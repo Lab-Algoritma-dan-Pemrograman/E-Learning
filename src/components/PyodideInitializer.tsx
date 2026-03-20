@@ -21,18 +21,9 @@ export const PyodideInitializer: React.FC = () => {
         try {
           const py = await window.loadPyodide({ indexURL });
           
-          // Load packages one by one to avoid massive fetch failures and handle errors individually
-          const packages = ['numpy', 'pandas', 'matplotlib', 'scipy', 'scikit-learn'];
-          
-          for (const pkg of packages) {
-            try {
-              console.log(`Loading ${pkg}...`);
-              await py.loadPackage(pkg);
-            } catch (pkgErr) {
-              console.error(`Failed to load ${pkg}:`, pkgErr);
-              // We continue even if one package fails so the basic environment is still available
-            }
-          }
+          // Only load the core engine initially. 
+          // Packages will be loaded on-demand in the CodeEditor or Lesson components.
+          console.log('Pyodide core initialized');
 
           setPyodide(py);
           setIsPyodideLoading(false);

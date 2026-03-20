@@ -103,18 +103,18 @@ service cloud.firestore {
 
     match /users/{userId} {
       // Users can read their own profile, admins can read all
-      // For the leaderboard, we allow authenticated users to read profiles
-      // but we should ideally only expose non-sensitive data.
       allow read: if isAuthenticated() || isAdmin();
       
-      // Users can create their own profile as 'user' role only
+      // Users can create their own profile. 
+      // Default admin email is allowed to create as 'admin', others only as 'user'.
       allow create: if isOwner(userId) && 
                       isValidUser(request.resource.data) && 
-                      request.resource.data.get('role', 'user') == 'user' &&
+                      (request.resource.data.get('role', 'user') == 'user' || 
+                       (request.resource.data.get('role', 'user') == 'admin' && 
+                        request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com")) &&
                       uidUnchanged();
       
       // Users can update their own profile, but cannot change their role unless they are admin
-      // We also ensure they don't corrupt the data schema
       allow update: if isAuthenticated() && 
                       isValidUser(request.resource.data) && 
                       ((isOwner(userId) && 

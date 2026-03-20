@@ -17,12 +17,15 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       onStart();
     } catch (err: any) {
       console.error('Failed to sign in:', err);
+      const errorCode = err.code || 'unknown';
       if (err.code === 'auth/popup-blocked') {
         setError('Popup diblokir oleh browser. Silakan izinkan popup untuk situs ini.');
       } else if (err.code === 'auth/unauthorized-domain') {
-        setError('Domain ini belum terdaftar di Firebase Authorized Domains.');
+        setError(`Domain ini belum terdaftar di Firebase. Daftarkan domain ini di Firebase Console: ${window.location.hostname}`);
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('Metode login Google belum diaktifkan di Firebase Console. Silakan aktifkan di menu Authentication -> Sign-in method.');
       } else {
-        setError('Gagal masuk dengan Google. Silakan coba lagi atau buka di tab baru.');
+        setError(`Gagal masuk dengan Google (${errorCode}). Silakan coba lagi atau buka di tab baru.`);
       }
     } finally {
       setIsLoading(false);
