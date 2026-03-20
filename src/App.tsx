@@ -1,0 +1,64 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { FirebaseProvider } from './components/FirebaseProvider';
+import { PyodideInitializer } from './components/PyodideInitializer';
+import { useStore } from './store/useStore';
+import { LandingPage } from './pages/LandingPage';
+import { Dashboard } from './pages/Dashboard';
+import { LessonPage } from './pages/LessonPage';
+import { Playground } from './pages/Playground';
+import { Leaderboard } from './pages/Leaderboard';
+import { CourseExplorer } from './pages/CourseExplorer';
+import { Profile } from './pages/Profile';
+import { AdminDashboard } from './pages/AdminDashboard';
+
+function AppContent() {
+  const { user, page, setPage } = useStore();
+
+  if (!user) {
+    return <LandingPage onStart={() => {}} />;
+  }
+
+  const renderPage = () => {
+    switch (page) {
+      case 'dashboard': return <Dashboard />;
+      case 'lesson': return <LessonPage />;
+      case 'playground': return <Playground />;
+      case 'leaderboard': return <Leaderboard />;
+      case 'courses': return <CourseExplorer />;
+      case 'profile': return <Profile />;
+      case 'admin': return <AdminDashboard />;
+      default: return <Dashboard />;
+    }
+  };
+
+  return (
+    <div onClick={(e) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a');
+      if (link) {
+        const href = link.getAttribute('href');
+        if (href === '/') { e.preventDefault(); setPage('dashboard'); }
+        if (href === '/courses') { e.preventDefault(); setPage('courses'); }
+        if (href === '/playground') { e.preventDefault(); setPage('playground'); }
+        if (href === '/leaderboard') { e.preventDefault(); setPage('leaderboard'); }
+        if (href === '/profile') { e.preventDefault(); setPage('profile'); }
+        if (href === '/admin') { e.preventDefault(); setPage('admin'); }
+      }
+    }}>
+      {renderPage()}
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <FirebaseProvider>
+      <PyodideInitializer />
+      <AppContent />
+    </FirebaseProvider>
+  );
+}

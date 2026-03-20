@@ -1,0 +1,162 @@
+import React from 'react';
+import { Layout } from '../components/Layout';
+import { motion } from 'framer-motion';
+import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play } from 'lucide-react';
+import { curriculum } from '../data/curriculum';
+import { useStore } from '../store/useStore';
+import { useProgress } from '../store/useProgress';
+
+export const Dashboard: React.FC = () => {
+  const { user, setPage, currentLessonId, setCurrentLessonId } = useStore();
+  const { completedLessons } = useProgress();
+
+  const handleContinue = () => {
+    if (!currentLessonId) {
+      setCurrentLessonId(curriculum[0].modules[0].lessons[0].id);
+    }
+    setPage('lesson');
+  };
+
+  const totalLessons = curriculum.reduce((acc, level) => 
+    acc + level.modules.reduce((mAcc, module) => mAcc + module.lessons.length, 0), 0
+  );
+
+  const progressPercentage = Math.round((completedLessons.length / totalLessons) * 100);
+
+  return (
+    <Layout>
+      <div className="space-y-8">
+        {/* Welcome Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Selamat datang kembali, {user?.displayName?.split(' ')[0] || 'Penjelajah'}! 👋</h1>
+            <p className="text-zinc-500 mt-1">Anda membuat kemajuan besar. Pertahankan!</p>
+          </div>
+          <div className="flex items-center gap-3 bg-white border border-zinc-200 p-2 rounded-2xl shadow-sm">
+            <StatCard icon={<Zap className="text-amber-500" size={20} />} label="Beruntun" value={`${user?.streak || 0} hari`} />
+            <div className="w-px h-8 bg-zinc-100" />
+            <StatCard icon={<Trophy className="text-emerald-500" size={20} />} label="XP" value={(user?.xp || 0).toLocaleString()} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Progress */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Continue Learning Card */}
+            <motion.div 
+              whileHover={{ y: -4 }}
+              onClick={handleContinue}
+              className="bg-zinc-900 text-white rounded-3xl p-8 relative overflow-hidden group cursor-pointer"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -mr-20 -mt-20 blur-3xl transition-all group-hover:bg-emerald-500/20" />
+              
+              <div className="relative z-10">
+                <div className="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-2">Lanjutkan Belajar</div>
+                <h2 className="text-3xl font-bold mb-4">Dasar-dasar Python</h2>
+                <p className="text-zinc-400 mb-8 max-w-md">Kuasai dasar-dasar pemrograman Python. Anda telah menyelesaikan <span className="text-white font-medium">{completedLessons.length}</span> dari <span className="text-white font-medium">{totalLessons}</span> pelajaran.</p>
+                
+                <div className="flex items-center gap-6">
+                  <button className="bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95">
+                    <Play size={18} fill="currentColor" />
+                    Lanjutkan Pelajaran
+                  </button>
+                  <div className="flex flex-col gap-1">
+                    <div className="text-xs text-zinc-500 font-bold uppercase">Kemajuan Keseluruhan</div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%` }} />
+                      </div>
+                      <span className="text-sm font-bold">{progressPercentage}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Course Curriculum Preview */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <BookOpen size={20} className="text-emerald-500" />
+                Kurikulum Anda
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {curriculum.map((level, idx) => (
+                  <div 
+                    key={level.id} 
+                    onClick={() => {
+                      setCurrentLessonId(level.modules[0].lessons[0].id);
+                      setPage('lesson');
+                    }}
+                    className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-emerald-200 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-10 h-10 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                        {idx + 1}
+                      </div>
+                      <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {idx + 1}</div>
+                    </div>
+                    <h4 className="font-bold text-lg mb-1">{level.title}</h4>
+                    <p className="text-sm text-zinc-500 mb-4 line-clamp-2">{level.description}</p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-zinc-400 font-medium">{level.modules.length} Modul</span>
+                      <ChevronRight size={18} className="text-zinc-300 group-hover:text-emerald-500 transition-all group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar Stats */}
+          <div className="space-y-8">
+            <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm">
+              <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
+                <Clock size={20} className="text-emerald-500" />
+                Aktivitas Terbaru
+              </h3>
+              <div className="space-y-6">
+                {completedLessons.length > 0 ? (
+                  completedLessons.slice(-3).reverse().map((lessonId, i) => (
+                    <ActivityItem key={lessonId} title={`Pelajaran ${lessonId}`} time={i === 0 ? "Baru saja" : `${i + 1} hari yang lalu`} xp={50} />
+                  ))
+                ) : (
+                  <p className="text-sm text-zinc-500 italic">Belum ada aktivitas. Mulai pelajaran pertama Anda!</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-emerald-600 rounded-3xl p-6 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+              <h3 className="font-bold text-lg mb-2 relative z-10">Tips Pro! 💡</h3>
+              <p className="text-emerald-100 text-sm relative z-10 leading-relaxed">
+                Konsistensi adalah kunci. Cobalah untuk memprogram setidaknya 15 menit setiap hari untuk membangun memori otot.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
+  <div className="flex items-center gap-3 px-3 py-1">
+    {icon}
+    <div>
+      <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{label}</div>
+      <div className="text-sm font-bold">{value}</div>
+    </div>
+  </div>
+);
+
+const ActivityItem: React.FC<{ title: string; time: string; xp: number }> = ({ title, time, xp }) => (
+  <div className="flex items-center gap-4">
+    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+    <div className="flex-1">
+      <div className="text-sm font-bold">{title}</div>
+      <div className="text-xs text-zinc-400">{time}</div>
+    </div>
+    <div className="text-xs font-bold text-emerald-600">+{xp} XP</div>
+  </div>
+);
