@@ -7,6 +7,8 @@ import { useProgress } from '../store/useProgress';
 import { syncProgress } from '../services/progressService';
 import { curriculumService } from '../services/curriculumService';
 
+import { Loader2 } from 'lucide-react';
+
 interface FirebaseContextType {
   user: User | null;
   loading: boolean;
@@ -22,6 +24,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setStoreUser = useStore((state) => state.setUser);
   const setCurriculum = useStore((state) => state.setCurriculum);
   const setCompletedLessons = useProgress((state) => state.setCompletedLessons);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -41,6 +44,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setUser(firebaseUser);
       
       if (firebaseUser) {
+        setIsSyncing(true);
         const userRef = doc(db, 'users', firebaseUser.uid);
         
         try {
@@ -79,13 +83,18 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           // Sync progress
           unsubProgress = syncProgress(firebaseUser.uid, setCompletedLessons);
         } catch (error) {
-          handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+          console.error("Auth sync error:", error);
+          // Don't throw here, just log and let the user be null in store if it fails
+          setStoreUser(null);
+        } finally {
+          setIsSyncing(false);
         }
       } else {
         setStoreUser(null);
         setCompletedLessons([]);
         if (unsubProfile) unsubProfile();
         if (unsubProgress) unsubProgress();
+        setIsSyncing(false);
       }
       
       setLoading(false);
@@ -98,9 +107,23 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [setStoreUser, setCompletedLessons]);
 
+  if (loading || isSyncing) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-emerald-500/20 mb-6 animate-bounce">
+          <span className="text-2xl font-black">P</span>
+        </div>
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <p className="mt-4 text-zinc-500 font-medium animate-pulse">
+          {isSyncing ? "Menyiapkan profil Anda..." : "Memuat PyLearn..."}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <FirebaseContext.Provider value={{ user, loading }}>
-      {!loading && children}
+      {children}
     </FirebaseContext.Provider>
   );
 };

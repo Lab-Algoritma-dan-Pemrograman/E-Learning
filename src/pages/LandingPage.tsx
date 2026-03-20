@@ -1,15 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit } from 'lucide-react';
+import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit, Loader2 } from 'lucide-react';
 import { signInWithGoogle } from '../firebase';
+import { useState } from 'react';
 
 export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleStart = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
     try {
       await signInWithGoogle();
       onStart();
     } catch (error) {
       console.error('Failed to sign in:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
   return (
@@ -28,9 +35,11 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           <a href="#pricing" className="hover:text-zinc-900 transition-colors">Harga</a>
         </div>
         <button 
-          onClick={onStart}
-          className="bg-zinc-900 text-white px-6 py-2.5 rounded-full font-bold hover:bg-zinc-800 transition-all active:scale-95 shadow-xl shadow-zinc-900/10"
+          onClick={handleStart}
+          disabled={isLoading}
+          className="bg-zinc-900 text-white px-6 py-2.5 rounded-full font-bold hover:bg-zinc-800 transition-all active:scale-95 shadow-xl shadow-zinc-900/10 disabled:opacity-50 flex items-center gap-2"
         >
+          {isLoading && <Loader2 size={16} className="animate-spin" />}
           Mulai Sekarang
         </button>
       </nav>
@@ -57,10 +66,15 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <button 
               onClick={handleStart}
-              className="w-full sm:w-auto bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-emerald-400 transition-all shadow-2xl shadow-emerald-500/30 active:scale-95 flex items-center justify-center gap-2"
+              disabled={isLoading}
+              className="w-full sm:w-auto bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-emerald-400 transition-all shadow-2xl shadow-emerald-500/30 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              Mulai Belajar Gratis
-              <ChevronRight size={22} />
+              {isLoading ? <Loader2 size={22} className="animate-spin" /> : (
+                <>
+                  Mulai Belajar Gratis
+                  <ChevronRight size={22} />
+                </>
+              )}
             </button>
             <div className="flex items-center gap-2 text-zinc-400 font-medium">
               <div className="flex -space-x-2">
@@ -150,9 +164,11 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             Bergabunglah dengan ribuan siswa dan mulai bangun masa depan Anda hari ini. Tidak perlu kartu kredit.
           </p>
           <button 
-            onClick={onStart}
-            className="bg-white text-zinc-900 px-12 py-5 rounded-2xl font-black text-xl hover:bg-zinc-100 transition-all active:scale-95 relative z-10 shadow-2xl shadow-white/10"
+            onClick={handleStart}
+            disabled={isLoading}
+            className="bg-white text-zinc-900 px-12 py-5 rounded-2xl font-black text-xl hover:bg-zinc-100 transition-all active:scale-95 relative z-10 shadow-2xl shadow-white/10 disabled:opacity-50 flex items-center gap-2 mx-auto"
           >
+            {isLoading && <Loader2 size={22} className="animate-spin" />}
             Gabung PyLearn Sekarang
           </button>
         </div>
