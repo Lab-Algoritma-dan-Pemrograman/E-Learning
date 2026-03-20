@@ -34,41 +34,55 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("Firebase initialized with project:", auth.app.options.projectId);
-      console.log("Auth State Changed:", firebaseUser?.email);
+      console.log("Auth State Changed:", firebaseUser?.email || "No user");
       
       // Cleanup previous subscriptions
       if (unsubProfile) unsubProfile();
       if (unsubProgress) unsubProgress();
       if (unsubCurriculum) unsubCurriculum();
 
+      // Helper to handle curriculum loading
+      const loadCurriculum = () => {
+        return new Promise<void>((resolve) => {
+          unsubCurriculum = curriculumService.subscribeToCurriculum((levels) => {
+            console.log("Curriculum updated:", levels.length, "levels");
+            setCurriculum(levels);
+            resolve();
+          });
+        });
+      };
+
       if (!firebaseUser) {
+        console.log("User logged out or not authenticated");
         setUser(null);
         setStoreUser(null);
         setCompletedLessons([]);
-        // Still subscribe to curriculum for landing page/public view if needed
-        unsubCurriculum = curriculumService.subscribeToCurriculum(setCurriculum);
+        
+        await loadCurriculum();
+        
         setIsSyncing(false);
         setLoading(false);
         setSyncError(null);
         return;
       }
 
+      console.log("User authenticated:", firebaseUser.uid);
       setUser(firebaseUser);
       setIsSyncing(true);
       setSyncError(null);
       
       try {
-        // Subscribe to curriculum first
-        unsubCurriculum = curriculumService.subscribeToCurriculum(setCurriculum);
+        console.log("Loading curriculum...");
+        await loadCurriculum();
 
         const userRef = doc(db, 'users', firebaseUser.uid);
-        console.log("Attempting to sync profile for:", firebaseUser.uid);
+        console.log("Fetching user profile from Firestore...");
         
         const userSnap = await getDoc(userRef);
         
         let profileData: UserProfile;
         if (!userSnap.exists()) {
-          console.log("Creating new user profile...");
+          console.log("Profile not found, creating new user profile...");
           profileData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
@@ -82,23 +96,30 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             role: firebaseUser.email?.toLowerCase() === 'a.faqodkurnia@gmail.com' ? 'admin' : 'user',
           };
           await setDoc(userRef, profileData);
+          console.log("New profile created successfully");
         } else {
+          console.log("Profile found, loading data...");
           profileData = userSnap.data() as UserProfile;
         }
         
+        console.log("Setting store user:", profileData.displayName);
         setStoreUser(profileData);
-        setIsSyncing(false);
-        setLoading(false);
-
+        
+        console.log("Subscribing to real-time profile updates...");
         unsubProfile = onSnapshot(userRef, (doc) => {
           if (doc.exists()) {
+            console.log("Profile updated in real-time");
             setStoreUser(doc.data() as UserProfile);
           }
         }, (error) => {
           console.error("Profile sync real-time error:", error);
+          handleFirestoreError(error, OperationType.GET, 'users/' + firebaseUser.uid);
         });
 
+        console.log("Subscribing to progress updates...");
         unsubProgress = syncProgress(firebaseUser.uid, setCompletedLessons);
+        
+        console.log("Firebase sync complete");
       } catch (error: any) {
         console.error("Auth sync error detail:", error);
         setSyncError(error.message || "Gagal memuat profil. Pastikan Firestore sudah aktif.");
@@ -108,7 +129,20 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     });
 
+    // Fallback timeout to prevent infinite loading screen
+    const loadingTimeout = setTimeout(() => {
+      setLoading((currentLoading) => {
+        if (currentLoading) {
+          console.warn("Firebase loading timeout reached. Forcing loading to false.");
+          return false;
+        }
+        return currentLoading;
+      });
+      setIsSyncing(false);
+    }, 10000); // 10 seconds
+
     return () => {
+      if (loadingTimeout) clearTimeout(loadingTimeout);
       unsubscribe();
       if (unsubProfile) unsubProfile();
       if (unsubProgress) unsubProgress();

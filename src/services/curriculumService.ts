@@ -1,5 +1,5 @@
 import { collection, doc, getDocs, setDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { curriculum as staticCurriculum, Level } from '../data/curriculum';
 
 const COLLECTION_NAME = 'curriculum';
@@ -16,7 +16,7 @@ export const curriculumService = {
 
       return snapshot.docs.map(doc => doc.data() as Level);
     } catch (error) {
-      console.error('Error fetching curriculum:', error);
+      handleFirestoreError(error, OperationType.LIST, COLLECTION_NAME);
       return [];
     }
   },
@@ -30,7 +30,7 @@ export const curriculumService = {
         onUpdate(snapshot.docs.map(doc => doc.data() as Level));
       }
     }, (error) => {
-      console.error('Curriculum subscription error:', error);
+      handleFirestoreError(error, OperationType.LIST, COLLECTION_NAME);
       onUpdate([]);
     });
   },
@@ -41,7 +41,7 @@ export const curriculumService = {
         await setDoc(doc(db, COLLECTION_NAME, level.id), level);
       }
     } catch (error) {
-      console.error('Error saving curriculum:', error);
+      handleFirestoreError(error, OperationType.WRITE, COLLECTION_NAME);
       throw error;
     }
   },
@@ -50,7 +50,7 @@ export const curriculumService = {
     try {
       await setDoc(doc(db, COLLECTION_NAME, level.id), level);
     } catch (error) {
-      console.error('Error updating level:', error);
+      handleFirestoreError(error, OperationType.WRITE, `${COLLECTION_NAME}/${level.id}`);
       throw error;
     }
   },
@@ -65,7 +65,7 @@ export const curriculumService = {
       });
       await Promise.all(deletePromises);
     } catch (error) {
-      console.error('Error clearing curriculum:', error);
+      handleFirestoreError(error, OperationType.WRITE, COLLECTION_NAME);
       throw error;
     }
   }

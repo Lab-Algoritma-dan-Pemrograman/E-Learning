@@ -517,8 +517,8 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                       <h4 className="font-bold">{level.title}</h4>
                       <div className="mt-2 flex gap-4 text-xs text-zinc-500">
-                        <span>{level.modules.length} Modul</span>
-                        <span>{level.modules.reduce((acc, m) => acc + m.lessons.length, 0)} Pelajaran</span>
+                        <span>{level.modules?.length || 0} Modul</span>
+                        <span>{level.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0} Pelajaran</span>
                       </div>
                     </div>
                   ))}
@@ -645,10 +645,10 @@ export const AdminDashboard: React.FC = () => {
                       <h4 className="font-bold text-lg mb-2">{level.title}</h4>
                       <p className="text-zinc-500 text-sm mb-4">{level.description}</p>
                       <div className="space-y-2">
-                        {level.modules.map(m => (
+                        {level.modules?.map(m => (
                           <div key={m.id} className="flex items-center gap-2 text-xs text-zinc-400">
                             <ChevronRight size={12} />
-                            <span>{m.title} ({m.lessons.length} Pelajaran)</span>
+                            <span>{m.title} ({m.lessons?.length || 0} Pelajaran)</span>
                           </div>
                         ))}
                       </div>

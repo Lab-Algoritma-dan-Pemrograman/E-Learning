@@ -22,8 +22,10 @@ export const LessonPage: React.FC = () => {
   useEffect(() => {
     if (currentLessonId && curriculum.length > 0) {
       for (let l = 0; l < curriculum.length; l++) {
-        for (let m = 0; m < curriculum[l].modules.length; m++) {
-          const lessonIdx = curriculum[l].modules[m].lessons.findIndex(less => less.id === currentLessonId);
+        const modules = curriculum[l]?.modules || [];
+        for (let m = 0; m < modules.length; m++) {
+          const lessons = modules[m]?.lessons || [];
+          const lessonIdx = lessons.findIndex(less => less.id === currentLessonId);
           if (lessonIdx !== -1) {
             setCurrentLevelIdx(l);
             setCurrentModuleIdx(m);
@@ -47,7 +49,7 @@ export const LessonPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const lesson = curriculum.length > 0 
-    ? curriculum[currentLevelIdx]?.modules[currentModuleIdx]?.lessons[currentLessonIdx]
+    ? curriculum[currentLevelIdx]?.modules?.[currentModuleIdx]?.lessons?.[currentLessonIdx]
     : null;
   
   const { runCode, isLoading, error: pyodideError } = usePyodide();
@@ -120,14 +122,15 @@ export const LessonPage: React.FC = () => {
     
     // Find next lesson
     let nextId: string | null = null;
-    const currentModule = curriculum[currentLevelIdx].modules[currentModuleIdx];
+    const currentLevel = curriculum[currentLevelIdx];
+    const currentModule = currentLevel?.modules?.[currentModuleIdx];
     
-    if (currentLessonIdx < currentModule.lessons.length - 1) {
+    if (currentModule && currentLessonIdx < (currentModule.lessons?.length || 0) - 1) {
       nextId = currentModule.lessons[currentLessonIdx + 1].id;
-    } else if (currentModuleIdx < curriculum[currentLevelIdx].modules.length - 1) {
-      nextId = curriculum[currentLevelIdx].modules[currentModuleIdx + 1].lessons[0].id;
+    } else if (currentLevel && currentModuleIdx < (currentLevel.modules?.length || 0) - 1) {
+      nextId = currentLevel.modules[currentModuleIdx + 1].lessons?.[0]?.id || null;
     } else if (currentLevelIdx < curriculum.length - 1) {
-      nextId = curriculum[currentLevelIdx + 1].modules[0].lessons[0].id;
+      nextId = curriculum[currentLevelIdx + 1].modules?.[0]?.lessons?.[0]?.id || null;
     }
 
     if (nextId) {
@@ -183,7 +186,7 @@ export const LessonPage: React.FC = () => {
             </div>
             <div>
               <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                Level {currentLevelIdx + 1} • {curriculum[currentLevelIdx].modules[currentModuleIdx].title}
+                Level {currentLevelIdx + 1} • {curriculum[currentLevelIdx]?.modules?.[currentModuleIdx]?.title || 'Pelajaran'}
               </div>
               <h1 className="text-xl font-bold">{lesson.title}</h1>
             </div>

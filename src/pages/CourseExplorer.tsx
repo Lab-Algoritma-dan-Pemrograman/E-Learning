@@ -20,18 +20,23 @@ export const CourseExplorer: React.FC = () => {
     if (prevModuleIdx < 0) {
       prevLevelIdx = levelIdx - 1;
       if (prevLevelIdx < 0) return false;
-      prevModuleIdx = curriculum[prevLevelIdx].modules.length - 1;
+      prevModuleIdx = (curriculum[prevLevelIdx]?.modules?.length || 0) - 1;
     }
     
-    const prevModule = curriculum[prevLevelIdx].modules[prevModuleIdx];
-    const allLessonsCompleted = prevModule.lessons.every(lesson => 
+    if (prevModuleIdx < 0) return false;
+
+    const prevModule = curriculum[prevLevelIdx]?.modules?.[prevModuleIdx];
+    if (!prevModule) return false;
+
+    const allLessonsCompleted = prevModule.lessons?.every(lesson => 
       completedLessons.includes(lesson.id)
-    );
+    ) || false;
     
     return !allLessonsCompleted;
   };
 
   const getModuleProgress = (module: any) => {
+    if (!Array.isArray(module?.lessons) || module.lessons.length === 0) return 0;
     const completedInModule = module.lessons.filter((l: any) => completedLessons.includes(l.id)).length;
     return Math.round((completedInModule / module.lessons.length) * 100);
   };
@@ -60,7 +65,7 @@ export const CourseExplorer: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {level.modules.map((module, mIdx) => {
+                {(level.modules || []).map((module, mIdx) => {
                   const locked = isModuleLocked(lIdx, mIdx);
                   const progress = getModuleProgress(module);
                   return (
@@ -70,7 +75,7 @@ export const CourseExplorer: React.FC = () => {
                       locked={locked}
                       progress={progress}
                       onClick={() => {
-                        if (!locked) {
+                        if (!locked && module.lessons?.[0]?.id) {
                           setCurrentLessonId(module.lessons[0].id);
                           setPage('lesson');
                         }
@@ -109,14 +114,14 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; on
       <div>
         <h3 className="text-xl font-black mb-2">{module.title}</h3>
         <div className="flex items-center gap-2 text-sm font-bold text-zinc-400">
-          <span>{module.lessons.length} Pelajaran</span>
+          <span>{module.lessons?.length || 0} Pelajaran</span>
           <span>•</span>
-          <span>~{module.lessons.length * 5} menit</span>
+          <span>~{(module.lessons?.length || 0) * 5} menit</span>
         </div>
       </div>
 
       <div className="space-y-3">
-        {module.lessons.slice(0, 3).map((lesson: any) => {
+        {module.lessons?.slice(0, 3).map((lesson: any) => {
           const isCompleted = useProgress.getState().completedLessons.includes(lesson.id);
           return (
             <div key={lesson.id} className="flex items-center justify-between text-sm text-zinc-500 group-hover:text-zinc-700 transition-colors">
@@ -128,9 +133,9 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; on
             </div>
           );
         })}
-        {module.lessons.length > 3 && (
+        {(module.lessons?.length || 0) > 3 && (
           <div className="text-xs font-bold text-zinc-400 pt-2">
-            + {module.lessons.length - 3} pelajaran lagi
+            + {(module.lessons?.length || 0) - 3} pelajaran lagi
           </div>
         )}
       </div>

@@ -16,8 +16,8 @@ export const Dashboard: React.FC = () => {
     let firstUncompletedLessonId: string | null = null;
     
     for (const level of curriculum) {
-      for (const module of level.modules) {
-        for (const lesson of module.lessons) {
+      for (const module of (level.modules || [])) {
+        for (const lesson of (module.lessons || [])) {
           if (!completedLessons.includes(lesson.id)) {
             firstUncompletedLessonId = lesson.id;
             break;
@@ -30,7 +30,7 @@ export const Dashboard: React.FC = () => {
 
     if (firstUncompletedLessonId) {
       setCurrentLessonId(firstUncompletedLessonId);
-    } else if (!currentLessonId) {
+    } else if (!currentLessonId && curriculum.length > 0 && curriculum[0].modules?.length > 0 && curriculum[0].modules[0].lessons?.length > 0) {
       // If all completed or no current lesson, start from the very first one
       setCurrentLessonId(curriculum[0].modules[0].lessons[0].id);
     }
@@ -39,7 +39,7 @@ export const Dashboard: React.FC = () => {
   };
 
   const totalLessons = curriculum.reduce((acc, level) => 
-    acc + level.modules.reduce((mAcc, module) => mAcc + module.lessons.length, 0), 0
+    acc + (level.modules?.reduce((mAcc, module) => mAcc + (module.lessons?.length || 0), 0) || 0), 0
   );
 
   const handleInitialize = async () => {
@@ -134,18 +134,20 @@ export const Dashboard: React.FC = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {curriculum.map((level, idx) => {
-                  const totalInLevel = level.modules.reduce((acc, m) => acc + m.lessons.length, 0);
-                  const completedInLevel = level.modules.reduce((acc, m) => 
-                    acc + m.lessons.filter(l => completedLessons.includes(l.id)).length, 0
-                  );
-                  const levelProgress = Math.round((completedInLevel / totalInLevel) * 100);
+                  const totalInLevel = level.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
+                  const completedInLevel = level.modules?.reduce((acc, m) => 
+                    acc + (m.lessons?.filter(l => completedLessons.includes(l.id)).length || 0), 0
+                  ) || 0;
+                  const levelProgress = totalInLevel > 0 ? Math.round((completedInLevel / totalInLevel) * 100) : 0;
 
                   return (
                     <div 
                       key={level.id} 
                       onClick={() => {
-                        setCurrentLessonId(level.modules[0].lessons[0].id);
-                        setPage('lesson');
+                        if (level.modules?.[0]?.lessons?.[0]?.id) {
+                          setCurrentLessonId(level.modules[0].lessons[0].id);
+                          setPage('lesson');
+                        }
                       }}
                       className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-emerald-200 transition-all cursor-pointer group"
                     >
@@ -160,7 +162,7 @@ export const Dashboard: React.FC = () => {
                       
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-zinc-400 font-medium">{level.modules.length} Modul</span>
+                          <span className="text-zinc-400 font-medium">{level.modules?.length || 0} Modul</span>
                           <span className="text-emerald-600 font-bold">{levelProgress}%</span>
                         </div>
                         <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">

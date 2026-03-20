@@ -18,25 +18,35 @@ import { AdminDashboard } from './pages/AdminDashboard';
 function AppContent() {
   const { user, page, setPage } = useStore();
 
+  console.log("AppContent Render:", { hasUser: !!user, page });
+
   // If user just logged in, ensure we are on dashboard
   const handleStart = () => {
+    console.log("handleStart called, setting page to dashboard");
     setPage('dashboard');
   };
 
   if (!user) {
+    console.log("No user found, showing LandingPage");
     return <LandingPage onStart={handleStart} />;
   }
 
   const renderPage = () => {
-    switch (page) {
-      case 'dashboard': return <Dashboard />;
-      case 'lesson': return <LessonPage />;
-      case 'playground': return <Playground />;
-      case 'leaderboard': return <Leaderboard />;
-      case 'courses': return <CourseExplorer />;
-      case 'profile': return <Profile />;
-      case 'admin': return <AdminDashboard />;
-      default: return <Dashboard />;
+    console.log("Rendering page:", page);
+    try {
+      switch (page) {
+        case 'dashboard': return <Dashboard />;
+        case 'lesson': return <LessonPage />;
+        case 'playground': return <Playground />;
+        case 'leaderboard': return <Leaderboard />;
+        case 'courses': return <CourseExplorer />;
+        case 'profile': return <Profile />;
+        case 'admin': return <AdminDashboard />;
+        default: return <Dashboard />;
+      }
+    } catch (error) {
+      console.error("Page render error:", error);
+      return <Dashboard />;
     }
   };
 
