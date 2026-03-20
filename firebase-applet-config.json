@@ -3,7 +3,7 @@
   "appId": "1:526169969296:web:d79d50804360855fb2be15",
   "apiKey": "AIzaSyBt2trdcBN33qJ1qULHRoQQIULvLMsIn6I",
   "authDomain": "pylearn-a00da.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-84b7d2b0-ca06-4c37-941c-d5b42d269ba5",
+  "firestoreDatabaseId": "(default)",
   "storageBucket": "pylearn-a00da.firebasestorage.app",
   "messagingSenderId": "526169969296",
   "measurementId": "G-YYCFWRH3GF"

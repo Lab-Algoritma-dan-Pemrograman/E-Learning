@@ -18,8 +18,13 @@ import { AdminDashboard } from './pages/AdminDashboard';
 function AppContent() {
   const { user, page, setPage } = useStore();
 
+  // If user just logged in, ensure we are on dashboard
+  const handleStart = () => {
+    setPage('dashboard');
+  };
+
   if (!user) {
-    return <LandingPage onStart={() => {}} />;
+    return <LandingPage onStart={handleStart} />;
   }
 
   const renderPage = () => {

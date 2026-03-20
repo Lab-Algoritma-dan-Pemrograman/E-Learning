@@ -16,8 +16,12 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase SDK
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('MASUKKAN')) {
+  console.warn('Firebase API Key is missing or using placeholder. Authentication will not work.');
+}
+
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 

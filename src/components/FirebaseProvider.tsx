@@ -21,28 +21,20 @@ export const useFirebase = () => useContext(FirebaseContext);
 export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const setStoreUser = useStore((state) => state.setUser);
   const setCurriculum = useStore((state) => state.setCurriculum);
   const setCompletedLessons = useProgress((state) => state.setCompletedLessons);
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      setCurriculum([]);
-      return;
-    }
-    // Subscribe to curriculum updates
-    const unsubscribe = curriculumService.subscribeToCurriculum(setCurriculum);
-    return () => unsubscribe();
-  }, [user, setCurriculum]);
-
-  useEffect(() => {
     let unsubProfile: (() => void) | undefined;
     let unsubProgress: (() => void) | undefined;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // Don't immediately set user to null if we were previously syncing
-      // to avoid unnecessary unmounts of the app content
+      console.log("Firebase initialized with project:", auth.app.options.projectId);
+      console.log("Auth State Changed:", firebaseUser?.email);
+      
       if (!firebaseUser) {
         setUser(null);
         setStoreUser(null);
@@ -51,18 +43,24 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (unsubProgress) unsubProgress();
         setIsSyncing(false);
         setLoading(false);
+        setSyncError(null);
         return;
       }
 
       setUser(firebaseUser);
       setIsSyncing(true);
+      setSyncError(null);
+      
       const userRef = doc(db, 'users', firebaseUser.uid);
       
       try {
+        console.log("Attempting to sync profile for:", firebaseUser.uid);
         const userSnap = await getDoc(userRef);
         
+        let profileData: UserProfile;
         if (!userSnap.exists()) {
-          const newUser: UserProfile = {
+          console.log("Creating new user profile...");
+          profileData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             displayName: firebaseUser.displayName,
@@ -73,23 +71,25 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             lastActive: new Date().toISOString(),
             createdAt: new Date().toISOString(),
           };
-          await setDoc(userRef, newUser);
-          setStoreUser(newUser);
+          await setDoc(userRef, profileData);
         } else {
-          setStoreUser(userSnap.data() as UserProfile);
+          profileData = userSnap.data() as UserProfile;
         }
+        
+        setStoreUser(profileData);
 
         unsubProfile = onSnapshot(userRef, (doc) => {
           if (doc.exists()) {
             setStoreUser(doc.data() as UserProfile);
           }
         }, (error) => {
-          console.error("Profile sync error:", error);
+          console.error("Profile sync real-time error:", error);
         });
 
         unsubProgress = syncProgress(firebaseUser.uid, setCompletedLessons);
-      } catch (error) {
-        console.error("Auth sync error:", error);
+      } catch (error: any) {
+        console.error("Auth sync error detail:", error);
+        setSyncError(error.message || "Gagal memuat profil. Pastikan Firestore sudah aktif.");
       } finally {
         setIsSyncing(false);
         setLoading(false);
@@ -113,6 +113,17 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         <p className="mt-4 text-zinc-500 font-medium animate-pulse">
           {isSyncing ? "Menyiapkan profil Anda..." : "Memuat PyLearn..."}
         </p>
+        {syncError && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl max-w-md text-center">
+            <p className="text-red-600 text-sm font-medium">{syncError}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-3 text-xs text-red-500 underline hover:text-red-700"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        )}
       </div>
     );
   }
