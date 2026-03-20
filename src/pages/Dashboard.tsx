@@ -42,11 +42,42 @@ export const Dashboard: React.FC = () => {
     acc + level.modules.reduce((mAcc, module) => mAcc + module.lessons.length, 0), 0
   );
 
+  const handleInitialize = async () => {
+    try {
+      const { curriculumService } = await import('../services/curriculumService');
+      const { curriculum: staticCurriculum } = await import('../data/curriculum');
+      await curriculumService.saveFullCurriculum(staticCurriculum);
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to initialize:", error);
+    }
+  };
+
   const progressPercentage = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
   return (
     <Layout>
       <div className="space-y-8">
+        {/* Setup Banner for Admin if DB is empty */}
+        {curriculum.length === 0 && user?.email?.toLowerCase() === 'a.faqodkurnia@gmail.com' && (
+          <div className="bg-amber-50 border-2 border-dashed border-amber-200 rounded-3xl p-8 text-center space-y-4">
+            <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
+              <Zap size={32} />
+            </div>
+            <div className="max-w-md mx-auto">
+              <h2 className="text-xl font-bold text-amber-900">Database Anda Masih Kosong</h2>
+              <p className="text-amber-700 text-sm mt-2">
+                Klik tombol di bawah untuk mengisi database Firestore Anda dengan kurikulum PyLearn standar secara otomatis.
+              </p>
+            </div>
+            <button 
+              onClick={handleInitialize}
+              className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-amber-500/20 transition-all active:scale-95"
+            >
+              Inisialisasi Database PyLearn
+            </button>
+          </div>
+        )}
         {/* Welcome Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

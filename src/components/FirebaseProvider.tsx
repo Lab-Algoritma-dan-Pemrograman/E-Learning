@@ -30,17 +30,23 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     let unsubProfile: (() => void) | undefined;
     let unsubProgress: (() => void) | undefined;
+    let unsubCurriculum: (() => void) | undefined;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("Firebase initialized with project:", auth.app.options.projectId);
       console.log("Auth State Changed:", firebaseUser?.email);
       
+      // Cleanup previous subscriptions
+      if (unsubProfile) unsubProfile();
+      if (unsubProgress) unsubProgress();
+      if (unsubCurriculum) unsubCurriculum();
+
       if (!firebaseUser) {
         setUser(null);
         setStoreUser(null);
         setCompletedLessons([]);
-        if (unsubProfile) unsubProfile();
-        if (unsubProgress) unsubProgress();
+        // Still subscribe to curriculum for landing page/public view if needed
+        unsubCurriculum = curriculumService.subscribeToCurriculum(setCurriculum);
         setIsSyncing(false);
         setLoading(false);
         setSyncError(null);
@@ -51,10 +57,13 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setIsSyncing(true);
       setSyncError(null);
       
-      const userRef = doc(db, 'users', firebaseUser.uid);
-      
       try {
+        // Subscribe to curriculum first
+        unsubCurriculum = curriculumService.subscribeToCurriculum(setCurriculum);
+
+        const userRef = doc(db, 'users', firebaseUser.uid);
         console.log("Attempting to sync profile for:", firebaseUser.uid);
+        
         const userSnap = await getDoc(userRef);
         
         let profileData: UserProfile;
@@ -70,6 +79,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             streak: 0,
             lastActive: new Date().toISOString(),
             createdAt: new Date().toISOString(),
+            role: firebaseUser.email?.toLowerCase() === 'a.faqodkurnia@gmail.com' ? 'admin' : 'user',
           };
           await setDoc(userRef, profileData);
         } else {
@@ -100,6 +110,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       unsubscribe();
       if (unsubProfile) unsubProfile();
       if (unsubProgress) unsubProgress();
+      if (unsubCurriculum) unsubCurriculum();
     };
   }, [setStoreUser, setCompletedLessons]);
 

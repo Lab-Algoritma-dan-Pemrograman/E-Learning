@@ -103,26 +103,30 @@ service cloud.firestore {
 
     match /users/{userId} {
       // Users can read their own profile, admins can read all
-      // For the leaderboard, we allow authenticated users to list/get profiles
-      // WARNING: This exposes emails. In a production app, split PII into a private collection.
+      // For the leaderboard, we allow authenticated users to read profiles
+      // but we should ideally only expose non-sensitive data.
       allow read: if isAuthenticated() || isAdmin();
       
       // Users can create their own profile as 'user' role only
       allow create: if isOwner(userId) && 
                       isValidUser(request.resource.data) && 
-                      (!('role' in request.resource.data) || request.resource.data.role == 'user');
+                      request.resource.data.get('role', 'user') == 'user' &&
+                      uidUnchanged();
       
       // Users can update their own profile, but cannot change their role unless they are admin
-      allow update: if (isOwner(userId) && 
-                       isValidUser(request.resource.data) && 
-                       (request.resource.data.get('role', 'user') == resource.data.get('role', 'user') || isAdmin())) ||
-                      isAdmin();
+      // We also ensure they don't corrupt the data schema
+      allow update: if isAuthenticated() && 
+                      isValidUser(request.resource.data) && 
+                      ((isOwner(userId) && 
+                        request.resource.data.get('role', 'user') == resource.data.get('role', 'user') &&
+                        uidNotModified()) || 
+                       isAdmin());
 
       match /progress/{lessonId} {
         // Users can read/write their own progress, admins can read all
         allow read: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && isValidProgress(request.resource.data);
-        allow update: if isOwner(userId) && isValidProgress(request.resource.data);
+        allow create: if isOwner(userId) && isValidProgress(request.resource.data) && uidUnchanged();
+        allow update: if isOwner(userId) && isValidProgress(request.resource.data) && uidNotModified();
         allow delete: if isOwner(userId) || isAdmin();
       }
     }
