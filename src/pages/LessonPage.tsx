@@ -4,7 +4,6 @@ import { CodeEditor } from '../components/CodeEditor';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { Quiz } from '../components/Quiz';
 import { usePyodide } from '../hooks/usePyodide';
-import { curriculum } from '../data/curriculum';
 import { CheckCircle2, Lightbulb, ChevronRight, BookOpen, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -15,13 +14,13 @@ import { getCodeHint } from '../services/aiService';
 import { Sparkles, Loader2 } from 'lucide-react';
 
 export const LessonPage: React.FC = () => {
-  const { user, currentLessonId, setCurrentLessonId } = useStore();
+  const { user, currentLessonId, setCurrentLessonId, curriculum } = useStore();
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
   const [currentModuleIdx, setCurrentModuleIdx] = useState(0);
   const [currentLessonIdx, setCurrentLessonIdx] = useState(0);
 
   useEffect(() => {
-    if (currentLessonId) {
+    if (currentLessonId && curriculum.length > 0) {
       for (let l = 0; l < curriculum.length; l++) {
         for (let m = 0; m < curriculum[l].modules.length; m++) {
           const lessonIdx = curriculum[l].modules[m].lessons.findIndex(less => less.id === currentLessonId);
@@ -34,7 +33,7 @@ export const LessonPage: React.FC = () => {
         }
       }
     }
-  }, [currentLessonId]);
+  }, [currentLessonId, curriculum]);
 
   const [step, setStep] = useState<'learn' | 'quiz' | 'code'>('learn');
   const [code, setCode] = useState('');
@@ -46,19 +45,34 @@ export const LessonPage: React.FC = () => {
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const lesson = curriculum[currentLevelIdx].modules[currentModuleIdx].lessons[currentLessonIdx];
+  const lesson = curriculum.length > 0 
+    ? curriculum[currentLevelIdx]?.modules[currentModuleIdx]?.lessons[currentLessonIdx]
+    : null;
+  
   const { runCode, isLoading, error: pyodideError } = usePyodide();
 
   useEffect(() => {
-    setStep('learn');
-    setCode(lesson.initialCode || lesson.codeExample);
-    setIsCorrect(null);
-    setShowHint(false);
-    setAiHint(null);
-    setIsAiLoading(false);
-    setOutput('');
-    setError(null);
-  }, [currentLevelIdx, currentModuleIdx, currentLessonIdx, lesson.initialCode, lesson.codeExample]);
+    if (lesson) {
+      setStep('learn');
+      setCode(lesson.initialCode || lesson.codeExample);
+      setIsCorrect(null);
+      setShowHint(false);
+      setAiHint(null);
+      setIsAiLoading(false);
+      setOutput('');
+      setError(null);
+    }
+  }, [currentLevelIdx, currentModuleIdx, currentLessonIdx, lesson?.initialCode, lesson?.codeExample]);
+
+  if (!lesson) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        </div>
+      </Layout>
+    );
+  }
 
   const handleRun = async () => {
     const result = await runCode(code);
@@ -236,7 +250,7 @@ export const LessonPage: React.FC = () => {
                       <Lightbulb size={14} />
                       {showHint ? "Sembunyikan Petunjuk" : "Butuh petunjuk?"}
                     </button>
-                    {isCorrect === false && (
+                    {(isCorrect === false || error) && (
                       <button 
                         onClick={handleAiHint}
                         disabled={isAiLoading}
@@ -289,7 +303,19 @@ export const LessonPage: React.FC = () => {
                 </div>
                 <div className="h-40 bg-zinc-900 rounded-2xl border border-zinc-800 p-4 font-mono text-sm flex flex-col">
                   <div className="flex items-center justify-between mb-2 text-zinc-500 text-xs uppercase tracking-widest font-bold">
-                    <span>Output</span>
+                    <div className="flex items-center gap-2">
+                      <span>Output</span>
+                      {(isCorrect === false || error) && (
+                        <button 
+                          onClick={handleAiHint}
+                          disabled={isAiLoading}
+                          className="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded hover:bg-emerald-400 transition-colors flex items-center gap-1"
+                        >
+                          {isAiLoading ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                          Tanya AI
+                        </button>
+                      )}
+                    </div>
                     {isCorrect !== null && (
                       <span className={isCorrect ? "text-emerald-400" : "text-red-400"}>
                         {isCorrect ? "Berhasil!" : "Coba lagi"}

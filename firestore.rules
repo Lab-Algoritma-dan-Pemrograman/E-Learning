@@ -28,6 +28,14 @@ service cloud.firestore {
     //   - completedAt: string (required, iso8601) - Completion timestamp
     //   - score: number (optional, >= 0) - Quiz/Exercise score
     //
+    // Collection: curriculum
+    // Document ID: {levelId}
+    // Fields:
+    //   - id: string (required)
+    //   - title: string (required)
+    //   - description: string (required)
+    //   - modules: list (required) - List of Module objects
+    //
     // ===============================================================
 
     // ===============================================================
@@ -94,7 +102,9 @@ service cloud.firestore {
 
     match /users/{userId} {
       // Users can read their own profile, admins can read all
-      allow read: if isOwner(userId) || isAdmin();
+      // For the leaderboard, we allow authenticated users to list/get profiles
+      // WARNING: This exposes emails. In a production app, split PII into a private collection.
+      allow read: if isAuthenticated() || isAdmin();
       
       // Users can create their own profile as 'user' role only
       allow create: if isOwner(userId) && 
@@ -114,6 +124,13 @@ service cloud.firestore {
         allow update: if isOwner(userId) && isValidProgress(request.resource.data);
         allow delete: if isOwner(userId) || isAdmin();
       }
+    }
+
+    match /curriculum/{levelId} {
+      // All authenticated users can read the curriculum
+      allow read: if isAuthenticated();
+      // Only admins can write to the curriculum
+      allow write: if isAdmin();
     }
   }
 }

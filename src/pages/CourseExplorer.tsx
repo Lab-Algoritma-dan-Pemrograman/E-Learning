@@ -1,12 +1,40 @@
 import React from 'react';
 import { Layout } from '../components/Layout';
-import { curriculum } from '../data/curriculum';
 import { BookOpen, ChevronRight, Lock, CheckCircle2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
+import { useProgress } from '../store/useProgress';
 
 export const CourseExplorer: React.FC = () => {
-  const { setPage, setCurrentLessonId } = useStore();
+  const { setPage, setCurrentLessonId, curriculum } = useStore();
+  const { completedLessons } = useProgress();
+
+  const isModuleLocked = (levelIdx: number, moduleIdx: number) => {
+    if (curriculum.length === 0) return true;
+    if (levelIdx === 0 && moduleIdx === 0) return false;
+    
+    // Get previous module
+    let prevLevelIdx = levelIdx;
+    let prevModuleIdx = moduleIdx - 1;
+    
+    if (prevModuleIdx < 0) {
+      prevLevelIdx = levelIdx - 1;
+      if (prevLevelIdx < 0) return false;
+      prevModuleIdx = curriculum[prevLevelIdx].modules.length - 1;
+    }
+    
+    const prevModule = curriculum[prevLevelIdx].modules[prevModuleIdx];
+    const allLessonsCompleted = prevModule.lessons.every(lesson => 
+      completedLessons.includes(lesson.id)
+    );
+    
+    return !allLessonsCompleted;
+  };
+
+  const getModuleProgress = (module: any) => {
+    const completedInModule = module.lessons.filter((l: any) => completedLessons.includes(l.id)).length;
+    return Math.round((completedInModule / module.lessons.length) * 100);
+  };
 
   return (
     <Layout>
@@ -19,11 +47,11 @@ export const CourseExplorer: React.FC = () => {
         </div>
 
         <div className="space-y-16">
-          {curriculum.map((level, idx) => (
+          {curriculum.map((level, lIdx) => (
             <div key={level.id} className="space-y-8">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-zinc-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl shadow-zinc-900/10">
-                  {idx + 1}
+                  {lIdx + 1}
                 </div>
                 <div>
                   <h2 className="text-2xl font-black">{level.title}</h2>
@@ -32,19 +60,24 @@ export const CourseExplorer: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {level.modules.map((module) => (
-                  <ModuleCard 
-                    key={module.id} 
-                    module={module} 
-                    locked={idx > 0} 
-                    onClick={() => {
-                      if (idx === 0) {
-                        setCurrentLessonId(module.lessons[0].id);
-                        setPage('lesson');
-                      }
-                    }}
-                  />
-                ))}
+                {level.modules.map((module, mIdx) => {
+                  const locked = isModuleLocked(lIdx, mIdx);
+                  const progress = getModuleProgress(module);
+                  return (
+                    <ModuleCard 
+                      key={module.id} 
+                      module={module} 
+                      locked={locked}
+                      progress={progress}
+                      onClick={() => {
+                        if (!locked) {
+                          setCurrentLessonId(module.lessons[0].id);
+                          setPage('lesson');
+                        }
+                      }}
+                    />
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -54,12 +87,12 @@ export const CourseExplorer: React.FC = () => {
   );
 };
 
-const ModuleCard: React.FC<{ module: any; locked?: boolean; onClick?: () => void }> = ({ module, locked, onClick }) => (
+const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; onClick?: () => void }> = ({ module, locked, progress, onClick }) => (
   <div 
     onClick={onClick}
     className={cn(
       "bg-white border border-zinc-200 rounded-[2rem] p-8 transition-all group relative overflow-hidden",
-      locked ? "opacity-60 grayscale" : "hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-500/5 cursor-pointer"
+      locked ? "opacity-60 grayscale cursor-not-allowed" : "hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-500/5 cursor-pointer"
     )}
   >
     {locked && (
@@ -83,12 +116,18 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; onClick?: () => void
       </div>
 
       <div className="space-y-3">
-        {module.lessons.slice(0, 3).map((lesson: any) => (
-          <div key={lesson.id} className="flex items-center justify-between text-sm text-zinc-500 group-hover:text-zinc-700 transition-colors">
-            <span className="truncate">{lesson.title}</span>
-            <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        ))}
+        {module.lessons.slice(0, 3).map((lesson: any) => {
+          const isCompleted = useProgress.getState().completedLessons.includes(lesson.id);
+          return (
+            <div key={lesson.id} className="flex items-center justify-between text-sm text-zinc-500 group-hover:text-zinc-700 transition-colors">
+              <div className="flex items-center gap-2 truncate">
+                {isCompleted ? <CheckCircle2 size={14} className="text-emerald-500" /> : <div className="w-3.5 h-3.5" />}
+                <span className="truncate">{lesson.title}</span>
+              </div>
+              <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          );
+        })}
         {module.lessons.length > 3 && (
           <div className="text-xs font-bold text-zinc-400 pt-2">
             + {module.lessons.length - 3} pelajaran lagi
@@ -99,9 +138,9 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; onClick?: () => void
       {!locked && (
         <div className="pt-4">
           <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-            <div className="w-0 h-full bg-emerald-500 rounded-full transition-all duration-1000 group-hover:w-1/4" />
+            <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
           </div>
-          <div className="mt-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest">0% Selesai</div>
+          <div className="mt-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest">{progress}% Selesai</div>
         </div>
       )}
     </div>

@@ -30,6 +30,65 @@
         "score": { "type": "integer" }
       },
       "required": ["userId", "lessonId", "completed", "completedAt"]
+    },
+    "Level": {
+      "title": "Level",
+      "description": "A level in the learning curriculum.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "lessons": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "title": { "type": "string" },
+                    "explanation": { "type": "string" },
+                    "codeExample": { "type": "string" },
+                    "initialCode": { "type": "string" },
+                    "solution": { "type": "string" },
+                    "hint": { "type": "string" },
+                    "quiz": {
+                      "type": "object",
+                      "properties": {
+                        "question": { "type": "string" },
+                        "options": { "type": "array", "items": { "type": "string" } },
+                        "correctAnswer": { "type": "integer" }
+                      },
+                      "required": ["question", "options", "correctAnswer"]
+                    },
+                    "testCases": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "input": { "type": "string" },
+                          "expectedOutput": { "type": "string" },
+                          "description": { "type": "string" }
+                        },
+                        "required": ["expectedOutput", "description"]
+                      }
+                    }
+                  },
+                  "required": ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
+                }
+              }
+            },
+            "required": ["id", "title", "lessons"]
+          }
+        }
+      },
+      "required": ["id", "title", "description", "modules"]
     }
   },
   "firestore": {
@@ -40,6 +99,10 @@
     "/users/{userId}/progress/{lessonId}": {
       "schema": "LessonProgress",
       "description": "Progress tracking for a specific lesson"
+    },
+    "/curriculum/{levelId}": {
+      "schema": "Level",
+      "description": "A level in the learning curriculum"
     }
   }
 }

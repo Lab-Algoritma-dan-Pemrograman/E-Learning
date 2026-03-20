@@ -5,6 +5,7 @@ import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 import { syncProgress } from '../services/progressService';
+import { curriculumService } from '../services/curriculumService';
 
 interface FirebaseContextType {
   user: User | null;
@@ -19,7 +20,14 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const setStoreUser = useStore((state) => state.setUser);
+  const setCurriculum = useStore((state) => state.setCurriculum);
   const setCompletedLessons = useProgress((state) => state.setCompletedLessons);
+
+  useEffect(() => {
+    // Subscribe to curriculum updates
+    const unsubscribe = curriculumService.subscribeToCurriculum(setCurriculum);
+    return () => unsubscribe();
+  }, [setCurriculum]);
 
   useEffect(() => {
     let unsubProfile: (() => void) | undefined;

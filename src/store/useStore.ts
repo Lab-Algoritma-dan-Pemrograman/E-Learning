@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Level } from '../data/curriculum';
 
 export interface UserProfile {
   uid: string;
@@ -18,6 +19,8 @@ type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 
 interface AppState {
   user: UserProfile | null;
   setUser: (user: UserProfile | null) => void;
+  curriculum: Level[];
+  setCurriculum: (curriculum: Level[]) => void;
   currentLessonId: string | null;
   setCurrentLessonId: (id: string | null) => void;
   isSidebarOpen: boolean;
@@ -33,6 +36,8 @@ interface AppState {
 export const useStore = create<AppState>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
+  curriculum: [],
+  setCurriculum: (curriculum) => set({ curriculum }),
   currentLessonId: null,
   setCurrentLessonId: (id) => set({ currentLessonId: id }),
   isSidebarOpen: true,

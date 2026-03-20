@@ -2,18 +2,39 @@ import React from 'react';
 import { Layout } from '../components/Layout';
 import { motion } from 'framer-motion';
 import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play } from 'lucide-react';
-import { curriculum } from '../data/curriculum';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 
 export const Dashboard: React.FC = () => {
-  const { user, setPage, currentLessonId, setCurrentLessonId } = useStore();
+  const { user, setPage, currentLessonId, setCurrentLessonId, curriculum } = useStore();
   const { completedLessons } = useProgress();
 
   const handleContinue = () => {
-    if (!currentLessonId) {
+    if (curriculum.length === 0) return;
+    
+    // Find the first lesson that is not completed
+    let firstUncompletedLessonId: string | null = null;
+    
+    for (const level of curriculum) {
+      for (const module of level.modules) {
+        for (const lesson of module.lessons) {
+          if (!completedLessons.includes(lesson.id)) {
+            firstUncompletedLessonId = lesson.id;
+            break;
+          }
+        }
+        if (firstUncompletedLessonId) break;
+      }
+      if (firstUncompletedLessonId) break;
+    }
+
+    if (firstUncompletedLessonId) {
+      setCurrentLessonId(firstUncompletedLessonId);
+    } else if (!currentLessonId) {
+      // If all completed or no current lesson, start from the very first one
       setCurrentLessonId(curriculum[0].modules[0].lessons[0].id);
     }
+    
     setPage('lesson');
   };
 
@@ -21,7 +42,7 @@ export const Dashboard: React.FC = () => {
     acc + level.modules.reduce((mAcc, module) => mAcc + module.lessons.length, 0), 0
   );
 
-  const progressPercentage = Math.round((completedLessons.length / totalLessons) * 100);
+  const progressPercentage = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
   return (
     <Layout>
@@ -52,8 +73,8 @@ export const Dashboard: React.FC = () => {
               
               <div className="relative z-10">
                 <div className="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-2">Lanjutkan Belajar</div>
-                <h2 className="text-3xl font-bold mb-4">Dasar-dasar Python</h2>
-                <p className="text-zinc-400 mb-8 max-w-md">Kuasai dasar-dasar pemrograman Python. Anda telah menyelesaikan <span className="text-white font-medium">{completedLessons.length}</span> dari <span className="text-white font-medium">{totalLessons}</span> pelajaran.</p>
+                <h2 className="text-3xl font-bold mb-4">{curriculum[0]?.title || 'Kursus Anda'}</h2>
+                <p className="text-zinc-400 mb-8 max-w-md">Kuasai materi yang telah disusun. Anda telah menyelesaikan <span className="text-white font-medium">{completedLessons.length}</span> dari <span className="text-white font-medium">{totalLessons}</span> pelajaran.</p>
                 
                 <div className="flex items-center gap-6">
                   <button className="bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95">
@@ -81,29 +102,43 @@ export const Dashboard: React.FC = () => {
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {curriculum.map((level, idx) => (
-                  <div 
-                    key={level.id} 
-                    onClick={() => {
-                      setCurrentLessonId(level.modules[0].lessons[0].id);
-                      setPage('lesson');
-                    }}
-                    className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-emerald-200 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-10 h-10 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
-                        {idx + 1}
+                {curriculum.map((level, idx) => {
+                  const totalInLevel = level.modules.reduce((acc, m) => acc + m.lessons.length, 0);
+                  const completedInLevel = level.modules.reduce((acc, m) => 
+                    acc + m.lessons.filter(l => completedLessons.includes(l.id)).length, 0
+                  );
+                  const levelProgress = Math.round((completedInLevel / totalInLevel) * 100);
+
+                  return (
+                    <div 
+                      key={level.id} 
+                      onClick={() => {
+                        setCurrentLessonId(level.modules[0].lessons[0].id);
+                        setPage('lesson');
+                      }}
+                      className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-emerald-200 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-10 h-10 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                          {idx + 1}
+                        </div>
+                        <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {idx + 1}</div>
                       </div>
-                      <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {idx + 1}</div>
+                      <h4 className="font-bold text-lg mb-1">{level.title}</h4>
+                      <p className="text-sm text-zinc-500 mb-4 line-clamp-2">{level.description}</p>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-zinc-400 font-medium">{level.modules.length} Modul</span>
+                          <span className="text-emerald-600 font-bold">{levelProgress}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${levelProgress}%` }} />
+                        </div>
+                      </div>
                     </div>
-                    <h4 className="font-bold text-lg mb-1">{level.title}</h4>
-                    <p className="text-sm text-zinc-500 mb-4 line-clamp-2">{level.description}</p>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-400 font-medium">{level.modules.length} Modul</span>
-                      <ChevronRight size={18} className="text-zinc-300 group-hover:text-emerald-500 transition-all group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

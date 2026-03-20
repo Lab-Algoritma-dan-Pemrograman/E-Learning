@@ -21,6 +21,8 @@ export const PyodideInitializer: React.FC = () => {
         script.onload = async () => {
           try {
             const py = await window.loadPyodide();
+            // Pre-load common libraries for data analysis and ML
+            await py.loadPackage(['numpy', 'pandas', 'matplotlib', 'scipy', 'scikit-learn']);
             setPyodide(py);
             setIsPyodideLoading(false);
           } catch (err) {
@@ -36,6 +38,8 @@ export const PyodideInitializer: React.FC = () => {
       } else {
         try {
           const py = await window.loadPyodide();
+          // Pre-load common libraries for data analysis and ML
+          await py.loadPackage(['numpy', 'pandas', 'matplotlib', 'scipy', 'scikit-learn']);
           setPyodide(py);
           setIsPyodideLoading(false);
         } catch (err) {

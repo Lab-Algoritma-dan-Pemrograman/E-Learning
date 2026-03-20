@@ -64,11 +64,25 @@ export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswer, on
           Periksa Jawaban
         </button>
       ) : (
-        <div className={cn(
-          "p-4 rounded-2xl text-center font-bold",
-          selected === correctAnswer ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-        )}>
-          {selected === correctAnswer ? "Benar! Bagus sekali." : "Kurang tepat. Coba tinjau kembali pelajarannya."}
+        <div className="space-y-4">
+          <div className={cn(
+            "p-4 rounded-2xl text-center font-bold",
+            selected === correctAnswer ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+          )}>
+            {selected === correctAnswer ? "Benar! Bagus sekali." : `Kurang tepat. Jawaban yang benar adalah: ${options[correctAnswer]}`}
+          </div>
+          
+          {selected !== correctAnswer && (
+            <button
+              onClick={() => {
+                setIsSubmitted(false);
+                setSelected(null);
+              }}
+              className="w-full py-3 bg-zinc-100 text-zinc-900 font-bold rounded-2xl hover:bg-zinc-200 transition-all active:scale-95"
+            >
+              Coba Lagi
+            </button>
+          )}
         </div>
       )}
     </div>
