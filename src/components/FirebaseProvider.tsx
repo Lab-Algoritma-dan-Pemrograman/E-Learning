@@ -41,63 +41,59 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let unsubProgress: (() => void) | undefined;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      
-      if (firebaseUser) {
-        setIsSyncing(true);
-        const userRef = doc(db, 'users', firebaseUser.uid);
-        
-        try {
-          // Check if user exists in Firestore
-          const userSnap = await getDoc(userRef);
-          
-          if (!userSnap.exists()) {
-            // Create new user profile
-            const newUser: UserProfile = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-              photoURL: firebaseUser.photoURL,
-              xp: 0,
-              level: 1,
-              streak: 0,
-              lastActive: new Date().toISOString(),
-              createdAt: new Date().toISOString(),
-            };
-            await setDoc(userRef, newUser);
-            setStoreUser(newUser);
-          } else {
-            // Sync with Firestore
-            setStoreUser(userSnap.data() as UserProfile);
-          }
-
-          // Listen for real-time updates
-          unsubProfile = onSnapshot(userRef, (doc) => {
-            if (doc.exists()) {
-              setStoreUser(doc.data() as UserProfile);
-            }
-          }, (error) => {
-            handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
-          });
-
-          // Sync progress
-          unsubProgress = syncProgress(firebaseUser.uid, setCompletedLessons);
-        } catch (error) {
-          console.error("Auth sync error:", error);
-          // Don't throw here, just log and let the user be null in store if it fails
-          setStoreUser(null);
-        } finally {
-          setIsSyncing(false);
-        }
-      } else {
+      // Don't immediately set user to null if we were previously syncing
+      // to avoid unnecessary unmounts of the app content
+      if (!firebaseUser) {
+        setUser(null);
         setStoreUser(null);
         setCompletedLessons([]);
         if (unsubProfile) unsubProfile();
         if (unsubProgress) unsubProgress();
         setIsSyncing(false);
+        setLoading(false);
+        return;
       }
+
+      setUser(firebaseUser);
+      setIsSyncing(true);
+      const userRef = doc(db, 'users', firebaseUser.uid);
       
-      setLoading(false);
+      try {
+        const userSnap = await getDoc(userRef);
+        
+        if (!userSnap.exists()) {
+          const newUser: UserProfile = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL,
+            xp: 0,
+            level: 1,
+            streak: 0,
+            lastActive: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+          };
+          await setDoc(userRef, newUser);
+          setStoreUser(newUser);
+        } else {
+          setStoreUser(userSnap.data() as UserProfile);
+        }
+
+        unsubProfile = onSnapshot(userRef, (doc) => {
+          if (doc.exists()) {
+            setStoreUser(doc.data() as UserProfile);
+          }
+        }, (error) => {
+          console.error("Profile sync error:", error);
+        });
+
+        unsubProgress = syncProgress(firebaseUser.uid, setCompletedLessons);
+      } catch (error) {
+        console.error("Auth sync error:", error);
+      } finally {
+        setIsSyncing(false);
+        setLoading(false);
+      }
     });
 
     return () => {
