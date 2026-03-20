@@ -6,15 +6,24 @@ import { useState } from 'react';
 
 export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleStart = async () => {
     if (isLoading) return;
     setIsLoading(true);
+    setError(null);
     try {
       await signInWithGoogle();
       onStart();
-    } catch (error) {
-      console.error('Failed to sign in:', error);
+    } catch (err: any) {
+      console.error('Failed to sign in:', err);
+      if (err.code === 'auth/popup-blocked') {
+        setError('Popup diblokir oleh browser. Silakan izinkan popup untuk situs ini.');
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError('Domain ini belum terdaftar di Firebase Authorized Domains.');
+      } else {
+        setError('Gagal masuk dengan Google. Silakan coba lagi atau buka di tab baru.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +69,18 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             Kuasai Python. <br />
             <span className="text-emerald-500">Bangun Masa Depan.</span>
           </h1>
+          
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-medium"
+            >
+              {error}
+              <p className="mt-1 text-[10px] opacity-70">Tips: Jika masalah berlanjut, coba buka aplikasi di tab baru.</p>
+            </motion.div>
+          )}
+
           <p className="text-xl text-zinc-500 max-w-lg leading-relaxed">
             Cara paling interaktif untuk belajar Python. Dari "Hello World" pertama Anda hingga Sains Data dan Pembelajaran Mesin tingkat lanjut.
           </p>
