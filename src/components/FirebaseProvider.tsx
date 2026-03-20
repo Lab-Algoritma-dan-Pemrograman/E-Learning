@@ -87,6 +87,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
         
         setStoreUser(profileData);
+        setIsSyncing(false);
+        setLoading(false);
 
         unsubProfile = onSnapshot(userRef, (doc) => {
           if (doc.exists()) {

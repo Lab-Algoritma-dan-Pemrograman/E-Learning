@@ -4,6 +4,9 @@ import { getFirestore } from 'firebase/firestore';
 import firebaseConfigJson from '../firebase-applet-config.json';
 
 // Support for environment variables (useful for Vercel/Production)
+// Priority: JSON Config (if valid) > Env Vars
+const isJsonConfigValid = firebaseConfigJson.apiKey && !firebaseConfigJson.apiKey.includes('MASUKKAN');
+
 const firebaseConfig = {
   apiKey: firebaseConfigJson.apiKey,
   authDomain: firebaseConfigJson.authDomain,
@@ -15,15 +18,17 @@ const firebaseConfig = {
   measurementId: (firebaseConfigJson as any).measurementId
 };
 
-// Override with env vars if present and not empty
-if (import.meta.env.VITE_FIREBASE_API_KEY) firebaseConfig.apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-if (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) firebaseConfig.authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
-if (import.meta.env.VITE_FIREBASE_PROJECT_ID) firebaseConfig.projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-if (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) firebaseConfig.storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
-if (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) firebaseConfig.messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID;
-if (import.meta.env.VITE_FIREBASE_APP_ID) firebaseConfig.appId = import.meta.env.VITE_FIREBASE_APP_ID;
-if (import.meta.env.VITE_FIREBASE_DATABASE_ID) firebaseConfig.firestoreDatabaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID;
-if (import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) firebaseConfig.measurementId = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID;
+// Only use env vars if JSON config is invalid/missing
+if (!isJsonConfigValid) {
+  if (import.meta.env.VITE_FIREBASE_API_KEY) firebaseConfig.apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+  if (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) firebaseConfig.authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
+  if (import.meta.env.VITE_FIREBASE_PROJECT_ID) firebaseConfig.projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+  if (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) firebaseConfig.storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
+  if (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) firebaseConfig.messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID;
+  if (import.meta.env.VITE_FIREBASE_APP_ID) firebaseConfig.appId = import.meta.env.VITE_FIREBASE_APP_ID;
+  if (import.meta.env.VITE_FIREBASE_DATABASE_ID) firebaseConfig.firestoreDatabaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID;
+  if (import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) firebaseConfig.measurementId = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID;
+}
 
 // Initialize Firebase SDK
 if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('MASUKKAN')) {
