@@ -1,12 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Level } from "../data/curriculum";
 
-const apiKey = process.env.GEMINI_API_KEY || '';
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
 
 export const aiCurriculumService = {
   async generateCurriculum(material: string, fileData?: string): Promise<Level[]> {
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not configured.');
+      throw new Error('GEMINI_API_KEY or VITE_GEMINI_API_KEY is not configured.');
     }
 
     const ai = new GoogleGenAI({ apiKey });

@@ -31,6 +31,12 @@ export const AdminDashboard: React.FC = () => {
   const [generatedCurriculum, setGeneratedCurriculum] = useState<Level[] | null>(null);
 
   const [currentCurriculum, setCurrentCurriculum] = useState<Level[]>([]);
+  const [showModal, setShowModal] = useState<{
+    type: 'confirm' | 'alert';
+    title: string;
+    message: string;
+    onConfirm?: () => void;
+  } | null>(null);
 
   const isAdmin = currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'a.faqodkurnia@gmail.com';
 
@@ -53,7 +59,11 @@ export const AdminDashboard: React.FC = () => {
     if (file && file.type === 'application/pdf') {
       setSelectedFile(file);
     } else if (file) {
-      alert('Mohon unggah file PDF.');
+      setShowModal({
+        type: 'alert',
+        title: 'File Tidak Valid',
+        message: 'Mohon unggah file PDF.'
+      });
     }
   };
 
@@ -78,7 +88,11 @@ export const AdminDashboard: React.FC = () => {
       const result = await aiCurriculumService.generateCurriculum(aiMaterial, fileData);
       setGeneratedCurriculum(result);
     } catch (error) {
-      alert('Gagal membuat kurikulum: ' + (error instanceof Error ? error.message : 'Error tidak diketahui'));
+      setShowModal({
+        type: 'alert',
+        title: 'Gagal',
+        message: 'Gagal membuat kurikulum: ' + (error instanceof Error ? error.message : 'Error tidak diketahui')
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -87,53 +101,60 @@ export const AdminDashboard: React.FC = () => {
   const handleSaveAiCurriculum = async () => {
     if (!generatedCurriculum) return;
     
-    const mode = window.confirm('Ganti kurikulum yang ada? (OK = Ganti Semua, Cancel = Tambahkan ke yang sudah ada)');
-    
-    try {
-      const { curriculumService } = await import('../services/curriculumService');
-      
-      if (mode) {
-        await curriculumService.clearCurriculum();
+    setShowModal({
+      type: 'confirm',
+      title: 'Simpan Kurikulum',
+      message: 'Ganti kurikulum yang ada? (Pilih "Ya" untuk Ganti Semua, "Tidak" untuk Tambahkan ke yang sudah ada)',
+      onConfirm: async () => {
+        try {
+          const { curriculumService } = await import('../services/curriculumService');
+          await curriculumService.clearCurriculum();
+          await curriculumService.saveFullCurriculum(generatedCurriculum);
+          setShowModal({ type: 'alert', title: 'Berhasil', message: 'Kurikulum berhasil disimpan!' });
+          setGeneratedCurriculum(null);
+          setAiMaterial('');
+          setSelectedFile(null);
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menyimpan kurikulum.' });
+        }
       }
-      
-      await curriculumService.saveFullCurriculum(generatedCurriculum);
-      alert('Kurikulum berhasil disimpan!');
-      setGeneratedCurriculum(null);
-      setAiMaterial('');
-      setSelectedFile(null);
-    } catch (error) {
-      alert('Gagal menyimpan kurikulum.');
-    }
+    });
   };
 
   const handleClearCurriculum = async () => {
-    if (!window.confirm('PERINGATAN: Ini akan menghapus SEMUA kurikulum yang ada di database. Lanjutkan?')) return;
-    
-    try {
-      const { curriculumService } = await import('../services/curriculumService');
-      await curriculumService.clearCurriculum();
-      alert('Kurikulum berhasil dikosongkan!');
-    } catch (error) {
-      alert('Gagal menghapus kurikulum.');
-    }
+    setShowModal({
+      type: 'confirm',
+      title: 'Hapus Kurikulum',
+      message: 'PERINGATAN: Ini akan menghapus SEMUA kurikulum yang ada di database. Lanjutkan?',
+      onConfirm: async () => {
+        try {
+          const { curriculumService } = await import('../services/curriculumService');
+          await curriculumService.clearCurriculum();
+          setShowModal({ type: 'alert', title: 'Berhasil', message: 'Kurikulum berhasil dikosongkan!' });
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menghapus kurikulum.' });
+        }
+      }
+    });
   };
 
   const handleResetCurriculum = async () => {
-    if (!window.confirm('Reset kurikulum ke pengaturan awal? Semua perubahan kustom akan hilang.')) return;
-    
-    try {
-      const { curriculumService } = await import('../services/curriculumService');
-      const { curriculum: staticCurriculum } = await import('../data/curriculum');
-      
-      // Clear first
-      await curriculumService.clearCurriculum();
-      
-      // Save static
-      await curriculumService.saveFullCurriculum(staticCurriculum);
-      alert('Kurikulum berhasil direset ke pengaturan awal!');
-    } catch (error) {
-      alert('Gagal mereset kurikulum.');
-    }
+    setShowModal({
+      type: 'confirm',
+      title: 'Reset Kurikulum',
+      message: 'Reset kurikulum ke pengaturan awal? Semua perubahan kustom akan hilang.',
+      onConfirm: async () => {
+        try {
+          const { curriculumService } = await import('../services/curriculumService');
+          const { curriculum: staticCurriculum } = await import('../data/curriculum');
+          await curriculumService.clearCurriculum();
+          await curriculumService.saveFullCurriculum(staticCurriculum);
+          setShowModal({ type: 'alert', title: 'Berhasil', message: 'Kurikulum berhasil direset ke pengaturan awal!' });
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mereset kurikulum.' });
+        }
+      }
+    });
   };
 
   useEffect(() => {
@@ -168,15 +189,20 @@ export const AdminDashboard: React.FC = () => {
 
   const handleToggleRole = async (targetUser: UserProfile) => {
     const newRole = targetUser.role === 'admin' ? 'user' : 'admin';
-    if (!window.confirm(`Ubah peran ${targetUser.displayName} menjadi ${newRole}?`)) return;
-
-    try {
-      await updateDoc(doc(db, 'users', targetUser.uid), {
-        role: newRole
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${targetUser.uid}`);
-    }
+    setShowModal({
+      type: 'confirm',
+      title: 'Ubah Peran',
+      message: `Ubah peran ${targetUser.displayName} menjadi ${newRole}?`,
+      onConfirm: async () => {
+        try {
+          await updateDoc(doc(db, 'users', targetUser.uid), {
+            role: newRole
+          });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.UPDATE, `users/${targetUser.uid}`);
+        }
+      }
+    });
   };
 
   const filteredUsers = users.filter(u => 
@@ -201,6 +227,53 @@ export const AdminDashboard: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-8">
+        {/* Modal */}
+        <AnimatePresence>
+          {showModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold">{showModal.title}</h3>
+                  <p className="text-zinc-500 leading-relaxed">{showModal.message}</p>
+                </div>
+                <div className="flex gap-3">
+                  {showModal.type === 'confirm' ? (
+                    <>
+                      <button 
+                        onClick={() => setShowModal(null)}
+                        className="flex-1 py-3 bg-zinc-100 text-zinc-600 font-bold rounded-xl hover:bg-zinc-200 transition-all"
+                      >
+                        Batal
+                      </button>
+                      <button 
+                        onClick={() => {
+                          showModal.onConfirm?.();
+                          setShowModal(null);
+                        }}
+                        className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all"
+                      >
+                        Ya, Lanjutkan
+                      </button>
+                    </>
+                  ) : (
+                    <button 
+                      onClick={() => setShowModal(null)}
+                      className="w-full py-3 bg-zinc-900 text-white font-bold rounded-xl hover:bg-zinc-800 transition-all"
+                    >
+                      Tutup
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>

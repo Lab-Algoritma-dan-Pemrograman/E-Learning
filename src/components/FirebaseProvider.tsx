@@ -24,10 +24,14 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setCompletedLessons = useProgress((state) => state.setCompletedLessons);
 
   useEffect(() => {
+    if (!user) {
+      setCurriculum([]);
+      return;
+    }
     // Subscribe to curriculum updates
     const unsubscribe = curriculumService.subscribeToCurriculum(setCurriculum);
     return () => unsubscribe();
-  }, [setCurriculum]);
+  }, [user, setCurriculum]);
 
   useEffect(() => {
     let unsubProfile: (() => void) | undefined;

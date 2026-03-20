@@ -4,7 +4,7 @@ import { CodeEditor } from '../components/CodeEditor';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { Quiz } from '../components/Quiz';
 import { usePyodide } from '../hooks/usePyodide';
-import { CheckCircle2, Lightbulb, ChevronRight, BookOpen, Menu } from 'lucide-react';
+import { CheckCircle2, Lightbulb, ChevronRight, BookOpen, Menu, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useStore } from '../store/useStore';
@@ -41,6 +41,7 @@ export const LessonPage: React.FC = () => {
   const [showHint, setShowHint] = useState(false);
   const [aiHint, setAiHint] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -133,13 +134,47 @@ export const LessonPage: React.FC = () => {
       setCurrentLessonId(nextId);
     } else {
       // Course completed!
-      alert("Selamat! Anda telah menyelesaikan semua pelajaran yang tersedia.");
+      setShowSuccessModal(true);
     }
   };
 
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-8">
+        {/* Success Modal */}
+        <AnimatePresence>
+          {showSuccessModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-[2.5rem] p-12 max-w-lg w-full shadow-2xl text-center space-y-8 relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500" />
+                <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <Trophy size={48} />
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-4xl font-black tracking-tight">Luar Biasa!</h3>
+                  <p className="text-zinc-500 text-lg leading-relaxed">
+                    Selamat! Anda telah menyelesaikan semua pelajaran yang tersedia di kurikulum ini. Anda telah mengambil langkah besar dalam menguasai Python!
+                  </p>
+                </div>
+                <button 
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    useStore.getState().setPage('dashboard');
+                  }}
+                  className="w-full py-5 bg-zinc-900 text-white font-bold rounded-2xl hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-900/10 active:scale-95"
+                >
+                  Kembali ke Dashboard
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Header with Selector */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

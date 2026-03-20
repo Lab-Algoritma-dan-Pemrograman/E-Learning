@@ -1,6 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+
+const ai = new GoogleGenAI({ apiKey });
 
 export const getCodeHint = async (
   lessonTitle: string,
@@ -9,6 +11,10 @@ export const getCodeHint = async (
   error: string,
   expectedOutput?: string
 ) => {
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY or VITE_GEMINI_API_KEY is not configured.");
+    return "Maaf, kunci API AI belum dikonfigurasi. Silakan hubungi admin.";
+  }
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
