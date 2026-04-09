@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { CodeEditor } from '../components/CodeEditor';
-import { usePyodide } from '../hooks/usePyodide';
+import { useCodeRunner, CodeLanguage } from '../hooks/useCodeRunner';
 import { Terminal, Trash2, Copy, Share2 } from 'lucide-react';
 
+const DEFAULT_CODE: Record<CodeLanguage, string> = {
+  python: '# Tulis kode Python Anda di sini\n\ndef sapa(nama):\n    return f"Halo, {nama}!"\n\nprint(sapa("Penjelajah Python"))',
+  c: '// Tulis kode C Anda di sini\n#include <stdio.h>\n\nint main() {\n    char nama[] = "Penjelajah C";\n    printf("Halo, %s!\\n", nama);\n    return 0;\n}',
+};
+
 export const Playground: React.FC = () => {
-  const [code, setCode] = useState('# Tulis kode Python Anda di sini\n\ndef sapa(nama):\n    return f"Halo, {nama}!"\n\nprint(sapa("Penjelajah Python"))');
+  const [language, setLanguage] = useState<CodeLanguage>('python');
+  const [code, setCode] = useState(DEFAULT_CODE.python);
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const { runCode, isLoading } = usePyodide();
+  const { runCode, isLoading } = useCodeRunner(language);
 
   const handleRun = async () => {
     const result = await runCode(code);
@@ -16,11 +22,17 @@ export const Playground: React.FC = () => {
     setError(result.error);
   };
 
+  const handleLanguageChange = (newLang: CodeLanguage) => {
+    setLanguage(newLang);
+    setCode(DEFAULT_CODE[newLang]);
+    setOutput('');
+    setError(null);
+  };
+
   const clearOutput = () => setOutput('');
   
   const copyCode = () => {
     navigator.clipboard.writeText(code);
-    // Add toast notification here
   };
 
   return (
@@ -28,10 +40,34 @@ export const Playground: React.FC = () => {
       <div className="flex flex-col gap-6 h-[calc(100vh-160px)]">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Playground Python</h1>
-            <p className="text-zinc-500">Bereksperimen dengan kode Python di lingkungan sandbox.</p>
+            <h1 className="text-3xl font-bold tracking-tight">Playground Kode</h1>
+            <p className="text-zinc-500">Bereksperimen dengan kode di lingkungan sandbox.</p>
           </div>
           <div className="flex items-center gap-2">
+            {/* Language Switcher */}
+            <div className="flex items-center bg-zinc-100 rounded-xl p-1">
+              <button
+                onClick={() => handleLanguageChange('python')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                  language === 'python' 
+                    ? 'bg-rose-700 text-white shadow-lg shadow-rose-700/20' 
+                    : 'text-zinc-500 hover:text-zinc-900'
+                }`}
+              >
+                Python
+              </button>
+              <button
+                onClick={() => handleLanguageChange('c')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                  language === 'c' 
+                    ? 'bg-rose-700 text-white shadow-lg shadow-rose-700/20' 
+                    : 'text-zinc-500 hover:text-zinc-900'
+                }`}
+              >
+                C
+              </button>
+            </div>
+            <div className="w-px h-8 bg-zinc-200" />
             <button 
               onClick={copyCode}
               className="p-2 hover:bg-zinc-100 rounded-lg text-zinc-500 transition-colors"
@@ -55,6 +91,7 @@ export const Playground: React.FC = () => {
               onChange={(val) => setCode(val || '')} 
               onRun={handleRun}
               isLoading={isLoading}
+              language={language}
             />
           </div>
 

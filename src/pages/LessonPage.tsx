@@ -3,7 +3,7 @@ import { Layout } from '../components/Layout';
 import { CodeEditor } from '../components/CodeEditor';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { Quiz } from '../components/Quiz';
-import { usePyodide } from '../hooks/usePyodide';
+
 import { CheckCircle2, Lightbulb, ChevronRight, BookOpen, Menu, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -12,6 +12,7 @@ import { useProgress } from '../store/useProgress';
 import { completeLesson as completeLessonService } from '../services/progressService';
 import { cn } from '../lib/utils';
 import { getCodeHint } from '../services/aiService';
+import { useCodeRunner, detectLanguage, CodeLanguage } from '../hooks/useCodeRunner';
 import { Sparkles, Loader2 } from 'lucide-react';
 
 export const LessonPage: React.FC = () => {
@@ -54,7 +55,12 @@ export const LessonPage: React.FC = () => {
     ? curriculum[currentLevelIdx]?.modules?.[currentModuleIdx]?.lessons?.[currentLessonIdx]
     : null;
   
-  const { runCode, isLoading, error: pyodideError } = usePyodide();
+  // Detect language from lesson content
+  const lessonLanguage: CodeLanguage = lesson 
+    ? detectLanguage(lesson.codeExample || lesson.initialCode || '') 
+    : 'python';
+  
+  const { runCode, isLoading, error: runnerError } = useCodeRunner(lessonLanguage);
 
   useEffect(() => {
     if (lesson) {
@@ -339,6 +345,7 @@ export const LessonPage: React.FC = () => {
                     }} 
                     onRun={handleRun}
                     isLoading={isLoading}
+                    language={lessonLanguage}
                   />
                 </div>
                 <div className="h-40 bg-zinc-900 rounded-2xl border border-zinc-800 p-4 font-mono text-sm flex flex-col">

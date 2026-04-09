@@ -1,14 +1,23 @@
 import React from 'react';
 import Editor from '@monaco-editor/react';
+import { CodeLanguage } from '../hooks/useCodeRunner';
 
 interface CodeEditorProps {
   code: string;
   onChange: (value: string | undefined) => void;
   onRun: () => void;
   isLoading?: boolean;
+  language?: CodeLanguage;
 }
 
-export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, isLoading }) => {
+const LANGUAGE_CONFIG: Record<CodeLanguage, { monacoLang: string; fileName: string }> = {
+  python: { monacoLang: 'python', fileName: 'main.py' },
+  c: { monacoLang: 'c', fileName: 'main.c' },
+};
+
+export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, isLoading, language = 'python' }) => {
+  const config = LANGUAGE_CONFIG[language] || LANGUAGE_CONFIG.python;
+
   return (
     <div className="flex flex-col h-full bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
       <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/50 border-b border-zinc-800">
@@ -16,7 +25,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
           <div className="w-3 h-3 rounded-full bg-red-500/80" />
           <div className="w-3 h-3 rounded-full bg-amber-500/80" />
           <div className="w-3 h-3 rounded-full bg-rose-700/80" />
-          <span className="ml-2 text-xs font-mono text-zinc-400">main.py</span>
+          <span className="ml-2 text-xs font-mono text-zinc-400">{config.fileName}</span>
+          <span className="text-[10px] font-bold text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded uppercase tracking-wider">
+            {language === 'c' ? 'C' : 'Python'}
+          </span>
         </div>
         <button
           onClick={onRun}
@@ -37,7 +49,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
       <div className="flex-1 min-h-[300px]">
         <Editor
           height="100%"
-          defaultLanguage="python"
+          language={config.monacoLang}
           theme="vs-dark"
           value={code}
           onChange={onChange}
