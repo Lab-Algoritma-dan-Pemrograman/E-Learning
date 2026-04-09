@@ -23,92 +23,80 @@ export function detectLanguage(code: string): CodeLanguage {
 }
 
 /**
- * Piston API language mapping
+ * Runs C code using Wandbox API (free, no auth, full GCC compiler).
+ * https://wandbox.org
  */
-const PISTON_LANGUAGES: Record<string, { language: string; version: string }> = {
-  c: { language: 'c', version: '10.2.0' },
-  python: { language: 'python', version: '3.10.0' },
-};
-
-/**
- * Runs code using the Piston API (free, no auth required).
- * Supports C, Python, and many other languages with full compiler/interpreter.
- * API docs: https://github.com/engineer-man/piston
- */
-async function runWithPiston(code: string, language: CodeLanguage, input?: string): Promise<{ output: string; error: string | null }> {
-  const langConfig = PISTON_LANGUAGES[language];
-  if (!langConfig) {
-    return { output: '', error: `Bahasa "${language}" tidak didukung.` };
-  }
-
+async function runCWithWandbox(code: string, input?: string): Promise<{ output: string; error: string | null }> {
   try {
-    const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+    const response = await fetch('https://wandbox.org/api/compile.json', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        language: langConfig.language,
-        version: langConfig.version,
-        files: [{ name: language === 'c' ? 'main.c' : 'main.py', content: code }],
+        code: code,
+        compiler: 'gcc-head',
+        options: '',
         stdin: input || '',
       }),
     });
 
     if (!response.ok) {
-      return { output: '', error: `Server error: ${response.status}. Coba lagi.` };
+      return { output: '', error: `Server error (${response.status}). Coba lagi dalam beberapa detik.` };
     }
 
     const result = await response.json();
-    
-    // Check compile errors (for C)
-    if (result.compile && result.compile.stderr) {
-      return { output: '', error: result.compile.stderr };
+
+    // Check compile errors
+    if (result.compiler_error) {
+      return { output: '', error: result.compiler_error };
     }
 
     // Check runtime errors
-    if (result.run?.stderr) {
-      return { output: result.run.stdout || '', error: result.run.stderr };
+    if (result.program_error) {
+      return { output: result.program_output || '', error: result.program_error };
     }
 
-    return { output: result.run?.stdout || '', error: null };
+    // Check status (non-zero = runtime error)
+    if (result.status !== 0 && result.status !== '0') {
+      const errorMsg = result.program_error || result.compiler_error || `Program exit dengan kode ${result.status}`;
+      return { output: result.program_output || '', error: errorMsg };
+    }
+
+    return { output: result.program_output || '', error: null };
   } catch (err: any) {
-    return { output: '', error: `Gagal terhubung ke server: ${err.message}. Periksa koneksi internet.` };
+    return { output: '', error: `Gagal terhubung ke compiler. Periksa koneksi internet: ${err.message}` };
   }
 }
 
 /**
- * Universal code runner hook that supports Python (Pyodide) and C (Piston API).
- * - Python: Uses Pyodide (in-browser, offline) as primary, Piston as fallback
- * - C: Always uses Piston API (full GCC compiler)
+ * Universal code runner hook.
+ * - Python: Pyodide (in-browser, offline)
+ * - C: Wandbox API (full GCC compiler, online)
  */
 export const useCodeRunner = (language: CodeLanguage = 'python') => {
   const { pyodide, isPyodideLoading } = useStore();
 
   const runCode = useCallback(async (code: string, input?: string): Promise<{ output: string; error: string | null }> => {
     if (language === 'c') {
-      // C always uses Piston API (full GCC compiler)
-      return runWithPiston(code, 'c', input);
+      return runCWithWandbox(code, input);
     }
 
-    // Python: try Pyodide first (faster, offline), fallback to Piston
-    if (pyodide) {
-      try {
-        await pyodide.runPythonAsync(`
+    // Python via Pyodide
+    if (!pyodide) return { output: '', error: 'Pyodide belum dimuat. Mohon tunggu...' };
+
+    try {
+      await pyodide.runPythonAsync(`
 import sys
 import io
 sys.stdout = io.StringIO()
-        `);
+      `);
 
-        await pyodide.runPythonAsync(code);
-        
-        const stdout = await pyodide.runPythonAsync('sys.stdout.getvalue()');
-        return { output: stdout, error: null };
-      } catch (err: any) {
-        return { output: '', error: err.message };
-      }
+      await pyodide.runPythonAsync(code);
+      
+      const stdout = await pyodide.runPythonAsync('sys.stdout.getvalue()');
+      return { output: stdout, error: null };
+    } catch (err: any) {
+      return { output: '', error: err.message };
     }
-
-    // Fallback: Piston API for Python too
-    return runWithPiston(code, 'python', input);
   }, [pyodide, language]);
 
   const isLoading = language === 'python' ? isPyodideLoading : false;
