@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
@@ -81,6 +81,14 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         let profileData: UserProfile;
         if (!userSnap.exists()) {
           console.log("Profile not found, creating new user profile...");
+          
+          // Check if this is the first user (empty database) → auto-assign admin
+          const usersSnapshot = await getDocs(collection(db, 'users'));
+          const isFirstUser = usersSnapshot.empty;
+          if (isFirstUser) {
+            console.log("🎉 First user detected! Assigning admin role.");
+          }
+
           profileData = {
             nim: payload.nim,
             nama: payload.nama,
@@ -91,7 +99,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             streak: 0,
             lastActive: new Date().toISOString(),
             createdAt: new Date().toISOString(),
-            role: 'user',
+            role: isFirstUser ? 'admin' : 'user',
           };
           await setDoc(userRef, profileData);
           console.log("New profile created successfully");
