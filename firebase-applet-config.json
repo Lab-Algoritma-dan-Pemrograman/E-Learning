@@ -1,10 +1,10 @@
 {
-  "projectId": "pylearn-a00da",
-  "appId": "1:526169969296:web:94d177d47b4924acb2be15",
-  "apiKey": "AIzaSyBt2trdcBN33qJ1qULHRoQQIULvLMsIn6I",
-  "authDomain": "pylearn-a00da.firebaseapp.com",
+  "projectId": "e-learning-491bc",
+  "appId": "1:58556953180:web:fd68f28776272ba8beac99",
+  "apiKey": "AIzaSyDex7JyRWH4-XabGwuPwOLfcPoXYqSLrEM",
+  "authDomain": "e-learning-491bc.firebaseapp.com",
   "firestoreDatabaseId": "(default)",
-  "storageBucket": "pylearn-a00da.firebasestorage.app",
-  "messagingSenderId": "526169969296",
-  "measurementId": "G-F5PQ0DK5RN"
+  "storageBucket": "e-learning-491bc.firebasestorage.app",
+  "messagingSenderId": "58556953180",
+  "measurementId": "G-TM3M9DFQ8P"
 }
