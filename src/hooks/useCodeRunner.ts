@@ -23,18 +23,35 @@ export function detectLanguage(code: string): CodeLanguage {
   return matchCount >= 2 ? 'c' : 'python';
 }
 
-let _jscpp: any = null;
+/**
+ * Load JSCPP from CDN (avoids ESM/CJS compatibility issues)
+ */
+let _jscppPromise: Promise<any> | null = null;
 
-async function getJSCPP() {
-  if (_jscpp) return _jscpp;
-  try {
-    const mod = await import('JSCPP');
-    _jscpp = mod.default || mod;
-    return _jscpp;
-  } catch (e) {
-    console.error('Failed to load JSCPP:', e);
-    return null;
-  }
+function loadJSCPP(): Promise<any> {
+  if ((window as any).JSCPP) return Promise.resolve((window as any).JSCPP);
+  
+  if (_jscppPromise) return _jscppPromise;
+
+  _jscppPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/JSCPP@2.0.3/dist/JSCPP.es5.min.js';
+    script.async = true;
+    script.onload = () => {
+      if ((window as any).JSCPP) {
+        resolve((window as any).JSCPP);
+      } else {
+        reject(new Error('JSCPP loaded but not available on window'));
+      }
+    };
+    script.onerror = () => {
+      _jscppPromise = null;
+      reject(new Error('Failed to load JSCPP from CDN'));
+    };
+    document.head.appendChild(script);
+  });
+
+  return _jscppPromise;
 }
 
 /**
@@ -42,10 +59,7 @@ async function getJSCPP() {
  */
 async function runCCode(code: string, input?: string): Promise<{ output: string; error: string | null }> {
   try {
-    const JSCPP = await getJSCPP();
-    if (!JSCPP) {
-      return { output: '', error: 'Gagal memuat interpreter C. Coba refresh halaman.' };
-    }
+    const JSCPP = await loadJSCPP();
 
     let outputBuffer = '';
     
@@ -68,8 +82,11 @@ async function runCCode(code: string, input?: string): Promise<{ output: string;
   } catch (err: any) {
     let errorMsg = err.message || String(err);
     
-    if (errorMsg.includes('line')) {
-      errorMsg = `Error: ${errorMsg}`;
+    // Make JSCPP errors more user-friendly
+    if (errorMsg.includes('Parsing Failure')) {
+      const lineMatch = errorMsg.match(/line (\d+)/);
+      const line = lineMatch ? lineMatch[1] : '?';
+      errorMsg = `Syntax Error di baris ${line}: Kode C tidak valid. Pastikan syntax C Anda benar.`;
     }
     
     return { output: '', error: errorMsg };
@@ -84,7 +101,6 @@ export const useCodeRunner = (language: CodeLanguage = 'python') => {
 
   const runCode = useCallback(async (code: string, input?: string): Promise<{ output: string; error: string | null }> => {
     if (language === 'c') {
-      // C runs synchronously via JSCPP - no loading needed
       return runCCode(code, input);
     }
 
@@ -107,7 +123,7 @@ sys.stdout = io.StringIO()
     }
   }, [pyodide, language]);
 
-  // For C, there's no loading time (JSCPP is bundled)
+  // For C, there's no loading time
   const isLoading = language === 'python' ? isPyodideLoading : false;
 
   return { runCode, isLoading, error: null, language };

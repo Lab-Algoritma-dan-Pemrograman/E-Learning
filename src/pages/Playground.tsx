@@ -6,7 +6,7 @@ import { Terminal, Trash2, Copy, Share2 } from 'lucide-react';
 
 const DEFAULT_CODE: Record<CodeLanguage, string> = {
   python: '# Tulis kode Python Anda di sini\n\ndef sapa(nama):\n    return f"Halo, {nama}!"\n\nprint(sapa("Penjelajah Python"))',
-  c: '// Tulis kode C Anda di sini\n#include <stdio.h>\n\nint main() {\n    char nama[] = "Penjelajah C";\n    printf("Halo, %s!\\n", nama);\n    return 0;\n}',
+  c: '#include <stdio.h>\n\nint main() {\n    int angka = 42;\n    printf("Halo dari bahasa C!\\n");\n    printf("Angka favorit saya: %d\\n", angka);\n    return 0;\n}',
 };
 
 export const Playground: React.FC = () => {
