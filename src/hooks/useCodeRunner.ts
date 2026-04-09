@@ -1,9 +1,6 @@
 import { useCallback } from 'react';
 import { useStore } from '../store/useStore';
 
-// @ts-ignore - JSCPP doesn't have type definitions
-import JSCPP from 'JSCPP';
-
 export type CodeLanguage = 'python' | 'c';
 
 /**
@@ -26,11 +23,30 @@ export function detectLanguage(code: string): CodeLanguage {
   return matchCount >= 2 ? 'c' : 'python';
 }
 
+let _jscpp: any = null;
+
+async function getJSCPP() {
+  if (_jscpp) return _jscpp;
+  try {
+    const mod = await import('JSCPP');
+    _jscpp = mod.default || mod;
+    return _jscpp;
+  } catch (e) {
+    console.error('Failed to load JSCPP:', e);
+    return null;
+  }
+}
+
 /**
  * Runs C code using JSCPP interpreter in the browser.
  */
-function runCCode(code: string, input?: string): { output: string; error: string | null } {
+async function runCCode(code: string, input?: string): Promise<{ output: string; error: string | null }> {
   try {
+    const JSCPP = await getJSCPP();
+    if (!JSCPP) {
+      return { output: '', error: 'Gagal memuat interpreter C. Coba refresh halaman.' };
+    }
+
     let outputBuffer = '';
     
     const config = {
@@ -50,10 +66,8 @@ function runCCode(code: string, input?: string): { output: string; error: string
     
     return { output: outputBuffer, error: null };
   } catch (err: any) {
-    // Parse JSCPP error messages to be more readable
     let errorMsg = err.message || String(err);
     
-    // Clean up common JSCPP error format
     if (errorMsg.includes('line')) {
       errorMsg = `Error: ${errorMsg}`;
     }
