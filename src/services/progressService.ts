@@ -2,10 +2,18 @@ import { doc, setDoc, updateDoc, increment, collection, onSnapshot, query, where
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile } from '../store/useStore';
 import { LessonProgress } from '../store/useProgress';
+import { reportProgressToSupabase, logLessonCompletion, getLevelInfoForLesson } from './centralApiService';
+import { Level } from '../data/curriculum';
 
-export const completeLesson = async (user: UserProfile, lessonId: string, xpReward: number) => {
-  const userRef = doc(db, 'users', user.uid);
-  const progressRef = doc(db, 'users', user.uid, 'progress', lessonId);
+export const completeLesson = async (
+  user: UserProfile,
+  lessonId: string,
+  xpReward: number,
+  curriculum: Level[] = [],
+  completedLessons: string[] = []
+) => {
+  const userRef = doc(db, 'users', user.nim);
+  const progressRef = doc(db, 'users', user.nim, 'progress', lessonId);
 
   try {
     // Update user XP and streak
@@ -27,20 +35,49 @@ export const completeLesson = async (user: UserProfile, lessonId: string, xpRewa
         lastActive: new Date().toISOString(),
       });
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, `users/${user.uid}`);
+      handleFirestoreError(e, OperationType.WRITE, `users/${user.nim}`);
       return;
     }
 
-    // Save lesson progress
+    // Save lesson progress to Firestore
     const progress: LessonProgress = {
-      userId: user.uid,
+      userId: user.nim,
       lessonId,
       completed: true,
       completedAt: new Date().toISOString(),
     };
     await setDoc(progressRef, progress);
+
+    // Report to Supabase central database
+    if (curriculum.length > 0) {
+      const levelInfo = getLevelInfoForLesson(lessonId, curriculum, completedLessons);
+
+      if (levelInfo) {
+        // Report level progress
+        await reportProgressToSupabase({
+          nim: user.nim,
+          levelId: levelInfo.levelId,
+          levelTitle: levelInfo.levelTitle,
+          lessonsCompleted: levelInfo.lessonsCompleted,
+          totalLessons: levelInfo.totalLessons,
+          isCompleted: levelInfo.isCompleted,
+        });
+
+        // Log individual lesson completion
+        await logLessonCompletion({
+          nim: user.nim,
+          levelId: levelInfo.levelId,
+          lessonId,
+          lessonTitle: levelInfo.lessonTitle,
+        });
+
+        if (levelInfo.isCompleted) {
+          console.log(`🎉 Level "${levelInfo.levelTitle}" completed by ${user.nim}!`);
+        }
+      }
+    }
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/progress/${lessonId}`);
+    handleFirestoreError(error, OperationType.WRITE, `users/${user.nim}/progress/${lessonId}`);
   }
 };
 
@@ -55,3 +92,4 @@ export const syncProgress = (userId: string, setCompletedLessons: (lessons: stri
     handleFirestoreError(error, OperationType.LIST, `users/${userId}/progress`);
   });
 };
+

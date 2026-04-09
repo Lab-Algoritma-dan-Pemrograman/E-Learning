@@ -8,7 +8,7 @@ import { logout } from '../firebase';
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isSidebarOpen, toggleSidebar, user, page, setPage } = useStore();
 
-  const isAdmin = user?.role === 'admin' || user?.email?.toLowerCase() === 'a.faqodkurnia@gmail.com';
+  const isAdmin = user?.role === 'admin';
 
   const handleLogout = async () => {
     try {
@@ -109,14 +109,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             className="flex items-center gap-4 cursor-pointer hover:bg-zinc-50 p-1 rounded-xl transition-colors"
           >
             <div className="text-right hidden sm:block">
-              <div className="text-sm font-semibold">{user?.displayName || 'User'}</div>
+              <div className="text-sm font-semibold">{user?.nama || 'User'}</div>
               <div className="text-xs text-zinc-500">Level {user?.level || 1} • {user?.xp || 0} XP</div>
             </div>
             {user?.photoURL ? (
               <img src={user.photoURL} alt="Profile" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
             ) : (
               <div className="w-10 h-10 rounded-full bg-zinc-200 border-2 border-white shadow-sm flex items-center justify-center font-bold text-zinc-500">
-                {(user?.displayName || 'U').charAt(0)}
+                {(user?.nama || 'U').charAt(0)}
               </div>
             )}
           </div>

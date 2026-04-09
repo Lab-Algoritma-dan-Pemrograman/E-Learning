@@ -2,10 +2,11 @@ import { create } from 'zustand';
 import { Level } from '../data/curriculum';
 
 export interface UserProfile {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
+  nim: string;
+  nama: string;
+  kelas: string;
+  email?: string | null;
+  photoURL?: string | null;
   xp: number;
   level: number;
   streak: number;

@@ -8,6 +8,7 @@ import { CheckCircle2, Lightbulb, ChevronRight, BookOpen, Menu, Trophy } from 'l
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useStore } from '../store/useStore';
+import { useProgress } from '../store/useProgress';
 import { completeLesson as completeLessonService } from '../services/progressService';
 import { cn } from '../lib/utils';
 import { getCodeHint } from '../services/aiService';
@@ -15,6 +16,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 
 export const LessonPage: React.FC = () => {
   const { user, currentLessonId, setCurrentLessonId, curriculum } = useStore();
+  const { completedLessons } = useProgress();
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
   const [currentModuleIdx, setCurrentModuleIdx] = useState(0);
   const [currentLessonIdx, setCurrentLessonIdx] = useState(0);
@@ -117,7 +119,7 @@ export const LessonPage: React.FC = () => {
 
   const nextLesson = async () => {
     if (user) {
-      await completeLessonService(user, lesson.id, 50);
+      await completeLessonService(user, lesson.id, 50, curriculum, completedLessons);
     }
     
     // Find next lesson

@@ -24,7 +24,7 @@ export const Leaderboard: React.FC = () => {
     fetchData();
   }, [user]);
 
-  const isUserInTop = leaders.some(l => l.uid === user?.uid);
+  const isUserInTop = leaders.some(l => l.nim === user?.nim);
 
   if (loading) {
     return (
@@ -69,10 +69,10 @@ export const Leaderboard: React.FC = () => {
           <div className="divide-y divide-zinc-100">
             {leaders.map((entry, idx) => (
               <div 
-                key={entry.uid} 
+                key={entry.nim} 
                 className={cn(
                   "grid grid-cols-12 px-6 py-4 items-center hover:bg-zinc-50 transition-colors group",
-                  user?.uid === entry.uid && "bg-emerald-50/50"
+                  user?.nim === entry.nim && "bg-emerald-50/50"
                 )}
               >
                 <div className="col-span-2 sm:col-span-1 flex items-center gap-2">
@@ -84,16 +84,16 @@ export const Leaderboard: React.FC = () => {
                 </div>
                 <div className="col-span-6 flex items-center gap-3">
                   {entry.photoURL ? (
-                    <img src={entry.photoURL} alt={entry.displayName || ''} className="w-10 h-10 rounded-full border border-zinc-200 object-cover" />
+                    <img src={entry.photoURL} alt={entry.nama || ''} className="w-10 h-10 rounded-full border border-zinc-200 object-cover" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center font-bold text-zinc-400">
-                      {(entry.displayName || 'U').charAt(0)}
+                      {(entry.nama || 'U').charAt(0)}
                     </div>
                   )}
                   <div className="flex flex-col">
                     <span className="font-bold text-zinc-900 truncate max-w-[150px] sm:max-w-none">
-                      {entry.displayName || 'Anonymous'}
-                      {user?.uid === entry.uid && <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Anda</span>}
+                      {entry.nama || 'Anonymous'}
+                      {user?.nim === entry.nim && <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Anda</span>}
                     </span>
                     <span className="text-[10px] text-zinc-400 sm:hidden uppercase font-bold tracking-wider">Level {entry.level || 1}</span>
                   </div>
@@ -122,15 +122,15 @@ export const Leaderboard: React.FC = () => {
                   </div>
                   <div className="col-span-6 flex items-center gap-3">
                     {user.photoURL ? (
-                      <img src={user.photoURL} alt={user.displayName || ''} className="w-10 h-10 rounded-full border border-emerald-200 object-cover" />
+                      <img src={user.photoURL} alt={user.nama || ''} className="w-10 h-10 rounded-full border border-emerald-200 object-cover" />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center font-bold text-emerald-600">
-                        {(user.displayName || 'U').charAt(0)}
+                        {(user.nama || 'U').charAt(0)}
                       </div>
                     )}
                     <div className="flex flex-col">
                       <span className="font-bold text-zinc-900">
-                        {user.displayName || 'Anonymous'}
+                        {user.nama || 'Anonymous'}
                         <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Anda</span>
                       </span>
                       <span className="text-[10px] text-zinc-400 sm:hidden uppercase font-bold tracking-wider">Level {user.level || 1}</span>
@@ -168,10 +168,10 @@ const PodiumItem: React.FC<{ entry: UserProfile; rank: number; height: string; c
   <div className="flex flex-col items-center gap-4 min-w-[120px]">
     <div className="relative">
       {entry.photoURL ? (
-        <img src={entry.photoURL} alt={entry.displayName || ''} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white shadow-xl object-cover" />
+        <img src={entry.photoURL} alt={entry.nama || ''} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white shadow-xl object-cover" />
       ) : (
         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-zinc-200 border-4 border-white shadow-xl flex items-center justify-center text-xl sm:text-2xl font-black text-zinc-400">
-          {(entry.displayName || 'U').charAt(0)}
+          {(entry.nama || 'U').charAt(0)}
         </div>
       )}
       <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-lg">
@@ -179,7 +179,7 @@ const PodiumItem: React.FC<{ entry: UserProfile; rank: number; height: string; c
       </div>
     </div>
     <div className="text-center">
-      <div className="font-bold text-sm sm:text-lg truncate max-w-[100px] sm:max-w-[140px]">{entry.displayName || 'Anonymous'}</div>
+      <div className="font-bold text-sm sm:text-lg truncate max-w-[100px] sm:max-w-[140px]">{entry.nama || 'Anonymous'}</div>
       <div className="text-xs sm:text-sm text-zinc-500">{(entry.xp || 0).toLocaleString()} XP</div>
     </div>
     <div className={cn("w-full rounded-t-3xl shadow-inner flex items-center justify-center", height, color)}>

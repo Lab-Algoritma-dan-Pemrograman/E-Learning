@@ -1,10 +1,10 @@
 {
   "projectId": "pylearn-a00da",
-  "appId": "1:526169969296:web:d79d50804360855fb2be15",
+  "appId": "1:526169969296:web:94d177d47b4924acb2be15",
   "apiKey": "AIzaSyBt2trdcBN33qJ1qULHRoQQIULvLMsIn6I",
   "authDomain": "pylearn-a00da.firebaseapp.com",
   "firestoreDatabaseId": "(default)",
   "storageBucket": "pylearn-a00da.firebasestorage.app",
   "messagingSenderId": "526169969296",
-  "measurementId": "G-YYCFWRH3GF"
+  "measurementId": "G-F5PQ0DK5RN"
 }

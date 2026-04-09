@@ -59,7 +59,7 @@ export const Dashboard: React.FC = () => {
     <Layout>
       <div className="space-y-8">
         {/* Setup Banner for Admin if DB is empty */}
-        {curriculum.length === 0 && user?.email?.toLowerCase() === 'a.faqodkurnia@gmail.com' && (
+        {curriculum.length === 0 && user?.role === 'admin' && (
           <div className="bg-amber-50 border-2 border-dashed border-amber-200 rounded-3xl p-8 text-center space-y-4">
             <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
               <Zap size={32} />
@@ -81,7 +81,7 @@ export const Dashboard: React.FC = () => {
         {/* Welcome Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Selamat datang kembali, {user?.displayName?.split(' ')[0] || 'Penjelajah'}! 👋</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Selamat datang kembali, {user?.nama?.split(' ')[0] || 'Penjelajah'}! 👋</h1>
             <p className="text-zinc-500 mt-1">Anda membuat kemajuan besar. Pertahankan!</p>
           </div>
           <div className="flex items-center gap-3 bg-white border border-zinc-200 p-2 rounded-2xl shadow-sm">

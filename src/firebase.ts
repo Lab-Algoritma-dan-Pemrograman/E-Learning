@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { clearToken } from './services/tokenService';
 import firebaseConfigJson from '../firebase-applet-config.json';
 
 // Support for environment variables (useful for Vercel/Production)
@@ -32,13 +32,11 @@ if (!isJsonConfigValid) {
 
 // Initialize Firebase SDK
 if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('MASUKKAN')) {
-  console.warn('Firebase API Key is missing or using placeholder. Authentication will not work.');
+  console.warn('Firebase API Key is missing or using placeholder. Firestore will not work.');
 }
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
 
 export enum OperationType {
   CREATE = 'create',
@@ -53,37 +51,11 @@ export interface FirestoreErrorInfo {
   error: string;
   operationType: OperationType;
   path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-    tenantId: string | null | undefined;
-    providerInfo: {
-      providerId: string;
-      displayName: string | null;
-      email: string | null;
-      photoUrl: string | null;
-    }[];
-  }
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
     operationType,
     path
   }
@@ -91,21 +63,12 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-export const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } catch (error) {
-    console.error('Error signing in with Google', error);
-    throw error;
-  }
+/**
+ * Logout: Clear the JWT token session.
+ * User will need to re-access from web utama to get a new token.
+ */
+export const logout = async () => {
+  clearToken();
+  window.location.reload();
 };
 
-export const logout = async () => {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    console.error('Error signing out', error);
-    throw error;
-  }
-};

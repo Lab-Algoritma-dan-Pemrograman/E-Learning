@@ -1,36 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit, Loader2 } from 'lucide-react';
-import { signInWithGoogle } from '../firebase';
-import { useState } from 'react';
+import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit, ExternalLink } from 'lucide-react';
+
+const WEB_UTAMA_URL = import.meta.env.VITE_WEB_UTAMA_URL || '#';
 
 export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleStart = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      await signInWithGoogle();
-      onStart();
-    } catch (err: any) {
-      console.error('Failed to sign in:', err);
-      const errorCode = err.code || 'unknown';
-      if (err.code === 'auth/popup-blocked') {
-        setError('Popup diblokir oleh browser. Silakan izinkan popup untuk situs ini.');
-      } else if (err.code === 'auth/unauthorized-domain') {
-        setError(`Domain ini belum terdaftar di Firebase. Daftarkan domain ini di Firebase Console: ${window.location.hostname}`);
-      } else if (err.code === 'auth/operation-not-allowed') {
-        setError('Metode login Google belum diaktifkan di Firebase Console. Silakan aktifkan di menu Authentication -> Sign-in method.');
-      } else {
-        setError(`Gagal masuk dengan Google (${errorCode}). Silakan coba lagi atau buka di tab baru.`);
-      }
-    } finally {
-      setIsLoading(false);
+  const handleGoToWebUtama = () => {
+    if (WEB_UTAMA_URL && WEB_UTAMA_URL !== '#') {
+      window.location.href = WEB_UTAMA_URL;
     }
   };
+
   return (
     <div className="min-h-screen bg-white text-zinc-900 font-sans selection:bg-emerald-100 selection:text-emerald-900">
       {/* Navbar */}
@@ -44,15 +25,13 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-zinc-500">
           <a href="#curriculum" className="hover:text-zinc-900 transition-colors">Kurikulum</a>
           <a href="#features" className="hover:text-zinc-900 transition-colors">Fitur</a>
-          <a href="#pricing" className="hover:text-zinc-900 transition-colors">Harga</a>
         </div>
         <button 
-          onClick={handleStart}
-          disabled={isLoading}
-          className="bg-zinc-900 text-white px-6 py-2.5 rounded-full font-bold hover:bg-zinc-800 transition-all active:scale-95 shadow-xl shadow-zinc-900/10 disabled:opacity-50 flex items-center gap-2"
+          onClick={handleGoToWebUtama}
+          className="bg-zinc-900 text-white px-6 py-2.5 rounded-full font-bold hover:bg-zinc-800 transition-all active:scale-95 shadow-xl shadow-zinc-900/10 flex items-center gap-2"
         >
-          {isLoading && <Loader2 size={16} className="animate-spin" />}
-          Mulai Sekarang
+          <ExternalLink size={16} />
+          Masuk via Web Utama
         </button>
       </nav>
 
@@ -72,33 +51,25 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             Kuasai Python. <br />
             <span className="text-emerald-500">Bangun Masa Depan.</span>
           </h1>
-          
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-medium"
-            >
-              {error}
-              <p className="mt-1 text-[10px] opacity-70">Tips: Jika masalah berlanjut, coba buka aplikasi di tab baru.</p>
-            </motion.div>
-          )}
+
+          {/* Access info card */}
+          <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl">
+            <p className="text-blue-800 text-sm font-medium leading-relaxed">
+              <strong>ℹ️ Cara Mengakses:</strong> Silakan login melalui <strong>Web Utama</strong> menggunakan NIM dan Password Anda. 
+              Setelah login, klik menu <strong>"E-Learning"</strong> untuk mulai belajar.
+            </p>
+          </div>
 
           <p className="text-xl text-zinc-500 max-w-lg leading-relaxed">
             Cara paling interaktif untuk belajar Python. Dari "Hello World" pertama Anda hingga Sains Data dan Pembelajaran Mesin tingkat lanjut.
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <button 
-              onClick={handleStart}
-              disabled={isLoading}
-              className="w-full sm:w-auto bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-emerald-400 transition-all shadow-2xl shadow-emerald-500/30 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+              onClick={handleGoToWebUtama}
+              className="w-full sm:w-auto bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-emerald-400 transition-all shadow-2xl shadow-emerald-500/30 active:scale-95 flex items-center justify-center gap-2"
             >
-              {isLoading ? <Loader2 size={22} className="animate-spin" /> : (
-                <>
-                  Mulai Belajar Gratis
-                  <ChevronRight size={22} />
-                </>
-              )}
+              Masuk via Web Utama
+              <ExternalLink size={22} />
             </button>
             <div className="flex items-center gap-2 text-zinc-400 font-medium">
               <div className="flex -space-x-2">
@@ -185,15 +156,14 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_70%)]" />
           <h2 className="text-4xl md:text-6xl font-black text-white relative z-10">Siap untuk memulai perjalanan Anda?</h2>
           <p className="text-zinc-400 text-xl max-w-xl mx-auto relative z-10">
-            Bergabunglah dengan ribuan siswa dan mulai bangun masa depan Anda hari ini. Tidak perlu kartu kredit.
+            Login melalui Web Utama dengan NIM dan Password Anda, lalu akses E-Learning untuk mulai belajar Python.
           </p>
           <button 
-            onClick={handleStart}
-            disabled={isLoading}
-            className="bg-white text-zinc-900 px-12 py-5 rounded-2xl font-black text-xl hover:bg-zinc-100 transition-all active:scale-95 relative z-10 shadow-2xl shadow-white/10 disabled:opacity-50 flex items-center gap-2 mx-auto"
+            onClick={handleGoToWebUtama}
+            className="bg-white text-zinc-900 px-12 py-5 rounded-2xl font-black text-xl hover:bg-zinc-100 transition-all active:scale-95 relative z-10 shadow-2xl shadow-white/10 flex items-center gap-2 mx-auto"
           >
-            {isLoading && <Loader2 size={22} className="animate-spin" />}
-            Gabung PyLearn Sekarang
+            <ExternalLink size={22} />
+            Masuk via Web Utama
           </button>
         </div>
       </section>
@@ -216,3 +186,4 @@ const CurriculumCard: React.FC<{ icon: React.ReactNode; title: string; desc: str
     <p className="text-zinc-500 leading-relaxed">{desc}</p>
   </div>
 );
+

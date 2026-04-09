@@ -38,7 +38,7 @@ export const AdminDashboard: React.FC = () => {
     onConfirm?: () => void;
   } | null>(null);
 
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'a.faqodkurnia@gmail.com';
+  const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -192,21 +192,21 @@ export const AdminDashboard: React.FC = () => {
     setShowModal({
       type: 'confirm',
       title: 'Ubah Peran',
-      message: `Ubah peran ${targetUser.displayName} menjadi ${newRole}?`,
+      message: `Ubah peran ${targetUser.nama} menjadi ${newRole}?`,
       onConfirm: async () => {
         try {
-          await updateDoc(doc(db, 'users', targetUser.uid), {
+          await updateDoc(doc(db, 'users', targetUser.nim), {
             role: newRole
           });
         } catch (error) {
-          handleFirestoreError(error, OperationType.UPDATE, `users/${targetUser.uid}`);
+          handleFirestoreError(error, OperationType.UPDATE, `users/${targetUser.nim}`);
         }
       }
     });
   };
 
   const filteredUsers = users.filter(u => 
-    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.nama?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -309,7 +309,7 @@ export const AdminDashboard: React.FC = () => {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
                 <input 
                   type="text" 
-                  placeholder="Cari nama atau email peserta..."
+                  placeholder="Cari nama atau NIM peserta..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-4 py-4 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
@@ -337,14 +337,14 @@ export const AdminDashboard: React.FC = () => {
                           <motion.tr 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            key={u.uid} 
+                            key={u.nim} 
                             className={cn(
                               "hover:bg-zinc-50/50 transition-colors group cursor-pointer",
-                              selectedUser?.uid === u.uid && "bg-emerald-50/30"
+                              selectedUser?.nim === u.nim && "bg-emerald-50/30"
                             )}
                             onClick={() => {
                               setSelectedUser(u);
-                              fetchUserProgress(u.uid);
+                              fetchUserProgress(u.nim);
                             }}
                           >
                             <td className="px-6 py-4">
@@ -353,11 +353,11 @@ export const AdminDashboard: React.FC = () => {
                                   <img src={u.photoURL} alt="" className="w-10 h-10 rounded-full border border-zinc-100" />
                                 ) : (
                                   <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center font-bold text-zinc-400">
-                                    {u.displayName?.charAt(0) || 'U'}
+                                    {u.nama?.charAt(0) || 'U'}
                                   </div>
                                 )}
                                 <div>
-                                  <div className="font-bold text-zinc-900">{u.displayName}</div>
+                                  <div className="font-bold text-zinc-900">{u.nama}</div>
                                   <div className="text-xs text-zinc-500">{u.email}</div>
                                 </div>
                               </div>
@@ -379,7 +379,7 @@ export const AdminDashboard: React.FC = () => {
                             <td className="px-6 py-4 text-right">
                               <ChevronRight size={20} className={cn(
                                 "transition-transform",
-                                selectedUser?.uid === u.uid ? "rotate-90 text-emerald-500" : "text-zinc-300"
+                                selectedUser?.nim === u.nim ? "rotate-90 text-emerald-500" : "text-zinc-300"
                               )} />
                             </td>
                           </motion.tr>
@@ -410,10 +410,10 @@ export const AdminDashboard: React.FC = () => {
                         <img src={selectedUser.photoURL} alt="" className="w-20 h-20 rounded-full border-4 border-zinc-50 mb-4" />
                       ) : (
                         <div className="w-20 h-20 rounded-full bg-zinc-100 flex items-center justify-center text-2xl font-bold text-zinc-400 mb-4">
-                          {selectedUser.displayName?.charAt(0)}
+                          {selectedUser.nama?.charAt(0)}
                         </div>
                       )}
-                      <h2 className="text-xl font-bold">{selectedUser.displayName}</h2>
+                      <h2 className="text-xl font-bold">{selectedUser.nama}</h2>
                       <p className="text-zinc-500 text-sm">{selectedUser.email}</p>
                     </div>
 

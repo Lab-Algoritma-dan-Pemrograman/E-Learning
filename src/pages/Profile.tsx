@@ -24,7 +24,7 @@ export const Profile: React.FC = () => {
               <img src={user.photoURL} alt="Profile" className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover" />
             ) : (
               <div className="w-32 h-32 rounded-full bg-zinc-100 border-4 border-white shadow-xl flex items-center justify-center text-4xl font-black text-zinc-300">
-                {(user?.displayName || 'U').charAt(0)}
+                {(user?.nama || 'U').charAt(0)}
               </div>
             )}
             <button className="absolute bottom-0 right-0 p-2 bg-emerald-500 text-white rounded-full shadow-lg hover:bg-emerald-400 transition-colors">
@@ -33,7 +33,7 @@ export const Profile: React.FC = () => {
           </div>
           
           <div className="flex-1 text-center md:text-left space-y-2">
-            <h1 className="text-3xl font-black tracking-tight">{user?.displayName || 'User'}</h1>
+            <h1 className="text-3xl font-black tracking-tight">{user?.nama || 'User'}</h1>
             <p className="text-zinc-500 font-medium">Penjelajah Python • Bergabung {joinedDate}</p>
             <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
               <Badge icon={<Zap size={14} />} label={`${user?.streak || 0} Hari Beruntun`} color="bg-amber-50 text-amber-700" />

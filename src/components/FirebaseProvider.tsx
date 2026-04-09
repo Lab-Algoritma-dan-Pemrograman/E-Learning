@@ -1,25 +1,25 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 import { syncProgress } from '../services/progressService';
 import { curriculumService } from '../services/curriculumService';
+import { initializeFromToken, TokenPayload } from '../services/tokenService';
 
 import { Loader2 } from 'lucide-react';
 
 interface FirebaseContextType {
-  user: User | null;
+  tokenPayload: TokenPayload | null;
   loading: boolean;
 }
 
-const FirebaseContext = createContext<FirebaseContextType>({ user: null, loading: true });
+const FirebaseContext = createContext<FirebaseContextType>({ tokenPayload: null, loading: true });
 
 export const useFirebase = () => useContext(FirebaseContext);
 
 export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [tokenPayload, setTokenPayload] = useState<TokenPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
   const setStoreUser = useStore((state) => state.setUser);
@@ -32,14 +32,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let unsubProgress: (() => void) | undefined;
     let unsubCurriculum: (() => void) | undefined;
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("Firebase initialized with project:", auth.app.options.projectId);
-      console.log("Auth State Changed:", firebaseUser?.email || "No user");
-      
-      // Cleanup previous subscriptions
-      if (unsubProfile) unsubProfile();
-      if (unsubProgress) unsubProgress();
-      if (unsubCurriculum) unsubCurriculum();
+    const initialize = async () => {
+      console.log("Initializing E-Learning session...");
 
       // Helper to handle curriculum loading
       const loadCurriculum = () => {
@@ -52,59 +46,73 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
       };
 
-      if (!firebaseUser) {
-        console.log("User logged out or not authenticated");
-        setUser(null);
+      // Try to get token from URL or sessionStorage
+      const payload = await initializeFromToken();
+
+      if (!payload) {
+        console.log("No valid token found. User must access from web utama.");
+        setTokenPayload(null);
         setStoreUser(null);
         setCompletedLessons([]);
-        
+
         await loadCurriculum();
-        
+
         setIsSyncing(false);
         setLoading(false);
         setSyncError(null);
         return;
       }
 
-      console.log("User authenticated:", firebaseUser.uid);
-      setUser(firebaseUser);
+      console.log("Token valid for:", payload.nim, payload.nama);
+      setTokenPayload(payload);
       setIsSyncing(true);
       setSyncError(null);
-      
+
       try {
         console.log("Loading curriculum...");
         await loadCurriculum();
 
-        const userRef = doc(db, 'users', firebaseUser.uid);
+        // Use NIM as the Firestore document ID
+        const userRef = doc(db, 'users', payload.nim);
         console.log("Fetching user profile from Firestore...");
-        
+
         const userSnap = await getDoc(userRef);
-        
+
         let profileData: UserProfile;
         if (!userSnap.exists()) {
           console.log("Profile not found, creating new user profile...");
           profileData = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
+            nim: payload.nim,
+            nama: payload.nama,
+            kelas: payload.kelas,
+            email: payload.email || null,
             xp: 0,
             level: 1,
             streak: 0,
             lastActive: new Date().toISOString(),
             createdAt: new Date().toISOString(),
-            role: firebaseUser.email?.toLowerCase() === 'a.faqodkurnia@gmail.com' ? 'admin' : 'user',
+            role: 'user',
           };
           await setDoc(userRef, profileData);
           console.log("New profile created successfully");
         } else {
           console.log("Profile found, loading data...");
           profileData = userSnap.data() as UserProfile;
+          // Update nama and kelas in case they changed in web utama
+          if (profileData.nama !== payload.nama || profileData.kelas !== payload.kelas) {
+            await setDoc(userRef, {
+              ...profileData,
+              nama: payload.nama,
+              kelas: payload.kelas,
+            });
+            profileData.nama = payload.nama;
+            profileData.kelas = payload.kelas;
+          }
         }
-        
-        console.log("Setting store user:", profileData.displayName);
+
+        console.log("Setting store user:", profileData.nama);
         setStoreUser(profileData);
-        
+
         console.log("Subscribing to real-time profile updates...");
         unsubProfile = onSnapshot(userRef, (doc) => {
           if (doc.exists()) {
@@ -113,12 +121,12 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
         }, (error) => {
           console.error("Profile sync real-time error:", error);
-          handleFirestoreError(error, OperationType.GET, 'users/' + firebaseUser.uid);
+          handleFirestoreError(error, OperationType.GET, 'users/' + payload.nim);
         });
 
         console.log("Subscribing to progress updates...");
-        unsubProgress = syncProgress(firebaseUser.uid, setCompletedLessons);
-        
+        unsubProgress = syncProgress(payload.nim, setCompletedLessons);
+
         console.log("Firebase sync complete");
       } catch (error: any) {
         console.error("Auth sync error detail:", error);
@@ -127,13 +135,15 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsSyncing(false);
         setLoading(false);
       }
-    });
+    };
+
+    initialize();
 
     // Fallback timeout to prevent infinite loading screen
     const loadingTimeout = setTimeout(() => {
       setLoading((currentLoading) => {
         if (currentLoading) {
-          console.warn("Firebase loading timeout reached. Forcing loading to false.");
+          console.warn("Loading timeout reached. Forcing loading to false.");
           return false;
         }
         return currentLoading;
@@ -143,7 +153,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return () => {
       if (loadingTimeout) clearTimeout(loadingTimeout);
-      unsubscribe();
       if (unsubProfile) unsubProfile();
       if (unsubProgress) unsubProgress();
       if (unsubCurriculum) unsubCurriculum();
@@ -176,8 +185,9 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }
 
   return (
-    <FirebaseContext.Provider value={{ user, loading }}>
+    <FirebaseContext.Provider value={{ tokenPayload, loading }}>
       {children}
     </FirebaseContext.Provider>
   );
 };
+
