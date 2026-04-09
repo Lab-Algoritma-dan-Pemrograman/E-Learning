@@ -12,29 +12,35 @@ export const aiCurriculumService = {
     const ai = new GoogleGenAI({ apiKey });
     const parts: any[] = [
       {
-        text: `Anda adalah seorang ahli pendidikan Python. Berdasarkan materi yang diberikan (Teks dan/atau PDF), susunlah kurikulum pembelajaran Python yang lengkap dan terstruktur.
+        text: `Anda adalah seorang ahli pendidikan dan perancang kurikulum profesional. Berdasarkan materi yang diberikan (Teks dan/atau file PDF), susunlah kurikulum pembelajaran yang SANGAT LENGKAP, MENDALAM, dan TERSTRUKTUR.
         
-        PENTING: Kurikulum ini HARUS didasarkan pada materi yang saya berikan. Jika materi tersebut spesifik (misalnya: Python untuk Akuntansi), maka kurikulumnya harus mencerminkan hal tersebut.
+        PENTING: 
+        - Kurikulum ini WAJIB didasarkan SEPENUHNYA pada isi materi/PDF yang diberikan.
+        - Baca dan analisis SELURUH isi PDF/materi secara mendalam sebelum menyusun kurikulum.
+        - Setiap topik, sub-topik, dan contoh dalam PDF HARUS tercakup dalam kurikulum.
+        - Jika materi bersifat spesifik (misalnya: Python untuk Akuntansi, Data Science, Web Development), maka seluruh kurikulum harus mencerminkan konteks tersebut.
         
         Materi Teks:
-        ${material || "Tidak ada materi teks tambahan."}
+        ${material || "Tidak ada materi teks tambahan. Fokus pada isi file PDF."}
         
-        Instruksi:
-        1. Buatlah minimal 3 Level baru yang mencakup seluruh materi yang diberikan.
-        2. Setiap Level harus memiliki minimal 2 Module.
-        3. Setiap Module harus memiliki minimal 2 Lesson.
+        Instruksi WAJIB:
+        1. Buatlah Level berdasarkan bab/bagian utama dalam materi PDF. Minimal 3 Level, maksimal disesuaikan dengan isi PDF.
+        2. Setiap Level WAJIB memiliki minimal 3-5 Module yang mencakup sub-topik dalam bab tersebut.
+        3. Setiap Level WAJIB memiliki MINIMAL 10 LESSON secara total (tersebar di module-modulenya).
         4. Setiap Lesson harus memiliki:
-           - Penjelasan (explanation) dalam format Markdown yang mendalam berdasarkan materi.
-           - Contoh kode (codeExample) yang relevan.
-           - Kode awal untuk latihan (initialCode) yang menantang.
-           - Solusi kode (solution) yang benar.
-           - Petunjuk (hint) yang membantu.
-           - Satu pertanyaan kuis pilihan ganda (quiz) untuk menguji pemahaman.
+           - Penjelasan (explanation) dalam format Markdown yang SANGAT MENDALAM dan DETAIL berdasarkan materi PDF. Minimal 3 paragraf penjelasan.
+           - Contoh kode (codeExample) yang relevan dan bisa dijalankan.
+           - Kode awal untuk latihan (initialCode) yang menantang siswa.
+           - Solusi kode (solution) yang benar dan lengkap.
+           - Petunjuk (hint) yang membantu tanpa memberikan jawaban langsung.
+           - Satu pertanyaan kuis pilihan ganda (quiz) untuk menguji pemahaman konsep dari materi.
            - Minimal satu test case untuk memvalidasi kode latihan (testCases).
         5. Gunakan Bahasa Indonesia yang profesional namun mudah dipahami.
         6. Pastikan ID unik untuk setiap level, module, dan lesson (misal: level-ai-1, module-ai-1, lesson-ai-1).
-        7. Output HARUS dalam format JSON sesuai dengan struktur data yang saya berikan.
-        8. JANGAN gunakan contoh soal atau materi standar jika materi yang saya berikan berbeda.`
+        7. Output HARUS dalam format JSON sesuai dengan struktur data yang diberikan.
+        8. JANGAN gunakan contoh soal atau materi generik. SEMUA konten harus berdasarkan isi PDF/materi yang diberikan.
+        9. Pastikan urutan lesson mengikuti alur logis dari materi PDF (dari dasar ke lanjutan).
+        10. Setiap lesson harus saling berkaitan dan membangun pemahaman secara bertahap.`
       }
     ];
 

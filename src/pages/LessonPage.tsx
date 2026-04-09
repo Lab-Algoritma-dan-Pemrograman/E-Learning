@@ -73,7 +73,7 @@ export const LessonPage: React.FC = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-rose-700" />
         </div>
       </Layout>
     );
@@ -97,7 +97,7 @@ export const LessonPage: React.FC = () => {
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#10b981', '#34d399', '#6ee7b7']
+        colors: ['#9f1239', '#e11d48', '#fb7185']
       });
     }
   };
@@ -156,8 +156,8 @@ export const LessonPage: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white rounded-[2.5rem] p-12 max-w-lg w-full shadow-2xl text-center space-y-8 relative overflow-hidden"
               >
-                <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500" />
-                <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <div className="absolute top-0 left-0 w-full h-2 bg-rose-700" />
+                <div className="w-24 h-24 bg-rose-100 text-rose-700 rounded-3xl flex items-center justify-center mx-auto mb-6">
                   <Trophy size={48} />
                 </div>
                 <div className="space-y-4">
@@ -183,7 +183,7 @@ export const LessonPage: React.FC = () => {
         {/* Header with Selector */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-rose-50 text-rose-700 rounded-xl flex items-center justify-center">
               <BookOpen size={20} />
             </div>
             <div>
@@ -220,7 +220,7 @@ export const LessonPage: React.FC = () => {
               className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start"
             >
               <div className="space-y-6">
-                <div className="flex items-center gap-2 text-sm font-bold text-emerald-600 bg-emerald-50 w-fit px-3 py-1 rounded-full">
+                <div className="flex items-center gap-2 text-sm font-bold text-rose-700 bg-rose-50 w-fit px-3 py-1 rounded-full">
                   <BookOpen size={16} />
                   Level {currentLevelIdx + 1} • Pelajaran {currentLessonIdx + 1}
                 </div>
@@ -277,7 +277,7 @@ export const LessonPage: React.FC = () => {
                   <div className="space-y-4 mb-4">
                     {lesson.testCases.map((tc, idx) => (
                       <div key={idx} className="flex items-start gap-3 text-zinc-600">
-                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-rose-700 shrink-0" />
                         <p>{tc.description}</p>
                       </div>
                     ))}
@@ -294,7 +294,7 @@ export const LessonPage: React.FC = () => {
                       <button 
                         onClick={handleAiHint}
                         disabled={isAiLoading}
-                        className="text-sm font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors bg-emerald-50 px-3 py-1.5 rounded-lg"
+                        className="text-sm font-bold text-rose-700 hover:text-rose-800 flex items-center gap-1 transition-colors bg-rose-50 px-3 py-1.5 rounded-lg"
                       >
                         {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                         Tanya AI
@@ -315,8 +315,8 @@ export const LessonPage: React.FC = () => {
                           </div>
                         )}
                         {aiHint && (
-                          <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">
-                            <div className="flex items-center gap-2 mb-2 font-bold text-emerald-700">
+                          <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-sm text-rose-800">
+                            <div className="flex items-center gap-2 mb-2 font-bold text-rose-700">
                               <Sparkles size={14} />
                               Analisis AI
                             </div>
@@ -349,7 +349,7 @@ export const LessonPage: React.FC = () => {
                         <button 
                           onClick={handleAiHint}
                           disabled={isAiLoading}
-                          className="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded hover:bg-emerald-400 transition-colors flex items-center gap-1"
+                          className="text-[10px] bg-rose-700 text-white px-2 py-0.5 rounded hover:bg-rose-600 transition-colors flex items-center gap-1"
                         >
                           {isAiLoading ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
                           Tanya AI
@@ -357,7 +357,7 @@ export const LessonPage: React.FC = () => {
                       )}
                     </div>
                     {isCorrect !== null && (
-                      <span className={isCorrect ? "text-emerald-400" : "text-red-400"}>
+                      <span className={isCorrect ? "text-rose-400" : "text-red-400"}>
                         {isCorrect ? "Berhasil!" : "Coba lagi"}
                       </span>
                     )}
@@ -369,7 +369,7 @@ export const LessonPage: React.FC = () => {
                 <button 
                   disabled={!isCorrect}
                   onClick={nextLesson}
-                  className="w-full py-4 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-400 disabled:opacity-50 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                  className="w-full py-4 bg-rose-700 text-white font-bold rounded-2xl hover:bg-rose-600 disabled:opacity-50 transition-all shadow-lg shadow-rose-700/20 active:scale-95"
                 >
                   Selesaikan Pelajaran
                 </button>
@@ -386,8 +386,8 @@ const StepIndicator: React.FC<{ active: boolean; completed: boolean; label: stri
   <div className="flex items-center gap-2">
     <div className={cn(
       "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all",
-      active ? "bg-emerald-500 text-white scale-110 shadow-lg shadow-emerald-500/20" : 
-      completed ? "bg-emerald-100 text-emerald-600" : "bg-zinc-100 text-zinc-400"
+      active ? "bg-rose-700 text-white scale-110 shadow-lg shadow-rose-700/20" : 
+      completed ? "bg-rose-100 text-rose-700" : "bg-zinc-100 text-zinc-400"
     )}>
       {completed ? <CheckCircle2 size={16} /> : label[0]}
     </div>

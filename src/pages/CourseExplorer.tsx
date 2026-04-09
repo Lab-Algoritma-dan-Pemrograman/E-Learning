@@ -97,7 +97,7 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; on
     onClick={onClick}
     className={cn(
       "bg-white border border-zinc-200 rounded-[2rem] p-8 transition-all group relative overflow-hidden",
-      locked ? "opacity-60 grayscale cursor-not-allowed" : "hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-500/5 cursor-pointer"
+      locked ? "opacity-60 grayscale cursor-not-allowed" : "hover:border-rose-200 hover:shadow-2xl hover:shadow-rose-700/5 cursor-pointer"
     )}
   >
     {locked && (
@@ -107,7 +107,7 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; on
     )}
     
     <div className="space-y-6">
-      <div className="w-12 h-12 bg-zinc-50 rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+      <div className="w-12 h-12 bg-zinc-50 rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-rose-50 group-hover:text-rose-700 transition-colors">
         <BookOpen size={24} />
       </div>
       
@@ -126,7 +126,7 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; on
           return (
             <div key={lesson.id} className="flex items-center justify-between text-sm text-zinc-500 group-hover:text-zinc-700 transition-colors">
               <div className="flex items-center gap-2 truncate">
-                {isCompleted ? <CheckCircle2 size={14} className="text-emerald-500" /> : <div className="w-3.5 h-3.5" />}
+                {isCompleted ? <CheckCircle2 size={14} className="text-rose-700" /> : <div className="w-3.5 h-3.5" />}
                 <span className="truncate">{lesson.title}</span>
               </div>
               <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -143,7 +143,7 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; on
       {!locked && (
         <div className="pt-4">
           <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
+            <div className="h-full bg-rose-700 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
           </div>
           <div className="mt-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest">{progress}% Selesai</div>
         </div>

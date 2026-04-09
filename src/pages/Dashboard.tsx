@@ -60,21 +60,21 @@ export const Dashboard: React.FC = () => {
       <div className="space-y-8">
         {/* Setup Banner for Admin if DB is empty */}
         {curriculum.length === 0 && user?.role === 'admin' && (
-          <div className="bg-amber-50 border-2 border-dashed border-amber-200 rounded-3xl p-8 text-center space-y-4">
-            <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
+          <div className="bg-rose-50 border-2 border-dashed border-rose-200 rounded-3xl p-8 text-center space-y-4">
+            <div className="w-16 h-16 bg-rose-100 text-rose-700 rounded-2xl flex items-center justify-center mx-auto">
               <Zap size={32} />
             </div>
             <div className="max-w-md mx-auto">
-              <h2 className="text-xl font-bold text-amber-900">Database Anda Masih Kosong</h2>
-              <p className="text-amber-700 text-sm mt-2">
-                Klik tombol di bawah untuk mengisi database Firestore Anda dengan kurikulum PyLearn standar secara otomatis.
+              <h2 className="text-xl font-bold text-rose-900">Database Anda Masih Kosong</h2>
+              <p className="text-rose-700 text-sm mt-2">
+                Klik tombol di bawah untuk mengisi database Firestore Anda dengan kurikulum E-Learning standar secara otomatis.
               </p>
             </div>
             <button 
               onClick={handleInitialize}
-              className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-amber-500/20 transition-all active:scale-95"
+              className="bg-rose-700 hover:bg-rose-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-rose-700/20 transition-all active:scale-95"
             >
-              Inisialisasi Database PyLearn
+              Inisialisasi Database E-Learning
             </button>
           </div>
         )}
@@ -87,7 +87,7 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-center gap-3 bg-white border border-zinc-200 p-2 rounded-2xl shadow-sm">
             <StatCard icon={<Zap className="text-amber-500" size={20} />} label="Beruntun" value={`${user?.streak || 0} hari`} />
             <div className="w-px h-8 bg-zinc-100" />
-            <StatCard icon={<Trophy className="text-emerald-500" size={20} />} label="XP" value={(user?.xp || 0).toLocaleString()} />
+            <StatCard icon={<Trophy className="text-rose-700" size={20} />} label="XP" value={(user?.xp || 0).toLocaleString()} />
           </div>
         </div>
 
@@ -100,15 +100,15 @@ export const Dashboard: React.FC = () => {
               onClick={handleContinue}
               className="bg-zinc-900 text-white rounded-3xl p-8 relative overflow-hidden group cursor-pointer"
             >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -mr-20 -mt-20 blur-3xl transition-all group-hover:bg-emerald-500/20" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-rose-700/10 rounded-full -mr-20 -mt-20 blur-3xl transition-all group-hover:bg-rose-700/20" />
               
               <div className="relative z-10">
-                <div className="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-2">Lanjutkan Belajar</div>
+                <div className="text-rose-400 text-sm font-bold uppercase tracking-widest mb-2">Lanjutkan Belajar</div>
                 <h2 className="text-3xl font-bold mb-4">{curriculum[0]?.title || 'Kursus Anda'}</h2>
                 <p className="text-zinc-400 mb-8 max-w-md">Kuasai materi yang telah disusun. Anda telah menyelesaikan <span className="text-white font-medium">{completedLessons.length}</span> dari <span className="text-white font-medium">{totalLessons}</span> pelajaran.</p>
                 
                 <div className="flex items-center gap-6">
-                  <button className="bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95">
+                  <button className="bg-rose-700 hover:bg-rose-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95">
                     <Play size={18} fill="currentColor" />
                     Lanjutkan Pelajaran
                   </button>
@@ -116,7 +116,7 @@ export const Dashboard: React.FC = () => {
                     <div className="text-xs text-zinc-500 font-bold uppercase">Kemajuan Keseluruhan</div>
                     <div className="flex items-center gap-3">
                       <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%` }} />
+                        <div className="h-full bg-rose-700 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%` }} />
                       </div>
                       <span className="text-sm font-bold">{progressPercentage}%</span>
                     </div>
@@ -128,7 +128,7 @@ export const Dashboard: React.FC = () => {
             {/* Course Curriculum Preview */}
             <div className="space-y-4">
               <h3 className="text-xl font-bold flex items-center gap-2">
-                <BookOpen size={20} className="text-emerald-500" />
+                <BookOpen size={20} className="text-rose-700" />
                 Kurikulum Anda
               </h3>
               
@@ -149,10 +149,10 @@ export const Dashboard: React.FC = () => {
                           setPage('lesson');
                         }
                       }}
-                      className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-emerald-200 transition-all cursor-pointer group"
+                      className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-rose-200 transition-all cursor-pointer group"
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                        <div className="w-10 h-10 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-400 group-hover:bg-rose-50 group-hover:text-rose-700 transition-colors">
                           {idx + 1}
                         </div>
                         <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {idx + 1}</div>
@@ -163,10 +163,10 @@ export const Dashboard: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-zinc-400 font-medium">{level.modules?.length || 0} Modul</span>
-                          <span className="text-emerald-600 font-bold">{levelProgress}%</span>
+                          <span className="text-rose-700 font-bold">{levelProgress}%</span>
                         </div>
                         <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${levelProgress}%` }} />
+                          <div className="h-full bg-rose-700 rounded-full transition-all duration-500" style={{ width: `${levelProgress}%` }} />
                         </div>
                       </div>
                     </div>
@@ -180,7 +180,7 @@ export const Dashboard: React.FC = () => {
           <div className="space-y-8">
             <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm">
               <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                <Clock size={20} className="text-emerald-500" />
+                <Clock size={20} className="text-rose-700" />
                 Aktivitas Terbaru
               </h3>
               <div className="space-y-6">
@@ -194,10 +194,10 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-emerald-600 rounded-3xl p-6 text-white relative overflow-hidden">
+            <div className="bg-rose-800 rounded-3xl p-6 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
               <h3 className="font-bold text-lg mb-2 relative z-10">Tips Pro! 💡</h3>
-              <p className="text-emerald-100 text-sm relative z-10 leading-relaxed">
+              <p className="text-rose-100 text-sm relative z-10 leading-relaxed">
                 Konsistensi adalah kunci. Cobalah untuk memprogram setidaknya 15 menit setiap hari untuk membangun memori otot.
               </p>
             </div>
@@ -220,11 +220,11 @@ const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string }
 
 const ActivityItem: React.FC<{ title: string; time: string; xp: number }> = ({ title, time, xp }) => (
   <div className="flex items-center gap-4">
-    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+    <div className="w-2 h-2 rounded-full bg-rose-700" />
     <div className="flex-1">
       <div className="text-sm font-bold">{title}</div>
       <div className="text-xs text-zinc-400">{time}</div>
     </div>
-    <div className="text-xs font-bold text-emerald-600">+{xp} XP</div>
+    <div className="text-xs font-bold text-rose-700">+{xp} XP</div>
   </div>
 );

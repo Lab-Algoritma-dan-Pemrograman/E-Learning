@@ -23,7 +23,7 @@ export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswer, on
   return (
     <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm space-y-8">
       <div className="space-y-2">
-        <div className="text-xs font-black text-emerald-600 uppercase tracking-widest">Kuis Singkat</div>
+        <div className="text-xs font-black text-rose-800 uppercase tracking-widest">Kuis Singkat</div>
         <h3 className="text-2xl font-bold text-zinc-900">{question}</h3>
       </div>
 
@@ -36,20 +36,20 @@ export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswer, on
             className={cn(
               "w-full p-4 rounded-2xl border-2 text-left transition-all flex items-center justify-between group",
               selected === idx 
-                ? "border-emerald-500 bg-emerald-50" 
+                ? "border-rose-700 bg-rose-50" 
                 : "border-zinc-100 hover:border-zinc-200 bg-zinc-50",
-              isSubmitted && idx === correctAnswer && "border-emerald-500 bg-emerald-50",
+              isSubmitted && idx === correctAnswer && "border-rose-700 bg-rose-50",
               isSubmitted && selected === idx && idx !== correctAnswer && "border-red-500 bg-red-50"
             )}
           >
             <span className={cn(
               "font-medium",
-              selected === idx ? "text-emerald-900" : "text-zinc-600"
+              selected === idx ? "text-rose-900" : "text-zinc-600"
             )}>
               {option}
             </span>
             
-            {isSubmitted && idx === correctAnswer && <CheckCircle2 className="text-emerald-500" size={20} />}
+            {isSubmitted && idx === correctAnswer && <CheckCircle2 className="text-rose-700" size={20} />}
             {isSubmitted && selected === idx && idx !== correctAnswer && <XCircle className="text-red-500" size={20} />}
           </button>
         ))}
@@ -67,7 +67,7 @@ export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswer, on
         <div className="space-y-4">
           <div className={cn(
             "p-4 rounded-2xl text-center font-bold",
-            selected === correctAnswer ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+            selected === correctAnswer ? "bg-rose-100 text-rose-900" : "bg-red-100 text-red-700"
           )}>
             {selected === correctAnswer ? "Benar! Bagus sekali." : `Kurang tepat. Jawaban yang benar adalah: ${options[correctAnswer]}`}
           </div>

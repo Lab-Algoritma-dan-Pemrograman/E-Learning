@@ -255,7 +255,7 @@ export const AdminDashboard: React.FC = () => {
                           showModal.onConfirm?.();
                           setShowModal(null);
                         }}
-                        className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all"
+                        className="flex-1 py-3 bg-rose-800 text-white font-bold rounded-xl hover:bg-rose-900 shadow-lg shadow-rose-700/20 transition-all"
                       >
                         Ya, Lanjutkan
                       </button>
@@ -312,7 +312,7 @@ export const AdminDashboard: React.FC = () => {
                   placeholder="Cari nama atau NIM peserta..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all shadow-sm"
                 />
               </div>
 
@@ -340,7 +340,7 @@ export const AdminDashboard: React.FC = () => {
                             key={u.nim} 
                             className={cn(
                               "hover:bg-zinc-50/50 transition-colors group cursor-pointer",
-                              selectedUser?.nim === u.nim && "bg-emerald-50/30"
+                              selectedUser?.nim === u.nim && "bg-rose-50/30"
                             )}
                             onClick={() => {
                               setSelectedUser(u);
@@ -363,7 +363,7 @@ export const AdminDashboard: React.FC = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <div className="flex items-center justify-center gap-1 font-bold text-emerald-600">
+                              <div className="flex items-center justify-center gap-1 font-bold text-rose-800">
                                 <Trophy size={14} />
                                 {u.xp.toLocaleString()}
                               </div>
@@ -379,7 +379,7 @@ export const AdminDashboard: React.FC = () => {
                             <td className="px-6 py-4 text-right">
                               <ChevronRight size={20} className={cn(
                                 "transition-transform",
-                                selectedUser?.nim === u.nim ? "rotate-90 text-emerald-500" : "text-zinc-300"
+                                selectedUser?.nim === u.nim ? "rotate-90 text-rose-700" : "text-zinc-300"
                               )} />
                             </td>
                           </motion.tr>
@@ -465,7 +465,7 @@ export const AdminDashboard: React.FC = () => {
                           userProgress.map((p) => (
                             <div key={p.lessonId} className="flex items-center justify-between p-3 bg-zinc-50 rounded-xl">
                               <div className="flex items-center gap-3">
-                                <CheckCircle2 size={16} className="text-emerald-500" />
+                                <CheckCircle2 size={16} className="text-rose-700" />
                                 <div className="text-sm font-medium truncate max-w-[120px]">{p.lessonId}</div>
                               </div>
                               <div className="text-[10px] text-zinc-400">
@@ -532,7 +532,7 @@ export const AdminDashboard: React.FC = () => {
 
             <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-rose-50 text-rose-800 rounded-2xl flex items-center justify-center">
                   <Zap size={24} />
                 </div>
                 <div>
@@ -565,7 +565,7 @@ export const AdminDashboard: React.FC = () => {
                     value={aiMaterial}
                     onChange={(e) => setAiMaterial(e.target.value)}
                     placeholder="Tempelkan materi pelajaran di sini (teks, outline, atau penjelasan detail)..."
-                    className="w-full h-48 p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none font-sans text-sm"
+                    className="w-full h-48 p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all resize-none font-sans text-sm"
                   />
                 </div>
 
@@ -581,12 +581,12 @@ export const AdminDashboard: React.FC = () => {
                     <div className={cn(
                       "w-full p-6 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 transition-all",
                       selectedFile 
-                        ? "border-emerald-500 bg-emerald-50/30" 
+                        ? "border-rose-700 bg-rose-50/30" 
                         : "border-zinc-200 bg-zinc-50 group-hover:border-zinc-300 group-hover:bg-zinc-100/50"
                     )}>
                       <div className={cn(
                         "w-10 h-10 rounded-xl flex items-center justify-center mb-1 shadow-sm",
-                        selectedFile ? "bg-emerald-500 text-white" : "bg-white text-zinc-400"
+                        selectedFile ? "bg-rose-700 text-white" : "bg-white text-zinc-400"
                       )}>
                         <Zap size={20} />
                       </div>
@@ -632,7 +632,7 @@ export const AdminDashboard: React.FC = () => {
                   <h3 className="text-lg font-bold">Hasil Generasi AI</h3>
                   <button 
                     onClick={handleSaveAiCurriculum}
-                    className="px-6 py-2 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all"
+                    className="px-6 py-2 bg-rose-800 text-white font-bold rounded-xl hover:bg-rose-900 shadow-lg shadow-rose-700/20 transition-all"
                   >
                     Simpan Kurikulum
                   </button>
@@ -641,7 +641,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {generatedCurriculum.map((level) => (
                     <div key={level.id} className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm">
-                      <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">{level.id}</div>
+                      <div className="text-xs font-bold text-rose-800 uppercase tracking-widest mb-1">{level.id}</div>
                       <h4 className="font-bold text-lg mb-2">{level.title}</h4>
                       <p className="text-zinc-500 text-sm mb-4">{level.description}</p>
                       <div className="space-y-2">

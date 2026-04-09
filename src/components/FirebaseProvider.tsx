@@ -187,12 +187,12 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   if (loading || isSyncing) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white">
-        <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-emerald-500/20 mb-6 animate-bounce">
-          <span className="text-2xl font-black">P</span>
+        <div className="w-16 h-16 bg-rose-700 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-rose-700/20 mb-6 animate-bounce">
+          <span className="text-2xl font-black">E</span>
         </div>
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-rose-700" />
         <p className="mt-4 text-zinc-500 font-medium animate-pulse">
-          {isSyncing ? "Menyiapkan profil Anda..." : "Memuat PyLearn..."}
+          {isSyncing ? "Menyiapkan profil Anda..." : "Memuat E-Learning..."}
         </p>
         {syncError && (
           <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl max-w-md text-center">

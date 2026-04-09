@@ -15,13 +15,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-red-500/80" />
           <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-          <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+          <div className="w-3 h-3 rounded-full bg-rose-700/80" />
           <span className="ml-2 text-xs font-mono text-zinc-400">main.py</span>
         </div>
         <button
           onClick={onRun}
           disabled={isLoading}
-          className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
+          className="px-4 py-1.5 bg-rose-700 hover:bg-rose-600 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-rose-700/20 active:scale-95"
         >
           {isLoading ? (
             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

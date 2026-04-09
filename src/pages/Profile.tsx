@@ -27,7 +27,7 @@ export const Profile: React.FC = () => {
                 {(user?.nama || 'U').charAt(0)}
               </div>
             )}
-            <button className="absolute bottom-0 right-0 p-2 bg-emerald-500 text-white rounded-full shadow-lg hover:bg-emerald-400 transition-colors">
+            <button className="absolute bottom-0 right-0 p-2 bg-rose-700 text-white rounded-full shadow-lg hover:bg-rose-600 transition-colors">
               <Edit2 size={16} />
             </button>
           </div>
@@ -37,7 +37,7 @@ export const Profile: React.FC = () => {
             <p className="text-zinc-500 font-medium">Penjelajah Python • Bergabung {joinedDate}</p>
             <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
               <Badge icon={<Zap size={14} />} label={`${user?.streak || 0} Hari Beruntun`} color="bg-amber-50 text-amber-700" />
-              <Badge icon={<Trophy size={14} />} label={`Level ${user?.level || 1}`} color="bg-emerald-50 text-emerald-700" />
+              <Badge icon={<Trophy size={14} />} label={`Level ${user?.level || 1}`} color="bg-rose-50 text-rose-700" />
               <Badge icon={<Star size={14} />} label={`${(user?.xp || 0).toLocaleString()} XP`} color="bg-blue-50 text-blue-700" />
             </div>
           </div>
@@ -51,7 +51,7 @@ export const Profile: React.FC = () => {
           {/* Achievements */}
           <div className="lg:col-span-2 space-y-6">
             <h3 className="text-xl font-black flex items-center gap-2">
-              <Award size={20} className="text-emerald-500" />
+              <Award size={20} className="text-rose-700" />
               Pencapaian
             </h3>
             
@@ -69,7 +69,7 @@ export const Profile: React.FC = () => {
           <div className="space-y-8">
             <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm">
               <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                <Clock size={20} className="text-emerald-500" />
+                <Clock size={20} className="text-rose-700" />
                 Statistik Belajar
               </h3>
               <div className="space-y-4">
@@ -88,7 +88,7 @@ export const Profile: React.FC = () => {
                   <span className="font-bold">{(user?.xp || 0) % 2000} / 2000 XP</span>
                 </div>
                 <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${xpProgress}%` }} />
+                  <div className="h-full bg-rose-700 rounded-full transition-all duration-500" style={{ width: `${xpProgress}%` }} />
                 </div>
                 <p className="text-xs text-zinc-500 leading-relaxed">
                   Selesaikan {Math.ceil((2000 - ((user?.xp || 0) % 2000)) / 50)} pelajaran lagi untuk mencapai Level {(user?.level || 1) + 1} dan membuka modul baru!

@@ -31,10 +31,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           >
             <div className="p-6 border-bottom border-zinc-100 flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-                <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
-                  P
+                <div className="w-8 h-8 bg-rose-700 rounded-lg flex items-center justify-center text-white">
+                  E
                 </div>
-                <span>PyLearn</span>
+                <span>E-Learning</span>
               </div>
               <button onClick={toggleSidebar} className="p-2 hover:bg-zinc-100 rounded-lg lg:hidden">
                 <X size={20} />
@@ -137,7 +137,7 @@ const SidebarItem: React.FC<{ icon: React.ReactNode; label: string; href: string
     className={cn(
       "flex items-center gap-3 p-3 rounded-xl transition-all duration-200",
       active 
-        ? "bg-emerald-50 text-emerald-700 font-semibold" 
+        ? "bg-rose-50 text-rose-700 font-semibold" 
         : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
     )}
   >

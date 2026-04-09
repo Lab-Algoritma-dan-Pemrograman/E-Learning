@@ -30,7 +30,7 @@ export const Leaderboard: React.FC = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-          <Loader2 className="animate-spin text-emerald-500" size={48} />
+          <Loader2 className="animate-spin text-rose-700" size={48} />
         </div>
       </Layout>
     );
@@ -50,7 +50,7 @@ export const Leaderboard: React.FC = () => {
             {leaders.length >= 2 && (
               <PodiumItem entry={leaders[1]} rank={2} height="h-40 sm:h-48" color="bg-zinc-100" medal={<Medal className="text-zinc-400" size={32} />} />
             )}
-            <PodiumItem entry={leaders[0]} rank={1} height="h-56 sm:h-64" color="bg-emerald-50" medal={<Trophy className="text-amber-500" size={48} />} />
+            <PodiumItem entry={leaders[0]} rank={1} height="h-56 sm:h-64" color="bg-rose-50" medal={<Trophy className="text-amber-500" size={48} />} />
             {leaders.length >= 3 && (
               <PodiumItem entry={leaders[2]} rank={3} height="h-32 sm:h-40" color="bg-orange-50" medal={<Medal className="text-orange-400" size={32} />} />
             )}
@@ -72,13 +72,13 @@ export const Leaderboard: React.FC = () => {
                 key={entry.nim} 
                 className={cn(
                   "grid grid-cols-12 px-6 py-4 items-center hover:bg-zinc-50 transition-colors group",
-                  user?.nim === entry.nim && "bg-emerald-50/50"
+                  user?.nim === entry.nim && "bg-rose-50/50"
                 )}
               >
                 <div className="col-span-2 sm:col-span-1 flex items-center gap-2">
                   <span className={cn(
                     "font-bold",
-                    idx < 3 ? "text-emerald-600" : "text-zinc-900"
+                    idx < 3 ? "text-rose-700" : "text-zinc-900"
                   )}>{idx + 1}</span>
                   <TrendIcon trend="stable" />
                 </div>
@@ -93,7 +93,7 @@ export const Leaderboard: React.FC = () => {
                   <div className="flex flex-col">
                     <span className="font-bold text-zinc-900 truncate max-w-[150px] sm:max-w-none">
                       {entry.nama || 'Anonymous'}
-                      {user?.nim === entry.nim && <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Anda</span>}
+                      {user?.nim === entry.nim && <span className="ml-2 text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Anda</span>}
                     </span>
                     <span className="text-[10px] text-zinc-400 sm:hidden uppercase font-bold tracking-wider">Level {entry.level || 1}</span>
                   </div>
@@ -101,7 +101,7 @@ export const Leaderboard: React.FC = () => {
                 <div className="col-span-2 text-center hidden sm:block">
                   <span className="px-2 py-1 bg-zinc-100 rounded-lg text-xs font-bold text-zinc-600">Lvl {entry.level || 1}</span>
                 </div>
-                <div className="col-span-4 sm:col-span-3 text-right font-bold text-emerald-600">
+                <div className="col-span-4 sm:col-span-3 text-right font-bold text-rose-700">
                   {(entry.xp || 0).toLocaleString()} XP
                 </div>
               </div>
@@ -115,31 +115,31 @@ export const Leaderboard: React.FC = () => {
                   <div className="h-1 w-1 rounded-full bg-zinc-300 mx-1" />
                   <div className="h-1 w-1 rounded-full bg-zinc-300 mx-1" />
                 </div>
-                <div className="grid grid-cols-12 px-6 py-4 items-center bg-emerald-50/50">
+                <div className="grid grid-cols-12 px-6 py-4 items-center bg-rose-50/50">
                   <div className="col-span-2 sm:col-span-1 flex items-center gap-2">
                     <span className="font-bold text-zinc-900">{userRank}</span>
                     <TrendIcon trend="stable" />
                   </div>
                   <div className="col-span-6 flex items-center gap-3">
                     {user.photoURL ? (
-                      <img src={user.photoURL} alt={user.nama || ''} className="w-10 h-10 rounded-full border border-emerald-200 object-cover" />
+                      <img src={user.photoURL} alt={user.nama || ''} className="w-10 h-10 rounded-full border border-rose-200 object-cover" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center font-bold text-emerald-600">
+                      <div className="w-10 h-10 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center font-bold text-rose-700">
                         {(user.nama || 'U').charAt(0)}
                       </div>
                     )}
                     <div className="flex flex-col">
                       <span className="font-bold text-zinc-900">
                         {user.nama || 'Anonymous'}
-                        <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Anda</span>
+                        <span className="ml-2 text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Anda</span>
                       </span>
                       <span className="text-[10px] text-zinc-400 sm:hidden uppercase font-bold tracking-wider">Level {user.level || 1}</span>
                     </div>
                   </div>
                   <div className="col-span-2 text-center hidden sm:block">
-                    <span className="px-2 py-1 bg-emerald-100 rounded-lg text-xs font-bold text-emerald-700">Lvl {user.level || 1}</span>
+                    <span className="px-2 py-1 bg-rose-100 rounded-lg text-xs font-bold text-rose-700">Lvl {user.level || 1}</span>
                   </div>
-                  <div className="col-span-4 sm:col-span-3 text-right font-bold text-emerald-600">
+                  <div className="col-span-4 sm:col-span-3 text-right font-bold text-rose-700">
                     {(user.xp || 0).toLocaleString()} XP
                   </div>
                 </div>
@@ -189,7 +189,7 @@ const PodiumItem: React.FC<{ entry: UserProfile; rank: number; height: string; c
 );
 
 const TrendIcon: React.FC<{ trend: 'up' | 'down' | 'stable' }> = ({ trend }) => {
-  if (trend === 'up') return <ArrowUp size={14} className="text-emerald-500" />;
+  if (trend === 'up') return <ArrowUp size={14} className="text-rose-700" />;
   if (trend === 'down') return <ArrowDown size={14} className="text-red-500" />;
   return <Minus size={14} className="text-zinc-300" />;
 };
