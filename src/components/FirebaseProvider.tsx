@@ -139,6 +139,23 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch (error: any) {
         console.error("Auth sync error detail:", error);
         setSyncError(error.message || "Gagal memuat profil. Pastikan Firestore sudah aktif.");
+        
+        // FALLBACK: Still set user from token so they can access the app
+        // even if Firestore is not yet configured (e.g. new project, rules not set)
+        const fallbackProfile: UserProfile = {
+          nim: payload.nim,
+          nama: payload.nama,
+          kelas: payload.kelas,
+          email: payload.email || null,
+          xp: 0,
+          level: 1,
+          streak: 0,
+          lastActive: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          role: 'admin', // Give admin role on fallback so they can initialize DB
+        };
+        console.log("Using fallback profile from token:", fallbackProfile.nama);
+        setStoreUser(fallbackProfile);
       } finally {
         setIsSyncing(false);
         setLoading(false);
