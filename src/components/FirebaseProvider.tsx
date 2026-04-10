@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { doc, getDoc, setDoc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
-import { syncProgress } from '../services/progressService';
+import { syncProgress, syncExistingProgressToSupabase } from '../services/progressService';
 import { curriculumService } from '../services/curriculumService';
 import { initializeFromToken, TokenPayload } from '../services/tokenService';
 
@@ -26,6 +26,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setCurriculum = useStore((state) => state.setCurriculum);
   const setCompletedLessons = useProgress((state) => state.setCompletedLessons);
   const [isSyncing, setIsSyncing] = useState(false);
+  const hasSyncedToSupabase = useRef(false);
 
   useEffect(() => {
     let unsubProfile: (() => void) | undefined;
@@ -183,6 +184,23 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (unsubCurriculum) unsubCurriculum();
     };
   }, [setStoreUser, setCompletedLessons]);
+
+  // ===== Auto-sync existing progress to Supabase on load =====
+  const user = useStore((state) => state.user);
+  const curriculum = useStore((state) => state.curriculum);
+  const completedLessons = useProgress((state) => state.completedLessons);
+
+  useEffect(() => {
+    if (
+      !hasSyncedToSupabase.current &&
+      user &&
+      curriculum.length > 0 &&
+      completedLessons.length > 0
+    ) {
+      hasSyncedToSupabase.current = true;
+      syncExistingProgressToSupabase(user, curriculum, completedLessons);
+    }
+  }, [user, curriculum, completedLessons]);
 
   if (loading || isSyncing) {
     return (

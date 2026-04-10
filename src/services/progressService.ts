@@ -89,6 +89,37 @@ export const syncProgress = (userId: string, setCompletedLessons: (lessons: stri
   });
 };
 
+/**
+ * Sync existing Firestore progress to Supabase.
+ * Call this on app load to ensure Supabase has up-to-date data
+ * even if lessons were completed before the sync code was added.
+ */
+export const syncExistingProgressToSupabase = async (
+  user: UserProfile,
+  curriculum: Level[],
+  completedLessons: string[]
+): Promise<void> => {
+  if (!user.nim || curriculum.length === 0 || completedLessons.length === 0) return;
+
+  try {
+    const overall = getOverallProgress('', curriculum, completedLessons);
+
+    await reportProgressToSupabase({
+      nim: user.nim,
+      studentName: user.nama || '',
+      completedLessons: overall.completedCount,
+      totalLessons: overall.totalCount,
+      isCompleted: overall.isAllCompleted,
+      completedLevels: overall.completedLevels,
+      currentLevel: overall.currentLevel,
+    });
+
+    console.log('🔄 Existing progress synced to Supabase');
+  } catch (error) {
+    console.error('Error syncing existing progress:', error);
+  }
+};
+
 // ===== ADMIN FUNCTIONS =====
 
 /**
