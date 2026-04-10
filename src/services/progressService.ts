@@ -2,7 +2,7 @@ import { doc, setDoc, updateDoc, increment, collection, onSnapshot, query, where
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile } from '../store/useStore';
 import { LessonProgress } from '../store/useProgress';
-import { reportProgressToSupabase, logLessonCompletion, getLevelInfoForLesson, resetSupabaseProgress, resetSupabaseLevelProgress } from './centralApiService';
+import { reportProgressToSupabase, getLevelInfoForLesson, resetSupabaseProgress, resetSupabaseLevelProgress } from './centralApiService';
 import { Level } from '../data/curriculum';
 
 export const completeLesson = async (
@@ -67,14 +67,6 @@ export const completeLesson = async (
           lessonsCompleted: levelInfo.lessonsCompleted,
           totalLessons: levelInfo.totalLessons,
           isCompleted: levelInfo.isCompleted,
-        });
-
-        // Log individual lesson completion
-        await logLessonCompletion({
-          nim: user.nim,
-          levelId: levelInfo.levelId,
-          lessonId,
-          lessonTitle: levelInfo.lessonTitle,
         });
 
         if (levelInfo.isCompleted) {

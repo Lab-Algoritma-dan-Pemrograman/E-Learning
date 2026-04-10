@@ -10,14 +10,6 @@ export interface LevelProgressPayload {
   isCompleted: boolean;
 }
 
-export interface LessonLogPayload {
-  nim: string;
-  levelId: string;
-  lessonId: string;
-  lessonTitle: string;
-  score?: number;
-}
-
 /**
  * Report level progress to Supabase central database.
  * Called every time a lesson is completed, to keep the progress up-to-date.
@@ -47,33 +39,6 @@ export async function reportProgressToSupabase(payload: LevelProgressPayload): P
     }
   } catch (error) {
     console.error('Error reporting progress to Supabase:', error);
-  }
-}
-
-/**
- * Log individual lesson completion to Supabase.
- * This is optional detailed tracking for analytics.
- */
-export async function logLessonCompletion(payload: LessonLogPayload): Promise<void> {
-  try {
-    const { error } = await supabase
-      .from('elearning_lesson_log')
-      .upsert({
-        nim: payload.nim,
-        level_id: payload.levelId,
-        lesson_id: payload.lessonId,
-        lesson_title: payload.lessonTitle,
-        score: payload.score ?? null,
-        completed_at: new Date().toISOString(),
-      }, {
-        onConflict: 'nim,lesson_id',
-      });
-
-    if (error) {
-      console.error('Failed to log lesson completion:', error);
-    }
-  } catch (error) {
-    console.error('Error logging lesson completion:', error);
   }
 }
 
@@ -132,12 +97,11 @@ export function getLevelInfoForLesson(
 
 /**
  * Reset ALL Supabase progress for a user.
- * Deletes all rows in elearning_progress and elearning_lesson_log.
+ * Deletes all rows in elearning_progress.
  */
 export async function resetSupabaseProgress(nim: string): Promise<void> {
   try {
     await supabase.from('elearning_progress').delete().eq('nim', nim);
-    await supabase.from('elearning_lesson_log').delete().eq('nim', nim);
     console.log(`✅ Supabase progress reset for ${nim}`);
   } catch (error) {
     console.error('Error resetting Supabase progress:', error);
@@ -150,7 +114,6 @@ export async function resetSupabaseProgress(nim: string): Promise<void> {
 export async function resetSupabaseLevelProgress(nim: string, levelId: string): Promise<void> {
   try {
     await supabase.from('elearning_progress').delete().eq('nim', nim).eq('level_id', levelId);
-    await supabase.from('elearning_lesson_log').delete().eq('nim', nim).eq('level_id', levelId);
     console.log(`✅ Supabase level progress reset: ${nim} - ${levelId}`);
   } catch (error) {
     console.error('Error resetting Supabase level progress:', error);
