@@ -1,5 +1,5 @@
-import React from 'react';
-import Editor from '@monaco-editor/react';
+import React, { useRef, useEffect } from 'react';
+import Editor, { OnMount } from '@monaco-editor/react';
 import { CodeLanguage } from '../hooks/useCodeRunner';
 
 interface CodeEditorProps {
@@ -17,6 +17,27 @@ const LANGUAGE_CONFIG: Record<CodeLanguage, { monacoLang: string; fileName: stri
 
 export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, isLoading, language = 'python' }) => {
   const config = LANGUAGE_CONFIG[language] || LANGUAGE_CONFIG.python;
+  const onRunRef = useRef(onRun);
+
+  // Keep ref updated so the Monaco action always calls the latest onRun
+  useEffect(() => {
+    onRunRef.current = onRun;
+  }, [onRun]);
+
+  const handleEditorMount: OnMount = (editor) => {
+    // Register Ctrl+Enter / Cmd+Enter shortcut to run code
+    editor.addAction({
+      id: 'run-code',
+      label: 'Jalankan Kode',
+      keybindings: [
+        // Ctrl+Enter (Windows/Linux)
+        2048 | 3, // KeyMod.CtrlCmd | KeyCode.Enter
+      ],
+      run: () => {
+        onRunRef.current();
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col h-full bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
@@ -43,6 +64,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
             </svg>
           )}
           Jalankan
+          <span className="hidden sm:inline text-[10px] font-normal text-white/50 ml-1">Ctrl+Enter</span>
         </button>
       </div>
       
@@ -53,6 +75,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
           theme="vs-dark"
           value={code}
           onChange={onChange}
+          onMount={handleEditorMount}
           options={{
             minimap: { enabled: false },
             fontSize: 14,

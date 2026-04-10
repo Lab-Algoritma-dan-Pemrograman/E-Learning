@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout } from '../components/Layout';
-import { BookOpen, ChevronRight, Lock, CheckCircle2 } from 'lucide-react';
+import { BookOpen, ChevronRight, Lock, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
@@ -11,6 +11,11 @@ export const CourseExplorer: React.FC = () => {
 
   const isModuleLocked = (levelIdx: number, moduleIdx: number) => {
     if (curriculum.length === 0) return true;
+
+    // Check if the level itself is locked by admin
+    const level = curriculum[levelIdx];
+    if (level?.locked) return true;
+
     if (levelIdx === 0 && moduleIdx === 0) return false;
     
     // Get previous module
@@ -41,9 +46,28 @@ export const CourseExplorer: React.FC = () => {
     return Math.round((completedInModule / module.lessons.length) * 100);
   };
 
+  // Find the first uncompleted lesson in a module (resume feature)
+  const getResumeLessonId = (module: any): string | null => {
+    if (!module?.lessons?.length) return null;
+    // Find first uncompleted lesson
+    const firstUncompleted = module.lessons.find((l: any) => !completedLessons.includes(l.id));
+    if (firstUncompleted) return firstUncompleted.id;
+    // All completed: return last lesson (so they can review)
+    return module.lessons[module.lessons.length - 1].id;
+  };
+
   return (
     <Layout>
       <div className="space-y-12">
+        {/* Back Button */}
+        <button
+          onClick={() => setPage('dashboard')}
+          className="flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors group"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          Kembali ke Dashboard
+        </button>
+
         <div className="max-w-3xl">
           <h1 className="text-4xl font-black tracking-tight mb-4">Kurikulum Kursus</h1>
           <p className="text-xl text-zinc-500">
@@ -55,11 +79,23 @@ export const CourseExplorer: React.FC = () => {
           {curriculum.map((level, lIdx) => (
             <div key={level.id} className="space-y-8">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-zinc-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl shadow-zinc-900/10">
-                  {lIdx + 1}
+                <div className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shadow-xl",
+                  level.locked 
+                    ? "bg-zinc-400 text-white shadow-zinc-400/10" 
+                    : "bg-zinc-900 text-white shadow-zinc-900/10"
+                )}>
+                  {level.locked ? <Lock size={20} /> : lIdx + 1}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black">{level.title}</h2>
+                  <h2 className="text-2xl font-black flex items-center gap-2">
+                    {level.title}
+                    {level.locked && (
+                      <span className="text-xs font-bold text-zinc-400 bg-zinc-100 px-2 py-1 rounded-lg uppercase tracking-wider">
+                        Terkunci
+                      </span>
+                    )}
+                  </h2>
                   <p className="text-zinc-500">{level.description}</p>
                 </div>
               </div>
@@ -75,9 +111,12 @@ export const CourseExplorer: React.FC = () => {
                       locked={locked}
                       progress={progress}
                       onClick={() => {
-                        if (!locked && module.lessons?.[0]?.id) {
-                          setCurrentLessonId(module.lessons[0].id);
-                          setPage('lesson');
+                        if (!locked) {
+                          const resumeId = getResumeLessonId(module);
+                          if (resumeId) {
+                            setCurrentLessonId(resumeId);
+                            setPage('lesson');
+                          }
                         }
                       }}
                     />

@@ -127,3 +127,32 @@ export function getLevelInfoForLesson(
 
   return null;
 }
+
+// ===== ADMIN RESET FUNCTIONS =====
+
+/**
+ * Reset ALL Supabase progress for a user.
+ * Deletes all rows in elearning_progress and elearning_lesson_log.
+ */
+export async function resetSupabaseProgress(nim: string): Promise<void> {
+  try {
+    await supabase.from('elearning_progress').delete().eq('nim', nim);
+    await supabase.from('elearning_lesson_log').delete().eq('nim', nim);
+    console.log(`✅ Supabase progress reset for ${nim}`);
+  } catch (error) {
+    console.error('Error resetting Supabase progress:', error);
+  }
+}
+
+/**
+ * Reset Supabase progress for a specific level.
+ */
+export async function resetSupabaseLevelProgress(nim: string, levelId: string): Promise<void> {
+  try {
+    await supabase.from('elearning_progress').delete().eq('nim', nim).eq('level_id', levelId);
+    await supabase.from('elearning_lesson_log').delete().eq('nim', nim).eq('level_id', levelId);
+    console.log(`✅ Supabase level progress reset: ${nim} - ${levelId}`);
+  } catch (error) {
+    console.error('Error resetting Supabase level progress:', error);
+  }
+}

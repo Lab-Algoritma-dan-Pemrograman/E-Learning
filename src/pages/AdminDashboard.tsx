@@ -4,9 +4,15 @@ import { collection, onSnapshot, query, orderBy, doc, updateDoc, getDocs } from 
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile, useStore } from '../store/useStore';
 import { cn } from '../lib/utils';
-import { Users, Trophy, Zap, Clock, ChevronRight, Search, Shield, User as UserIcon, CheckCircle2, Sparkles, Loader2, BookOpen } from 'lucide-react';
+import { 
+  Users, Trophy, Zap, Clock, ChevronRight, Search, Shield, 
+  User as UserIcon, CheckCircle2, Sparkles, Loader2, BookOpen,
+  Lock, Unlock, ChevronUp, ChevronDown, Trash2, Plus, GripVertical,
+  RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Level } from '../data/curriculum';
+import { Level, Module, Lesson } from '../data/curriculum';
+import { resetUserProgress, resetLevelProgress, adjustUserXp } from '../services/progressService';
 
 interface LessonProgress {
   lessonId: string;
@@ -16,7 +22,7 @@ interface LessonProgress {
 }
 
 export const AdminDashboard: React.FC = () => {
-  const { user: currentUser } = useStore();
+  const { user: currentUser, curriculum: appCurriculum } = useStore();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -24,13 +30,22 @@ export const AdminDashboard: React.FC = () => {
   const [userProgress, setUserProgress] = useState<LessonProgress[]>([]);
   const [loadingProgress, setLoadingProgress] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'users' | 'curriculum'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'curriculum' | 'structure'>('users');
   const [aiMaterial, setAiMaterial] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCurriculum, setGeneratedCurriculum] = useState<Level[] | null>(null);
 
   const [currentCurriculum, setCurrentCurriculum] = useState<Level[]>([]);
+  const [expandedLevels, setExpandedLevels] = useState<Set<string>>(new Set());
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [editingLevel, setEditingLevel] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ title: string; description: string }>({ title: '', description: '' });
+  
+  // Admin reset state
+  const [xpAdjustValue, setXpAdjustValue] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+
   const [showModal, setShowModal] = useState<{
     type: 'confirm' | 'alert';
     title: string;
@@ -157,6 +172,208 @@ export const AdminDashboard: React.FC = () => {
     });
   };
 
+  // ===== TOGGLE LEVEL LOCK =====
+  const handleToggleLevelLock = async (level: Level) => {
+    const newLocked = !level.locked;
+    setShowModal({
+      type: 'confirm',
+      title: newLocked ? 'Kunci Level' : 'Buka Level',
+      message: `${newLocked ? 'Kunci' : 'Buka'} level "${level.title}"? ${newLocked ? 'Siswa tidak akan bisa mengakses level ini.' : 'Siswa akan bisa mengakses level ini.'}`,
+      onConfirm: async () => {
+        try {
+          const { curriculumService } = await import('../services/curriculumService');
+          await curriculumService.updateLevel({ ...level, locked: newLocked });
+          setShowModal({ type: 'alert', title: 'Berhasil', message: `Level berhasil ${newLocked ? 'dikunci' : 'dibuka'}!` });
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mengubah status level.' });
+        }
+      }
+    });
+  };
+
+  // ===== REORDER MODULES =====
+  const handleMoveModule = async (levelId: string, modIdx: number, direction: 'up' | 'down') => {
+    const level = currentCurriculum.find(l => l.id === levelId);
+    if (!level || !level.modules) return;
+    
+    const newModules = [...level.modules];
+    const targetIdx = direction === 'up' ? modIdx - 1 : modIdx + 1;
+    if (targetIdx < 0 || targetIdx >= newModules.length) return;
+    
+    [newModules[modIdx], newModules[targetIdx]] = [newModules[targetIdx], newModules[modIdx]];
+    
+    try {
+      const { curriculumService } = await import('../services/curriculumService');
+      await curriculumService.updateLevel({ ...level, modules: newModules });
+    } catch (error) {
+      setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mengubah urutan modul.' });
+    }
+  };
+
+  // ===== REORDER LESSONS =====
+  const handleMoveLesson = async (levelId: string, modIdx: number, lessonIdx: number, direction: 'up' | 'down') => {
+    const level = currentCurriculum.find(l => l.id === levelId);
+    if (!level || !level.modules) return;
+    
+    const mod = level.modules[modIdx];
+    if (!mod || !mod.lessons) return;
+    
+    const newLessons = [...mod.lessons];
+    const targetIdx = direction === 'up' ? lessonIdx - 1 : lessonIdx + 1;
+    if (targetIdx < 0 || targetIdx >= newLessons.length) return;
+    
+    [newLessons[lessonIdx], newLessons[targetIdx]] = [newLessons[targetIdx], newLessons[lessonIdx]];
+    
+    const newModules = [...level.modules];
+    newModules[modIdx] = { ...mod, lessons: newLessons };
+    
+    try {
+      const { curriculumService } = await import('../services/curriculumService');
+      await curriculumService.updateLevel({ ...level, modules: newModules });
+    } catch (error) {
+      setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mengubah urutan pelajaran.' });
+    }
+  };
+
+  // ===== DELETE MODULE =====
+  const handleDeleteModule = async (levelId: string, modIdx: number) => {
+    const level = currentCurriculum.find(l => l.id === levelId);
+    if (!level || !level.modules) return;
+    
+    const modTitle = level.modules[modIdx]?.title || 'modul';
+    
+    setShowModal({
+      type: 'confirm',
+      title: 'Hapus Modul',
+      message: `Hapus modul "${modTitle}" beserta semua pelajarannya? Tindakan ini tidak bisa dibatalkan.`,
+      onConfirm: async () => {
+        try {
+          const newModules = level.modules.filter((_, i) => i !== modIdx);
+          const { curriculumService } = await import('../services/curriculumService');
+          await curriculumService.updateLevel({ ...level, modules: newModules });
+          setShowModal({ type: 'alert', title: 'Berhasil', message: 'Modul berhasil dihapus!' });
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menghapus modul.' });
+        }
+      }
+    });
+  };
+
+  // ===== DELETE LESSON =====
+  const handleDeleteLesson = async (levelId: string, modIdx: number, lessonIdx: number) => {
+    const level = currentCurriculum.find(l => l.id === levelId);
+    if (!level?.modules?.[modIdx]) return;
+    
+    const mod = level.modules[modIdx];
+    const lessonTitle = mod.lessons?.[lessonIdx]?.title || 'pelajaran';
+    
+    setShowModal({
+      type: 'confirm',
+      title: 'Hapus Pelajaran',
+      message: `Hapus pelajaran "${lessonTitle}"? Tindakan ini tidak bisa dibatalkan.`,
+      onConfirm: async () => {
+        try {
+          const newLessons = mod.lessons.filter((_, i) => i !== lessonIdx);
+          const newModules = [...level.modules];
+          newModules[modIdx] = { ...mod, lessons: newLessons };
+          const { curriculumService } = await import('../services/curriculumService');
+          await curriculumService.updateLevel({ ...level, modules: newModules });
+          setShowModal({ type: 'alert', title: 'Berhasil', message: 'Pelajaran berhasil dihapus!' });
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menghapus pelajaran.' });
+        }
+      }
+    });
+  };
+
+  // ===== EDIT LEVEL TITLE/DESCRIPTION =====
+  const handleSaveLevelEdit = async (levelId: string) => {
+    const level = currentCurriculum.find(l => l.id === levelId);
+    if (!level) return;
+    
+    try {
+      const { curriculumService } = await import('../services/curriculumService');
+      await curriculumService.updateLevel({ 
+        ...level, 
+        title: editForm.title || level.title, 
+        description: editForm.description || level.description 
+      });
+      setEditingLevel(null);
+    } catch (error) {
+      setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menyimpan perubahan.' });
+    }
+  };
+
+  // ===== ADMIN: RESET USER PROGRESS =====
+  const handleResetUserProgress = async () => {
+    if (!selectedUser) return;
+    setShowModal({
+      type: 'confirm',
+      title: '⚠️ Reset Semua Progress',
+      message: `PERINGATAN: Ini akan menghapus SEMUA progress dan mengeset XP ke 0 untuk ${selectedUser.nama}. Data di Supabase juga akan dihapus. Tindakan ini TIDAK BISA dibatalkan!`,
+      onConfirm: async () => {
+        setResetLoading(true);
+        try {
+          await resetUserProgress(selectedUser.nim);
+          setShowModal({ type: 'alert', title: 'Berhasil', message: `Progress ${selectedUser.nama} berhasil direset.` });
+          fetchUserProgress(selectedUser.nim);
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mereset progress.' });
+        } finally {
+          setResetLoading(false);
+        }
+      }
+    });
+  };
+
+  const handleResetLevelForUser = async (levelId: string, levelTitle: string) => {
+    if (!selectedUser) return;
+    setShowModal({
+      type: 'confirm',
+      title: 'Reset Level Progress',
+      message: `Reset progress level "${levelTitle}" untuk ${selectedUser.nama}? XP akan dikurangi sesuai jumlah pelajaran yang dihapus.`,
+      onConfirm: async () => {
+        setResetLoading(true);
+        try {
+          await resetLevelProgress(selectedUser.nim, levelId, appCurriculum);
+          setShowModal({ type: 'alert', title: 'Berhasil', message: `Level "${levelTitle}" berhasil direset.` });
+          fetchUserProgress(selectedUser.nim);
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mereset level.' });
+        } finally {
+          setResetLoading(false);
+        }
+      }
+    });
+  };
+
+  const handleAdjustXp = async () => {
+    if (!selectedUser || !xpAdjustValue) return;
+    const newXp = parseInt(xpAdjustValue);
+    if (isNaN(newXp) || newXp < 0) {
+      setShowModal({ type: 'alert', title: 'Error', message: 'Masukkan angka XP yang valid (>= 0).' });
+      return;
+    }
+    
+    setShowModal({
+      type: 'confirm',
+      title: 'Ubah XP',
+      message: `Ubah XP ${selectedUser.nama} dari ${selectedUser.xp} menjadi ${newXp}?`,
+      onConfirm: async () => {
+        setResetLoading(true);
+        try {
+          await adjustUserXp(selectedUser.nim, newXp);
+          setShowModal({ type: 'alert', title: 'Berhasil', message: `XP berhasil diubah menjadi ${newXp}.` });
+          setXpAdjustValue('');
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mengubah XP.' });
+        } finally {
+          setResetLoading(false);
+        }
+      }
+    });
+  };
+
   useEffect(() => {
     if (!isAdmin || activeTab !== 'users') return;
 
@@ -171,7 +388,7 @@ export const AdminDashboard: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [isAdmin]);
+  }, [isAdmin, activeTab]);
 
   const fetchUserProgress = async (userId: string) => {
     setLoadingProgress(true);
@@ -277,31 +494,26 @@ export const AdminDashboard: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-            <p className="text-zinc-500 mt-1">Kelola peserta dan kurikulum kursus.</p>
+            <p className="text-zinc-500 mt-1">Kelola peserta, kurikulum, dan struktur kursus.</p>
           </div>
-          <div className="flex items-center gap-2 bg-zinc-100 p-1 rounded-2xl">
-            <button 
-              onClick={() => setActiveTab('users')}
-              className={cn(
-                "px-6 py-2.5 rounded-xl font-bold text-sm transition-all",
-                activeTab === 'users' ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-              )}
-            >
-              Peserta
-            </button>
-            <button 
-              onClick={() => setActiveTab('curriculum')}
-              className={cn(
-                "px-6 py-2.5 rounded-xl font-bold text-sm transition-all",
-                activeTab === 'curriculum' ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-              )}
-            >
-              Kurikulum AI
-            </button>
+          <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-2xl">
+            {(['users', 'structure', 'curriculum'] as const).map((tab) => (
+              <button 
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "px-5 py-2.5 rounded-xl font-bold text-sm transition-all",
+                  activeTab === tab ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                )}
+              >
+                {tab === 'users' ? 'Peserta' : tab === 'structure' ? 'Struktur' : 'Kurikulum AI'}
+              </button>
+            ))}
           </div>
         </div>
 
-        {activeTab === 'users' ? (
+        {/* ==================== USERS TAB ==================== */}
+        {activeTab === 'users' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Users List */}
             <div className="lg:col-span-2 space-y-4">
@@ -403,9 +615,9 @@ export const AdminDashboard: React.FC = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm sticky top-24"
+                    className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm sticky top-24 space-y-6"
                   >
-                    <div className="flex flex-col items-center text-center mb-6">
+                    <div className="flex flex-col items-center text-center">
                       {selectedUser.photoURL ? (
                         <img src={selectedUser.photoURL} alt="" className="w-20 h-20 rounded-full border-4 border-zinc-50 mb-4" />
                       ) : (
@@ -417,7 +629,7 @@ export const AdminDashboard: React.FC = () => {
                       <p className="text-zinc-500 text-sm">{selectedUser.email}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="bg-zinc-50 p-3 rounded-2xl text-center">
                         <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Level</div>
                         <div className="text-lg font-bold">{selectedUser.level}</div>
@@ -431,34 +643,79 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-4 mb-8">
+                    {/* Admin Actions */}
+                    <div className="space-y-3">
                       <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Aksi Admin</h3>
+                      
                       <button 
                         onClick={() => handleToggleRole(selectedUser)}
                         className={cn(
-                          "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all",
+                          "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-sm",
                           selectedUser.role === 'admin' 
                             ? "bg-zinc-100 text-zinc-600 hover:bg-zinc-200" 
                             : "bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-500/20"
                         )}
                       >
                         {selectedUser.role === 'admin' ? (
-                          <>
-                            <UserIcon size={18} />
-                            Jadikan User Biasa
-                          </>
+                          <><UserIcon size={16} /> Jadikan User Biasa</>
                         ) : (
-                          <>
-                            <Shield size={18} />
-                            Jadikan Admin
-                          </>
+                          <><Shield size={16} /> Jadikan Admin</>
                         )}
+                      </button>
+
+                      {/* XP Adjustment */}
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="Set XP baru..."
+                          value={xpAdjustValue}
+                          onChange={(e) => setXpAdjustValue(e.target.value)}
+                          className="flex-1 px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700"
+                        />
+                        <button
+                          onClick={handleAdjustXp}
+                          disabled={!xpAdjustValue || resetLoading}
+                          className="px-4 py-2.5 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 disabled:opacity-50 transition-all text-sm flex items-center gap-1"
+                        >
+                          <Zap size={14} />
+                          Set
+                        </button>
+                      </div>
+
+                      {/* Reset Per Level */}
+                      <div className="space-y-2">
+                        <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Reset Per Level</div>
+                        <div className="max-h-[120px] overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                          {appCurriculum.map(level => (
+                            <button
+                              key={level.id}
+                              onClick={() => handleResetLevelForUser(level.id, level.title)}
+                              disabled={resetLoading}
+                              className="w-full flex items-center justify-between px-3 py-2 bg-zinc-50 hover:bg-amber-50 rounded-lg text-xs transition-colors disabled:opacity-50"
+                            >
+                              <span className="font-medium truncate">{level.title}</span>
+                              <RotateCcw size={12} className="text-zinc-400 shrink-0" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Reset All */}
+                      <button 
+                        onClick={handleResetUserProgress}
+                        disabled={resetLoading}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all text-sm disabled:opacity-50"
+                      >
+                        {resetLoading ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
+                        Reset Semua Progress & XP
                       </button>
                     </div>
 
+                    {/* Progress List */}
                     <div className="space-y-4">
                       <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Progres Pelajaran</h3>
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
                         {loadingProgress ? (
                           <div className="text-center py-4 text-zinc-400 text-sm italic">Memuat progres...</div>
                         ) : userProgress.length > 0 ? (
@@ -491,7 +748,223 @@ export const AdminDashboard: React.FC = () => {
               </AnimatePresence>
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* ==================== STRUCTURE TAB ==================== */}
+        {activeTab === 'structure' && (
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-zinc-50 text-zinc-400 rounded-2xl flex items-center justify-center">
+                    <GripVertical size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Kelola Struktur Kurikulum</h2>
+                    <p className="text-zinc-500 text-sm">Atur urutan modul, buka/kunci level, edit judul, atau hapus konten.</p>
+                  </div>
+                </div>
+              </div>
+
+              {currentCurriculum.length > 0 ? (
+                <div className="space-y-4">
+                  {currentCurriculum.map((level, lIdx) => {
+                    const isExpanded = expandedLevels.has(level.id);
+                    return (
+                      <div key={level.id} className="border border-zinc-200 rounded-2xl overflow-hidden">
+                        {/* Level Header */}
+                        <div className="bg-zinc-50 px-5 py-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <button
+                              onClick={() => {
+                                const next = new Set(expandedLevels);
+                                isExpanded ? next.delete(level.id) : next.add(level.id);
+                                setExpandedLevels(next);
+                              }}
+                              className="p-1 hover:bg-zinc-200 rounded-lg transition-colors"
+                            >
+                              {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                            </button>
+                            
+                            {editingLevel === level.id ? (
+                              <div className="flex-1 flex items-center gap-2">
+                                <input
+                                  value={editForm.title}
+                                  onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                                  className="flex-1 px-2 py-1 bg-white border border-zinc-200 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20"
+                                  placeholder="Judul Level"
+                                />
+                                <button onClick={() => handleSaveLevelEdit(level.id)} className="p-1 text-rose-700 hover:bg-rose-50 rounded-lg">
+                                  <Save size={16} />
+                                </button>
+                                <button onClick={() => setEditingLevel(null)} className="p-1 text-zinc-400 hover:bg-zinc-100 rounded-lg">
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {lIdx + 1}</span>
+                                  {level.locked && (
+                                    <span className="text-[10px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">TERKUNCI</span>
+                                  )}
+                                </div>
+                                <h4 className="font-bold truncate">{level.title}</h4>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                setEditingLevel(level.id);
+                                setEditForm({ title: level.title, description: level.description });
+                              }}
+                              className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleToggleLevelLock(level)}
+                              className={cn(
+                                "p-2 rounded-lg transition-colors",
+                                level.locked 
+                                  ? "text-red-500 hover:bg-red-50" 
+                                  : "text-green-600 hover:bg-green-50"
+                              )}
+                              title={level.locked ? 'Buka Level' : 'Kunci Level'}
+                            >
+                              {level.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Expanded: Modules */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="p-4 space-y-3">
+                                {(level.modules || []).map((mod, mIdx) => {
+                                  const modKey = `${level.id}:${mod.id}`;
+                                  const isModExpanded = expandedModules.has(modKey);
+                                  return (
+                                    <div key={mod.id} className="border border-zinc-100 rounded-xl overflow-hidden">
+                                      {/* Module Header */}
+                                      <div className="bg-white px-4 py-3 flex items-center justify-between">
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                          <button
+                                            onClick={() => {
+                                              const next = new Set(expandedModules);
+                                              isModExpanded ? next.delete(modKey) : next.add(modKey);
+                                              setExpandedModules(next);
+                                            }}
+                                            className="p-1 hover:bg-zinc-100 rounded transition-colors"
+                                          >
+                                            {isModExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                          </button>
+                                          <BookOpen size={14} className="text-zinc-400" />
+                                          <span className="font-bold text-sm truncate">{mod.title}</span>
+                                          <span className="text-[10px] text-zinc-400 shrink-0">({mod.lessons?.length || 0} pelajaran)</span>
+                                        </div>
+                                        <div className="flex items-center gap-0.5">
+                                          <button
+                                            onClick={() => handleMoveModule(level.id, mIdx, 'up')}
+                                            disabled={mIdx === 0}
+                                            className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded disabled:opacity-30 transition-colors"
+                                            title="Pindah Ke Atas"
+                                          >
+                                            <ChevronUp size={14} />
+                                          </button>
+                                          <button
+                                            onClick={() => handleMoveModule(level.id, mIdx, 'down')}
+                                            disabled={mIdx === (level.modules?.length || 0) - 1}
+                                            className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded disabled:opacity-30 transition-colors"
+                                            title="Pindah Ke Bawah"
+                                          >
+                                            <ChevronDown size={14} />
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteModule(level.id, mIdx)}
+                                            className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                            title="Hapus Modul"
+                                          >
+                                            <Trash2 size={14} />
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      {/* Expanded: Lessons */}
+                                      <AnimatePresence>
+                                        {isModExpanded && (
+                                          <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="overflow-hidden"
+                                          >
+                                            <div className="px-4 pb-3 space-y-1">
+                                              {(mod.lessons || []).map((lesson, lesIdx) => (
+                                                <div key={lesson.id} className="flex items-center justify-between p-2 bg-zinc-50 rounded-lg text-xs">
+                                                  <div className="flex items-center gap-2 truncate">
+                                                    <span className="text-zinc-400 font-mono w-5 text-center">{lesIdx + 1}</span>
+                                                    <span className="font-medium truncate">{lesson.title}</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-0.5 shrink-0">
+                                                    <button
+                                                      onClick={() => handleMoveLesson(level.id, mIdx, lesIdx, 'up')}
+                                                      disabled={lesIdx === 0}
+                                                      className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded disabled:opacity-30 transition-colors"
+                                                    >
+                                                      <ChevronUp size={12} />
+                                                    </button>
+                                                    <button
+                                                      onClick={() => handleMoveLesson(level.id, mIdx, lesIdx, 'down')}
+                                                      disabled={lesIdx === (mod.lessons?.length || 0) - 1}
+                                                      className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded disabled:opacity-30 transition-colors"
+                                                    >
+                                                      <ChevronDown size={12} />
+                                                    </button>
+                                                    <button
+                                                      onClick={() => handleDeleteLesson(level.id, mIdx, lesIdx)}
+                                                      className="p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                                    >
+                                                      <Trash2 size={12} />
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-zinc-400 italic">
+                  Database kurikulum kosong. Buka tab "Kurikulum AI" untuk membuat kurikulum baru.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ==================== CURRICULUM AI TAB ==================== */}
+        {activeTab === 'curriculum' && (
           <div className="max-w-4xl mx-auto space-y-8">
             {/* Preview Kurikulum Saat Ini */}
             <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
@@ -512,7 +985,14 @@ export const AdminDashboard: React.FC = () => {
                   {currentCurriculum.map((level, idx) => (
                     <div key={level.id} className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {idx + 1}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {idx + 1}</span>
+                          {level.locked && (
+                            <span className="text-[10px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded flex items-center gap-1">
+                              <Lock size={10} /> Terkunci
+                            </span>
+                          )}
+                        </div>
                         <span className="text-xs font-mono text-zinc-300">{level.id}</span>
                       </div>
                       <h4 className="font-bold">{level.title}</h4>
