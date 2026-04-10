@@ -64,6 +64,8 @@ export const completeLesson = async (
         completedLessons: overall.completedCount,
         totalLessons: overall.totalCount,
         isCompleted: overall.isAllCompleted,
+        completedLevels: overall.completedLevels,
+        currentLevel: overall.currentLevel,
       });
 
       if (overall.isAllCompleted) {
