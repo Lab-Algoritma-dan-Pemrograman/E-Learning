@@ -1,41 +1,43 @@
 import { supabase } from '../lib/supabase';
 import { Level } from '../data/curriculum';
 
-export interface LevelProgressPayload {
+export interface ProgressSummaryPayload {
   nim: string;
-  levelId: string;
-  levelTitle: string;
-  lessonsCompleted: number;
+  studentName: string;
+  completedLessons: number;
   totalLessons: number;
   isCompleted: boolean;
 }
 
 /**
- * Report level progress to Supabase central database.
- * Called every time a lesson is completed, to keep the progress up-to-date.
- * Uses upsert so the same (nim, level_id) row is updated, not duplicated.
+ * Report aggregated progress (1 row per user) to Supabase central database.
+ * Counts ALL lessons across ALL levels and sends a single summary row.
+ * Uses upsert on 'nim' so the same user always has 1 row.
  */
-export async function reportProgressToSupabase(payload: LevelProgressPayload): Promise<void> {
+export async function reportProgressToSupabase(payload: ProgressSummaryPayload): Promise<void> {
   try {
+    const percentage = payload.totalLessons > 0
+      ? Math.round((payload.completedLessons / payload.totalLessons) * 10000) / 100
+      : 0;
+
     const { error } = await supabase
       .from('elearning_progress')
       .upsert({
         nim: payload.nim,
-        level_id: payload.levelId,
-        level_title: payload.levelTitle,
-        lessons_completed: payload.lessonsCompleted,
+        student_name: payload.studentName,
+        completed_lessons: payload.completedLessons,
         total_lessons: payload.totalLessons,
+        completion_percentage: percentage,
         is_completed: payload.isCompleted,
-        completed_at: payload.isCompleted ? new Date().toISOString() : null,
-        last_activity: new Date().toISOString(),
+        last_accessed_at: new Date().toISOString(),
       }, {
-        onConflict: 'nim,level_id',
+        onConflict: 'nim',
       });
 
     if (error) {
       console.error('Failed to report progress to Supabase:', error);
     } else {
-      console.log(`Progress reported: ${payload.nim} - ${payload.levelId} (${payload.lessonsCompleted}/${payload.totalLessons})`);
+      console.log(`📊 Progress reported: ${payload.nim} (${payload.completedLessons}/${payload.totalLessons} = ${percentage}%)`);
     }
   } catch (error) {
     console.error('Error reporting progress to Supabase:', error);
@@ -43,54 +45,38 @@ export async function reportProgressToSupabase(payload: LevelProgressPayload): P
 }
 
 /**
- * Find which level a lesson belongs to, and count progress within that level.
- * Returns level info + completion stats based on the completed lessons list.
+ * Calculate total progress across ALL levels in the curriculum.
+ * Returns aggregated counts for the entire curriculum, not per-level.
  */
-export function getLevelInfoForLesson(
+export function getOverallProgress(
   lessonId: string,
   curriculum: Level[],
   completedLessons: string[]
 ): {
-  levelId: string;
-  levelTitle: string;
-  lessonTitle: string;
-  lessonsCompleted: number;
-  totalLessons: number;
-  isCompleted: boolean;
-} | null {
-  for (const level of curriculum) {
-    let totalLessons = 0;
-    let completedInLevel = 0;
-    let lessonTitle = '';
-    let found = false;
+  completedCount: number;
+  totalCount: number;
+  isAllCompleted: boolean;
+} {
+  let totalCount = 0;
+  let completedCount = 0;
 
+  for (const level of curriculum) {
     for (const module of level.modules || []) {
       for (const lesson of module.lessons || []) {
-        totalLessons++;
+        totalCount++;
         // Count the current lesson as completed too (it's being completed right now)
         if (completedLessons.includes(lesson.id) || lesson.id === lessonId) {
-          completedInLevel++;
-        }
-        if (lesson.id === lessonId) {
-          found = true;
-          lessonTitle = lesson.title;
+          completedCount++;
         }
       }
     }
-
-    if (found) {
-      return {
-        levelId: level.id,
-        levelTitle: level.title,
-        lessonTitle,
-        lessonsCompleted: completedInLevel,
-        totalLessons,
-        isCompleted: completedInLevel >= totalLessons,
-      };
-    }
   }
 
-  return null;
+  return {
+    completedCount,
+    totalCount,
+    isAllCompleted: totalCount > 0 && completedCount >= totalCount,
+  };
 }
 
 // ===== ADMIN RESET FUNCTIONS =====
@@ -110,11 +96,15 @@ export async function resetSupabaseProgress(nim: string): Promise<void> {
 
 /**
  * Reset Supabase progress for a specific level.
+ * Since we use 1 row per user, we just re-sync the full progress.
+ * The caller should re-trigger a full progress report after this.
  */
-export async function resetSupabaseLevelProgress(nim: string, levelId: string): Promise<void> {
+export async function resetSupabaseLevelProgress(nim: string, _levelId: string): Promise<void> {
   try {
-    await supabase.from('elearning_progress').delete().eq('nim', nim).eq('level_id', levelId);
-    console.log(`✅ Supabase level progress reset: ${nim} - ${levelId}`);
+    // With 1-row-per-user model, we can't delete a single level.
+    // Instead, we delete the entire row. It will be re-created on next lesson completion.
+    await supabase.from('elearning_progress').delete().eq('nim', nim);
+    console.log(`✅ Supabase progress reset for ${nim} (level reset triggers full reset)`);
   } catch (error) {
     console.error('Error resetting Supabase level progress:', error);
   }

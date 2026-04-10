@@ -2,7 +2,7 @@ import { doc, setDoc, updateDoc, increment, collection, onSnapshot, query, where
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile } from '../store/useStore';
 import { LessonProgress } from '../store/useProgress';
-import { reportProgressToSupabase, getLevelInfoForLesson, resetSupabaseProgress, resetSupabaseLevelProgress } from './centralApiService';
+import { reportProgressToSupabase, getOverallProgress, resetSupabaseProgress, resetSupabaseLevelProgress } from './centralApiService';
 import { Level } from '../data/curriculum';
 
 export const completeLesson = async (
@@ -54,24 +54,20 @@ export const completeLesson = async (
     };
     await setDoc(progressRef, progress);
 
-    // Report to Supabase central database
+    // Report aggregated progress to Supabase (1 row per user)
     if (curriculum.length > 0) {
-      const levelInfo = getLevelInfoForLesson(lessonId, curriculum, completedLessons);
+      const overall = getOverallProgress(lessonId, curriculum, completedLessons);
 
-      if (levelInfo) {
-        // Report level progress
-        await reportProgressToSupabase({
-          nim: user.nim,
-          levelId: levelInfo.levelId,
-          levelTitle: levelInfo.levelTitle,
-          lessonsCompleted: levelInfo.lessonsCompleted,
-          totalLessons: levelInfo.totalLessons,
-          isCompleted: levelInfo.isCompleted,
-        });
+      await reportProgressToSupabase({
+        nim: user.nim,
+        studentName: user.nama || '',
+        completedLessons: overall.completedCount,
+        totalLessons: overall.totalCount,
+        isCompleted: overall.isAllCompleted,
+      });
 
-        if (levelInfo.isCompleted) {
-          console.log(`🎉 Level "${levelInfo.levelTitle}" completed by ${user.nim}!`);
-        }
+      if (overall.isAllCompleted) {
+        console.log(`🎉 ALL lessons completed by ${user.nim}!`);
       }
     }
   } catch (error) {
