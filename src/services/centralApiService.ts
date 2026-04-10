@@ -25,7 +25,7 @@ export async function reportProgressToSupabase(payload: ProgressSummaryPayload):
       .upsert({
         nim: payload.nim,
         student_name: payload.studentName,
-        completed_lessons: payload.completedLessons,
+        lessons_completed: payload.completedLessons,
         total_lessons: payload.totalLessons,
         completion_percentage: percentage,
         is_completed: payload.isCompleted,
