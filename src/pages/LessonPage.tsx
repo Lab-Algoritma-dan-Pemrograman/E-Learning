@@ -15,6 +15,31 @@ import { getCodeHint } from '../services/aiService';
 import { useCodeRunner, detectLanguage, CodeLanguage } from '../hooks/useCodeRunner';
 import { Sparkles, Loader2 } from 'lucide-react';
 
+/**
+ * Normalize output for flexible comparison:
+ * - Trim whitespace at start/end
+ * - Remove trailing empty lines
+ * - Normalize multiple spaces to single space per line
+ * - Remove trailing whitespace per line
+ * - Case-insensitive (lowercase)
+ */
+function normalizeOutput(text: string): string {
+  return text
+    .trim()
+    .split('\n')
+    .map(line => line.trimEnd().replace(/\s+/g, ' '))
+    .filter((line, idx, arr) => {
+      // Remove trailing empty lines only
+      if (line === '') {
+        // Check if all remaining lines are also empty
+        return arr.slice(idx).some(l => l !== '');
+      }
+      return true;
+    })
+    .join('\n')
+    .toLowerCase();
+}
+
 export const LessonPage: React.FC = () => {
   const { user, currentLessonId, setCurrentLessonId, curriculum, setPage } = useStore();
   const { completedLessons } = useProgress();
@@ -92,7 +117,7 @@ export const LessonPage: React.FC = () => {
     setError(result.error);
 
     const success = lesson.testCases.every(tc => {
-      return result.output.trim() === tc.expectedOutput.trim();
+      return normalizeOutput(result.output) === normalizeOutput(tc.expectedOutput);
     });
 
     setIsCorrect(success);

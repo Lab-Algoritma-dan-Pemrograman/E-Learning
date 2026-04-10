@@ -41,6 +41,11 @@ export const AdminDashboard: React.FC = () => {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [editingLevel, setEditingLevel] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ title: string; description: string }>({ title: '', description: '' });
+
+  // Lesson editor state
+  const [editingLessonInfo, setEditingLessonInfo] = useState<{ levelId: string; modIdx: number; lessonIdx: number } | null>(null);
+  const [lessonEditForm, setLessonEditForm] = useState<Lesson | null>(null);
+  const [savingLesson, setSavingLesson] = useState(false);
   
   // Admin reset state
   const [xpAdjustValue, setXpAdjustValue] = useState('');
@@ -302,6 +307,73 @@ export const AdminDashboard: React.FC = () => {
     } catch (error) {
       setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menyimpan perubahan.' });
     }
+  };
+
+  // ===== EDIT LESSON CONTENT =====
+  const handleOpenLessonEditor = (levelId: string, modIdx: number, lessonIdx: number) => {
+    const level = currentCurriculum.find(l => l.id === levelId);
+    if (!level?.modules?.[modIdx]?.lessons?.[lessonIdx]) return;
+    const lesson = level.modules[modIdx].lessons[lessonIdx];
+    setEditingLessonInfo({ levelId, modIdx, lessonIdx });
+    setLessonEditForm(JSON.parse(JSON.stringify(lesson))); // deep clone
+  };
+
+  const handleSaveLessonEdit = async () => {
+    if (!editingLessonInfo || !lessonEditForm) return;
+    const { levelId, modIdx, lessonIdx } = editingLessonInfo;
+    const level = currentCurriculum.find(l => l.id === levelId);
+    if (!level?.modules?.[modIdx]) return;
+
+    setSavingLesson(true);
+    try {
+      const newModules = [...level.modules];
+      const newLessons = [...newModules[modIdx].lessons];
+      newLessons[lessonIdx] = lessonEditForm;
+      newModules[modIdx] = { ...newModules[modIdx], lessons: newLessons };
+
+      const { curriculumService } = await import('../services/curriculumService');
+      await curriculumService.updateLevel({ ...level, modules: newModules });
+      setShowModal({ type: 'alert', title: 'Berhasil', message: 'Pelajaran berhasil diperbarui!' });
+      setEditingLessonInfo(null);
+      setLessonEditForm(null);
+    } catch (error) {
+      setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menyimpan pelajaran.' });
+    } finally {
+      setSavingLesson(false);
+    }
+  };
+
+  const handleUpdateTestCase = (idx: number, field: 'expectedOutput' | 'description' | 'input', value: string) => {
+    if (!lessonEditForm) return;
+    const newTestCases = [...lessonEditForm.testCases];
+    newTestCases[idx] = { ...newTestCases[idx], [field]: value };
+    setLessonEditForm({ ...lessonEditForm, testCases: newTestCases });
+  };
+
+  const handleAddTestCase = () => {
+    if (!lessonEditForm) return;
+    setLessonEditForm({
+      ...lessonEditForm,
+      testCases: [...lessonEditForm.testCases, { expectedOutput: '', description: '' }]
+    });
+  };
+
+  const handleRemoveTestCase = (idx: number) => {
+    if (!lessonEditForm) return;
+    setLessonEditForm({
+      ...lessonEditForm,
+      testCases: lessonEditForm.testCases.filter((_, i) => i !== idx)
+    });
+  };
+
+  const handleUpdateQuizOption = (idx: number, value: string) => {
+    if (!lessonEditForm) return;
+    const newOptions = [...lessonEditForm.quiz.options];
+    newOptions[idx] = value;
+    setLessonEditForm({
+      ...lessonEditForm,
+      quiz: { ...lessonEditForm.quiz, options: newOptions }
+    });
   };
 
   // ===== ADMIN: RESET USER PROGRESS =====
@@ -917,6 +989,13 @@ export const AdminDashboard: React.FC = () => {
                                                   </div>
                                                   <div className="flex items-center gap-0.5 shrink-0">
                                                     <button
+                                                      onClick={() => handleOpenLessonEditor(level.id, mIdx, lesIdx)}
+                                                      className="p-1 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors"
+                                                      title="Edit Pelajaran"
+                                                    >
+                                                      <Edit2 size={12} />
+                                                    </button>
+                                                    <button
                                                       onClick={() => handleMoveLesson(level.id, mIdx, lesIdx, 'up')}
                                                       disabled={lesIdx === 0}
                                                       className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded disabled:opacity-30 transition-colors"
@@ -1139,6 +1218,233 @@ export const AdminDashboard: React.FC = () => {
             )}
           </div>
         )}
+        {/* ==================== LESSON EDITOR MODAL ==================== */}
+        <AnimatePresence>
+          {editingLessonInfo && lessonEditForm && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden"
+              >
+                {/* Modal Header */}
+                <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-100 shrink-0">
+                  <div>
+                    <h3 className="text-xl font-bold">Edit Pelajaran</h3>
+                    <p className="text-sm text-zinc-400">ID: {lessonEditForm.id}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleSaveLessonEdit}
+                      disabled={savingLesson}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-rose-700 text-white font-bold rounded-xl hover:bg-rose-800 disabled:opacity-50 transition-all text-sm shadow-lg shadow-rose-700/20"
+                    >
+                      {savingLesson ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                      Simpan
+                    </button>
+                    <button
+                      onClick={() => { setEditingLessonInfo(null); setLessonEditForm(null); }}
+                      className="p-2.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Modal Body */}
+                <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+                  {/* Title */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Judul Pelajaran</label>
+                    <input
+                      value={lessonEditForm.title}
+                      onChange={e => setLessonEditForm({ ...lessonEditForm, title: e.target.value })}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all"
+                    />
+                  </div>
+
+                  {/* Explanation */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Materi Penjelasan (Markdown)</label>
+                    <textarea
+                      value={lessonEditForm.explanation}
+                      onChange={e => setLessonEditForm({ ...lessonEditForm, explanation: e.target.value })}
+                      rows={8}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all resize-y"
+                    />
+                  </div>
+
+                  {/* Code Example & Initial Code */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Contoh Kode</label>
+                      <textarea
+                        value={lessonEditForm.codeExample}
+                        onChange={e => setLessonEditForm({ ...lessonEditForm, codeExample: e.target.value })}
+                        rows={5}
+                        className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Kode Awal (Initial)</label>
+                      <textarea
+                        value={lessonEditForm.initialCode}
+                        onChange={e => setLessonEditForm({ ...lessonEditForm, initialCode: e.target.value })}
+                        rows={5}
+                        className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Solution & Hint */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Solusi (Referensi)</label>
+                      <textarea
+                        value={lessonEditForm.solution}
+                        onChange={e => setLessonEditForm({ ...lessonEditForm, solution: e.target.value })}
+                        rows={4}
+                        className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Petunjuk (Hint)</label>
+                      <textarea
+                        value={lessonEditForm.hint}
+                        onChange={e => setLessonEditForm({ ...lessonEditForm, hint: e.target.value })}
+                        rows={4}
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all resize-y"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quiz Section */}
+                  <div className="bg-amber-50/50 border border-amber-200/50 rounded-2xl p-6 space-y-5">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={18} className="text-amber-600" />
+                      <h4 className="font-bold text-amber-900">Soal Kuis</h4>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pertanyaan</label>
+                      <input
+                        value={lessonEditForm.quiz.question}
+                        onChange={e => setLessonEditForm({
+                          ...lessonEditForm,
+                          quiz: { ...lessonEditForm.quiz, question: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pilihan Jawaban</label>
+                      {lessonEditForm.quiz.options.map((opt, oIdx) => (
+                        <div key={oIdx} className="flex items-center gap-3">
+                          <button
+                            onClick={() => setLessonEditForm({
+                              ...lessonEditForm,
+                              quiz: { ...lessonEditForm.quiz, correctAnswer: oIdx }
+                            })}
+                            className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0 transition-all",
+                              lessonEditForm.quiz.correctAnswer === oIdx
+                                ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                                : "bg-zinc-100 text-zinc-400 hover:bg-zinc-200"
+                            )}
+                            title={lessonEditForm.quiz.correctAnswer === oIdx ? 'Jawaban Benar' : 'Klik untuk jadikan jawaban benar'}
+                          >
+                            {String.fromCharCode(65 + oIdx)}
+                          </button>
+                          <input
+                            value={opt}
+                            onChange={e => handleUpdateQuizOption(oIdx, e.target.value)}
+                            className={cn(
+                              "flex-1 px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all",
+                              lessonEditForm.quiz.correctAnswer === oIdx
+                                ? "bg-green-50 border-green-300 focus:ring-green-500/20 focus:border-green-500"
+                                : "bg-white border-zinc-200 focus:ring-amber-500/20 focus:border-amber-500"
+                            )}
+                            placeholder={`Pilihan ${String.fromCharCode(65 + oIdx)}`}
+                          />
+                          {lessonEditForm.quiz.correctAnswer === oIdx && (
+                            <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-lg uppercase tracking-wider shrink-0">Benar</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Test Cases */}
+                  <div className="bg-blue-50/50 border border-blue-200/50 rounded-2xl p-6 space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={18} className="text-blue-600" />
+                        <h4 className="font-bold text-blue-900">Test Cases (Validasi Output)</h4>
+                      </div>
+                      <button
+                        onClick={handleAddTestCase}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Plus size={12} />
+                        Tambah
+                      </button>
+                    </div>
+
+                    {lessonEditForm.testCases.map((tc, tcIdx) => (
+                      <div key={tcIdx} className="bg-white border border-blue-200/50 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Test Case #{tcIdx + 1}</span>
+                          {lessonEditForm.testCases.length > 1 && (
+                            <button
+                              onClick={() => handleRemoveTestCase(tcIdx)}
+                              className="p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                            >
+                              <Minus size={14} />
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deskripsi Tugas</label>
+                          <input
+                            value={tc.description}
+                            onChange={e => handleUpdateTestCase(tcIdx, 'description', e.target.value)}
+                            className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            placeholder="Deskripsi tugas..."
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expected Output</label>
+                            <textarea
+                              value={tc.expectedOutput}
+                              onChange={e => handleUpdateTestCase(tcIdx, 'expectedOutput', e.target.value)}
+                              rows={2}
+                              className="w-full px-3 py-2 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-y"
+                              placeholder="Output yang diharapkan..."
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Input (Opsional)</label>
+                            <textarea
+                              value={tc.input || ''}
+                              onChange={e => handleUpdateTestCase(tcIdx, 'input', e.target.value)}
+                              rows={2}
+                              className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-y"
+                              placeholder="Input opsional..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
       </div>
     </Layout>
   );
