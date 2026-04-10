@@ -1,9 +1,10 @@
 import React from 'react';
 import { Layout } from '../components/Layout';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play } from 'lucide-react';
+import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play, Lock } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
+import { cn } from '../lib/utils';
 
 export const Dashboard: React.FC = () => {
   const { user, setPage, currentLessonId, setCurrentLessonId, curriculum } = useStore();
@@ -16,6 +17,8 @@ export const Dashboard: React.FC = () => {
     let firstUncompletedLessonId: string | null = null;
     
     for (const level of curriculum) {
+      // Skip locked levels
+      if (level.locked) continue;
       for (const module of (level.modules || [])) {
         for (const lesson of (module.lessons || [])) {
           if (!completedLessons.includes(lesson.id)) {
@@ -39,7 +42,7 @@ export const Dashboard: React.FC = () => {
   };
 
   const totalLessons = curriculum.reduce((acc, level) => 
-    acc + (level.modules?.reduce((mAcc, module) => mAcc + (module.lessons?.length || 0), 0) || 0), 0
+    acc + (level.locked ? 0 : (level.modules?.reduce((mAcc, module) => mAcc + (module.lessons?.length || 0), 0) || 0)), 0
   );
 
   const handleInitialize = async () => {
@@ -134,6 +137,7 @@ export const Dashboard: React.FC = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {curriculum.map((level, idx) => {
+                  const isLocked = level.locked === true;
                   const totalInLevel = level.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
                   const completedInLevel = level.modules?.reduce((acc, m) => 
                     acc + (m.lessons?.filter(l => completedLessons.includes(l.id)).length || 0), 0
@@ -144,16 +148,35 @@ export const Dashboard: React.FC = () => {
                     <div 
                       key={level.id} 
                       onClick={() => {
+                        if (isLocked) return;
                         if (level.modules?.[0]?.lessons?.[0]?.id) {
                           setCurrentLessonId(level.modules[0].lessons[0].id);
                           setPage('lesson');
                         }
                       }}
-                      className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-rose-200 transition-all cursor-pointer group"
+                      className={cn(
+                        "bg-white border border-zinc-200 p-6 rounded-2xl transition-all relative overflow-hidden",
+                        isLocked 
+                          ? "opacity-60 grayscale cursor-not-allowed" 
+                          : "hover:border-rose-200 cursor-pointer group"
+                      )}
                     >
+                      {isLocked && (
+                        <div className="absolute inset-0 bg-zinc-100/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                          <div className="flex flex-col items-center gap-2 text-zinc-500">
+                            <Lock size={28} />
+                            <span className="text-xs font-bold uppercase tracking-widest">Terkunci</span>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between mb-4">
-                        <div className="w-10 h-10 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-400 group-hover:bg-rose-50 group-hover:text-rose-700 transition-colors">
-                          {idx + 1}
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                          isLocked 
+                            ? "bg-zinc-100 text-zinc-400" 
+                            : "bg-zinc-50 text-zinc-400 group-hover:bg-rose-50 group-hover:text-rose-700"
+                        )}>
+                          {isLocked ? <Lock size={18} /> : idx + 1}
                         </div>
                         <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {idx + 1}</div>
                       </div>
@@ -163,10 +186,10 @@ export const Dashboard: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-zinc-400 font-medium">{level.modules?.length || 0} Modul</span>
-                          <span className="text-rose-700 font-bold">{levelProgress}%</span>
+                          <span className="text-rose-700 font-bold">{isLocked ? '—' : `${levelProgress}%`}</span>
                         </div>
                         <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-rose-700 rounded-full transition-all duration-500" style={{ width: `${levelProgress}%` }} />
+                          <div className="h-full bg-rose-700 rounded-full transition-all duration-500" style={{ width: `${isLocked ? 0 : levelProgress}%` }} />
                         </div>
                       </div>
                     </div>

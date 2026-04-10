@@ -138,8 +138,14 @@ export const LessonPage: React.FC = () => {
       nextId = currentModule.lessons[currentLessonIdx + 1].id;
     } else if (currentLevel && currentModuleIdx < (currentLevel.modules?.length || 0) - 1) {
       nextId = currentLevel.modules[currentModuleIdx + 1].lessons?.[0]?.id || null;
-    } else if (currentLevelIdx < curriculum.length - 1) {
-      nextId = curriculum[currentLevelIdx + 1].modules?.[0]?.lessons?.[0]?.id || null;
+    } else {
+      // Find next unlocked level
+      for (let i = currentLevelIdx + 1; i < curriculum.length; i++) {
+        if (!curriculum[i].locked) {
+          nextId = curriculum[i].modules?.[0]?.lessons?.[0]?.id || null;
+          break;
+        }
+      }
     }
 
     if (nextId) {
