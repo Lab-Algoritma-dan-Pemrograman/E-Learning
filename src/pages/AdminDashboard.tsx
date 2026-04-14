@@ -37,6 +37,8 @@ export const AdminDashboard: React.FC = () => {
   const [generatedCurriculum, setGeneratedCurriculum] = useState<Level[] | null>(null);
 
   const [currentCurriculum, setCurrentCurriculum] = useState<Level[]>([]);
+  const [draftCurriculum, setDraftCurriculum] = useState<Level[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
   const [expandedLevels, setExpandedLevels] = useState<Set<string>>(new Set());
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [editingLevel, setEditingLevel] = useState<string | null>(null);
@@ -58,6 +60,11 @@ export const AdminDashboard: React.FC = () => {
     onConfirm?: () => void;
   } | null>(null);
 
+  // AI Granular Generation State
+  const [aiGenModal, setAiGenModal] = useState<{ type: 'module' | 'lesson'; levelId: string; modIdx?: number; levelLanguage: string; } | null>(null);
+  const [aiGenContext, setAiGenContext] = useState('');
+  const [isAiTargetGenerating, setIsAiTargetGenerating] = useState(false);
+
   const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
@@ -73,6 +80,18 @@ export const AdminDashboard: React.FC = () => {
       if (unsubscribe) unsubscribe();
     };
   }, [isAdmin]);
+
+  useEffect(() => {
+    // Sinkronisasi pertama kali ke draft saat membuka tab structure
+    if (activeTab === 'structure' && currentCurriculum.length > 0 && draftCurriculum.length === 0) {
+      setDraftCurriculum(JSON.parse(JSON.stringify(currentCurriculum)));
+    }
+  }, [activeTab, currentCurriculum, draftCurriculum.length]);
+
+  const updateDraftLevel = (newLevel: Level) => {
+    setDraftCurriculum(prev => prev.map(l => l.id === newLevel.id ? newLevel : l));
+    setHasChanges(true);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -178,27 +197,14 @@ export const AdminDashboard: React.FC = () => {
   };
 
   // ===== TOGGLE LEVEL LOCK =====
-  const handleToggleLevelLock = async (level: Level) => {
+  const handleToggleLevelLock = (level: Level) => {
     const newLocked = !level.locked;
-    setShowModal({
-      type: 'confirm',
-      title: newLocked ? 'Kunci Level' : 'Buka Level',
-      message: `${newLocked ? 'Kunci' : 'Buka'} level "${level.title}"? ${newLocked ? 'Siswa tidak akan bisa mengakses level ini.' : 'Siswa akan bisa mengakses level ini.'}`,
-      onConfirm: async () => {
-        try {
-          const { curriculumService } = await import('../services/curriculumService');
-          await curriculumService.updateLevel({ ...level, locked: newLocked });
-          setShowModal({ type: 'alert', title: 'Berhasil', message: `Level berhasil ${newLocked ? 'dikunci' : 'dibuka'}!` });
-        } catch (error) {
-          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mengubah status level.' });
-        }
-      }
-    });
+    updateDraftLevel({ ...level, locked: newLocked });
   };
 
   // ===== REORDER MODULES =====
-  const handleMoveModule = async (levelId: string, modIdx: number, direction: 'up' | 'down') => {
-    const level = currentCurriculum.find(l => l.id === levelId);
+  const handleMoveModule = (levelId: string, modIdx: number, direction: 'up' | 'down') => {
+    const level = draftCurriculum.find(l => l.id === levelId);
     if (!level || !level.modules) return;
     
     const newModules = [...level.modules];
@@ -206,18 +212,12 @@ export const AdminDashboard: React.FC = () => {
     if (targetIdx < 0 || targetIdx >= newModules.length) return;
     
     [newModules[modIdx], newModules[targetIdx]] = [newModules[targetIdx], newModules[modIdx]];
-    
-    try {
-      const { curriculumService } = await import('../services/curriculumService');
-      await curriculumService.updateLevel({ ...level, modules: newModules });
-    } catch (error) {
-      setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mengubah urutan modul.' });
-    }
+    updateDraftLevel({ ...level, modules: newModules });
   };
 
   // ===== REORDER LESSONS =====
-  const handleMoveLesson = async (levelId: string, modIdx: number, lessonIdx: number, direction: 'up' | 'down') => {
-    const level = currentCurriculum.find(l => l.id === levelId);
+  const handleMoveLesson = (levelId: string, modIdx: number, lessonIdx: number, direction: 'up' | 'down') => {
+    const level = draftCurriculum.find(l => l.id === levelId);
     if (!level || !level.modules) return;
     
     const mod = level.modules[modIdx];
@@ -231,18 +231,12 @@ export const AdminDashboard: React.FC = () => {
     
     const newModules = [...level.modules];
     newModules[modIdx] = { ...mod, lessons: newLessons };
-    
-    try {
-      const { curriculumService } = await import('../services/curriculumService');
-      await curriculumService.updateLevel({ ...level, modules: newModules });
-    } catch (error) {
-      setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mengubah urutan pelajaran.' });
-    }
+    updateDraftLevel({ ...level, modules: newModules });
   };
 
   // ===== DELETE MODULE =====
-  const handleDeleteModule = async (levelId: string, modIdx: number) => {
-    const level = currentCurriculum.find(l => l.id === levelId);
+  const handleDeleteModule = (levelId: string, modIdx: number) => {
+    const level = draftCurriculum.find(l => l.id === levelId);
     if (!level || !level.modules) return;
     
     const modTitle = level.modules[modIdx]?.title || 'modul';
@@ -250,23 +244,17 @@ export const AdminDashboard: React.FC = () => {
     setShowModal({
       type: 'confirm',
       title: 'Hapus Modul',
-      message: `Hapus modul "${modTitle}" beserta semua pelajarannya? Tindakan ini tidak bisa dibatalkan.`,
-      onConfirm: async () => {
-        try {
-          const newModules = level.modules.filter((_, i) => i !== modIdx);
-          const { curriculumService } = await import('../services/curriculumService');
-          await curriculumService.updateLevel({ ...level, modules: newModules });
-          setShowModal({ type: 'alert', title: 'Berhasil', message: 'Modul berhasil dihapus!' });
-        } catch (error) {
-          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menghapus modul.' });
-        }
+      message: `Hapus modul "${modTitle}" beserta semua pelajarannya? Tindakan ini tidak bisa dibatalkan jika Anda menyimpan draft.`,
+      onConfirm: () => {
+        const newModules = level.modules.filter((_, i) => i !== modIdx);
+        updateDraftLevel({ ...level, modules: newModules });
       }
     });
   };
 
   // ===== DELETE LESSON =====
-  const handleDeleteLesson = async (levelId: string, modIdx: number, lessonIdx: number) => {
-    const level = currentCurriculum.find(l => l.id === levelId);
+  const handleDeleteLesson = (levelId: string, modIdx: number, lessonIdx: number) => {
+    const level = draftCurriculum.find(l => l.id === levelId);
     if (!level?.modules?.[modIdx]) return;
     
     const mod = level.modules[modIdx];
@@ -275,72 +263,139 @@ export const AdminDashboard: React.FC = () => {
     setShowModal({
       type: 'confirm',
       title: 'Hapus Pelajaran',
-      message: `Hapus pelajaran "${lessonTitle}"? Tindakan ini tidak bisa dibatalkan.`,
-      onConfirm: async () => {
-        try {
-          const newLessons = mod.lessons.filter((_, i) => i !== lessonIdx);
-          const newModules = [...level.modules];
-          newModules[modIdx] = { ...mod, lessons: newLessons };
-          const { curriculumService } = await import('../services/curriculumService');
-          await curriculumService.updateLevel({ ...level, modules: newModules });
-          setShowModal({ type: 'alert', title: 'Berhasil', message: 'Pelajaran berhasil dihapus!' });
-        } catch (error) {
-          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menghapus pelajaran.' });
-        }
+      message: `Hapus pelajaran "${lessonTitle}"? Tindakan ini tidak bisa dibatalkan jika Anda menyimpan draft.`,
+      onConfirm: () => {
+        const newLessons = mod.lessons.filter((_, i) => i !== lessonIdx);
+        const newModules = [...level.modules];
+        newModules[modIdx] = { ...mod, lessons: newLessons };
+        updateDraftLevel({ ...level, modules: newModules });
       }
     });
   };
 
   // ===== EDIT LEVEL TITLE/DESCRIPTION =====
-  const handleSaveLevelEdit = async (levelId: string) => {
-    const level = currentCurriculum.find(l => l.id === levelId);
+  const handleSaveLevelEdit = (levelId: string) => {
+    const level = draftCurriculum.find(l => l.id === levelId);
     if (!level) return;
     
+    updateDraftLevel({ 
+      ...level, 
+      title: editForm.title || level.title, 
+      description: editForm.description || level.description 
+    });
+    setEditingLevel(null);
+  };
+
+  const handleCommitChanges = async () => {
     try {
+      setResetLoading(true); // Reuse this loading state for simplicity or use isGenerating
       const { curriculumService } = await import('../services/curriculumService');
-      await curriculumService.updateLevel({ 
-        ...level, 
-        title: editForm.title || level.title, 
-        description: editForm.description || level.description 
-      });
-      setEditingLevel(null);
+      await curriculumService.saveFullCurriculum(draftCurriculum);
+      setHasChanges(false);
+      setShowModal({ type: 'alert', title: 'Berhasil', message: 'Semua perubahan berhasil disimpan ke database.' });
     } catch (error) {
-      setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menyimpan perubahan.' });
+      setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menyimpan perubahan ke database.' });
+    } finally {
+      setResetLoading(false);
     }
+  };
+
+  const handleDiscardChanges = () => {
+    setShowModal({
+      type: 'confirm',
+      title: 'Batalkan Perubahan',
+      message: 'Semua draf perubahan akan hilang. Lanjutkan?',
+      onConfirm: () => {
+        setDraftCurriculum(JSON.parse(JSON.stringify(currentCurriculum)));
+        setHasChanges(false);
+      }
+    });
+  };
+
+  const submitAiGeneration = async () => {
+    if (!aiGenModal || !aiGenContext.trim()) return;
+    setIsAiTargetGenerating(true);
+    try {
+      const { aiCurriculumService } = await import('../services/aiCurriculumService');
+      const level = draftCurriculum.find(l => l.id === aiGenModal.levelId);
+      if (!level) throw new Error("Level not found");
+
+      if (aiGenModal.type === 'module') {
+        const newModule = await aiCurriculumService.generateSingleModule(aiGenContext, level.title, aiGenModal.levelLanguage);
+        const newModules = [...(level.modules || []), newModule];
+        updateDraftLevel({ ...level, modules: newModules });
+      } else if (aiGenModal.type === 'lesson' && typeof aiGenModal.modIdx === 'number') {
+        const mod = level.modules[aiGenModal.modIdx];
+        const newLesson = await aiCurriculumService.generateSingleLesson(aiGenContext, mod.title, aiGenModal.levelLanguage);
+        const newLessons = [...(mod.lessons || []), newLesson];
+        const newModules = [...level.modules];
+        newModules[aiGenModal.modIdx] = { ...mod, lessons: newLessons };
+        updateDraftLevel({ ...level, modules: newModules });
+      }
+      setAiGenModal(null);
+      setAiGenContext('');
+      setShowModal({ type: 'alert', title: 'Berhasil', message: `${aiGenModal.type === 'module' ? 'Modul' : 'Pelajaran'} baru ditambahkan ke draft.` });
+    } catch (error) {
+      setShowModal({ type: 'alert', title: 'Gagal', message: error instanceof Error ? error.message : 'Gagal memanggil AI.' });
+    } finally {
+      setIsAiTargetGenerating(false);
+    }
+  };
+
+  const handleAddManualModule = (levelId: string) => {
+    const level = draftCurriculum.find(l => l.id === levelId);
+    if (!level) return;
+    const newModule = {
+      id: `m-${Date.now()}`,
+      title: 'Modul Baru',
+      lessons: []
+    };
+    updateDraftLevel({ ...level, modules: [...(level.modules || []), newModule] });
+  };
+
+  const handleAddManualLesson = (levelId: string, modIdx: number) => {
+    const level = draftCurriculum.find(l => l.id === levelId);
+    if (!level || !level.modules) return;
+    const mod = level.modules[modIdx];
+    const newLesson: Lesson = {
+      id: `l-${Date.now()}`,
+      title: 'Pelajaran Baru',
+      explanation: 'Isi penjelasan...',
+      codeExample: '',
+      initialCode: '',
+      solution: '',
+      hint: '',
+      quiz: { question: 'Soal?', options: ['A','B','C','D'], correctAnswer: 0 },
+      testCases: [{ description: 'Test', expectedOutput: 'Output' }]
+    };
+    const newModules = [...level.modules];
+    newModules[modIdx] = { ...mod, lessons: [...(mod.lessons || []), newLesson] };
+    updateDraftLevel({ ...level, modules: newModules });
   };
 
   // ===== EDIT LESSON CONTENT =====
   const handleOpenLessonEditor = (levelId: string, modIdx: number, lessonIdx: number) => {
-    const level = currentCurriculum.find(l => l.id === levelId);
+    const level = draftCurriculum.find(l => l.id === levelId);
     if (!level?.modules?.[modIdx]?.lessons?.[lessonIdx]) return;
     const lesson = level.modules[modIdx].lessons[lessonIdx];
     setEditingLessonInfo({ levelId, modIdx, lessonIdx });
     setLessonEditForm(JSON.parse(JSON.stringify(lesson))); // deep clone
   };
 
-  const handleSaveLessonEdit = async () => {
+  const handleSaveLessonEdit = () => {
     if (!editingLessonInfo || !lessonEditForm) return;
     const { levelId, modIdx, lessonIdx } = editingLessonInfo;
-    const level = currentCurriculum.find(l => l.id === levelId);
+    const level = draftCurriculum.find(l => l.id === levelId);
     if (!level?.modules?.[modIdx]) return;
 
-    setSavingLesson(true);
-    try {
-      const newModules = [...level.modules];
-      const newLessons = [...newModules[modIdx].lessons];
-      newLessons[lessonIdx] = lessonEditForm;
-      newModules[modIdx] = { ...newModules[modIdx], lessons: newLessons };
+    const newModules = [...level.modules];
+    const newLessons = [...newModules[modIdx].lessons];
+    newLessons[lessonIdx] = lessonEditForm;
+    newModules[modIdx] = { ...newModules[modIdx], lessons: newLessons };
 
-      const { curriculumService } = await import('../services/curriculumService');
-      await curriculumService.updateLevel({ ...level, modules: newModules });
-      setShowModal({ type: 'alert', title: 'Berhasil', message: 'Pelajaran berhasil diperbarui!' });
-      setEditingLessonInfo(null);
-      setLessonEditForm(null);
-    } catch (error) {
-      setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menyimpan pelajaran.' });
-    } finally {
-      setSavingLesson(false);
-    }
+    updateDraftLevel({ ...level, modules: newModules });
+    setEditingLessonInfo(null);
+    setLessonEditForm(null);
   };
 
   const handleUpdateTestCase = (idx: number, field: 'expectedOutput' | 'description' | 'input', value: string) => {
@@ -847,9 +902,45 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {currentCurriculum.length > 0 ? (
+              <AnimatePresence>
+                {hasChanges && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex items-center justify-between p-4 mb-6 bg-rose-50 border border-rose-200 rounded-2xl"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Zap size={18} className="text-rose-700" />
+                      <div>
+                        <div className="font-bold text-rose-900 text-sm">Ada perubahan yang belum disimpan!</div>
+                        <div className="text-xs text-rose-700">Perubahan tidak akan terlihat oleh siswa sampai Anda menyimpannya.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={handleDiscardChanges}
+                        disabled={resetLoading}
+                        className="px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-100 rounded-xl transition-colors disabled:opacity-50"
+                      >
+                        Batalkan Draft
+                      </button>
+                      <button 
+                        onClick={handleCommitChanges}
+                        disabled={resetLoading}
+                        className="px-4 py-2 text-sm font-bold bg-rose-700 text-white hover:bg-rose-800 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-rose-700/20"
+                      >
+                        {resetLoading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                        Simpan ke Server
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {draftCurriculum.length > 0 ? (
                 <div className="space-y-4">
-                  {currentCurriculum.map((level, lIdx) => {
+                  {draftCurriculum.map((level, lIdx) => {
                     const isExpanded = expandedLevels.has(level.id);
                     return (
                       <div key={level.id} className="border border-zinc-200 rounded-2xl overflow-hidden">
@@ -931,6 +1022,14 @@ export const AdminDashboard: React.FC = () => {
                               className="overflow-hidden"
                             >
                               <div className="p-4 space-y-3">
+                                <div className="flex items-center justify-end gap-2 mb-2">
+                                  <button onClick={() => setAiGenModal({ type: 'module', levelId: level.id, levelLanguage: level.id.includes('c-') ? 'C' : 'Python' })} className="text-[10px] font-bold px-2 py-1 bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors flex items-center gap-1">
+                                    <Zap size={10} /> + Modul (AI)
+                                  </button>
+                                  <button onClick={() => handleAddManualModule(level.id)} className="text-[10px] font-bold px-2 py-1 bg-zinc-100 text-zinc-600 rounded hover:bg-zinc-200 transition-colors flex items-center gap-1">
+                                    <Plus size={10} /> + Modul Manual
+                                  </button>
+                                </div>
                                 {(level.modules || []).map((mod, mIdx) => {
                                   const modKey = `${level.id}:${mod.id}`;
                                   const isModExpanded = expandedModules.has(modKey);
@@ -990,6 +1089,14 @@ export const AdminDashboard: React.FC = () => {
                                             className="overflow-hidden"
                                           >
                                             <div className="px-4 pb-3 space-y-1">
+                                              <div className="flex items-center justify-end gap-2 mb-2">
+                                                <button onClick={() => setAiGenModal({ type: 'lesson', levelId: level.id, modIdx: mIdx, levelLanguage: level.id.includes('c-') ? 'C' : 'Python' })} className="text-[10px] font-bold px-2 py-1 bg-amber-50 text-amber-600 rounded hover:bg-amber-100 transition-colors flex items-center gap-1 border border-amber-200/50">
+                                                  <Zap size={10} /> + Pelajaran (AI)
+                                                </button>
+                                                <button onClick={() => handleAddManualLesson(level.id, mIdx)} className="text-[10px] font-bold px-2 py-1 bg-white text-zinc-500 rounded hover:bg-zinc-50 transition-colors flex items-center gap-1 border border-zinc-200">
+                                                  <Plus size={10} /> + Pelajaran Manual
+                                                </button>
+                                              </div>
                                               {(mod.lessons || []).map((lesson, lesIdx) => (
                                                 <div key={lesson.id} className="flex items-center justify-between p-2 bg-zinc-50 rounded-lg text-xs">
                                                   <div className="flex items-center gap-2 truncate">
@@ -1448,6 +1555,54 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* AI GEN MODAL */}
+        <AnimatePresence>
+          {aiGenModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+              >
+                <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-6">
+                  <Zap size={24} />
+                </div>
+                <h3 className="text-xl font-bold mb-2">
+                  Generate {aiGenModal.type === 'module' ? 'Modul' : 'Pelajaran'} via AI
+                </h3>
+                <p className="text-sm text-zinc-500 mb-6">
+                  Masukkan topik spesifik, materi, atau instruksi untuk generasi {aiGenModal.type === 'module' ? 'modul' : 'pelajaran'} baru di Level ini.
+                </p>
+                <textarea
+                  value={aiGenContext}
+                  onChange={e => setAiGenContext(e.target.value)}
+                  placeholder="Contoh: Buatkan soal tentang perulangan For khusus untuk analisis data..."
+                  rows={4}
+                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-none mb-6"
+                />
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => { setAiGenModal(null); setAiGenContext(''); }}
+                    disabled={isAiTargetGenerating}
+                    className="px-5 py-2.5 text-sm font-bold text-zinc-500 hover:text-zinc-700 transition-colors disabled:opacity-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={submitAiGeneration}
+                    disabled={!aiGenContext.trim() || isAiTargetGenerating}
+                    className="px-5 py-2.5 bg-amber-500 text-white rounded-xl text-sm font-bold hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/20 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isAiTargetGenerating ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+                    {isAiTargetGenerating ? 'Memproses...' : 'Generate Sekarang'}
+                  </button>
                 </div>
               </motion.div>
             </div>
