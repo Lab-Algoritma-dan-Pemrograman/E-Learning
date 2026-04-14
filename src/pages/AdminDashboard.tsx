@@ -22,7 +22,7 @@ interface LessonProgress {
 }
 
 export const AdminDashboard: React.FC = () => {
-  const { user: currentUser, curriculum: appCurriculum } = useStore();
+  const { user: currentUser, curriculum: appCurriculum, setPage } = useStore();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -66,9 +66,12 @@ export const AdminDashboard: React.FC = () => {
   const [isAiTargetGenerating, setIsAiTargetGenerating] = useState(false);
 
   const isAdmin = currentUser?.role === 'admin';
+  const isEditor = currentUser?.role === 'editor';
+  const isCoordinator = isAdmin && currentUser?.division === 'koordinator';
+  const canAccess = isAdmin || isEditor;
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canAccess) return;
     
     let unsubscribe: () => void;
     
@@ -79,7 +82,7 @@ export const AdminDashboard: React.FC = () => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [isAdmin]);
+  }, [canAccess]);
 
   useEffect(() => {
     // Sinkronisasi pertama kali ke draft saat membuka tab structure
@@ -562,17 +565,34 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleToggleRole = async (targetUser: UserProfile) => {
+  const handleToggleRole = async (targetUser: UserProfile, newRole: 'admin' | 'editor' | 'user') => {
     if (targetUser.nim === currentUser?.nim) {
       setShowModal({
         type: 'alert',
         title: 'Aksi Ditolak',
-        message: 'Anda tidak dapat menghapus akses admin dari akun Anda sendiri.',
+        message: 'Anda tidak dapat mengubah peran akun Anda sendiri.',
       });
       return;
     }
 
-    const newRole = targetUser.role === 'admin' ? 'user' : 'admin';
+    if (!isCoordinator && (newRole === 'admin' || targetUser.role === 'admin')) {
+      setShowModal({
+        type: 'alert',
+        title: 'Aksi Ditolak',
+        message: 'Hanya Koordinator yang dapat mengelola akun Admin.',
+      });
+      return;
+    }
+
+    if (!isAdmin && !isCoordinator) {
+      setShowModal({
+        type: 'alert',
+        title: 'Aksi Ditolak',
+        message: 'Anda tidak memiliki otoritas untuk mengubah peran.',
+      });
+      return;
+    }
+
     setShowModal({
       type: 'confirm',
       title: 'Ubah Peran',
@@ -594,15 +614,23 @@ export const AdminDashboard: React.FC = () => {
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!isAdmin) {
+  if (!canAccess) {
     return (
       <Layout>
-        <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
-            <ShieldCheck size={32} />
+        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6 bg-white border border-zinc-200 rounded-[3rem] shadow-xl shadow-zinc-200/50">
+          <div className="w-20 h-20 bg-rose-50 text-rose-700 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
+            <Lock size={40} />
           </div>
-          <h1 className="text-2xl font-bold">Akses Ditolak</h1>
-          <p className="text-zinc-500 mt-2">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
+          <h1 className="text-3xl font-black tracking-tight text-zinc-900 mb-2">Akses Terbatas</h1>
+          <p className="text-zinc-500 max-w-sm mb-8">
+            Maaf, area ini hanya dapat diakses oleh Administrator atau Editor.
+          </p>
+          <button 
+            onClick={() => setPage('dashboard')}
+            className="px-8 py-3 bg-zinc-900 text-white font-bold rounded-2xl hover:bg-zinc-800 transition-all active:scale-95 shadow-lg shadow-zinc-900/20"
+          >
+            Kembali ke Beranda
+          </button>
         </div>
       </Layout>
     );
@@ -810,25 +838,54 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Admin Actions */}
+                    {/* Admin/Editor Actions */}
                     <div className="space-y-3">
-                      <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Aksi Admin</h3>
+                      <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Manajemen Peran</h3>
                       
-                      <button 
-                        onClick={() => handleToggleRole(selectedUser)}
-                        className={cn(
-                          "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-sm",
-                          selectedUser.role === 'admin' 
-                            ? "bg-zinc-100 text-zinc-600 hover:bg-zinc-200" 
-                            : "bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-500/20"
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-1 bg-zinc-100 p-1 rounded-xl">
+                          <button 
+                            onClick={() => handleToggleRole(selectedUser, 'user')}
+                            disabled={selectedUser.role === 'user' || (!isCoordinator && selectedUser.role === 'admin')}
+                            className={cn(
+                              "flex-1 py-2 text-[10px] font-bold rounded-lg transition-all",
+                              selectedUser.role === 'user' || (!selectedUser.role)
+                                ? "bg-white text-zinc-900 shadow-sm" 
+                                : "text-zinc-500 hover:text-zinc-900"
+                            )}
+                          >
+                            User
+                          </button>
+                          <button 
+                            onClick={() => handleToggleRole(selectedUser, 'editor')}
+                            disabled={selectedUser.role === 'editor' || (!isCoordinator && selectedUser.role === 'admin')}
+                            className={cn(
+                              "flex-1 py-2 text-[10px] font-bold rounded-lg transition-all",
+                              selectedUser.role === 'editor'
+                                ? "bg-blue-600 text-white shadow-sm" 
+                                : "text-zinc-500 hover:text-zinc-900"
+                            )}
+                          >
+                            Editor
+                          </button>
+                          <button 
+                            onClick={() => handleToggleRole(selectedUser, 'admin')}
+                            disabled={selectedUser.role === 'admin' || !isCoordinator}
+                            className={cn(
+                              "flex-1 py-2 text-[10px] font-bold rounded-lg transition-all",
+                              selectedUser.role === 'admin'
+                                ? "bg-purple-600 text-white shadow-sm" 
+                                : "text-zinc-500 hover:text-zinc-900",
+                              !isCoordinator && "opacity-50 cursor-not-allowed"
+                            )}
+                          >
+                            Admin
+                          </button>
+                        </div>
+                        {!isCoordinator && (selectedUser.role === 'admin') && (
+                          <p className="text-[10px] text-zinc-400 italic px-2">Hanya Koordinator yang dapat mengelola Admin.</p>
                         )}
-                      >
-                        {selectedUser.role === 'admin' ? (
-                          <><UserIcon size={16} /> Jadikan User Biasa</>
-                        ) : (
-                          <><Shield size={16} /> Jadikan Admin</>
-                        )}
-                      </button>
+                      </div>
 
                       {/* XP Adjustment */}
                       <div className="flex gap-2">

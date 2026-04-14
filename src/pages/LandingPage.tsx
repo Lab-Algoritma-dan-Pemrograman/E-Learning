@@ -48,8 +48,8 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             Baru: Jalur Pembelajaran Mesin Tersedia
           </div>
           <h1 className="text-6xl md:text-7xl font-black tracking-tight leading-[1.1]">
-            Kuasai Python. <br />
-            <span className="text-rose-700">Bangun Masa Depan.</span>
+            Kuasai <span className="text-rose-700">Logika</span> & <br />
+            <span className="text-rose-700">Kode</span> Pemrograman.
           </h1>
 
           {/* Access info card */}
@@ -61,7 +61,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           </div>
 
           <p className="text-xl text-zinc-500 max-w-lg leading-relaxed">
-            Cara paling interaktif untuk belajar Python. Dari "Hello World" pertama Anda hingga Sains Data dan Pembelajaran Mesin tingkat lanjut.
+            Cara paling interaktif untuk belajar <span className="text-zinc-900 font-bold">Python</span> & <span className="text-zinc-900 font-bold">Bahasa C</span>. Bangun pondasi algoritma yang kuat dan kuasai industri teknologi.
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <button 
@@ -95,15 +95,16 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               <div className="w-3 h-3 rounded-full bg-rose-700" />
             </div>
             <pre className="font-mono text-sm md:text-base text-zinc-300 p-4 leading-relaxed">
-              <span className="text-rose-400">def</span> <span className="text-blue-400">learn_python</span>():<br />
-              &nbsp;&nbsp;skills = [<span className="text-amber-300">"Basics"</span>, <span className="text-amber-300">"Data Science"</span>, <span className="text-amber-300">"ML"</span>]<br />
-              &nbsp;&nbsp;<span className="text-rose-400">for</span> skill <span className="text-rose-400">in</span> skills:<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-blue-400">print</span>(<span className="text-amber-300">f"Mastering {"{skill}"}..."</span>)<br />
+              <span className="text-zinc-500">// Bahasa C</span><br />
+              <span className="text-rose-400">#include</span> <span className="text-amber-300">&lt;stdio.h&gt;</span><br />
+              <span className="text-rose-400">int</span> <span className="text-blue-400">main</span>() {"{"}<br />
+              &nbsp;&nbsp;<span className="text-blue-400">printf</span>(<span className="text-amber-300">"Mari Belajar Kode!"</span>);<br />
+              &nbsp;&nbsp;<span className="text-rose-400">return</span> <span className="text-amber-300">0</span>;<br />
+              {"}"}<br />
               <br />
-              <span className="text-zinc-500"># Output:</span><br />
-              <span className="text-zinc-400">Mastering Basics...</span><br />
-              <span className="text-zinc-400">Mastering Data Science...</span><br />
-              <span className="text-zinc-400">Mastering ML...</span>
+              <span className="text-zinc-500"># Python</span><br />
+              <span className="text-rose-400">def</span> <span className="text-blue-400">hello</span>():<br />
+              &nbsp;&nbsp;<span className="text-blue-400">print</span>(<span className="text-amber-300">"Semangat Belajar!"</span>)<br />
             </pre>
           </div>
           <div className="absolute -bottom-6 -left-6 w-48 h-48 bg-rose-700/20 rounded-full blur-3xl" />
@@ -156,7 +157,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(159,18,57,0.15),transparent_70%)]" />
           <h2 className="text-4xl md:text-6xl font-black text-white relative z-10">Siap untuk memulai perjalanan Anda?</h2>
           <p className="text-zinc-400 text-xl max-w-xl mx-auto relative z-10">
-            Login melalui Web Utama dengan NIM dan Password Anda, lalu akses E-Learning untuk mulai belajar Python.
+            Login melalui Web Utama dengan NIM dan Password Anda, lalu akses E-Learning untuk mulai belajar Python & Bahasa C.
           </p>
           <button 
             onClick={handleGoToWebUtama}

@@ -88,9 +88,9 @@ export const CourseExplorer: React.FC = () => {
         </button>
 
         <div className="max-w-3xl">
-          <h1 className="text-4xl font-black tracking-tight mb-4">Kurikulum Kursus</h1>
+          <h1 className="text-4xl font-black tracking-tight mb-4">Eksplorasi Kurikulum</h1>
           <p className="text-xl text-zinc-500">
-            Dari nol menjadi pahlawan. Ikuti jalur terstruktur kami untuk menguasai Python, Sains Data, dan Pembelajaran Mesin.
+            Kuasai fondasi algoritma dan pemrograman. Pilih jalur belajar Anda: <span className="text-rose-700 font-bold">Python</span> untuk kemudahan dan data, atau <span className="text-blue-700 font-bold">Bahasa C</span> untuk pemahaman sistem yang mendalam.
           </p>
         </div>
 
@@ -107,14 +107,22 @@ export const CourseExplorer: React.FC = () => {
                   {isModuleLocked(lIdx, 0) ? <Lock size={20} /> : lIdx + 1}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black flex items-center gap-2">
-                    {level.title}
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="text-2xl font-black flex items-center gap-2">
+                      {level.title}
+                    </h2>
                     {isModuleLocked(lIdx, 0) && (
-                      <span className="text-xs font-bold text-zinc-400 bg-zinc-100 px-2 py-1 rounded-lg uppercase tracking-wider">
+                      <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded uppercase tracking-widest">
                         Terkunci
                       </span>
                     )}
-                  </h2>
+                    <span className={cn(
+                      "text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest",
+                      level.id.startsWith('c-') ? "bg-blue-50 text-blue-700" : "bg-rose-50 text-rose-700"
+                    )}>
+                      {level.id.startsWith('c-') ? 'Bahasa C' : 'Python'}
+                    </span>
+                  </div>
                   <p className="text-zinc-500">{level.description}</p>
                 </div>
               </div>

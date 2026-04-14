@@ -81,7 +81,12 @@ export const useCodeRunner = (language: CodeLanguage = 'python') => {
     }
 
     // Python via Pyodide
-    if (!pyodide) return { output: '', error: 'Pyodide belum dimuat. Mohon tunggu...' };
+    if (!pyodide) {
+      return { 
+        output: '', 
+        error: 'Interpreter Python gagal dimuat atau sedang bermasalah. Pastikan koneksi internet stabil dan muat ulang halaman.' 
+      };
+    }
 
     try {
       await pyodide.runPythonAsync(`

@@ -12,7 +12,8 @@ export interface UserProfile {
   streak: number;
   lastActive: string;
   createdAt: string;
-  role?: 'admin' | 'user';
+  role?: 'admin' | 'editor' | 'user';
+  division?: string;
   levelAccessOverrides?: Record<string, 'auto' | 'unlocked' | 'locked'>;
 }
 

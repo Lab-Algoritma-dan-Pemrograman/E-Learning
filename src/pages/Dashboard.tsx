@@ -82,6 +82,26 @@ export const Dashboard: React.FC = () => {
 
   const progressPercentage = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
+  const cLevels = curriculum.filter(l => l.id.startsWith('c-'));
+  const pyLevels = curriculum.filter(l => l.id.startsWith('py-'));
+
+  const calculateLangProgress = (levels: any[]) => {
+    const total = levels.reduce((acc, level, i) => {
+      // Find original index in curriculum to check if locked
+      const originalIdx = curriculum.findIndex(l => l.id === level.id);
+      return acc + (isLevelLockedDisplay(level, originalIdx) ? 0 : (level.modules?.reduce((mAcc: number, module: any) => mAcc + (module.lessons?.length || 0), 0) || 0));
+    }, 0);
+    const completed = levels.reduce((acc, level) => 
+      acc + (level.modules?.reduce((mAcc: number, m: any) => 
+        mAcc + (m.lessons?.filter((l: any) => completedLessons.includes(l.id)).length || 0), 0
+      ) || 0), 0
+    );
+    return total > 0 ? Math.round((completed / total) * 100) : 0;
+  };
+
+  const cProgress = calculateLangProgress(cLevels);
+  const pyProgress = calculateLangProgress(pyLevels);
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -137,89 +157,66 @@ export const Dashboard: React.FC = () => {
                 <div className="flex items-center gap-6">
                   <button className="bg-rose-700 hover:bg-rose-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95">
                     <Play size={18} fill="currentColor" />
-                    Lanjutkan Pelajaran
+                    Mulai Belajar
                   </button>
-                  <div className="flex flex-col gap-1">
-                    <div className="text-xs text-zinc-500 font-bold uppercase">Kemajuan Keseluruhan</div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-rose-700 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%` }} />
+                  <div className="flex flex-col gap-3">
+                    {cLevels.length > 0 && (
+                      <div className="flex flex-col gap-1">
+                        <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Kemajuan Bahasa C</div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${cProgress}%` }} />
+                          </div>
+                          <span className="text-xs font-bold font-mono">{cProgress}%</span>
+                        </div>
                       </div>
-                      <span className="text-sm font-bold">{progressPercentage}%</span>
-                    </div>
+                    )}
+                    {pyLevels.length > 0 && (
+                      <div className="flex flex-col gap-1">
+                        <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Kemajuan Python</div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-rose-700 rounded-full transition-all duration-500" style={{ width: `${pyProgress}%` }} />
+                          </div>
+                          <span className="text-xs font-bold font-mono">{pyProgress}%</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </motion.div>
 
-            {/* Course Curriculum Preview */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <BookOpen size={20} className="text-rose-700" />
-                Kurikulum Anda
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {curriculum.map((level, idx) => {
-                  const isLocked = isLevelLockedDisplay(level, idx);
-                  const totalInLevel = level.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
-                  const completedInLevel = level.modules?.reduce((acc, m) => 
-                    acc + (m.lessons?.filter(l => completedLessons.includes(l.id)).length || 0), 0
-                  ) || 0;
-                  const levelProgress = totalInLevel > 0 ? Math.round((completedInLevel / totalInLevel) * 100) : 0;
+            <div className="space-y-12">
+              {cLevels.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-bold flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold">C</div>
+                    Kurikulum Bahasa C
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {cLevels.map((level) => {
+                      const idx = curriculum.findIndex(l => l.id === level.id);
+                      return <LevelCard key={level.id} level={level} idx={idx} isLocked={isLevelLockedDisplay(level, idx)} completedLessons={completedLessons} setCurrentLessonId={setCurrentLessonId} setPage={setPage} colorClass="rose" />;
+                    })}
+                  </div>
+                </div>
+              )}
 
-                  return (
-                    <div 
-                      key={level.id} 
-                      onClick={() => {
-                        if (isLocked) return;
-                        if (level.modules?.[0]?.lessons?.[0]?.id) {
-                          setCurrentLessonId(level.modules[0].lessons[0].id);
-                          setPage('lesson');
-                        }
-                      }}
-                      className={cn(
-                        "bg-white border border-zinc-200 p-6 rounded-2xl transition-all relative overflow-hidden",
-                        isLocked 
-                          ? "opacity-60 grayscale cursor-not-allowed" 
-                          : "hover:border-rose-200 cursor-pointer group"
-                      )}
-                    >
-                      {isLocked && (
-                        <div className="absolute inset-0 bg-zinc-100/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
-                          <div className="flex flex-col items-center gap-2 text-zinc-500">
-                            <Lock size={28} />
-                            <span className="text-xs font-bold uppercase tracking-widest">Terkunci</span>
-                          </div>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className={cn(
-                          "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                          isLocked 
-                            ? "bg-zinc-100 text-zinc-400" 
-                            : "bg-zinc-50 text-zinc-400 group-hover:bg-rose-50 group-hover:text-rose-700"
-                        )}>
-                          {isLocked ? <Lock size={18} /> : idx + 1}
-                        </div>
-                        <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {idx + 1}</div>
-                      </div>
-                      <h4 className="font-bold text-lg mb-1">{level.title}</h4>
-                      <p className="text-sm text-zinc-500 mb-4 line-clamp-2">{level.description}</p>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-zinc-400 font-medium">{level.modules?.length || 0} Modul</span>
-                          <span className="text-rose-700 font-bold">{isLocked ? '—' : `${levelProgress}%`}</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-rose-700 rounded-full transition-all duration-500" style={{ width: `${isLocked ? 0 : levelProgress}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {pyLevels.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-bold flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center font-bold">Py</div>
+                    Kurikulum Python
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pyLevels.map((level) => {
+                      const idx = curriculum.findIndex(l => l.id === level.id);
+                      return <LevelCard key={level.id} level={level} idx={idx} isLocked={isLevelLockedDisplay(level, idx)} completedLessons={completedLessons} setCurrentLessonId={setCurrentLessonId} setPage={setPage} colorClass="rose" />;
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -252,6 +249,72 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
     </Layout>
+  );
+};
+
+const LevelCard: React.FC<{ 
+  level: any; 
+  idx: number; 
+  isLocked: boolean; 
+  completedLessons: string[]; 
+  setCurrentLessonId: (id: string | null) => void;
+  setPage: (page: any) => void;
+  colorClass: string;
+}> = ({ level, idx, isLocked, completedLessons, setCurrentLessonId, setPage, colorClass }) => {
+  const totalInLevel = level.modules?.reduce((acc: number, m: any) => acc + (m.lessons?.length || 0), 0) || 0;
+  const completedInLevel = level.modules?.reduce((acc: number, m: any) => 
+    acc + (m.lessons?.filter((l: any) => completedLessons.includes(l.id)).length || 0), 0
+  ) || 0;
+  const levelProgress = totalInLevel > 0 ? Math.round((completedInLevel / totalInLevel) * 100) : 0;
+
+  return (
+    <div 
+      onClick={() => {
+        if (isLocked) return;
+        if (level.modules?.[0]?.lessons?.[0]?.id) {
+          setCurrentLessonId(level.modules[0].lessons[0].id);
+          setPage('lesson');
+        }
+      }}
+      className={cn(
+        "bg-white border border-zinc-200 p-6 rounded-2xl transition-all relative overflow-hidden",
+        isLocked 
+          ? "opacity-60 grayscale cursor-not-allowed" 
+          : "hover:border-rose-200 cursor-pointer group"
+      )}
+    >
+      {isLocked && (
+        <div className="absolute inset-0 bg-zinc-100/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-2 text-zinc-500">
+            <Lock size={28} />
+            <span className="text-xs font-bold uppercase tracking-widest">Terkunci</span>
+          </div>
+        </div>
+      )}
+      <div className="flex items-center justify-between mb-4">
+        <div className={cn(
+          "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+          isLocked 
+            ? "bg-zinc-100 text-zinc-400" 
+            : "bg-zinc-50 text-zinc-400 group-hover:bg-rose-50 group-hover:text-rose-700"
+        )}>
+          {isLocked ? <Lock size={18} /> : idx + 1}
+        </div>
+        <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {idx + 1}</div>
+      </div>
+      <h4 className="font-bold text-lg mb-1">{level.title}</h4>
+      <p className="text-sm text-zinc-500 mb-4 line-clamp-2">{level.description}</p>
+      
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-zinc-400 font-medium">{level.modules?.length || 0} Modul</span>
+          <span className="text-rose-700 font-bold">{isLocked ? '—' : `${levelProgress}%`}</span>
+        </div>
+        <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+          <div className="h-full bg-rose-700 rounded-full transition-all duration-500" style={{ width: `${isLocked ? 0 : levelProgress}%` }} />
+        </div>
+      </div>
+    </div>
   );
 };
 
