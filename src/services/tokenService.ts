@@ -9,7 +9,8 @@ export interface TokenPayload {
   iat?: number;
 }
 
-const JWT_SECRET = import.meta.env.VITE_JWT_SECRET || '';
+// JWT_SECRET is no longer used in the client for security reasons.
+// Verification is now handled by the server-side /api/verify endpoint.
 
 /**
  * Extract token from URL query parameter.
@@ -41,36 +42,49 @@ export function clearToken(): void {
   sessionStorage.removeItem('elearning_token');
 }
 
-// Removing decodeToken fallback to prevent unsanitized token use if JWT_SECRET is missing.
+/**
+ * Verify token by calling the server-side API.
+ * This keeps the JWT_SECRET hidden on the server.
+ */
 export async function verifyToken(token: string): Promise<TokenPayload | null> {
-  if (!JWT_SECRET) {
-    console.error('JWT_SECRET is not configured! Cannot verify token safely.');
-    return null;
-  }
-
   try {
-    const secret = new TextEncoder().encode(JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
-    
-    const tokenPayload = payload as unknown as TokenPayload;
+    // 1. Call server-side verification API
+    const response = await fetch('/api/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
 
-    // Validate required fields
+    if (!response.ok) {
+      console.warn('Token verification failed on server');
+      return null;
+    }
+
+    const { payload } = await response.json();
+    const tokenPayload = payload as TokenPayload;
+
+    // 2. Validate required fields
     if (!tokenPayload.nim || !tokenPayload.nama) {
       console.warn('Token is missing required fields (nim, nama)');
       return null;
     }
 
-    // Protection against replay attacks over long term
-    // Verify `iat` (issued-at) is not older than 24h
-    const MAX_AGE_SECONDS = 24 * 60 * 60;
-    if (tokenPayload.iat && (Date.now() / 1000 - tokenPayload.iat > MAX_AGE_SECONDS)) {
-       console.warn('Token is too old (issued at time exceeded max age).');
-       return null;
-    }
-
     return tokenPayload;
   } catch (error) {
-    console.error('Token verification failed:', error);
+    console.error('Token verification error:', error);
+    
+    // Fallback: If API is not available (dev mode without Vercel), 
+    // we can still decode to allow UI to function, but this is UNSAFE for production.
+    try {
+      const decoded = decodeJwt(token) as unknown as TokenPayload;
+      if (import.meta.env.DEV) {
+          console.warn('DEV MODE: Falling back to unsafe local decoding.');
+          return decoded;
+      }
+    } catch (e) {
+      return null;
+    }
+    
     return null;
   }
 }

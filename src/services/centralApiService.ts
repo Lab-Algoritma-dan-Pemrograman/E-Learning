@@ -1,5 +1,5 @@
-import { supabase } from '../lib/supabase';
 import { Level } from '../data/curriculum';
+import { getSavedToken } from './tokenService';
 
 export interface ProgressSummaryPayload {
   nim: string;
@@ -13,38 +13,36 @@ export interface ProgressSummaryPayload {
 
 /**
  * Report aggregated progress (1 row per user) to Supabase central database.
- * Counts ALL lessons across ALL levels and sends a single summary row.
- * Uses upsert on 'nim' so the same user always has 1 row.
+ * This report is now handled server-side for security.
  */
 export async function reportProgressToSupabase(payload: ProgressSummaryPayload): Promise<void> {
   try {
+    const token = getSavedToken();
+    if (!token) {
+      console.warn('Cannot report progress: No active token found.');
+      return;
+    }
+
+    // Call server-side API instead of direct Supabase client
+    const response = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, payload }),
+    });
+
+    if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        console.error('Failed to report progress to server:', errData.error || response.statusText);
+        return;
+    }
+
     const percentage = payload.totalLessons > 0
       ? Math.round((payload.completedLessons / payload.totalLessons) * 10000) / 100
       : 0;
 
-    const { error } = await supabase
-      .from('elearning_progress')
-      .upsert({
-        nim: payload.nim,
-        student_name: payload.studentName,
-        lessons_completed: payload.completedLessons,
-        total_lessons: payload.totalLessons,
-        completion_percentage: percentage,
-        is_completed: payload.isCompleted,
-        completed_levels: payload.completedLevels,
-        current_level: payload.currentLevel,
-        last_accessed_at: new Date().toISOString(),
-      }, {
-        onConflict: 'nim',
-      });
-
-    if (error) {
-      console.error('Failed to report progress to Supabase:', error);
-    } else {
-      console.log(`📊 Progress reported: ${payload.nim} (${payload.completedLessons}/${payload.totalLessons} = ${percentage}%)`);
-    }
+    console.log(`📊 Progress reported via server: ${payload.nim} (${payload.completedLessons}/${payload.totalLessons} = ${percentage}%)`);
   } catch (error) {
-    console.error('Error reporting progress to Supabase:', error);
+    console.error('Error reporting progress to server:', error);
   }
 }
 
