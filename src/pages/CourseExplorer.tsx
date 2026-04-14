@@ -6,15 +6,34 @@ import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 
 export const CourseExplorer: React.FC = () => {
-  const { setPage, setCurrentLessonId, curriculum } = useStore();
+  const { currentUser, setPage, setCurrentLessonId, curriculum } = useStore();
   const { completedLessons } = useProgress();
+
+  const getEffectiveAccessMode = (levelId: string): 'auto' | 'unlocked' | 'locked' => {
+    const userOverride = currentUser?.levelAccessOverrides?.[levelId];
+    if (userOverride && userOverride !== 'auto') {
+      return userOverride;
+    }
+    const level = curriculum.find(l => l.id === levelId);
+    if (!level) return 'locked';
+    
+    if (level.accessMode) return level.accessMode;
+    if (level.locked === true) return 'locked';
+    
+    return 'auto';
+  };
 
   const isModuleLocked = (levelIdx: number, moduleIdx: number) => {
     if (curriculum.length === 0) return true;
 
-    // Check if the level itself is locked by admin
     const level = curriculum[levelIdx];
-    if (level?.locked) return true;
+    if (!level) return true;
+
+    const accessMode = getEffectiveAccessMode(level.id);
+    if (accessMode === 'locked') return true;
+    if (accessMode === 'unlocked') return false;
+
+    // accessMode === 'auto' -> Sequential check
 
     if (levelIdx === 0 && moduleIdx === 0) return false;
     
@@ -81,16 +100,16 @@ export const CourseExplorer: React.FC = () => {
               <div className="flex items-center gap-4">
                 <div className={cn(
                   "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shadow-xl",
-                  level.locked 
+                  isModuleLocked(lIdx, 0)
                     ? "bg-zinc-400 text-white shadow-zinc-400/10" 
                     : "bg-zinc-900 text-white shadow-zinc-900/10"
                 )}>
-                  {level.locked ? <Lock size={20} /> : lIdx + 1}
+                  {isModuleLocked(lIdx, 0) ? <Lock size={20} /> : lIdx + 1}
                 </div>
                 <div>
                   <h2 className="text-2xl font-black flex items-center gap-2">
                     {level.title}
-                    {level.locked && (
+                    {isModuleLocked(lIdx, 0) && (
                       <span className="text-xs font-bold text-zinc-400 bg-zinc-100 px-2 py-1 rounded-lg uppercase tracking-wider">
                         Terkunci
                       </span>

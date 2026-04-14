@@ -28,7 +28,8 @@ export interface Level {
   id: string;
   title: string;
   description: string;
-  locked?: boolean;
+  locked?: boolean; // Deprecated, keep for backward compatibility
+  accessMode?: 'auto' | 'unlocked' | 'locked'; 
   modules: Module[];
 }
 

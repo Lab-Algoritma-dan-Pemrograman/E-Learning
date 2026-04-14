@@ -13,6 +13,7 @@ export interface UserProfile {
   lastActive: string;
   createdAt: string;
   role?: 'admin' | 'user';
+  levelAccessOverrides?: Record<string, 'auto' | 'unlocked' | 'locked'>;
 }
 
 type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin';

@@ -10,15 +10,39 @@ export const Dashboard: React.FC = () => {
   const { user, setPage, currentLessonId, setCurrentLessonId, curriculum } = useStore();
   const { completedLessons } = useProgress();
 
+  const isLevelLockedDisplay = (level: any, idx: number) => {
+    const userOverride = user?.levelAccessOverrides?.[level.id];
+    if (userOverride && userOverride !== 'auto') return userOverride === 'locked';
+    if (level.accessMode === 'locked') return true;
+    if (level.accessMode === 'unlocked') return false;
+    if (level.locked === true) return true;
+    if (level.locked === false) return false;
+    
+    if (idx === 0) return false;
+    const prevLevel = curriculum[idx - 1];
+    if (!prevLevel) return false;
+    
+    let uncompletedFound = false;
+    for (const mod of (prevLevel.modules || [])) {
+      for (const lesson of (mod.lessons || [])) {
+        if (!completedLessons.includes(lesson.id)) {
+          uncompletedFound = true;
+          break;
+        }
+      }
+      if (uncompletedFound) break;
+    }
+    return uncompletedFound;
+  };
+
   const handleContinue = () => {
     if (curriculum.length === 0) return;
     
-    // Find the first lesson that is not completed
     let firstUncompletedLessonId: string | null = null;
     
-    for (const level of curriculum) {
-      // Skip locked levels
-      if (level.locked) continue;
+    for (let i = 0; i < curriculum.length; i++) {
+      const level = curriculum[i];
+      if (isLevelLockedDisplay(level, i)) continue;
       for (const module of (level.modules || [])) {
         for (const lesson of (module.lessons || [])) {
           if (!completedLessons.includes(lesson.id)) {
@@ -41,8 +65,8 @@ export const Dashboard: React.FC = () => {
     setPage('lesson');
   };
 
-  const totalLessons = curriculum.reduce((acc, level) => 
-    acc + (level.locked ? 0 : (level.modules?.reduce((mAcc, module) => mAcc + (module.lessons?.length || 0), 0) || 0)), 0
+  const totalLessons = curriculum.reduce((acc, level, i) => 
+    acc + (isLevelLockedDisplay(level, i) ? 0 : (level.modules?.reduce((mAcc, module) => mAcc + (module.lessons?.length || 0), 0) || 0)), 0
   );
 
   const handleInitialize = async () => {
@@ -137,7 +161,7 @@ export const Dashboard: React.FC = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {curriculum.map((level, idx) => {
-                  const isLocked = level.locked === true;
+                  const isLocked = isLevelLockedDisplay(level, idx);
                   const totalInLevel = level.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0;
                   const completedInLevel = level.modules?.reduce((acc, m) => 
                     acc + (m.lessons?.filter(l => completedLessons.includes(l.id)).length || 0), 0

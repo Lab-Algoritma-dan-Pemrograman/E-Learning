@@ -196,10 +196,15 @@ export const AdminDashboard: React.FC = () => {
     });
   };
 
-  // ===== TOGGLE LEVEL LOCK =====
-  const handleToggleLevelLock = (level: Level) => {
-    const newLocked = !level.locked;
-    updateDraftLevel({ ...level, locked: newLocked });
+  // ===== CYCLE ACCESS MODE =====
+  const handleCycleAccessMode = (level: Level) => {
+    const current = level.accessMode || (level.locked ? 'locked' : 'auto');
+    let next: 'auto' | 'unlocked' | 'locked' = 'auto';
+    if (current === 'auto') next = 'unlocked';
+    else if (current === 'unlocked') next = 'locked';
+    else next = 'auto';
+    
+    updateDraftLevel({ ...level, accessMode: next, locked: next === 'locked' });
   };
 
   // ===== REORDER MODULES =====
@@ -499,6 +504,32 @@ export const AdminDashboard: React.FC = () => {
         }
       }
     });
+  };
+
+  const handleUpdateUserAccessOverride = async (levelId: string) => {
+    if (!selectedUser?.nim) return;
+    try {
+      setResetLoading(true);
+      const overrides = selectedUser.levelAccessOverrides || {};
+      const current = overrides[levelId] || 'auto';
+      let next: 'auto' | 'unlocked' | 'locked' = 'auto';
+      if (current === 'auto') next = 'unlocked';
+      else if (current === 'unlocked') next = 'locked';
+      else next = 'auto';
+
+      const newOverrides = { ...overrides, [levelId]: next };
+      const userRef = doc(db, 'users', selectedUser.nim);
+      await updateDoc(userRef, { levelAccessOverrides: newOverrides });
+      
+      const updatedUser = { ...selectedUser, levelAccessOverrides: newOverrides };
+      setSelectedUser(updatedUser);
+      setUsers(prevUsers => prevUsers.map(u => u.nim === selectedUser.nim ? updatedUser : u));
+    } catch (error) {
+      console.error(error);
+      setShowModal({ type: 'alert', title: 'Error', message: 'Gagal update akses level user' });
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -837,6 +868,36 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Override Akses Level (Per-User) */}
+                      <div className="space-y-2 mt-4">
+                        <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Otoritas Akses Level (User Ini Saja)</div>
+                        <div className="max-h-[160px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar pb-2">
+                          {appCurriculum.map(level => {
+                            const overrideState = selectedUser.levelAccessOverrides?.[level.id] || 'auto';
+                            return (
+                              <div key={level.id} className="flex items-center justify-between px-3 py-2 bg-zinc-50 rounded-lg text-xs">
+                                <span className="font-medium truncate flex-1 pr-2">{level.title}</span>
+                                <button
+                                  onClick={() => handleUpdateUserAccessOverride(level.id)}
+                                  disabled={resetLoading}
+                                  className={cn(
+                                    "px-2 py-1 rounded-md font-bold shrink-0 transition-colors flex items-center gap-1",
+                                    overrideState === 'unlocked' ? "bg-green-100 text-green-700 hover:bg-green-200" :
+                                    overrideState === 'locked' ? "bg-red-100 text-red-700 hover:bg-red-200" :
+                                    "bg-zinc-200 text-zinc-600 hover:bg-zinc-300"
+                                  )}
+                                  title="Klik untuk mengubah (Auto -> Terbuka -> Terkunci)"
+                                >
+                                  {overrideState === 'unlocked' && <><Unlock size={10} /> FORCE OPEN</>}
+                                  {overrideState === 'locked' && <><Lock size={10} /> FORCE LOCK</>}
+                                  {overrideState === 'auto' && <><CheckCircle2 size={10} /> AUTO</>}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                       {/* Reset All */}
                       <button 
                         onClick={handleResetUserProgress}
@@ -977,9 +1038,12 @@ export const AdminDashboard: React.FC = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Level {lIdx + 1}</span>
-                                  {level.locked && (
-                                    <span className="text-[10px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">TERKUNCI</span>
-                                  )}
+                                  {(() => {
+                                    const mode = level.accessMode || (level.locked ? 'locked' : 'auto');
+                                    if (mode === 'locked') return <span className="text-[10px] items-center gap-1 font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded flex"><Lock size={12}/> TERKUNCI</span>;
+                                    if (mode === 'unlocked') return <span className="text-[10px] items-center gap-1 font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded flex"><Unlock size={12}/> TERBUKA GLOBAL</span>;
+                                    return <span className="text-[10px] items-center gap-1 font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded flex"><CheckCircle2 size={12}/> AUTO (PROGRES)</span>;
+                                  })()}
                                 </div>
                                 <h4 className="font-bold truncate">{level.title}</h4>
                               </div>
@@ -998,16 +1062,21 @@ export const AdminDashboard: React.FC = () => {
                               <Edit2 size={14} />
                             </button>
                             <button
-                              onClick={() => handleToggleLevelLock(level)}
+                              onClick={() => handleCycleAccessMode(level)}
                               className={cn(
-                                "p-2 rounded-lg transition-colors",
-                                level.locked 
-                                  ? "text-red-500 hover:bg-red-50" 
-                                  : "text-green-600 hover:bg-green-50"
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-colors text-xs font-bold",
+                                (level.accessMode || (level.locked ? 'locked' : 'auto')) === 'locked' 
+                                  ? "text-red-500 hover:bg-red-50 bg-red-50/50" 
+                                  : (level.accessMode === 'unlocked' ? "text-green-600 hover:bg-green-50 bg-green-50/50" : "text-blue-600 hover:bg-blue-50 bg-blue-50/50")
                               )}
-                              title={level.locked ? 'Buka Level' : 'Kunci Level'}
+                              title="Silklus Mode Akses (Auto -> Terbuka -> Terkunci)"
                             >
-                              {level.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                              {(() => {
+                                const mode = level.accessMode || (level.locked ? 'locked' : 'auto');
+                                if (mode === 'locked') return <><Lock size={14} /> Terkunci</>;
+                                if (mode === 'unlocked') return <><Unlock size={14} /> Terbuka</>;
+                                return <><CheckCircle2 size={14} /> Auto</>;
+                              })()}
                             </button>
                           </div>
                         </div>
