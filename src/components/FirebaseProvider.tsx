@@ -82,13 +82,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         let profileData: UserProfile;
         if (!userSnap.exists()) {
           console.log("Profile not found, creating new user profile...");
-          
-          // Check if this is the first user (empty database) → auto-assign admin
-          const usersSnapshot = await getDocs(collection(db, 'users'));
-          const isFirstUser = usersSnapshot.empty;
-          if (isFirstUser) {
-            console.log("🎉 First user detected! Assigning admin role.");
-          }
 
           profileData = {
             nim: payload.nim,
@@ -100,7 +93,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             streak: 0,
             lastActive: new Date().toISOString(),
             createdAt: new Date().toISOString(),
-            role: isFirstUser ? 'admin' : 'user',
+            role: 'user',
           };
           await setDoc(userRef, profileData);
           console.log("New profile created successfully");
@@ -153,7 +146,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           streak: 0,
           lastActive: new Date().toISOString(),
           createdAt: new Date().toISOString(),
-          role: 'admin', // Give admin role on fallback so they can initialize DB
+          role: 'user', // Fallback to normal user for safety
         };
         console.log("Using fallback profile from token:", fallbackProfile.nama);
         setStoreUser(fallbackProfile);

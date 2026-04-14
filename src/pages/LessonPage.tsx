@@ -11,9 +11,8 @@ import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 import { completeLesson as completeLessonService } from '../services/progressService';
 import { cn } from '../lib/utils';
-import { getCodeHint } from '../services/aiService';
 import { useCodeRunner, detectLanguage, CodeLanguage } from '../hooks/useCodeRunner';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 /**
  * Normalize output for flexible comparison:
@@ -69,8 +68,6 @@ export const LessonPage: React.FC = () => {
   const [code, setCode] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showHint, setShowHint] = useState(false);
-  const [aiHint, setAiHint] = useState<string | null>(null);
-  const [isAiLoading, setIsAiLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showLessonNav, setShowLessonNav] = useState(false);
 
@@ -94,8 +91,6 @@ export const LessonPage: React.FC = () => {
       setCode(lesson.initialCode || lesson.codeExample);
       setIsCorrect(null);
       setShowHint(false);
-      setAiHint(null);
-      setIsAiLoading(false);
       setOutput('');
       setError(null);
     }
@@ -121,9 +116,6 @@ export const LessonPage: React.FC = () => {
     });
 
     setIsCorrect(success);
-    if (!success) {
-      setAiHint(null); // Reset AI hint on new run if incorrect
-    }
     if (success) {
       confetti({
         particleCount: 100,
@@ -134,20 +126,7 @@ export const LessonPage: React.FC = () => {
     }
   };
 
-  const handleAiHint = async () => {
-    if (isAiLoading) return;
-    setIsAiLoading(true);
-    const hint = await getCodeHint(
-      lesson.title,
-      lesson.explanation,
-      code,
-      error || output,
-      lesson.testCases[0]?.expectedOutput
-    );
-    setAiHint(hint || null);
-    setIsAiLoading(false);
-    setShowHint(true);
-  };
+
 
   const nextLesson = async () => {
     if (user) {
@@ -426,39 +405,18 @@ export const LessonPage: React.FC = () => {
                       <Lightbulb size={14} />
                       {showHint ? "Sembunyikan Petunjuk" : "Butuh petunjuk?"}
                     </button>
-                    {(isCorrect === false || error) && (
-                      <button 
-                        onClick={handleAiHint}
-                        disabled={isAiLoading}
-                        className="text-sm font-bold text-rose-700 hover:text-rose-800 flex items-center gap-1 transition-colors bg-rose-50 px-3 py-1.5 rounded-lg"
-                      >
-                        {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                        Tanya AI
-                      </button>
-                    )}
                   </div>
                   <AnimatePresence>
-                    {(showHint || aiHint) && (
+                    {showHint && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden space-y-3"
                       >
-                        {showHint && (
-                          <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800 italic">
-                            {lesson.hint}
-                          </div>
-                        )}
-                        {aiHint && (
-                          <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-sm text-rose-800">
-                            <div className="flex items-center gap-2 mb-2 font-bold text-rose-700">
-                              <Sparkles size={14} />
-                              Analisis AI
-                            </div>
-                            {aiHint}
-                          </div>
-                        )}
+                        <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800 italic">
+                          {lesson.hint}
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -482,16 +440,6 @@ export const LessonPage: React.FC = () => {
                   <div className="flex items-center justify-between mb-2 text-zinc-500 text-xs uppercase tracking-widest font-bold">
                     <div className="flex items-center gap-2">
                       <span>Output</span>
-                      {(isCorrect === false || error) && (
-                        <button 
-                          onClick={handleAiHint}
-                          disabled={isAiLoading}
-                          className="text-[10px] bg-rose-700 text-white px-2 py-0.5 rounded hover:bg-rose-600 transition-colors flex items-center gap-1"
-                        >
-                          {isAiLoading ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
-                          Tanya AI
-                        </button>
-                      )}
                     </div>
                     {isCorrect !== null && (
                       <span className={isCorrect ? "text-rose-400" : "text-red-400"}>

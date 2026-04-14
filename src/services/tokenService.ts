@@ -41,43 +41,11 @@ export function clearToken(): void {
   sessionStorage.removeItem('elearning_token');
 }
 
-/**
- * Decode JWT token without verification (for quick payload access).
- * Use this when signature verification is handled elsewhere or
- * when the JWT_SECRET is not available in the frontend.
- */
-export function decodeToken(token: string): TokenPayload | null {
-  try {
-    const payload = decodeJwt(token) as unknown as TokenPayload;
-    
-    // Check expiration
-    if (payload.exp && Date.now() / 1000 > payload.exp) {
-      console.warn('Token has expired');
-      return null;
-    }
-
-    // Validate required fields
-    if (!payload.nim || !payload.nama) {
-      console.warn('Token is missing required fields (nim, nama)');
-      return null;
-    }
-
-    return payload;
-  } catch (error) {
-    console.error('Failed to decode token:', error);
-    return null;
-  }
-}
-
-/**
- * Verify JWT token with signature validation.
- * Use this when JWT_SECRET is available.
- */
+// Removing decodeToken fallback to prevent unsanitized token use if JWT_SECRET is missing.
 export async function verifyToken(token: string): Promise<TokenPayload | null> {
   if (!JWT_SECRET) {
-    // Fallback to decode-only if secret is not configured
-    console.warn('JWT_SECRET not configured, falling back to decode-only mode');
-    return decodeToken(token);
+    console.error('JWT_SECRET is not configured! Cannot verify token safely.');
+    return null;
   }
 
   try {
@@ -90,6 +58,14 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
     if (!tokenPayload.nim || !tokenPayload.nama) {
       console.warn('Token is missing required fields (nim, nama)');
       return null;
+    }
+
+    // Protection against replay attacks over long term
+    // Verify `iat` (issued-at) is not older than 24h
+    const MAX_AGE_SECONDS = 24 * 60 * 60;
+    if (tokenPayload.iat && (Date.now() / 1000 - tokenPayload.iat > MAX_AGE_SECONDS)) {
+       console.warn('Token is too old (issued at time exceeded max age).');
+       return null;
     }
 
     return tokenPayload;
@@ -116,6 +92,10 @@ export async function initializeFromToken(): Promise<TokenPayload | null> {
       url.searchParams.delete('token');
       window.history.replaceState({}, '', url.toString());
       return payload;
+    } else {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('token');
+      window.history.replaceState({}, '', url.toString());
     }
   }
 

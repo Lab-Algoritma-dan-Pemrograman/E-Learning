@@ -6,6 +6,7 @@
 import { FirebaseProvider } from './components/FirebaseProvider';
 import { PyodideInitializer } from './components/PyodideInitializer';
 import { useStore } from './store/useStore';
+import { secureLog, secureError } from './lib/securityUtils';
 import { LandingPage } from './pages/LandingPage';
 import { Dashboard } from './pages/Dashboard';
 import { LessonPage } from './pages/LessonPage';
@@ -18,21 +19,21 @@ import { AdminDashboard } from './pages/AdminDashboard';
 function AppContent() {
   const { user, page, setPage } = useStore();
 
-  console.log("AppContent Render:", { hasUser: !!user, page });
+  secureLog("AppContent Render:", { hasUser: !!user, page });
 
   // If user just logged in, ensure we are on dashboard
   const handleStart = () => {
-    console.log("handleStart called, setting page to dashboard");
+    secureLog("handleStart called, setting page to dashboard");
     setPage('dashboard');
   };
 
   if (!user) {
-    console.log("No user found, showing LandingPage");
+    secureLog("No user found, showing LandingPage");
     return <LandingPage onStart={handleStart} />;
   }
 
   const renderPage = () => {
-    console.log("Rendering page:", page);
+    secureLog("Rendering page:", page);
     try {
       switch (page) {
         case 'dashboard': return <Dashboard />;
@@ -45,7 +46,7 @@ function AppContent() {
         default: return <Dashboard />;
       }
     } catch (error) {
-      console.error("Page render error:", error);
+      secureError("Page render error:", error);
       return <Dashboard />;
     }
   };

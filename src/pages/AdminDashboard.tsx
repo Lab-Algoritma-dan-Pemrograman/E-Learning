@@ -477,6 +477,15 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleToggleRole = async (targetUser: UserProfile) => {
+    if (targetUser.nim === currentUser?.nim) {
+      setShowModal({
+        type: 'alert',
+        title: 'Aksi Ditolak',
+        message: 'Anda tidak dapat menghapus akses admin dari akun Anda sendiri.',
+      });
+      return;
+    }
+
     const newRole = targetUser.role === 'admin' ? 'user' : 'admin';
     setShowModal({
       type: 'confirm',

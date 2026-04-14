@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { checkRateLimit, secureError } from '../lib/securityUtils';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
 
@@ -12,9 +13,15 @@ export const getCodeHint = async (
   expectedOutput?: string
 ) => {
   if (!apiKey) {
-    console.error("GEMINI_API_KEY or VITE_GEMINI_API_KEY is not configured.");
+    secureError("GEMINI_API_KEY or VITE_GEMINI_API_KEY is not configured.");
     return "Maaf, kunci API AI belum dikonfigurasi. Silakan hubungi admin.";
   }
+
+  // Rate Limiting: Max 10 requests per minute for hints
+  if (!checkRateLimit('ai_hint', 10, 60000)) {
+    return "Anda meminta petunjuk terlalu cepat. Silakan tunggu sesaat sebelum mencoba lagi.";
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",

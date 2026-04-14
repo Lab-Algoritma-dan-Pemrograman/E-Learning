@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Level } from "../data/curriculum";
+import { checkRateLimit } from '../lib/securityUtils';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
 
@@ -7,6 +8,11 @@ export const aiCurriculumService = {
   async generateCurriculum(material: string, fileData?: string): Promise<Level[]> {
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY or VITE_GEMINI_API_KEY is not configured.');
+    }
+
+    // Rate Limiting: Max 2 requests per minute for curriculum generation (heavy operation)
+    if (!checkRateLimit('ai_curriculum', 2, 60000)) {
+      throw new Error("Anda meminta generasi kurikulum terlalu cepat. Tunggu sebentar.");
     }
 
     const ai = new GoogleGenAI({ apiKey });
