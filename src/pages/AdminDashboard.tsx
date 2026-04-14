@@ -1285,6 +1285,43 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
+              <div className="bg-zinc-50 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-rose-700 shadow-sm border border-zinc-100">
+                    <Sparkles size={20} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest leading-none mb-1">Pilih Model AI</div>
+                    <div className="text-sm font-black">{useStore.getState().selectedModel === 'gemini-3-flash' ? 'Gemini 3 Flash (Terbaru)' : 'Gemini 2.5 Flash'}</div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 bg-white p-1 rounded-xl border border-zinc-200">
+                  <button 
+                    onClick={() => useStore.getState().setSelectedModel('gemini-3-flash')}
+                    className={cn(
+                      "px-4 py-2 text-xs font-bold rounded-lg transition-all",
+                      useStore.getState().selectedModel === 'gemini-3-flash' 
+                        ? "bg-rose-700 text-white shadow-md shadow-rose-700/20" 
+                        : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+                    )}
+                  >
+                    Gemini 3 Flash
+                  </button>
+                  <button 
+                    onClick={() => useStore.getState().setSelectedModel('gemini-2.5-flash')}
+                    className={cn(
+                      "px-4 py-2 text-xs font-bold rounded-lg transition-all",
+                      useStore.getState().selectedModel === 'gemini-2.5-flash' 
+                        ? "bg-rose-700 text-white shadow-md shadow-rose-700/20" 
+                        : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+                    )}
+                  >
+                    Gemini 2.5 Flash
+                  </button>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-4 mb-4">
                 <button 
                   onClick={handleClearCurriculum}

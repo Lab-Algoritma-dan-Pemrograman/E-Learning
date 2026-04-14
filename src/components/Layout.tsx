@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck } from 'lucide-react';
+import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { logout } from '../firebase';
@@ -81,7 +81,38 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               )}
             </nav>
 
-            <div className="p-4 border-t border-zinc-100">
+            <div className="p-4 border-t border-zinc-100 space-y-4">
+              <div className="bg-zinc-50 p-3 rounded-2xl space-y-2">
+                <div className="flex items-center gap-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">
+                  <Sparkles size={12} className="text-rose-700" />
+                  AI Model
+                </div>
+                <div className="flex gap-1 bg-white p-1 rounded-xl border border-zinc-200">
+                  <button 
+                    onClick={() => useStore.getState().setSelectedModel('gemini-3-flash')}
+                    className={cn(
+                      "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all",
+                      useStore.getState().selectedModel === 'gemini-3-flash' 
+                        ? "bg-rose-700 text-white shadow-sm" 
+                        : "text-zinc-500 hover:text-zinc-900"
+                    )}
+                  >
+                    3 Flash
+                  </button>
+                  <button 
+                    onClick={() => useStore.getState().setSelectedModel('gemini-2.5-flash')}
+                    className={cn(
+                      "flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all",
+                      useStore.getState().selectedModel === 'gemini-2.5-flash' 
+                        ? "bg-rose-700 text-white shadow-sm" 
+                        : "text-zinc-500 hover:text-zinc-900"
+                    )}
+                  >
+                    2.5 Flash
+                  </button>
+                </div>
+              </div>
+
               <button 
                 onClick={handleLogout}
                 className="flex items-center gap-3 w-full p-3 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 rounded-xl transition-colors"

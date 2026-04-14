@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Level, Module, Lesson } from "../data/curriculum";
 import { checkRateLimit } from '../lib/securityUtils';
+import { useStore } from "../store/useStore";
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
 
@@ -113,7 +114,7 @@ export const aiCurriculumService = {
     }
 
     const model = ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: useStore.getState().selectedModel,
       contents: [
         {
           role: "user",
@@ -213,7 +214,7 @@ export const aiCurriculumService = {
     
     // We strictly use the Module JSON structure only
     const model = ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: useStore.getState().selectedModel,
       contents: [
         {
           role: "user",
@@ -306,7 +307,7 @@ Instruksi WAJIB:
     
     // We strictly use the Lesson JSON structure only
     const model = ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-flash",
       contents: [
         {
           role: "user",

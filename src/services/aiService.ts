@@ -1,4 +1,5 @@
 import { checkRateLimit } from '../lib/securityUtils';
+import { useStore } from '../store/useStore';
 
 /**
  * Get a code hint from the AI via a secure server-side proxy.
@@ -33,10 +34,12 @@ Provide a short, encouraging hint in Indonesian to help the student fix their co
 Do NOT give the full solution immediately, but point out the logical or syntax error.
 Keep it under 3 sentences.`;
 
+    const { selectedModel } = useStore.getState();
+
     const response = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, model: selectedModel }),
     });
 
     if (!response.ok) {

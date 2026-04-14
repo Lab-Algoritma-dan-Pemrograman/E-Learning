@@ -1,5 +1,6 @@
 import { Level } from '../data/curriculum';
 import { getSavedToken } from './tokenService';
+import { supabase } from '../lib/supabase';
 
 export interface ProgressSummaryPayload {
   nim: string;

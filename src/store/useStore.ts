@@ -29,6 +29,8 @@ interface AppState {
   toggleSidebar: () => void;
   page: Page;
   setPage: (page: Page) => void;
+  selectedModel: 'gemini-3-flash' | 'gemini-2.5-flash';
+  setSelectedModel: (model: 'gemini-3-flash' | 'gemini-2.5-flash') => void;
   pyodide: any;
   setPyodide: (py: any) => void;
   isPyodideLoading: boolean;
@@ -46,6 +48,8 @@ export const useStore = create<AppState>((set) => ({
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   page: 'dashboard',
   setPage: (page) => set({ page }),
+  selectedModel: 'gemini-3-flash',
+  setSelectedModel: (model) => set({ selectedModel: model }),
   pyodide: null,
   setPyodide: (py) => set({ pyodide: py }),
   isPyodideLoading: true,

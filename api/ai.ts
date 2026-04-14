@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 export const config = {
   runtime: 'edge',
@@ -10,18 +10,24 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const { prompt } = await req.json();
+    const { prompt, model: requestedModel } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'AI Key not configured' }), { status: 500 });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Default to gemini-3-flash, only allow gemini-3-flash or gemini-2.5-flash
+    const allowedModels = ["gemini-3-flash", "gemini-2.5-flash"];
+    const modelId = allowedModels.includes(requestedModel) ? requestedModel : "gemini-3-flash";
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const genAI = new GoogleGenAI({ apiKey });
+    const result = await genAI.models.generateContent({
+      model: modelId,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
+    });
+
+    const text = result.text;
 
     return new Response(JSON.stringify({ text }), {
       status: 200,

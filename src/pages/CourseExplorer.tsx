@@ -6,11 +6,11 @@ import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 
 export const CourseExplorer: React.FC = () => {
-  const { currentUser, setPage, setCurrentLessonId, curriculum } = useStore();
+  const { user, setPage, setCurrentLessonId, curriculum } = useStore();
   const { completedLessons } = useProgress();
 
   const getEffectiveAccessMode = (levelId: string): 'auto' | 'unlocked' | 'locked' => {
-    const userOverride = currentUser?.levelAccessOverrides?.[levelId];
+    const userOverride = user?.levelAccessOverrides?.[levelId];
     if (userOverride && userOverride !== 'auto') {
       return userOverride;
     }
