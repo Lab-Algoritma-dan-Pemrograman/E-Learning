@@ -14,4 +14,12 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #d4d4d8;
   }
+
+  /* Fix for Monaco Editor cursor missing due to Tailwind border-width: 0 reset */
+  .monaco-editor .cursor {
+    border-style: solid !important;
+    border-width: 2px !important;
+    border-color: #fff !important;
+  }
 }
+
