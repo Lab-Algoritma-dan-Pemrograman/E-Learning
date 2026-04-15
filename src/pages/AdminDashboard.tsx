@@ -8,7 +8,7 @@ import {
   Users, Trophy, Zap, Clock, ChevronRight, Search, Shield, 
   User as UserIcon, CheckCircle2, Sparkles, Loader2, BookOpen,
   Lock, Unlock, ChevronUp, ChevronDown, Trash2, Plus, GripVertical,
-  RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff
+  RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff, Terminal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Level, Module, Lesson } from '../data/curriculum';
