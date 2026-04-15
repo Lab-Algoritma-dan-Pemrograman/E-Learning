@@ -13,6 +13,9 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Level, Module, Lesson } from '../data/curriculum';
 import { resetUserProgress, resetLevelProgress, adjustUserXp } from '../services/progressService';
+import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings } from '../services/gameService';
+import { Achievement, getAchievements } from '../services/achievementService';
+import initialAchievements from '../data/achievements.json';
 
 interface LessonProgress {
   lessonId: string;
@@ -30,7 +33,7 @@ export const AdminDashboard: React.FC = () => {
   const [userProgress, setUserProgress] = useState<LessonProgress[]>([]);
   const [loadingProgress, setLoadingProgress] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'users' | 'curriculum' | 'structure'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'curriculum' | 'structure' | 'games'>('users');
   const [aiMaterial, setAiMaterial] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -51,6 +54,13 @@ export const AdminDashboard: React.FC = () => {
   
   // Admin reset state
   const [xpAdjustValue, setXpAdjustValue] = useState('');
+  // Game management state
+  const [allQuestions, setAllQuestions] = useState<GameQuestion[]>([]);
+  const [gameSettings, setGameSettings] = useState<GameSettings>({ bugHuntCActive: true, bugHuntPythonActive: true });
+  const [editingQuestion, setEditingQuestion] = useState<GameQuestion | null>(null);
+  const [loadingGameData, setLoadingGameData] = useState(false);
+  const [questionFilters, setQuestionFilters] = useState({ language: 'all' as 'all' | 'c' | 'python' });
+
   const [resetLoading, setResetLoading] = useState(false);
 
   const [showModal, setShowModal] = useState<{
@@ -83,6 +93,29 @@ export const AdminDashboard: React.FC = () => {
       if (unsubscribe) unsubscribe();
     };
   }, [canAccess]);
+
+  useEffect(() => {
+    if (!canAccess || activeTab !== 'games') return;
+    
+    const fetchGameData = async () => {
+      setLoadingGameData(true);
+      try {
+        const [qList, settings] = await Promise.all([
+          getGameQuestions('c', 100), // temp fetch all by getting large amount
+          getGameSettings()
+        ]);
+        // Also fetch python
+        const pyList = await getGameQuestions('python', 100);
+        setAllQuestions([...qList, ...pyList]);
+        setGameSettings(settings);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingGameData(false);
+      }
+    };
+    fetchGameData();
+  }, [canAccess, activeTab]);
 
   useEffect(() => {
     // Sinkronisasi pertama kali ke draft saat membuka tab structure
@@ -692,7 +725,7 @@ export const AdminDashboard: React.FC = () => {
             <p className="text-zinc-500 mt-1">Kelola peserta, kurikulum, dan struktur kursus.</p>
           </div>
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-2xl">
-            {(['users', 'structure', 'curriculum'] as const).map((tab) => (
+            {(['users', 'structure', 'games', 'curriculum'] as const).map((tab) => (
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -701,7 +734,7 @@ export const AdminDashboard: React.FC = () => {
                   activeTab === tab ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
                 )}
               >
-                {tab === 'users' ? 'Peserta' : tab === 'structure' ? 'Struktur' : 'Kurikulum AI'}
+                {tab === 'users' ? 'Peserta' : tab === 'structure' ? 'Struktur' : tab === 'games' ? 'Game & Soal' : 'Kurikulum AI'}
               </button>
             ))}
           </div>
@@ -1284,6 +1317,314 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
+        {/* ==================== GAMES & SOAL TAB ==================== */}
+        {activeTab === 'games' && (
+          <div className="space-y-8 pb-20">
+            {/* Game Settings */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={cn(
+                "p-6 rounded-3xl border transition-all",
+                gameSettings.bugHuntCActive ? "bg-white border-zinc-200 shadow-sm" : "bg-zinc-50 border-zinc-200 opacity-60"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", gameSettings.bugHuntCActive ? "bg-blue-50 text-blue-700" : "bg-zinc-200 text-zinc-400")}>
+                      <span className="font-black">C</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold">Bug Hunt: Bahasa C</h3>
+                      <p className="text-zinc-500 text-xs">{gameSettings.bugHuntCActive ? 'Aktif - Bisa dimainkan' : 'Nonaktif - Tombol disembunyikan'}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      const next = !gameSettings.bugHuntCActive;
+                      await updateGameSettings({ bugHuntCActive: next });
+                      setGameSettings(prev => ({ ...prev, bugHuntCActive: next }));
+                    }}
+                    className={cn(
+                      "w-12 h-6 rounded-full relative transition-colors",
+                      gameSettings.bugHuntCActive ? "bg-rose-700" : "bg-zinc-300"
+                    )}
+                  >
+                    <motion.div 
+                      animate={{ x: gameSettings.bugHuntCActive ? 24 : 4 }}
+                      className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm" 
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div className={cn(
+                "p-6 rounded-3xl border transition-all",
+                gameSettings.bugHuntPythonActive ? "bg-white border-zinc-200 shadow-sm" : "bg-zinc-50 border-zinc-200 opacity-60"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", gameSettings.bugHuntPythonActive ? "bg-rose-50 text-rose-700" : "bg-zinc-200 text-zinc-400")}>
+                      <span className="font-black">Py</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold">Bug Hunt: Python</h3>
+                      <p className="text-zinc-500 text-xs">{gameSettings.bugHuntPythonActive ? 'Aktif - Bisa dimainkan' : 'Nonaktif - Tombol disembunyikan'}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      const next = !gameSettings.bugHuntPythonActive;
+                      await updateGameSettings({ bugHuntPythonActive: next });
+                      setGameSettings(prev => ({ ...prev, bugHuntPythonActive: next }));
+                    }}
+                    className={cn(
+                      "w-12 h-6 rounded-full relative transition-colors",
+                      gameSettings.bugHuntPythonActive ? "bg-rose-700" : "bg-zinc-300"
+                    )}
+                  >
+                    <motion.div 
+                      animate={{ x: gameSettings.bugHuntPythonActive ? 24 : 4 }}
+                      className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm" 
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Question Manager */}
+            <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-sm">
+              <div className="px-6 py-4 bg-zinc-50 border-b border-zinc-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-lg">Bank Soal Bug Hunt</h3>
+                  <p className="text-zinc-500 text-xs">Total {allQuestions.length} soal terdaftar.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <select 
+                    value={questionFilters.language}
+                    onChange={(e) => setQuestionFilters({ language: e.target.value as any })}
+                    className="bg-white border border-zinc-200 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20"
+                  >
+                    <option value="all">Semua Bahasa</option>
+                    <option value="c">Bahasa C</option>
+                    <option value="python">Python</option>
+                  </select>
+                  <button 
+                    onClick={() => {
+                      setEditingQuestion({
+                        id: '', 
+                        language: 'python', 
+                        difficulty: 'easy', 
+                        title: 'Soal Baru', 
+                        code: '', 
+                        bugLine: 0, 
+                        explanation: ''
+                      });
+                    }}
+                    className="bg-zinc-900 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-zinc-800 transition-all active:scale-95"
+                  >
+                    <Plus size={16} /> Tambah Soal
+                  </button>
+                </div>
+              </div>
+
+              <div className="divide-y divide-zinc-100 overflow-x-auto">
+                {loadingGameData ? (
+                  <div className="p-12 text-center text-zinc-400">Memuat bank soal...</div>
+                ) : allQuestions.filter(q => questionFilters.language === 'all' || q.language === questionFilters.language).length > 0 ? (
+                  allQuestions
+                    .filter(q => questionFilters.language === 'all' || q.language === questionFilters.language)
+                    .map((q) => (
+                      <div key={q.id} className="p-4 hover:bg-zinc-50 transition-colors flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                          <div className={cn(
+                            "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0",
+                            q.language === 'c' ? "bg-blue-50 text-blue-700" : "bg-rose-50 text-rose-700"
+                          )}>
+                            {q.language === 'c' ? 'C' : 'Py'}
+                          </div>
+                          <div className="truncate">
+                            <h4 className="font-bold text-sm truncate">{q.title}</h4>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className={cn(
+                                "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
+                                q.difficulty === 'easy' ? "bg-emerald-100 text-emerald-700" : 
+                                q.difficulty === 'medium' ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
+                              )}>
+                                {q.difficulty}
+                              </span>
+                              <span className="text-[10px] text-zinc-400 font-mono">Bug @ line {q.bugLine + 1}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button 
+                            onClick={() => setEditingQuestion(q)}
+                            className="p-2 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setShowModal({
+                                type: 'confirm',
+                                title: 'Hapus Soal',
+                                message: `Apakah Anda yakin ingin menghapus soal "${q.title}"?`,
+                                onConfirm: async () => {
+                                  await deleteGameQuestion(q.id);
+                                  setAllQuestions(prev => prev.filter(item => item.id !== q.id));
+                                }
+                              });
+                            }}
+                            className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="p-12 text-center text-zinc-400 italic">Belum ada soal untuk filter ini.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Question Editor Modal */}
+            <AnimatePresence>
+              {editingQuestion && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                  >
+                    <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+                      <div>
+                        <h3 className="text-xl font-bold">{editingQuestion.id ? 'Edit Soal' : 'Tambah Soal Baru'}</h3>
+                        <p className="text-zinc-500 text-xs">Konfigurasi materi untuk tantangan Bug Hunt.</p>
+                      </div>
+                      <button onClick={() => setEditingQuestion(null)} className="p-2 bg-white text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200">
+                        <X size={20} />
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Bahasa</label>
+                          <select 
+                            value={editingQuestion.language}
+                            onChange={(e) => setEditingQuestion({ ...editingQuestion, language: e.target.value as any })}
+                            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold focus:ring-2 focus:ring-rose-700/20"
+                          >
+                            <option value="c">Bahasa C</option>
+                            <option value="python">Python</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Kesulitan</label>
+                          <select 
+                            value={editingQuestion.difficulty}
+                            onChange={(e) => setEditingQuestion({ ...editingQuestion, difficulty: e.target.value as any })}
+                            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold focus:ring-2 focus:ring-rose-700/20"
+                          >
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Judul Soal</label>
+                        <input 
+                          type="text" 
+                          value={editingQuestion.title}
+                          onChange={(e) => setEditingQuestion({ ...editingQuestion, title: e.target.value })}
+                          placeholder="Contoh: Kesalahan Tipu Data"
+                          className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Snippet Kode (Buggy)</label>
+                          <span className="text-[10px] text-zinc-400 italic">Gunakan baris baru untuk setiap kode</span>
+                        </div>
+                        <textarea 
+                          rows={6}
+                          value={editingQuestion.code}
+                          onChange={(e) => setEditingQuestion({ ...editingQuestion, code: e.target.value })}
+                          placeholder="Tulis kode di sini..."
+                          className="w-full px-4 py-3 bg-zinc-900 text-emerald-400 font-mono text-sm border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Index Baris Bug (Mulai dari 0)</label>
+                          <input 
+                            type="number" 
+                            value={editingQuestion.bugLine}
+                            onChange={(e) => setEditingQuestion({ ...editingQuestion, bugLine: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Preview Baris Salah</label>
+                          <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 text-xs font-mono truncate">
+                            {editingQuestion.code.split('\n')[editingQuestion.bugLine] || '(Baris tidak valid)'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Penjelasan Bug</label>
+                        <textarea 
+                          rows={3}
+                          value={editingQuestion.explanation}
+                          onChange={(e) => setEditingQuestion({ ...editingQuestion, explanation: e.target.value })}
+                          placeholder="Jelaskan mengapa kode ini salah..."
+                          className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-6 bg-zinc-50 border-t border-zinc-100 flex gap-3">
+                      <button 
+                        onClick={() => setEditingQuestion(null)}
+                        className="flex-1 py-3 bg-white border border-zinc-200 text-zinc-600 font-bold rounded-xl hover:bg-zinc-100 transition-all"
+                      >
+                        Batal
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          setLoadingGameData(true);
+                          try {
+                            if (editingQuestion.id) {
+                              await updateGameQuestion(editingQuestion.id, editingQuestion);
+                              setAllQuestions(prev => prev.map(q => q.id === editingQuestion.id ? editingQuestion : q));
+                            } else {
+                              const newId = await addGameQuestion(editingQuestion);
+                              setAllQuestions(prev => [...prev, { ...editingQuestion, id: newId }]);
+                            }
+                            setEditingQuestion(null);
+                          } catch (e) {
+                            console.error(e);
+                          } finally {
+                            setLoadingGameData(false);
+                          }
+                        }}
+                        className="flex-1 py-3 bg-rose-700 text-white font-bold rounded-xl hover:bg-rose-800 shadow-lg shadow-rose-700/20 transition-all"
+                      >
+                        Simpan Materi
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
         {/* ==================== CURRICULUM AI TAB ==================== */}
         {activeTab === 'curriculum' && (
           <div className="max-w-4xl mx-auto space-y-8">
@@ -1652,6 +1993,95 @@ export const AdminDashboard: React.FC = () => {
                           )}
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Validation Rules (Static Checks) */}
+                  <div className="bg-rose-50/50 border border-rose-200/50 rounded-2xl p-6 space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Terminal size={18} className="text-rose-700" />
+                        <h4 className="font-bold text-rose-900">Validasi Kode Statis (Non-AI)</h4>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          const rules = [...(lessonEditForm.validationRules || [])];
+                          rules.push({ pattern: '', message: '', shouldExist: true });
+                          setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-rose-200 text-rose-700 text-[10px] font-bold rounded-lg hover:bg-rose-100 transition-all"
+                      >
+                        <Plus size={12} /> Tambah Aturan
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {(!lessonEditForm.validationRules || lessonEditForm.validationRules.length === 0) ? (
+                        <div className="text-center py-4 text-rose-300 text-xs italic">Belum ada aturan validasi statis.</div>
+                      ) : (
+                        lessonEditForm.validationRules.map((rule, rIdx) => (
+                          <div key={rIdx} className="bg-white/60 p-4 rounded-xl border border-rose-100 space-y-3 relative group/rule">
+                            <button 
+                              onClick={() => {
+                                const rules = lessonEditForm.validationRules?.filter((_, i) => i !== rIdx);
+                                setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                              }}
+                              className="absolute top-2 right-2 p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover/rule:opacity-100 transition-all"
+                            >
+                              <X size={14} />
+                            </button>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Regex Pattern</label>
+                                <input
+                                  value={rule.pattern}
+                                  onChange={e => {
+                                    const rules = [...(lessonEditForm.validationRules || [])];
+                                    rules[rIdx].pattern = e.target.value;
+                                    setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                                  }}
+                                  placeholder="Contoh: for.*range"
+                                  className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-mono focus:ring-1 focus:ring-rose-700"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Pesan Error</label>
+                                <input
+                                  value={rule.message}
+                                  onChange={e => {
+                                    const rules = [...(lessonEditForm.validationRules || [])];
+                                    rules[rIdx].message = e.target.value;
+                                    setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                                  }}
+                                  placeholder="Contoh: Gunakan for loop!"
+                                  className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-700"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => {
+                                  const rules = [...(lessonEditForm.validationRules || [])];
+                                  rules[rIdx].shouldExist = !rules[rIdx].shouldExist;
+                                  setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                                }}
+                                className={cn(
+                                  "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5",
+                                  rule.shouldExist 
+                                    ? "bg-green-100 text-green-700" 
+                                    : "bg-red-100 text-red-700"
+                                )}
+                              >
+                                {rule.shouldExist ? <CheckCircle2 size={12} /> : <X size={12} />}
+                                {rule.shouldExist ? 'Wajib Ada (Include)' : 'Dilarang Ada (Exclude)'}
+                              </button>
+                              <span className="text-[10px] text-zinc-400 italic">Klik untuk mengubah mode validasi.</span>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
 

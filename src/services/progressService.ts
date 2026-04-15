@@ -4,6 +4,7 @@ import { UserProfile } from '../store/useStore';
 import { LessonProgress } from '../store/useProgress';
 import { reportProgressToSupabase, getOverallProgress, resetSupabaseProgress, resetSupabaseLevelProgress } from './centralApiService';
 import { Level } from '../data/curriculum';
+import { Achievement, checkAndUnlockAchievements } from './achievementService';
 
 export const completeLesson = async (
   user: UserProfile,
@@ -11,11 +12,11 @@ export const completeLesson = async (
   xpReward: number,
   curriculum: Level[] = [],
   completedLessons: string[] = []
-) => {
+): Promise<Achievement[]> => {
   // ===== FIX: Skip XP increment if lesson already completed =====
   if (completedLessons.includes(lessonId)) {
     console.log(`⏭️ Lesson "${lessonId}" already completed. Skipping XP reward.`);
-    return;
+    return [];
   }
 
   const userRef = doc(db, 'users', user.nim);
@@ -42,7 +43,7 @@ export const completeLesson = async (
       });
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, `users/${user.nim}`);
-      return;
+      return [];
     }
 
     // Save lesson progress to Firestore
@@ -58,6 +59,13 @@ export const completeLesson = async (
     if (curriculum.length > 0) {
       const overall = getOverallProgress(lessonId, curriculum, completedLessons);
 
+      // Extract level IDs from completed level titles (or use IDs if available)
+      // Since getOverallProgress returns titles, let's map them back to IDs if needed 
+      // or adjust getOverallProgress to return IDs.
+      const completedLevelIds = curriculum
+        .filter(l => overall.completedLevels.includes(l.title))
+        .map(l => l.id);
+
       await reportProgressToSupabase({
         nim: user.nim,
         studentName: user.nama || '',
@@ -68,13 +76,24 @@ export const completeLesson = async (
         currentLevel: overall.currentLevel,
       });
 
-      if (overall.isAllCompleted) {
-        console.log(`🎉 ALL lessons completed by ${user.nim}!`);
+        if (overall.isAllCompleted) {
+          console.log(`🎉 ALL lessons completed by ${user.nim}!`);
+        }
       }
+
+      // Check for achievements
+      const newlyUnlocked = await checkAndUnlockAchievements(user, { 
+        xp: user.xp + xpReward,
+        completedLevelIds: curriculum
+          .filter(l => getOverallProgress(lessonId, curriculum, completedLessons).completedLevels.includes(l.title))
+          .map(l => l.id)
+      });
+      return newlyUnlocked;
+
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${user.nim}/progress/${lessonId}`);
+      return [];
     }
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `users/${user.nim}/progress/${lessonId}`);
-  }
 };
 
 export const syncProgress = (userId: string, setCompletedLessons: (lessons: string[]) => void) => {

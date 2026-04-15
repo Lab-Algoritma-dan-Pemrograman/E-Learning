@@ -1,3 +1,9 @@
+export interface ValidationRule {
+  pattern: string;      // Regex pattern
+  message: string;      // Error message to show
+  shouldExist: boolean; // true = must include, false = must NOT include
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -16,6 +22,7 @@ export interface Lesson {
     expectedOutput: string;
     description: string;
   }[];
+  validationRules?: ValidationRule[];
 }
 
 export interface Module {
@@ -69,6 +76,9 @@ Teks yang ingin ditampilkan harus diapit oleh tanda kutip (").`,
           },
           testCases: [
             { expectedOutput: 'Hello, World!', description: 'Tampilkan teks "Hello, World!" menggunakan fungsi print().' }
+          ],
+          validationRules: [
+            { pattern: 'print\\s*\\(', message: "Kamu harus menggunakan fungsi print() untuk menampilkan teks!", shouldExist: true }
           ]
         },
         {

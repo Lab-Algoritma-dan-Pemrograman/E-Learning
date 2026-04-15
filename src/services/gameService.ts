@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment, serverTimestamp, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile } from '../store/useStore';
 
@@ -103,4 +103,46 @@ export const seedInitialQuestions = async (questions: any[]): Promise<void> => {
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, 'game_questions');
   }
+};
+
+// ===== NEW: Question Management =====
+
+export const addGameQuestion = async (question: Omit<GameQuestion, 'id'>): Promise<string> => {
+  const ref = await addDoc(collection(db, 'game_questions'), question);
+  return ref.id;
+};
+
+export const updateGameQuestion = async (id: string, question: Partial<GameQuestion>): Promise<void> => {
+  await updateDoc(doc(db, 'game_questions', id), question);
+};
+
+export const deleteGameQuestion = async (id: string): Promise<void> => {
+  await deleteDoc(doc(db, 'game_questions', id));
+};
+
+// ===== NEW: App Settings =====
+
+export interface GameSettings {
+  bugHuntCActive: boolean;
+  bugHuntPythonActive: boolean;
+}
+
+export const getGameSettings = async (): Promise<GameSettings> => {
+  try {
+    const docRef = doc(db, 'app_settings', 'games');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data() as GameSettings;
+    }
+    // Return default if not exists
+    return { bugHuntCActive: true, bugHuntPythonActive: true };
+  } catch (error) {
+    console.error('Error fetching game settings:', error);
+    return { bugHuntCActive: true, bugHuntPythonActive: true };
+  }
+};
+
+export const updateGameSettings = async (settings: Partial<GameSettings>): Promise<void> => {
+  const docRef = doc(db, 'app_settings', 'games');
+  await setDoc(docRef, settings, { merge: true });
 };

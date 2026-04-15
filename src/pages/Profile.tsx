@@ -4,10 +4,25 @@ import { Trophy, Zap, Clock, Settings, Edit2, Award, Star } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
+import { useEffect, useState } from 'react';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { db } from '../firebase';
+import { Achievement } from '../services/achievementService';
+import achievementsData from '../data/achievements.json';
 
 export const Profile: React.FC = () => {
   const { user } = useStore();
   const { completedLessons } = useProgress();
+  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!user?.nim) return;
+    const q = query(collection(db, 'users', user.nim, 'unlocked_achievements'));
+    return onSnapshot(q, (snapshot) => {
+      const ids = new Set(snapshot.docs.map(doc => doc.id));
+      setUnlockedIds(ids);
+    });
+  }, [user?.nim]);
 
   const joinedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'March 2026';
 
@@ -55,13 +70,16 @@ export const Profile: React.FC = () => {
               Pencapaian
             </h3>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <AchievementCard title="Langkah Pertama" desc="Menyelesaikan pelajaran pertama" icon="🚀" unlocked={completedLessons.length >= 1} />
-              <AchievementCard title="Master Kuis" desc="10 kuis sempurna" icon="🧠" unlocked={completedLessons.length >= 10} />
-              <AchievementCard title="Ninja Kode" desc="100 baris kode" icon="🥷" unlocked={completedLessons.length >= 20} />
-              <AchievementCard title="Penyihir Data" desc="Analisis data pertama" icon="🧙‍♂️" />
-              <AchievementCard title="Pionir ML" desc="Model ML pertama" icon="🤖" />
-              <AchievementCard title="Raja Beruntun" desc="30 hari beruntun" icon="👑" unlocked={(user?.streak || 0) >= 30} />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {(achievementsData as Achievement[]).map((ach) => (
+                <AchievementCard 
+                  key={ach.id}
+                  title={ach.title} 
+                  desc={ach.description} 
+                  icon={ach.icon} 
+                  unlocked={unlockedIds.has(ach.id)} 
+                />
+              ))}
             </div>
           </div>
 
@@ -109,18 +127,33 @@ const Badge: React.FC<{ icon: React.ReactNode; label: string; color: string }> =
   </div>
 );
 
-const AchievementCard: React.FC<{ title: string; desc: string; icon: string; unlocked?: boolean }> = ({ title, desc, icon, unlocked }) => (
-  <div className={cn(
-    "p-6 rounded-3xl border text-center space-y-3 transition-all",
-    unlocked ? "bg-white border-zinc-200 shadow-sm" : "bg-zinc-50 border-zinc-100 opacity-50 grayscale"
-  )}>
-    <div className="text-4xl">{icon}</div>
-    <div>
-      <div className="font-bold text-sm">{title}</div>
-      <div className="text-[10px] text-zinc-500 font-medium leading-tight">{desc}</div>
+const AchievementCard: React.FC<{ title: string; desc: string; icon: string; unlocked?: boolean }> = ({ title, desc, icon, unlocked }) => {
+  const IconMap: Record<string, any> = {
+    Bug: Trophy, Target: Star, Zap: Zap, Trophy: Trophy, Flame: Zap, Star: Star
+  };
+  // Fallback to emoji if needed or just use consistent icons
+  
+  return (
+    <div className={cn(
+      "p-4 rounded-[2rem] border text-center space-y-3 transition-all flex flex-col items-center justify-center",
+      unlocked 
+        ? "bg-white border-zinc-200 shadow-sm" 
+        : "bg-zinc-50 border-zinc-100 opacity-30 grayscale"
+    )}>
+      <div className={cn(
+        "w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-1",
+        unlocked ? "bg-rose-100 text-rose-700" : "bg-zinc-200 text-zinc-400"
+      )}>
+        {/* Simple mapping for now, or just show icon prop if it's an emoji */}
+        {icon.length > 2 ? <Trophy size={20} /> : icon}
+      </div>
+      <div>
+        <div className="font-bold text-[11px] leading-tight mb-1">{title}</div>
+        <div className="text-[9px] text-zinc-500 font-medium leading-tight line-clamp-2">{desc}</div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const StatRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="flex items-center justify-between py-2 border-b border-zinc-50 last:border-0">

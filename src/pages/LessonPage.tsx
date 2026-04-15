@@ -40,7 +40,7 @@ function normalizeOutput(text: string): string {
 }
 
 export const LessonPage: React.FC = () => {
-  const { user, currentLessonId, setCurrentLessonId, curriculum, setPage } = useStore();
+  const { user, currentLessonId, setCurrentLessonId, curriculum, setPage, setUnlockedAchievement } = useStore();
   const { completedLessons } = useProgress();
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
   const [currentModuleIdx, setCurrentModuleIdx] = useState(0);
@@ -111,6 +111,30 @@ export const LessonPage: React.FC = () => {
     setOutput(result.output);
     setError(result.error);
 
+    // Static code validation (non-AI)
+    if (lesson.validationRules && lesson.validationRules.length > 0) {
+      for (const rule of lesson.validationRules) {
+        try {
+          const regex = new RegExp(rule.pattern, 'i');
+          const exists = regex.test(code);
+          
+          if (rule.shouldExist && !exists) {
+            setError(rule.message);
+            setIsCorrect(false);
+            return;
+          }
+          
+          if (!rule.shouldExist && exists) {
+            setError(rule.message);
+            setIsCorrect(false);
+            return;
+          }
+        } catch (e) {
+          console.error('Invalid regex pattern:', rule.pattern);
+        }
+      }
+    }
+
     const success = lesson.testCases.every(tc => {
       return normalizeOutput(result.output) === normalizeOutput(tc.expectedOutput);
     });
@@ -130,7 +154,10 @@ export const LessonPage: React.FC = () => {
 
   const nextLesson = async () => {
     if (user) {
-      await completeLessonService(user, lesson.id, 50, curriculum, completedLessons);
+      const newlyUnlocked = await completeLessonService(user, lesson.id, 50, curriculum, completedLessons);
+      if (newlyUnlocked && newlyUnlocked.length > 0) {
+        setUnlockedAchievement(newlyUnlocked[0]);
+      }
     }
     
     // Find next lesson

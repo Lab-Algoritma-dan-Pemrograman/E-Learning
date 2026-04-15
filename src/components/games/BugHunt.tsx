@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bug, Timer, CheckCircle2, XCircle, Trophy, ArrowRight, X, Terminal, Brain } from 'lucide-react';
-import { GameQuestion, getGameQuestions, saveGameResult } from '../../services/gameService';
+import { GameQuestion, getGameQuestions, saveGameResult, saveGameHistory } from '../../services/gameService';
+import { checkAndUnlockAchievements } from '../../services/achievementService';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../lib/utils';
 
@@ -11,7 +12,7 @@ interface BugHuntProps {
 }
 
 export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
-  const { user } = useStore();
+  const { user, setUnlockedAchievement } = useStore();
   const [questions, setQuestions] = useState<GameQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -82,8 +83,30 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
 
   const finishGame = async () => {
     setGameStatus('finished');
-    if (user) {
-      await saveGameResult(user, language, score, totalXp);
+    try {
+      if (user) {
+        await saveGameHistory(user.nim, {
+          gameType: 'bug_hunt',
+          score,
+          totalQuestions: questions.length,
+          xpEarned: totalXp,
+          playedAt: new Date().toISOString()
+        });
+
+        // Check for achievements
+        const newlyUnlocked = await checkAndUnlockAchievements(user, { 
+          xp: user.xp + totalXp,
+          gamesPlayed: 1,
+          perfectGames: score === questions.length ? 1 : 0 
+        });
+
+        if (newlyUnlocked.length > 0) {
+          // Show the first one
+          setUnlockedAchievement(newlyUnlocked[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to save game history:", error);
     }
   };
 

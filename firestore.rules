@@ -49,11 +49,18 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function isModerator() {
+      if (!isAuthenticated()) return false;
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return userDoc.get('role', 'user') in ['admin', 'editor'] ||
+             (request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com" && request.auth.token.get('email_verified', false) == true);
+    }
+
     function isAdmin() {
-      return isAuthenticated() &&
-        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin') ||
-         (request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com" && request.auth.token.get('email_verified', false) == true));
+      if (!isAuthenticated()) return false;
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return userDoc.get('role', 'user') == 'admin' ||
+             (request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com" && request.auth.token.get('email_verified', false) == true);
     }
 
     function isValidEmail(email) {
@@ -94,7 +101,7 @@ service cloud.firestore {
              data.get('streak', 0) is number && data.streak >= 0 &&
              isValidDateString(data.get('lastActive', '')) &&
              isValidDateString(data.get('createdAt', '')) &&
-             (!('role' in data) || data.role in ['admin', 'user']);
+             (!('role' in data) || data.role in ['admin', 'editor', 'user']);
     }
 
     function isValidProgress(data) {
@@ -152,17 +159,28 @@ service cloud.firestore {
     }
 
     match /game_questions/{questionId} {
-      // Everyone authenticated can read questions
       allow read: if isAuthenticated();
-      // Only admins can manage questions
+      allow write: if isModerator();
+    }
+
+    match /app_settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isModerator();
+    }
+
+    match /achievements/{achievementId} {
+      allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
 
+    match /users/{userId}/unlocked_achievements/{achievementId} {
+      allow read: if isOwner(userId) || isModerator();
+      allow create: if isOwner(userId); // Simplified for now
+    }
+
     match /curriculum/{levelId} {
-      // All authenticated users can read the curriculum
       allow read: if isAuthenticated();
-      // Only admins can write to the curriculum
-      allow write: if isAdmin();
+      allow write: if isModerator();
     }
   }
 }

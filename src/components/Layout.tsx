@@ -4,9 +4,10 @@ import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldChe
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { logout } from '../firebase';
+import { AchievementPopup } from './AchievementPopup';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isSidebarOpen, toggleSidebar, user, page, setPage } = useStore();
+  const { isSidebarOpen, toggleSidebar, user, page, setPage, unlockedAchievement, setUnlockedAchievement } = useStore();
 
   const isAdmin = user?.role === 'admin';
 
@@ -157,6 +158,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           {children}
         </div>
       </main>
+
+      <AnimatePresence>
+        {unlockedAchievement && (
+          <AchievementPopup 
+            achievement={unlockedAchievement} 
+            onClose={() => setUnlockedAchievement(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

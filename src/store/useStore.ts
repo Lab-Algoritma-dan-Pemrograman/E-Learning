@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Level } from '../data/curriculum';
+import { Achievement } from '../services/achievementService';
 
 export interface UserProfile {
   nim: string;
@@ -36,6 +37,8 @@ interface AppState {
   setPyodideWorker: (worker: Worker | null) => void;
   isPyodideLoading: boolean;
   setIsPyodideLoading: (loading: boolean) => void;
+  unlockedAchievement: Achievement | null;
+  setUnlockedAchievement: (achievement: Achievement | null) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -55,4 +58,6 @@ export const useStore = create<AppState>((set) => ({
   setPyodideWorker: (worker) => set({ pyodideWorker: worker }),
   isPyodideLoading: true,
   setIsPyodideLoading: (loading) => set({ isPyodideLoading: loading }),
+  unlockedAchievement: null,
+  setUnlockedAchievement: (achievement) => set({ unlockedAchievement: achievement }),
 }));
