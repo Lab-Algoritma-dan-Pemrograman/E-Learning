@@ -44,41 +44,36 @@ export const getGameQuestions = async (language: 'c' | 'python', limit: number =
   }
 };
 
-export const saveGameResult = async (
-  user: UserProfile,
-  language: 'c' | 'python',
-  score: number,
-  xpEarned: number
+export const saveGameHistory = async (
+  userId: string,
+  history: {
+    gameType: string;
+    score: number;
+    totalQuestions: number;
+    xpEarned: number;
+    playedAt: string;
+  }
 ): Promise<void> => {
-  if (!user.nim) return;
+  if (!userId) return;
 
   try {
-    const gameResult: Omit<GameResult, 'id'> = {
-      userId: user.nim,
-      gameType: 'bug_hunt',
-      language,
-      score,
-      xpEarned,
-      playedAt: new Date().toISOString()
-    };
-
     // 1. Record in game_history
-    const historyRef = collection(db, 'users', user.nim, 'game_history');
+    const historyRef = collection(db, 'users', userId, 'game_history');
     await addDoc(historyRef, {
-      ...gameResult,
+      ...history,
       serverTimestamp: serverTimestamp()
     });
 
     // 2. Update User XP
-    const userRef = doc(db, 'users', user.nim);
+    const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
-      xp: increment(xpEarned),
+      xp: increment(history.xpEarned),
       lastActive: new Date().toISOString()
     });
 
-    console.log(`✅ Game result saved: +${xpEarned} XP for ${user.nim}`);
+    console.log(`✅ Game result saved: +${history.xpEarned} XP for ${userId}`);
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `users/${user.nim}/game_history`);
+    handleFirestoreError(error, OperationType.WRITE, `users/${userId}/game_history`);
     throw error;
   }
 };

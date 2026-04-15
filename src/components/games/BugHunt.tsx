@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bug, Timer, CheckCircle2, XCircle, Trophy, ArrowRight, X, Terminal, Brain } from 'lucide-react';
-import { GameQuestion, getGameQuestions, saveGameResult, saveGameHistory } from '../../services/gameService';
+import { GameQuestion, getGameQuestions, saveGameHistory } from '../../services/gameService';
 import { checkAndUnlockAchievements } from '../../services/achievementService';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../lib/utils';
