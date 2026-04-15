@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Star, Zap, Bug, Target, Flame, X } from 'lucide-react';
-import Confetti from 'react-confetti';
-import { useWindowSize } from 'react-use';
+import confetti from 'canvas-confetti';
 import { Achievement } from '../services/achievementService';
 
 interface AchievementPopupProps {
@@ -15,18 +14,32 @@ const IconMap: Record<string, any> = {
 };
 
 export const AchievementPopup: React.FC<AchievementPopupProps> = ({ achievement, onClose }) => {
-  const { width, height } = useWindowSize();
   const Icon = IconMap[achievement.icon] || Star;
+
+  useEffect(() => {
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm">
-      <Confetti 
-        width={width} 
-        height={height} 
-        numberOfPieces={200} 
-        recycle={false}
-        colors={['#be123c', '#fbbf24', '#10b981', '#3b82f6']}
-      />
       
       <motion.div
         initial={{ scale: 0.5, opacity: 0, y: 50 }}
