@@ -5,6 +5,10 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/pyodide.worker.js",
+      "destination": "/pyodide.worker.js"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
