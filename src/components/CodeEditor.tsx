@@ -40,8 +40,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
-      <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/50 border-b border-zinc-800">
+    <div className="flex flex-col h-full bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl">
+      <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/50 border-b border-zinc-800 rounded-t-2xl">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-red-500/80" />
           <div className="w-3 h-3 rounded-full bg-amber-500/80" />
@@ -83,6 +83,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
             lineNumbers: 'on',
             roundedSelection: true,
             scrollBeyondLastLine: false,
+            cursorBlinking: "smooth",
+            cursorStyle: "line",
             automaticLayout: true,
             padding: { top: 16, bottom: 16 },
           }}

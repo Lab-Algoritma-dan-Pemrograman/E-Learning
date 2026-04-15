@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { jwtVerify } from 'jose';
 
 export const config = {
   runtime: 'edge',
@@ -10,11 +11,49 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const { prompt, model: requestedModel } = await req.json();
+    const { prompt, model: requestedModel, token } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'AI Key not configured' }), { status: 500 });
+    }
+
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Missing token' }), { status: 401 });
+    }
+
+    // 1. Verify token
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    let tokenPayload: any;
+    try {
+      const { payload } = await jwtVerify(token, secret);
+      tokenPayload = payload;
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token' }), { status: 401 });
+    }
+
+    const nim = tokenPayload.nim;
+
+    // 2. Fetch role from Firestore via REST API
+    const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+    if (!projectId) {
+      return new Response(JSON.stringify({ error: 'Server configuration error (projectId missing)' }), { status: 500 });
+    }
+
+    // Using Firestore REST API from edge function
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${nim}`;
+    const firestoreRes = await fetch(firestoreUrl);
+    
+    if (!firestoreRes.ok) {
+       return new Response(JSON.stringify({ error: 'Unauthorized: User not found in database' }), { status: 403 });
+    }
+
+    const userData = await firestoreRes.json();
+    const role = userData.fields?.role?.stringValue || 'user';
+
+    // 3. Check role (Only admin and editor allowed)
+    if (role !== 'admin' && role !== 'editor') {
+       return new Response(JSON.stringify({ error: 'Ops! Fitur asisten cerdas ini saat ini hanya secara khusus bisa diakses oleh Admin atau Editor.' }), { status: 403 });
     }
 
     // Default to gemini-3-flash, only allow gemini-3-flash or gemini-2.5-flash

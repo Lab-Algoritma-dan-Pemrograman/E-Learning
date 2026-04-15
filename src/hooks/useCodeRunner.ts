@@ -69,40 +69,41 @@ async function runCWithWandbox(code: string, input?: string): Promise<{ output: 
 
 /**
  * Universal code runner hook.
- * - Python: Pyodide (in-browser, offline)
+ * - Python: Pyodide (in-browser, offline via Web Worker)
  * - C: Wandbox API (full GCC compiler, online)
  */
 export const useCodeRunner = (language: CodeLanguage = 'python') => {
-  const { pyodide, isPyodideLoading } = useStore();
+  const { pyodideWorker, isPyodideLoading } = useStore();
 
   const runCode = useCallback(async (code: string, input?: string): Promise<{ output: string; error: string | null }> => {
     if (language === 'c') {
       return runCWithWandbox(code, input);
     }
 
-    // Python via Pyodide
-    if (!pyodide) {
+    // Python via Pyodide Worker
+    if (!pyodideWorker) {
       return { 
         output: '', 
         error: 'Interpreter Python gagal dimuat atau sedang bermasalah. Pastikan koneksi internet stabil dan muat ulang halaman.' 
       };
     }
 
-    try {
-      await pyodide.runPythonAsync(`
-import sys
-import io
-sys.stdout = io.StringIO()
-      `);
-
-      await pyodide.runPythonAsync(code);
-      
-      const stdout = await pyodide.runPythonAsync('sys.stdout.getvalue()');
-      return { output: stdout, error: null };
-    } catch (err: any) {
-      return { output: '', error: err.message };
-    }
-  }, [pyodide, language]);
+    return new Promise((resolve) => {
+      const id = Date.now().toString() + Math.random().toString();
+      const handler = (e: MessageEvent) => {
+        if (e.data.id === id) {
+          pyodideWorker.removeEventListener('message', handler);
+          if (e.data.type === 'RUN_DONE') {
+            resolve({ output: e.data.output, error: null });
+          } else if (e.data.type === 'RUN_ERROR') {
+            resolve({ output: '', error: e.data.error });
+          }
+        }
+      };
+      pyodideWorker.addEventListener('message', handler);
+      pyodideWorker.postMessage({ type: 'RUN', code, id });
+    });
+  }, [pyodideWorker, language]);
 
   const isLoading = language === 'python' ? isPyodideLoading : false;
 

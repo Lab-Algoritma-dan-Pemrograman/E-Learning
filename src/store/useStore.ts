@@ -32,8 +32,8 @@ interface AppState {
   setPage: (page: Page) => void;
   selectedModel: 'gemini-3-flash' | 'gemini-2.5-flash';
   setSelectedModel: (model: 'gemini-3-flash' | 'gemini-2.5-flash') => void;
-  pyodide: any;
-  setPyodide: (py: any) => void;
+  pyodideWorker: Worker | null;
+  setPyodideWorker: (worker: Worker | null) => void;
   isPyodideLoading: boolean;
   setIsPyodideLoading: (loading: boolean) => void;
 }
@@ -51,8 +51,8 @@ export const useStore = create<AppState>((set) => ({
   setPage: (page) => set({ page }),
   selectedModel: 'gemini-3-flash',
   setSelectedModel: (model) => set({ selectedModel: model }),
-  pyodide: null,
-  setPyodide: (py) => set({ pyodide: py }),
+  pyodideWorker: null,
+  setPyodideWorker: (worker) => set({ pyodideWorker: worker }),
   isPyodideLoading: true,
   setIsPyodideLoading: (loading) => set({ isPyodideLoading: loading }),
 }));

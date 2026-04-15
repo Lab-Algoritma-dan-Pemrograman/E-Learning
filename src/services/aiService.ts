@@ -35,11 +35,12 @@ Do NOT give the full solution immediately, but point out the logical or syntax e
 Keep it under 3 sentences.`;
 
     const { selectedModel } = useStore.getState();
+    const { getSavedToken } = await import('./tokenService');
 
     const response = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, model: selectedModel }),
+      body: JSON.stringify({ prompt, model: selectedModel, token: getSavedToken() }),
     });
 
     if (!response.ok) {

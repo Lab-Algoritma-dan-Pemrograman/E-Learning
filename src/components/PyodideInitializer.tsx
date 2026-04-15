@@ -1,62 +1,33 @@
 import React, { useEffect } from 'react';
 import { useStore } from '../store/useStore';
 
-declare global {
-  interface Window {
-    loadPyodide: any;
-  }
-}
-
 export const PyodideInitializer: React.FC = () => {
-  const { pyodide, setPyodide, setIsPyodideLoading } = useStore();
+  const { pyodideWorker, setPyodideWorker, setIsPyodideLoading } = useStore();
 
   useEffect(() => {
-    const initPyodide = async () => {
-      if (pyodide) return;
-      
-      const PYODIDE_VERSION = '0.25.0';
-      const indexURL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+    if (pyodideWorker) return;
 
-      // Timeout fallback: if pyodide takes more than 10s to load, set loading to false 
-      // so the run button activates (it will show a "Pyodide not loaded" error instead of hanging).
-      const timeoutId = setTimeout(() => {
+    console.log('Initializing Pyodide Worker...');
+    const worker = new Worker(new URL('../workers/pyodide.worker.ts', import.meta.url), { type: 'module' });
+
+    worker.onmessage = (e) => {
+      if (e.data.type === 'INIT_DONE') {
+        console.log('Pyodide Worker core initialized');
+        setPyodideWorker(worker);
         setIsPyodideLoading(false);
-        console.warn('Pyodide initialization timed out. Interpreter will show error on run.');
-      }, 10000);
-
-      const setupPyodide = async () => {
-        try {
-          const py = await window.loadPyodide({ indexURL });
-          
-          console.log('Pyodide core initialized');
-
-          setPyodide(py);
-          setIsPyodideLoading(false);
-          clearTimeout(timeoutId);
-        } catch (err) {
-          console.error('Failed to initialize Pyodide:', err);
-          setIsPyodideLoading(false);
-          clearTimeout(timeoutId);
-        }
-      };
-
-      if (!window.loadPyodide) {
-        const script = document.createElement('script');
-        script.src = `${indexURL}pyodide.js`;
-        script.async = true;
-        script.onload = setupPyodide;
-        script.onerror = () => {
-          console.error('Failed to load Pyodide script');
-          setIsPyodideLoading(false);
-        };
-        document.head.appendChild(script);
-      } else {
-        await setupPyodide();
+      } else if (e.data.type === 'INIT_ERROR') {
+        console.error('Failed to initialize Pyodide in worker:', e.data.error);
+        setIsPyodideLoading(false);
       }
     };
 
-    initPyodide();
-  }, [pyodide, setPyodide, setIsPyodideLoading]);
+    worker.postMessage({ type: 'INIT' });
+
+    return () => {
+      // NOTE: We don't terminate the worker on unmount because 
+      // PyodideInitializer is part of App layout and should persist across pages.
+    };
+  }, [pyodideWorker, setPyodideWorker, setIsPyodideLoading]);
 
   return null;
 };
