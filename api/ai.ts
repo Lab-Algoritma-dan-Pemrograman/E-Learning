@@ -11,18 +11,27 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const { prompt, model: requestedModel, token } = await req.json();
+    const { 
+      prompt, 
+      model: requestedModel, 
+      token, 
+      responseMimeType, 
+      responseSchema,
+      fileData,
+      fileMimeType = "application/pdf"
+    } = await req.json();
+
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'AI Key not configured' }), { status: 500 });
+      return new Response(JSON.stringify({ error: 'AI Key not configured on server' }), { status: 500 });
     }
 
     if (!token) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Missing token' }), { status: 401 });
     }
 
-    // 1. Verify token
+    // 1. Verify JWT token from Web Utama
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     let tokenPayload: any;
     try {
@@ -34,13 +43,12 @@ export default async function handler(req: Request) {
 
     const nim = tokenPayload.nim;
 
-    // 2. Fetch role from Firestore via REST API
+    // 2. Fetch role from Firestore via REST API (Edge friendly)
     const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
     if (!projectId) {
       return new Response(JSON.stringify({ error: 'Server configuration error (projectId missing)' }), { status: 500 });
     }
 
-    // Using Firestore REST API from edge function
     const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${nim}`;
     const firestoreRes = await fetch(firestoreUrl);
     
@@ -51,21 +59,47 @@ export default async function handler(req: Request) {
     const userData = await firestoreRes.json();
     const role = userData.fields?.role?.stringValue || 'user';
 
-    // 3. Check role (Only admin and editor allowed)
+    // 3. SECURE RBAC: Only admin and editor allowed to use AI
     if (role !== 'admin' && role !== 'editor') {
-       return new Response(JSON.stringify({ error: 'Ops! Fitur asisten cerdas ini saat ini hanya secara khusus bisa diakses oleh Admin atau Editor.' }), { status: 403 });
+       return new Response(JSON.stringify({ error: 'Akses Ditolak: Fitur AI ini hanya tersedia untuk Admin atau Editor.' }), { status: 403 });
     }
 
-    // Default to gemini-3-flash, only allow gemini-3-flash or gemini-2.5-flash
+    // 4. Configure Gemini Model
     const allowedModels = ["gemini-3-flash", "gemini-2.5-flash"];
     const modelId = allowedModels.includes(requestedModel) ? requestedModel : "gemini-3-flash";
 
     const genAI = new GoogleGenAI({ apiKey });
-    const result = await genAI.models.generateContent({
+    
+    // Prepare contents
+    const contents: any[] = [
+      {
+        role: "user",
+        parts: [{ text: prompt }]
+      }
+    ];
+
+    // Add inline data (file) if provided
+    if (fileData) {
+      contents[0].parts.push({
+        inlineData: {
+          mimeType: fileMimeType,
+          data: fileData
+        }
+      });
+    }
+
+    // AI Generation config
+    const aiConfig: any = {};
+    if (responseMimeType) aiConfig.responseMimeType = responseMimeType;
+    if (responseSchema) aiConfig.responseSchema = responseSchema;
+
+    const model = genAI.models.generateContent({
       model: modelId,
-      contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      contents: contents,
+      config: aiConfig
     });
 
+    const result = await model;
     const text = result.text;
 
     return new Response(JSON.stringify({ text }), {

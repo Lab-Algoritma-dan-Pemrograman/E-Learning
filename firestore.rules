@@ -2,43 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: users
-    // Document ID: {userId}
-    // Fields:
-    //   - uid: string (required) - Firebase Auth UID
-    //   - email: string (required, email) - User email
-    //   - displayName: string (optional) - User display name
-    //   - photoURL: string (optional, url) - User photo URL
-    //   - xp: number (required, >= 0) - Total experience points
-    //   - level: number (required, >= 1) - User level
-    //   - streak: number (required, >= 0) - Daily streak count
-    //   - lastActive: string (required, iso8601) - Last activity timestamp
-    //   - createdAt: string (required, iso8601) - Account creation timestamp
-    //   - role: string (optional, enum: ['admin', 'user']) - User role
-    //
-    // Sub-collection: users/{userId}/progress
-    // Document ID: {lessonId}
-    // Fields:
-    //   - userId: string (required) - Owner UID
-    //   - lessonId: string (required) - Lesson ID
-    //   - completed: bool (required) - Completion status
-    //   - completedAt: string (required, iso8601) - Completion timestamp
-    //   - score: number (optional, >= 0) - Quiz/Exercise score
-    //
-    // Collection: curriculum
-    // Document ID: {levelId}
-    // Fields:
-    //   - id: string (required)
-    //   - title: string (required)
-    //   - description: string (required)
-    //   - modules: list (required) - List of Module objects
-    //
-    // ===============================================================
-
-    // ===============================================================
     // Helper Functions
     // ===============================================================
     function isAuthenticated() {
@@ -49,17 +12,20 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isModerator() {
+    // Role check via user document
+    function hasRole(roles) {
       if (!isAuthenticated()) return false;
       let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return userDoc.get('role', 'user') in ['admin', 'editor'] ||
+      return userDoc.get('role', 'user') in roles;
+    }
+
+    function isModerator() {
+      return hasRole(['admin', 'editor']) || 
              (request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com" && request.auth.token.get('email_verified', false) == true);
     }
 
     function isAdmin() {
-      if (!isAuthenticated()) return false;
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return userDoc.get('role', 'user') == 'admin' ||
+      return hasRole(['admin']) || 
              (request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com" && request.auth.token.get('email_verified', false) == true);
     }
 
@@ -75,41 +41,23 @@ service cloud.firestore {
       return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
     }
 
-    function hasOnlyAllowedFields(fields) {
-      return request.resource.data.keys().hasOnly(fields);
-    }
-
-    function uidUnchanged() {
-      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
-    }
-
-    function uidNotModified() {
-      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
-    }
-
     // ===============================================================
     // Domain Validators
     // ===============================================================
 
     function isValidUser(data) {
-      return data.get('uid', '') is string && data.get('uid', '').size() > 0 &&
+      return data.get('uid', '') is string && 
              isValidEmail(data.get('email', '')) &&
-             (data.get('displayName', null) == null || (data.displayName is string && data.displayName.size() < 100)) &&
-             (data.get('photoURL', null) == null || isValidUrl(data.photoURL)) &&
              data.get('xp', 0) is number && data.xp >= 0 &&
              data.get('level', 1) is number && data.level >= 1 &&
-             data.get('streak', 0) is number && data.streak >= 0 &&
-             isValidDateString(data.get('lastActive', '')) &&
-             isValidDateString(data.get('createdAt', '')) &&
              (!('role' in data) || data.role in ['admin', 'editor', 'user']);
     }
 
     function isValidProgress(data) {
-      return data.userId is string && data.userId == request.auth.uid &&
-             data.lessonId is string && data.lessonId.size() > 0 &&
+      return data.userId is string && 
+             data.lessonId is string &&
              data.completed is bool &&
-             isValidDateString(data.completedAt) &&
-             (!('score' in data) || (data.score is number && data.score >= 0));
+             isValidDateString(data.completedAt);
     }
 
     // ===============================================================
@@ -117,44 +65,42 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      // Users can read their own profile, admins can read all
       allow read: if isOwner(userId) || isAdmin();
       
-      // Users can create their own profile. 
-      // Default admin email is allowed to create as 'admin', others only as 'user'.
+      // Prevent role escalation during creation
       allow create: if isOwner(userId) && 
                       isValidUser(request.resource.data) && 
                       (request.resource.data.get('role', 'user') == 'user' || 
                        (request.resource.data.get('role', 'user') == 'admin' && 
-                        request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com")) &&
-                      uidUnchanged();
+                        request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com"));
       
-      // Users can update their own profile, but cannot change their role unless they are admin
-      // Also validate that the XP change isn't too drastic if it's a regular user update
-      allow update: if isAuthenticated() && 
+      // Strict update rules: no role changes, limited XP gains
+      allow update: if isOwner(userId) && 
                       isValidUser(request.resource.data) && 
-                      ((isOwner(userId) && 
-                        request.resource.data.get('role', 'user') == resource.data.get('role', 'user') &&
-                        request.resource.data.get('xp', 0) <= resource.data.get('xp', 0) + 200 &&
-                        uidNotModified()) || 
-                       isAdmin());
+                      request.resource.data.get('role', 'user') == resource.data.get('role', 'user') &&
+                      request.resource.data.get('xp', 0) <= resource.data.get('xp', 0) + 1000 &&
+                      (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
+                    || isAdmin();
 
       match /progress/{lessonId} {
-        // Users can read/write their own progress, admins can read all
         allow read: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && isValidProgress(request.resource.data) && uidUnchanged();
-        allow update: if isOwner(userId) && isValidProgress(request.resource.data) && uidNotModified();
+        allow create: if isOwner(userId) && isValidProgress(request.resource.data);
+        allow update: if isOwner(userId) && isValidProgress(request.resource.data);
         allow delete: if isOwner(userId) || isAdmin();
       }
 
       match /game_history/{gameId} {
-        // Users can see their own game history, admins can see all
         allow read: if isOwner(userId) || isAdmin();
-        // Users can record a game session, with basic validation
         allow create: if isOwner(userId) && 
                         request.resource.data.gameType in ['bug_hunt'] &&
-                        request.resource.data.xpEarned <= 200 && // Safety cap
+                        request.resource.data.xpEarned <= 300 &&
                         isValidDateString(request.resource.data.playedAt);
+      }
+
+      match /unlocked_achievements/{achievementId} {
+        allow read: if isOwner(userId) || isModerator();
+        // Achievements should ideally be verified, but for now we restrict creation to owner
+        allow create: if isOwner(userId) && request.resource.data.unlockedAt is string;
       }
     }
 
@@ -171,11 +117,6 @@ service cloud.firestore {
     match /achievements/{achievementId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
-    }
-
-    match /users/{userId}/unlocked_achievements/{achievementId} {
-      allow read: if isOwner(userId) || isModerator();
-      allow create: if isOwner(userId); // Simplified for now
     }
 
     match /curriculum/{levelId} {

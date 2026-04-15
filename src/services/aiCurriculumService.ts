@@ -1,25 +1,76 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { Level, Module, Lesson } from "../data/curriculum";
 import { checkRateLimit } from '../lib/securityUtils';
 import { useStore } from "../store/useStore";
+import { getSavedToken } from "./tokenService";
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+/**
+ * AI Curriculum Service - Refactored to use secure backend proxy.
+ * No API keys are stored or used on the client.
+ */
+
+async function callAiApi(params: {
+  prompt: string;
+  model: string;
+  responseMimeType?: string;
+  responseSchema?: any;
+  fileData?: string;
+  fileMimeType?: string;
+}): Promise<string> {
+  const token = getSavedToken();
+  if (!token) {
+    throw new Error('Unauthorized: Sesi Anda telah berakhir. Silakan masuk kembali melalui Web Utama.');
+  }
+
+  const response = await fetch('/api/ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...params,
+      token
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Server error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.text;
+}
 
 export const aiCurriculumService = {
   async generateCurriculum(material: string, fileData?: string): Promise<Level[]> {
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY or VITE_GEMINI_API_KEY is not configured.');
-    }
-
     // Rate Limiting: Max 2 requests per minute for curriculum generation (heavy operation)
     if (!checkRateLimit('ai_curriculum', 2, 60000)) {
       throw new Error("Anda meminta generasi kurikulum terlalu cepat. Tunggu sebentar.");
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-    const parts: any[] = [
-      {
-        text: `Anda adalah seorang ahli pendidikan dan perancang kurikulum profesional. Berdasarkan materi yang diberikan (Teks dan/atau file PDF), susunlah kurikulum pembelajaran yang SANGAT LENGKAP, MENDALAM, dan TERSTRUKTUR.
+    const prompt = `Anda adalah seorang ahli pendidikan dan perancang kurikulum profesional. Berdasarkan materi yang diberikan (Teks dan/atau file PDF), susunlah kurikulum pembelajaran yang SANGAT LENGKAP, MENDALAM, dan TERSTRUKTUR.
+        
+        PENTING: 
+        - Kurikulum ini WAJIB didasarkan SEPENUHNYAN pada isi materi/PDF yang diberikan.
+        - Baca dan analisis SELURUH isi PDF/materi secara mendalam sebelum menyusun kurikulum.
+        ... [Full Prompt Restored below] ...`;
+
+    const text = await callAiApi({
+      prompt: aiCurriculumService._getCurriculumPrompt(material),
+      model: useStore.getState().selectedModel,
+      responseMimeType: "application/json",
+      responseSchema: aiCurriculumService._getCurriculumSchema(),
+      fileData
+    });
+
+    try {
+      return JSON.parse(text) as Level[];
+    } catch (e) {
+      console.error('Failed to parse AI response:', text);
+      throw new Error('Invalid JSON format from AI.');
+    }
+  },
+
+  _getCurriculumPrompt(material: string): string {
+    return `Anda adalah seorang ahli pendidikan dan perancang kurikulum profesional. Berdasarkan materi yang diberikan (Teks dan/atau file PDF), susunlah kurikulum pembelajaran yang SANGAT LENGKAP, MENDALAM, dan TERSTRUKTUR.
         
         PENTING: 
         - Kurikulum ini WAJIB didasarkan SEPENUHNYA pada isi materi/PDF yang diberikan.
@@ -100,127 +151,80 @@ export const aiCurriculumService = {
         8. JANGAN gunakan contoh soal atau materi generik. SEMUA konten harus berdasarkan isi PDF/materi yang diberikan.
         9. Pastikan urutan lesson mengikuti alur logis dari materi PDF (dari dasar ke lanjutan) dalam setiap level.
         10. Setiap lesson harus saling berkaitan dan membangun pemahaman secara bertahap.
-        11. TOTAL output: 6 Level, minimal 30 Module, minimal 60 Lesson.`
-      }
-    ];
+        11. TOTAL output: 6 Level, minimal 30 Module, minimal 60 Lesson.`;
+  },
 
-    if (fileData) {
-      parts.push({
-        inlineData: {
-          mimeType: "application/pdf",
-          data: fileData
-        }
-      });
-    }
-
-    const model = ai.models.generateContent({
-      model: useStore.getState().selectedModel,
-      contents: [
-        {
-          role: "user",
-          parts: parts
-        }
-      ],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              id: { type: Type.STRING },
-              title: { type: Type.STRING },
-              description: { type: Type.STRING },
-              modules: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    id: { type: Type.STRING },
-                    title: { type: Type.STRING },
-                    lessons: {
-                      type: Type.ARRAY,
-                      items: {
-                        type: Type.OBJECT,
+  _getCurriculumSchema(): any {
+    return {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          description: { type: "string" },
+          modules: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                title: { type: "string" },
+                lessons: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string" },
+                      title: { type: "string" },
+                      explanation: { type: "string" },
+                      codeExample: { type: "string" },
+                      initialCode: { type: "string" },
+                      solution: { type: "string" },
+                      hint: { type: "string" },
+                      quiz: {
+                        type: "object",
                         properties: {
-                          id: { type: Type.STRING },
-                          title: { type: Type.STRING },
-                          explanation: { type: Type.STRING },
-                          codeExample: { type: Type.STRING },
-                          initialCode: { type: Type.STRING },
-                          solution: { type: Type.STRING },
-                          hint: { type: Type.STRING },
-                          quiz: {
-                            type: Type.OBJECT,
-                            properties: {
-                              question: { type: Type.STRING },
-                              options: { type: Type.ARRAY, items: { type: Type.STRING } },
-                              correctAnswer: { type: Type.NUMBER }
-                            },
-                            required: ["question", "options", "correctAnswer"]
-                          },
-                          testCases: {
-                            type: Type.ARRAY,
-                            items: {
-                              type: Type.OBJECT,
-                              properties: {
-                                input: { type: Type.STRING },
-                                expectedOutput: { type: Type.STRING },
-                                description: { type: Type.STRING }
-                              },
-                              required: ["expectedOutput", "description"]
-                            }
-                          }
+                          question: { type: "string" },
+                          options: { type: "array", items: { type: "string" } },
+                          correctAnswer: { type: "number" }
                         },
-                        required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
+                        required: ["question", "options", "correctAnswer"]
+                      },
+                      testCases: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            input: { type: "string" },
+                            expectedOutput: { type: "string" },
+                            description: { type: "string" }
+                          },
+                          required: ["expectedOutput", "description"]
+                        }
                       }
-                    }
-                  },
-                  required: ["id", "title", "lessons"]
+                    },
+                    required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
+                  }
                 }
-              }
-            },
-            required: ["id", "title", "description", "modules"]
+              },
+              required: ["id", "title", "lessons"]
+            }
           }
-        }
+        },
+        required: ["id", "title", "description", "modules"]
       }
-    });
-
-    const response = await model;
-    const text = response.text;
-    if (!text) {
-      throw new Error('AI failed to generate curriculum.');
-    }
-
-    try {
-      return JSON.parse(text) as Level[];
-    } catch (e) {
-      console.error('Failed to parse AI response:', text);
-      throw new Error('Invalid JSON format from AI.');
-    }
+    };
   },
 
   async generateSingleModule(context: string, levelName: string, levelLanguage: string): Promise<Module> {
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY or VITE_GEMINI_API_KEY is not configured.');
-    }
-
     // Reuse rate limit checker for module generation, allow 5 per minute
     if (!checkRateLimit('ai_module_gen', 5, 60000)) {
       throw new Error("Pencarian AI terlalu cepat. Tunggu sebentar sebelum mencoba lagi.");
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-    
-    // We strictly use the Module JSON structure only
-    const model = ai.models.generateContent({
-      model: useStore.getState().selectedModel,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `Anda adalah pakar pembuat kurikulum programming. Buatkan 1 (SATU) struktur Module lengkap untuk disisipkan ke Level bernama "${levelName}" (Bahasa di level ini: ${levelLanguage}).
+    const text = await callAiApi({
+      prompt: `Anda adalah pakar pembuat kurikulum programming. Buatkan 1 (SATU) struktur Module lengkap untuk disisipkan ke Level bernama "${levelName}" (Bahasa di level ini: ${levelLanguage}).
 Konteks/Topik Spesifik Permintaan: "${context}"
 
 Instruksi WAJIB:
@@ -228,92 +232,71 @@ Instruksi WAJIB:
 2. Di dalam module tersebut, harus ada minimal 2 Lesson dan maksimal 4 Lesson yang relevan secara logis dengan Topik spesifik yang diminta.
 3. Struktur setiap Lesson sangat DIBUTUHKAN: title, explanation (mendalam), codeExample, initialCode (soal praktik), solution, hint, quiz (question, options, correctAnswer 0-3), dan testCases.
 4. Pastikan ID unik (acak) untuk module dan lessons.
-5. Kembalikan secara langsung objek JSON Module tersebut.`
-            }
-          ]
-        }
-      ],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            id: { type: Type.STRING },
-            title: { type: Type.STRING },
-            lessons: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING },
-                  title: { type: Type.STRING },
-                  explanation: { type: Type.STRING },
-                  codeExample: { type: Type.STRING },
-                  initialCode: { type: Type.STRING },
-                  solution: { type: Type.STRING },
-                  hint: { type: Type.STRING },
-                  quiz: {
-                    type: Type.OBJECT,
-                    properties: {
-                      question: { type: Type.STRING },
-                      options: { type: Type.ARRAY, items: { type: Type.STRING } },
-                      correctAnswer: { type: Type.NUMBER }
-                    },
-                    required: ["question", "options", "correctAnswer"]
+5. Kembalikan secara langsung objek JSON Module tersebut.`,
+      model: useStore.getState().selectedModel,
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          lessons: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                title: { type: "string" },
+                explanation: { type: "string" },
+                codeExample: { type: "string" },
+                initialCode: { type: "string" },
+                solution: { type: "string" },
+                hint: { type: "string" },
+                quiz: {
+                  type: "object",
+                  properties: {
+                    question: { type: "string" },
+                    options: { type: "array", items: { type: "string" } },
+                    correctAnswer: { type: "number" }
                   },
-                  testCases: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        input: { type: Type.STRING },
-                        expectedOutput: { type: Type.STRING },
-                        description: { type: Type.STRING }
-                      },
-                      required: ["expectedOutput", "description"]
-                    }
-                  }
+                  required: ["question", "options", "correctAnswer"]
                 },
-                required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
-              }
+                testCases: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      input: { type: "string" },
+                      expectedOutput: { type: "string" },
+                      description: { type: "string" }
+                    },
+                    required: ["expectedOutput", "description"]
+                  }
+                }
+              },
+              required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
             }
-          },
-          required: ["id", "title", "lessons"]
-        }
+          }
+        },
+        required: ["id", "title", "lessons"]
       }
     });
-
-    const response = await model;
-    if (!response.text) throw new Error('AI failed to generate module.');
     
     try {
-      return JSON.parse(response.text) as Module;
+      return JSON.parse(text) as Module;
     } catch (e) {
       throw new Error('Invalid JSON format from AI.');
     }
   },
 
   async generateSingleLesson(context: string, moduleName: string, levelLanguage: string): Promise<Lesson> {
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not configured.');
-    }
-
     // Reuse rate limit checker for lesson generation, allow 10 per minute
     if (!checkRateLimit('ai_lesson_gen', 10, 60000)) {
       throw new Error("Pencarian AI terlalu cepat. Tunggu sebentar sebelum mencoba lagi.");
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-    
-    // We strictly use the Lesson JSON structure only
-    const model = ai.models.generateContent({
-      model: "gemini-3-flash",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `Anda adalah pendidik pemrograman ahli. Buatkan 1 struktur Lesson/Pelajaran spesifik.
+    const text = await callAiApi({
+      prompt: `Anda adalah pendidik pemrograman ahli. Buatkan 1 struktur Lesson/Pelajaran spesifik.
 Pelajaran ini akan dimasukkan ke Modul "${moduleName}" (Fokus Bahasa: ${levelLanguage}).
 Topik yang Diminta User: "${context}"
 
@@ -322,57 +305,53 @@ Instruksi WAJIB:
 2. Panjang explanation harus minimal 2 paragraf, menggunakan markdown.
 3. Pastikan format syntax codeExample dan initialCode valid untuk ${levelLanguage}.
 4. Hasilkan testCases yang logis untuk kode solusinya.
-5. Beri ID yang valid (string acak kecil/huruf).`
-            }
-          ]
-        }
-      ],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            id: { type: Type.STRING },
-            title: { type: Type.STRING },
-            explanation: { type: Type.STRING },
-            codeExample: { type: Type.STRING },
-            initialCode: { type: Type.STRING },
-            solution: { type: Type.STRING },
-            hint: { type: Type.STRING },
-            quiz: {
-              type: Type.OBJECT,
-              properties: {
-                question: { type: Type.STRING },
-                options: { type: Type.ARRAY, items: { type: Type.STRING } },
-                correctAnswer: { type: Type.NUMBER }
-              },
-              required: ["question", "options", "correctAnswer"]
+5. Beri ID yang valid (string acak kecil/huruf).`,
+      model: "gemini-3-flash",
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          explanation: { type: "string" },
+          codeExample: { type: "string" },
+          initialCode: { type: "string" },
+          solution: { type: "string" },
+          hint: { type: "string" },
+          quiz: {
+            type: "object",
+            properties: {
+              question: { type: "string" },
+              options: { type: "array", items: { type: "string" } },
+              correctAnswer: { type: "number" }
             },
-            testCases: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  input: { type: Type.STRING },
-                  expectedOutput: { type: Type.STRING },
-                  description: { type: Type.STRING }
-                },
-                required: ["expectedOutput", "description"]
-              }
-            }
+            required: ["question", "options", "correctAnswer"]
           },
-          required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
-        }
+          testCases: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                input: { type: "string" },
+                expectedOutput: { type: "string" },
+                description: { type: "string" }
+              },
+              required: ["expectedOutput", "description"]
+            }
+          }
+        },
+        required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
       }
     });
 
-    const response = await model;
-    if (!response.text) throw new Error('AI failed to generate lesson.');
-    
     try {
-      return JSON.parse(response.text) as Lesson;
+      return JSON.parse(text) as Lesson;
     } catch (e) {
       throw new Error('Invalid JSON format from AI.');
+    }
+  }
+};
+
     }
   }
 };
