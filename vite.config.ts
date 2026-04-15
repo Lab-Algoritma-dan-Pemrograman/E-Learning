@@ -12,6 +12,7 @@ export default defineConfig(({mode}) => {
       injectRegister: 'auto',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        navigateFallbackDenylist: [/^\/pyodide\.worker\.js/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/pyodide\/.*$/i,
