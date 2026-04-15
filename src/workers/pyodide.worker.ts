@@ -1,4 +1,4 @@
-/// <reference lib="webworker" />
+import { loadPyodide } from "pyodide";
 
 self.onmessage = async (event) => {
   const { type, code, id } = event.data;
@@ -9,8 +9,7 @@ self.onmessage = async (event) => {
       return;
     }
     try {
-      importScripts('https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js');
-      (self as any).pyodide = await (self as any).loadPyodide({
+      (self as any).pyodide = await loadPyodide({
         indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/',
       });
       self.postMessage({ type: 'INIT_DONE' });

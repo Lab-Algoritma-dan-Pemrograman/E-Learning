@@ -68,27 +68,29 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
         </button>
       </div>
       
-      <div className="flex-1 min-h-[300px]">
-        <Editor
-          height="100%"
-          language={config.monacoLang}
-          theme="vs-dark"
-          value={code}
-          onChange={onChange}
-          onMount={handleEditorMount}
-          options={{
-            minimap: { enabled: false },
-            fontSize: 14,
-            fontFamily: "'JetBrains Mono', monospace",
-            lineNumbers: 'on',
-            roundedSelection: true,
-            scrollBeyondLastLine: false,
-            cursorBlinking: "smooth",
-            cursorStyle: "line",
-            automaticLayout: true,
-            padding: { top: 16, bottom: 16 },
-          }}
-        />
+      <div className="flex-1 relative min-h-[400px]">
+        <div className="absolute inset-0">
+          <Editor
+            height="100%"
+            language={config.monacoLang}
+            theme="vs-dark"
+            value={code}
+            onChange={onChange}
+            onMount={handleEditorMount}
+            options={{
+              minimap: { enabled: false },
+              fontSize: 14,
+              fontFamily: "'JetBrains Mono', monospace",
+              lineNumbers: 'on',
+              roundedSelection: true,
+              scrollBeyondLastLine: false,
+              cursorBlinking: "smooth",
+              cursorStyle: "line",
+              automaticLayout: true,
+              padding: { top: 16, bottom: 16 },
+            }}
+          />
+        </div>
       </div>
     </div>
   );
