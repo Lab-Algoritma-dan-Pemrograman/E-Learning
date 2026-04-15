@@ -1,24 +1,23 @@
-import { loadPyodide } from "pyodide";
-
 self.onmessage = async (event) => {
   const { type, code, id } = event.data;
 
   if (type === 'INIT') {
-    if ((self as any).pyodide) {
+    if (self.pyodide) {
       self.postMessage({ type: 'INIT_DONE' });
       return;
     }
     try {
-      (self as any).pyodide = await loadPyodide({
+      importScripts('https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js');
+      self.pyodide = await self.loadPyodide({
         indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/',
       });
       self.postMessage({ type: 'INIT_DONE' });
-    } catch (err: any) {
+    } catch (err) {
       self.postMessage({ type: 'INIT_ERROR', error: err.message });
     }
   } else if (type === 'RUN') {
     try {
-      const pyodide = (self as any).pyodide;
+      const pyodide = self.pyodide;
       if (!pyodide) {
         self.postMessage({ type: 'RUN_ERROR', id, error: 'Pyodide not initialized' });
         return;
@@ -34,7 +33,7 @@ sys.stdout = io.StringIO()
       const stdout = await pyodide.runPythonAsync('sys.stdout.getvalue()');
       
       self.postMessage({ type: 'RUN_DONE', id, output: stdout });
-    } catch (err: any) {
+    } catch (err) {
       self.postMessage({ type: 'RUN_ERROR', id, error: err.message });
     }
   }

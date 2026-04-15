@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import PyodideWorker from '../workers/pyodide.worker?worker';
 
 export const PyodideInitializer: React.FC = () => {
   const { pyodideWorker, setPyodideWorker, setIsPyodideLoading } = useStore();
@@ -8,8 +7,10 @@ export const PyodideInitializer: React.FC = () => {
   useEffect(() => {
     if (pyodideWorker) return;
 
-    console.log('Initializing Pyodide Worker...');
-    const worker = new PyodideWorker();
+    console.log('Initializing Pyodide Worker from /public ...');
+    
+    // Explicitly loading from public URL bypasses Vite Worker Bundling entirely
+    const worker = new Worker('/pyodide.worker.js');
 
     worker.onmessage = (e) => {
       if (e.data.type === 'INIT_DONE') {
@@ -32,4 +33,5 @@ export const PyodideInitializer: React.FC = () => {
 
   return null;
 };
+
 
