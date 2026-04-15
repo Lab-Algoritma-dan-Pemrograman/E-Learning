@@ -1,14 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play, Lock } from 'lucide-react';
+import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play, Lock, Bug } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 import { cn } from '../lib/utils';
+import { BugHunt } from '../components/games/BugHunt';
+import { seedInitialQuestions } from '../services/gameService';
+import gameQuestions from '../data/gameQuestions.json';
 
 export const Dashboard: React.FC = () => {
   const { user, setPage, currentLessonId, setCurrentLessonId, curriculum } = useStore();
   const { completedLessons } = useProgress();
+  const [activeGame, setActiveGame] = useState<'c' | 'python' | null>(null);
+
+  useEffect(() => {
+    // Seed questions if user is admin (simple check)
+    if (user?.role === 'admin') {
+      seedInitialQuestions(gameQuestions);
+    }
+  }, [user]);
 
   const isLevelLockedDisplay = (level: any, idx: number) => {
     const userOverride = user?.levelAccessOverrides?.[level.id];
@@ -238,16 +250,61 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-rose-800 rounded-3xl p-6 text-white relative overflow-hidden">
+            <div className="bg-rose-800 rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-rose-900/20">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
               <h3 className="font-bold text-lg mb-2 relative z-10">Tips Pro! 💡</h3>
               <p className="text-rose-100 text-sm relative z-10 leading-relaxed">
                 Konsistensi adalah kunci. Cobalah untuk memprogram setidaknya 15 menit setiap hari untuk membangun memori otot.
               </p>
             </div>
+
+            {/* Bug Hunt Card */}
+            <div className="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 relative overflow-hidden group shadow-xl">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-rose-700/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-rose-700/20 transition-all" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-rose-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-rose-700/20 group-hover:scale-110 transition-transform">
+                    <Bug size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-white text-xl">Bug Hunt! 🎯</h3>
+                    <p className="text-zinc-500 text-xs">Cari bug, dapatkan XP!</p>
+                  </div>
+                </div>
+
+                <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
+                  Uji ketelitian mata kamu dengan menemukan bug dalam potongan kode secepat mungkin. Tantang dirimu sekarang!
+                </p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={() => setActiveGame('c')}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-bold text-sm transition-all active:scale-95 border border-zinc-700 flex items-center justify-center gap-2"
+                  >
+                    <span className="text-blue-400 font-bold">C</span> Challenge
+                  </button>
+                  <button 
+                    onClick={() => setActiveGame('python')}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-bold text-sm transition-all active:scale-95 border border-zinc-700 flex items-center justify-center gap-2"
+                  >
+                    <span className="text-rose-500 font-bold">Py</span> Challenge
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      
+      {/* Game Modal */}
+      <AnimatePresence>
+        {activeGame && (
+          <BugHunt 
+            language={activeGame} 
+            onClose={() => setActiveGame(null)} 
+          />
+        )}
+      </AnimatePresence>
     </Layout>
   );
 };

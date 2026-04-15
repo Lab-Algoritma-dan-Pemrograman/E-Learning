@@ -139,6 +139,23 @@ service cloud.firestore {
         allow update: if isOwner(userId) && isValidProgress(request.resource.data) && uidNotModified();
         allow delete: if isOwner(userId) || isAdmin();
       }
+
+      match /game_history/{gameId} {
+        // Users can see their own game history, admins can see all
+        allow read: if isOwner(userId) || isAdmin();
+        // Users can record a game session, with basic validation
+        allow create: if isOwner(userId) && 
+                        request.resource.data.gameType in ['bug_hunt'] &&
+                        request.resource.data.xpEarned <= 200 && // Safety cap
+                        isValidDateString(request.resource.data.playedAt);
+      }
+    }
+
+    match /game_questions/{questionId} {
+      // Everyone authenticated can read questions
+      allow read: if isAuthenticated();
+      // Only admins can manage questions
+      allow write: if isAdmin();
     }
 
     match /curriculum/{levelId} {

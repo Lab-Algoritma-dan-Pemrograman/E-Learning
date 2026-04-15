@@ -1,0 +1,162 @@
+[
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang",
+    "code": "#include <stdio.h>\n\nint main() {\n    int a = 10\n    printf(\"Nilai a: %d\", a);\n    return 0;\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'a' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Format Specifier Salah",
+    "code": "#include <stdio.h>\n\nint main() {\n    float phi = 3.14;\n    printf(\"Nilai phi: %d\", phi);\n    return 0;\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan %d untuk float, seharusnya %f."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison",
+    "code": "#include <stdio.h>\n\nint main() {\n    int x = 5;\n    if (x = 10) {\n        printf(\"X adalah sepuluh\");\n    }\n    return 0;\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment) di dalam 'if', seharusnya '==' (comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Header Salah",
+    "code": "#include <studio.h>\n\nint main() {\n    printf(\"Halo Dunia\");\n    return 0;\n}",
+    "bugLine": 0,
+    "explanation": "Nama header standard input-output adalah <stdio.h>, bukan <studio.h>."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Array Index Out of Bounds",
+    "code": "#include <stdio.h>\n\nint main() {\n    int angka[3] = {1, 2, 3};\n    printf(\"%d\", angka[3]);\n    return 0;\n}",
+    "bugLine": 4,
+    "explanation": "Array berukuran 3 hanya memiliki indeks 0, 1, dan 2. Indeks 3 di luar jangkauan."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Sintaks Loop Salah",
+    "code": "#include <stdio.h>\n\nint main() {\n    for (int i = 0, i < 5, i++) {\n        printf(\"%d \", i);\n    }\n    return 0;\n}",
+    "bugLine": 3,
+    "explanation": "Pemisah dalam 'for' harus menggunakan titik koma (;), bukan koma (,)."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Darah Pointer",
+    "code": "#include <stdio.h>\n\nint main() {\n    int *ptr;\n    *ptr = 100;\n    printf(\"%d\", *ptr);\n    return 0;\n}",
+    "bugLine": 4,
+    "explanation": "Pointer 'ptr' belum diinisialisasi ke alamat memori yang valid sebelum digunakan."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal",
+    "code": "#include <stdio.h>\n\nint main() {\n    char nama = \"Budi\";\n    printf(\"%s\", nama);\n    return 0;\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'nama' harus bertipe 'char*' atau 'char[]' untuk menyimpan string, bukan 'char'."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Return Type Mismatch",
+    "code": "#include <stdio.h>\n\nvoid hitung() {\n    return 5;\n}\n\nint main() {\n    hitung();\n    return 0;\n}",
+    "bugLine": 3,
+    "explanation": "Fungsi bertipe 'void' tidak boleh mengembalikan nilai (return value)."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Case Sensitivity",
+    "code": "#include <stdio.h>\n\nint main() {\n    int Angka = 10;\n    printf(\"%d\", angka);\n    return 0;\n}",
+    "bugLine": 4,
+    "explanation": "Variabel 'Angka' dan 'angka' berbeda (case-sensitive). 'angka' tidak terdefinisi."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Salah",
+    "code": "def sapa():\nprint(\"Halo!\")\n\nsapa()",
+    "bugLine": 1,
+    "explanation": "Baris di dalam fungsi 'def' harus menjorok ke dalam (indentasi)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Hilang",
+    "code": "if 5 > 2\n    print(\"Lima lebih besar dari dua\")",
+    "bugLine": 0,
+    "explanation": "Pernyataan 'if' harus diakhiri dengan titik dua (:)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Tipe Data Berbeda",
+    "code": "umur = 20\npesan = \"Umur saya \" + umur\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Tidak bisa menggabungkan string dengan integer langsung. Gunakan str(umur)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Nama Fungsi Salah",
+    "code": "print(\"Halo\")\ninput_user = Inpu(\"Masukkan nama: \")",
+    "bugLine": 1,
+    "explanation": "Fungsi untuk input adalah 'input()', bukan 'Inpu()'."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Index List Keluar Batas",
+    "code": "buah = [\"apel\", \"jeruk\"]\nprint(buah[2])",
+    "bugLine": 1,
+    "explanation": "List hanya memiliki indeks 0 dan 1. Indeks 2 tidak tersedia."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Dictionary Tidak Ada",
+    "code": "siswa = {\"nama\": \"Andi\", \"kelas\": 10}\nprint(siswa[\"umur\"])",
+    "bugLine": 1,
+    "explanation": "Key 'umur' tidak ada dalam dictionary 'siswa'."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Variabel Belum Didefinisikan",
+    "code": "x = 10\ny = x + z\nprint(y)",
+    "bugLine": 1,
+    "explanation": "Variabel 'z' digunakan sebelum diberikan nilai atau didefinisikan."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Immutable String",
+    "code": "teks = \"Halo\"\nteks[0] = \"h\"\nprint(teks)",
+    "bugLine": 1,
+    "explanation": "String di Python bersifat immutable (tidak bisa diubah karakternya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Salah Menggunakan 'is' vs '=='",
+    "code": "a = [1, 2, 3]\nb = [1, 2, 3]\nif a is b:\n    print(\"Sama\")",
+    "bugLine": 2,
+    "explanation": "'is' mengecek identitas objek, '==' mengecek nilai. Untuk list baru, nilainya sama tapi objek berbeda."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Scope Variabel LOKAL",
+    "code": "def hitung():\n    hasil = 10\n\nhitung()\nprint(hasil)",
+    "bugLine": 4,
+    "explanation": "Variabel 'hasil' didefinisikan di dalam fungsi (lokal) dan tidak bisa diakses di luar fungsi."
+  }
+]
