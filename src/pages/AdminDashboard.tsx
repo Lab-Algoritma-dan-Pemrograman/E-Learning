@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Level, Module, Lesson } from '../data/curriculum';
-import { resetUserProgress, resetLevelProgress, adjustUserXp } from '../services/progressService';
+import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings } from '../services/gameService';
 import { Achievement, getAchievements } from '../services/achievementService';
 import initialAchievements from '../data/achievements.json';
@@ -639,6 +639,62 @@ export const AdminDashboard: React.FC = () => {
     });
   };
 
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    
+    // Safety checks
+    if (selectedUser.nim === currentUser?.nim) {
+      setShowModal({
+        type: 'alert',
+        title: 'Aksi Ditolak',
+        message: 'Anda tidak dapat menghapus akun Anda sendiri.',
+      });
+      return;
+    }
+
+    // Role-based permissions
+    const targetIsAdmin = selectedUser.role === 'admin';
+    const targetIsEditor = selectedUser.role === 'editor';
+    
+    if ((targetIsAdmin || targetIsEditor) && !isCoordinator) {
+      setShowModal({
+        type: 'alert',
+        title: 'Aksi Ditolak',
+        message: 'Hanya Koordinator yang dapat menghapus akun Admin atau Editor.',
+      });
+      return;
+    }
+
+    if (isEditor && (targetIsAdmin || targetIsEditor)) {
+       setShowModal({
+        type: 'alert',
+        title: 'Aksi Ditolak',
+        message: 'Editor hanya dapat menghapus akun dengan role User.',
+      });
+      return;
+    }
+
+    setShowModal({
+      type: 'confirm',
+      title: '🗑️ Hapus Akun Peserta',
+      message: `PERINGATAN: Ini akan menghapus akun ${selectedUser.nama} dan SEMUA datanya secara permanen dari sistem (Firebase & Supabase). Tindakan ini tidak dapat dibatalkan!`,
+      onConfirm: async () => {
+        setResetLoading(true);
+        try {
+          await deleteUser(selectedUser.nim);
+          setShowModal({ type: 'alert', title: 'Berhasil', message: `Akun ${selectedUser.nama} telah berhasil dihapus.` });
+          setSelectedUser(null);
+        } catch (error) {
+          console.error(error);
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menghapus akun.' });
+        } finally {
+          setResetLoading(false);
+        }
+      }
+    });
+  };
+
+
   const handleUpdateUserAccessOverride = async (levelId: string) => {
     if (!selectedUser?.nim) return;
     try {
@@ -1094,6 +1150,19 @@ export const AdminDashboard: React.FC = () => {
                         {resetLoading ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
                         Reset Semua Progress & XP
                       </button>
+
+                      {/* Delete User */}
+                      {(isCoordinator || isAdmin || isEditor) && (
+                        <button 
+                          onClick={handleDeleteUser}
+                          disabled={resetLoading}
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-rose-50 text-rose-700 font-bold rounded-xl hover:bg-rose-100 transition-all text-sm disabled:opacity-50 mt-2 border border-rose-100"
+                        >
+                          {resetLoading ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                          Hapus Akun Peserta
+                        </button>
+                      )}
+
                     </div>
 
                     {/* Progress List */}

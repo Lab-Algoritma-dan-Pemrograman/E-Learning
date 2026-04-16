@@ -239,3 +239,34 @@ export const adjustUserXp = async (nim: string, newXp: number): Promise<void> =>
     throw error;
   }
 };
+/**
+ * Delete a user and all their associated data from Firestore and Supabase.
+ */
+export const deleteUser = async (nim: string): Promise<void> => {
+  try {
+    // 1. Delete all progress documents
+    const progressRef = collection(db, 'users', nim, 'progress');
+    const progressSnapshot = await getDocs(progressRef);
+    const progressDeletes = progressSnapshot.docs.map(d => deleteDoc(d.ref));
+    
+    // 2. Delete all achievement documents
+    const achievementRef = collection(db, 'users', nim, 'unlocked_achievements');
+    const achievementSnapshot = await getDocs(achievementRef);
+    const achievementDeletes = achievementSnapshot.docs.map(d => deleteDoc(d.ref));
+    
+    // Wait for subcollection deletions
+    await Promise.all([...progressDeletes, ...achievementDeletes]);
+
+    // 3. Delete the main user document
+    const userRef = doc(db, 'users', nim);
+    await deleteDoc(userRef);
+
+    // 4. Sync to Supabase
+    await resetSupabaseProgress(nim);
+
+    console.log(`✅ User ${nim} and all associated data deleted successfully.`);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `users/${nim}`);
+    throw error;
+  }
+};
