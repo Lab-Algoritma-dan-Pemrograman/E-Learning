@@ -139,6 +139,10 @@ print(umur)
           },
           testCases: [
             { expectedOutput: '25', description: 'Buat variabel age dengan nilai 25, lalu tampilkan nilainya.' }
+          ],
+          validationRules: [
+            { pattern: 'age\\s*=', message: "Kamu harus membuat variabel bernama 'age'!", shouldExist: true },
+            { pattern: 'print\\s*\\(\\s*age\\s*\\)', message: "Cetak variabel 'age' menggunakan print(age).", shouldExist: true }
           ]
         },
         {
@@ -167,6 +171,10 @@ umur2 = 25
           },
           testCases: [
             { expectedOutput: 'Python Learner', description: 'Buat variabel nama_lengkap dan tampilkan isinya.' }
+          ],
+          validationRules: [
+            { pattern: 'nama_lengkap\\s*=', message: "Gunakan nama variabel 'nama_lengkap'!", shouldExist: true },
+            { pattern: 'print\\s*\\(\\s*nama_lengkap\\s*\\)', message: "Cetak variabel 'nama_lengkap'.", shouldExist: true }
           ]
         }
       ]
@@ -195,6 +203,9 @@ Kita bisa menggabungkan string menggunakan tanda plus (**+**).`,
           },
           testCases: [
             { expectedOutput: 'Python Keren', description: 'Gabungkan string "Python" dan "Keren" sehingga menghasilkan "Python Keren".' }
+          ],
+          validationRules: [
+            { pattern: '\\+', message: "Gunakan operator '+' untuk menggabungkan string.", shouldExist: true }
           ]
         },
         {
@@ -222,6 +233,9 @@ print("Nilai: " + teks)
           },
           testCases: [
             { expectedOutput: 'Skor: 100', description: 'Cetak "Skor: 100" dengan menggabungkan string dan konversi angka.' }
+          ],
+          validationRules: [
+            { pattern: 'str\\s*\\(', message: "Kamu wajib menggunakan fungsi str() untuk mengubah angka menjadi string.", shouldExist: true }
           ]
         }
       ]
@@ -257,6 +271,9 @@ print(2 ** 3)   # Hasilnya 8 (2 pangkat 3)
           },
           testCases: [
             { expectedOutput: '49', description: 'Hitung dan cetak hasil dari 7 pangkat 2.' }
+          ],
+          validationRules: [
+            { pattern: '\\*\\*\\s*2', message: "Gunakan operator '** 2' untuk menghitung pangkat dua.", shouldExist: true }
           ]
         },
         {
@@ -324,6 +341,9 @@ f-string menggunakan huruf **f** sebelum tanda kutip, dan variabel ditulis dalam
           },
           testCases: [
             { expectedOutput: 'Python dibuat tahun 1991', description: 'Cetak informasi menggunakan f-string.' }
+          ],
+          validationRules: [
+            { pattern: 'f["\'].*\\{.*\\}.*["\']', message: "Gunakan f-string untuk menggabungkan variabel ke dalam teks.", shouldExist: true }
           ]
         },
         {
@@ -348,6 +368,9 @@ Jika ingin menerima angka, kita harus mengubahnya menggunakan **int()** atau **f
           },
           testCases: [
             { expectedOutput: 'Selamat Datang Admin', description: 'Cetak pesan selamat datang menggunakan variabel user.' }
+          ],
+          validationRules: [
+            { pattern: 'print\\s*\\(.*user.*\\)', message: "Cetak variabel 'user' menggunakan print().", shouldExist: true }
           ]
         }
       ]
@@ -390,6 +413,10 @@ if skor > 70:
           },
           testCases: [
             { expectedOutput: 'Big', description: 'Buat pernyataan if untuk mencetak "Big" jika variabel x bernilai lebih dari 5.' }
+          ],
+          validationRules: [
+            { pattern: 'if\\s+x\\s*>', message: "Gunakan pernyataan 'if x > 5' untuk mencetak 'Big'.", shouldExist: true },
+            { pattern: ':', message: "Jangan lupa tanda titik dua (:) setelah kondisi if.", shouldExist: true }
           ]
         },
         {
@@ -418,6 +445,10 @@ else:
           },
           testCases: [
             { expectedOutput: 'Sejuk', description: 'Gunakan if-elif-else untuk menentukan kategori suhu 25 derajat.' }
+          ],
+          validationRules: [
+            { pattern: 'elif\\s+temp\\s*>', message: "Gunakan 'elif' untuk mengecek kondisi suhu kedua.", shouldExist: true },
+            { pattern: 'else\\s*:', message: "Jangan lupa blok 'else' untuk kondisi terakhir.", shouldExist: true }
           ]
         }
       ]
@@ -448,6 +479,9 @@ Kode di atas akan mencetak "Halo" sebanyak 3 kali.`,
           },
           testCases: [
             { expectedOutput: 'Python\nPython\nPython\nPython\nPython', description: 'Cetak kata "Python" sebanyak 5 kali menggunakan loop.' }
+          ],
+          validationRules: [
+            { pattern: 'for\\s+.*\\s+in\\s+range\\(\\s*5\\s*\\)', message: "Kamu harus menggunakan perulangan 'for i in range(5)'.", shouldExist: true }
           ]
         },
         {
@@ -471,6 +505,9 @@ for b in buah:
           },
           testCases: [
             { expectedOutput: '1\n2\n3', description: 'Cetak setiap elemen dari list [1, 2, 3].' }
+          ],
+          validationRules: [
+            { pattern: 'for\\s+.*\\s+in\\s+angka', message: "Gunakan loop 'for a in angka' untuk mengiterasi list.", shouldExist: true }
           ]
         }
       ]
@@ -503,6 +540,10 @@ while x < 3:
           },
           testCases: [
             { expectedOutput: '1\n2\n3\n4\n5', description: 'Cetak angka 1 sampai 5 menggunakan while loop.' }
+          ],
+          validationRules: [
+            { pattern: 'while\\s+.*<=', message: "Gunakan 'while i <= 5' untuk mengulangi kode.", shouldExist: true },
+            { pattern: '\\+=\\s*1', message: "Jangan lupa menambahkan 1 ke variabel (i += 1) agar loop berhenti.", shouldExist: true }
           ]
         }
       ]
@@ -534,6 +575,10 @@ sapa()  # Memanggil fungsi
           },
           testCases: [
             { expectedOutput: 'Ayo Belajar!', description: 'Definisikan fungsi semangat() dan panggil fungsi tersebut.' }
+          ],
+          validationRules: [
+            { pattern: 'def\\s+semangat\\s*\\(\\s*\\)', message: "Definisikan fungsi dengan nama 'semangat()'.", shouldExist: true },
+            { pattern: 'semangat\\s*\\(\\s*\\)', message: "Jangan lupa memanggil fungsi 'semangat()' di akhir kode.", shouldExist: true }
           ]
         },
         {
@@ -568,6 +613,10 @@ print(hasil)  # 8
           },
           testCases: [
             { expectedOutput: '36', description: 'Buat fungsi kuadrat(n) dan cetak hasil kuadrat(6).' }
+          ],
+          validationRules: [
+            { pattern: 'def\\s+kuadrat\\s*\\(\\s*n\\s*\\)', message: "Fungsi harus menerima satu parameter, misalnya 'n'.", shouldExist: true },
+            { pattern: 'return', message: "Kamu wajib menggunakan kata kunci 'return' untuk mengembalikan nilai.", shouldExist: true }
           ]
         }
       ]
@@ -665,6 +714,10 @@ print(siswa["nama"])  # Ali
           },
           testCases: [
             { expectedOutput: 'Jakarta', description: 'Buat dictionary dan cetak nilai kota.' }
+          ],
+          validationRules: [
+            { pattern: '\\{.*["\']nama["\'].*:.*["\']Budi["\'].*\\}', message: "Buat dictionary 'profil' dengan kunci 'nama' dan 'kota'.", shouldExist: true },
+            { pattern: '\\[["\']kota["\']\\]', message: "Akses nilai 'kota' menggunakan profil['kota'].", shouldExist: true }
           ]
         }
       ]
@@ -699,6 +752,9 @@ print(teks.split())    # ['Hello', 'World']
           },
           testCases: [
             { expectedOutput: 'belajar python itu menyenangkan', description: 'Ubah kalimat ke huruf kecil.' }
+          ],
+          validationRules: [
+            { pattern: '\\.lower\\s*\\(\\s*\\)', message: "Gunakan method '.lower()' untuk mengubah teks menjadi huruf kecil.", shouldExist: true }
           ]
         }
       ]
@@ -779,6 +835,10 @@ except Exception as e:
           },
           testCases: [
             { expectedOutput: 'Konversi gagal', description: 'Tangkap error konversi dan cetak pesan.' }
+          ],
+          validationRules: [
+            { pattern: 'try\\s*:', message: "Gunakan blok 'try' untuk membungkus kode yang berisiko error.", shouldExist: true },
+            { pattern: 'except\\s+ValueError\\s*:', message: "Gunakan 'except ValueError' untuk menangkap kesalahan konversi.", shouldExist: true }
           ]
         }
       ]
@@ -807,6 +867,11 @@ except Exception as e:
           },
           testCases: [
             { expectedOutput: 'Hasil: 30', description: 'Cetak hasil penjumlahan 10 + 20 dengan format "Hasil: 30".' }
+          ],
+          validationRules: [
+            { pattern: 'a\\s*=\\s*10', message: "Buat variabel a dengan nilai 10.", shouldExist: true },
+            { pattern: 'b\\s*=\\s*20', message: "Buat variabel b dengan nilai 20.", shouldExist: true },
+            { pattern: 'str\\s*\\(', message: "Gunakan str() untuk menggabungkan angka ke dalam string teks.", shouldExist: true }
           ]
         },
         {
@@ -828,6 +893,10 @@ except Exception as e:
           },
           testCases: [
             { expectedOutput: 'REMIDIAL', description: 'Siswa dengan nilai 75 tapi kehadiran 70 harus mendapatkan hasil "REMIDIAL".' }
+          ],
+          validationRules: [
+            { pattern: 'and', message: "Gunakan operator 'and' untuk mengecek dua kondisi sekaligus.", shouldExist: true },
+            { pattern: 'if\\s+nilai\\s*>=.*and.*kehadiran\\s*>=', message: "Gunakan logika 'if nilai >= 70 and kehadiran >= 80'.", shouldExist: true }
           ]
         }
       ]
@@ -879,6 +948,11 @@ int main() {
           },
           testCases: [
             { expectedOutput: 'Hello, World!', description: 'Cetak "Hello, World!" menggunakan printf().' }
+          ],
+          validationRules: [
+            { pattern: '#include\\s+<stdio.h>', message: "Setiap program C harus menyertakan '#include <stdio.h>'.", shouldExist: true },
+            { pattern: 'int\\s+main\\s*\\(\\s*\\)', message: "Harus ada fungsi 'int main()'.", shouldExist: true },
+            { pattern: 'printf\\s*\\(', message: "Gunakan fungsi 'printf()' untuk mencetak teks.", shouldExist: true }
           ]
         }
       ]
@@ -917,6 +991,10 @@ Untuk mencetak variabel, gunakan **format specifier**:
           },
           testCases: [
             { expectedOutput: 'Skor: 100', description: 'Deklarasikan variabel int dan cetak nilainya.' }
+          ],
+          validationRules: [
+            { pattern: 'int\\s+skor\\s*=\\s*100\\s*;', message: "Deklarasikan 'int skor = 100;' (jangan lupa titik koma).", shouldExist: true },
+            { pattern: '%d', message: "Gunakan '%d' di dalam printf untuk mencetak variabel integer.", shouldExist: true }
           ]
         }
       ]
@@ -1021,6 +1099,10 @@ printf("Umur Anda: %d\\n", umur);
           },
           testCases: [
             { expectedOutput: 'Luas: 32', description: 'Hitung dan cetak luas persegi panjang 8 × 4.' }
+          ],
+          validationRules: [
+            { pattern: 'p\\s*\\*\\s*l', message: "Gunakan rumus 'p * l' untuk menghitung luas.", shouldExist: true },
+            { pattern: 'printf\\s*\\(', message: "Hampilkan hasil menggunakan printf().", shouldExist: true }
           ]
         }
       ]
@@ -1064,6 +1146,10 @@ if (kondisi) {
           },
           testCases: [
             { expectedOutput: 'Lulus', description: 'Cek apakah nilai 75 memenuhi syarat lulus (>= 70).' }
+          ],
+          validationRules: [
+            { pattern: 'if\\s*\\(\\s*nilai\\s*>=', message: "Gunakan sintaks 'if (nilai >= 70)' dengan tanda kurung.", shouldExist: true },
+            { pattern: '\\{', message: "Gunakan kurung kurawal '{}' untuk membungkus kode di dalam if/else.", shouldExist: true }
           ]
         }
       ]
@@ -1098,6 +1184,9 @@ Terdiri dari 3 bagian:
           },
           testCases: [
             { expectedOutput: '1\n2\n3\n4\n5', description: 'Cetak angka 1 sampai 5.' }
+          ],
+          validationRules: [
+            { pattern: 'for\\s*\\(.*i\\s*=\\s*1\\s*;\\s*i\\s*<=\\s*5\\s*;\\s*i\\+\\+\\s*\\)', message: "Gunakan struktur 'for (int i = 1; i <= 5; i++)'.", shouldExist: true }
           ]
         }
       ]
@@ -1134,6 +1223,10 @@ void sapa() {
           },
           testCases: [
             { expectedOutput: '49', description: 'Buat fungsi kuadrat dan cetak kuadrat(7).' }
+          ],
+          validationRules: [
+            { pattern: 'int\\s+kuadrat\\s*\\(\\s*int\\s+n\\s*\\)', message: "Definisikan fungsi 'int kuadrat(int n)'.", shouldExist: true },
+            { pattern: 'return\\s+n\\s*\\*\\s*n\\s*;', message: "Kembalikan hasil kuadrat 'n * n' menggunakan return.", shouldExist: true }
           ]
         }
       ]
@@ -1165,6 +1258,9 @@ Indeks dimulai dari **0**. Ukuran array harus ditentukan saat deklarasi.`,
           },
           testCases: [
             { expectedOutput: '75', description: 'Akses dan cetak elemen ke-3 dari array.' }
+          ],
+          validationRules: [
+            { pattern: 'nilai\\[2\\]', message: "Indeks elemen ke-3 dalam array adalah [2].", shouldExist: true }
           ]
         }
       ]
@@ -1240,6 +1336,10 @@ printf("%p\\n", ptr);   // alamat memori x
           },
           testCases: [
             { expectedOutput: '100', description: 'Cetak nilai 100 melalui pointer.' }
+          ],
+          validationRules: [
+            { pattern: 'int\\s*\\*\\s*ptr\\s*=\\s*&nilai', message: "Buat pointer 'ptr' yang menyimpan alamat '&nilai'.", shouldExist: true },
+            { pattern: '\\*ptr', message: "Gunakan dereferencing '*ptr' untuk mengakses nilai variabel.", shouldExist: true }
           ]
         }
       ]
@@ -1276,6 +1376,10 @@ Akses anggota struct menggunakan operator **titik (.)**`,
           },
           testCases: [
             { expectedOutput: 'Budi: 90', description: 'Cetak data siswa dari struct.' }
+          ],
+          validationRules: [
+            { pattern: 'struct\\s+Siswa\\s+s\\s*=', message: "Deklarasikan variabel struct 's' dengan tipe 'struct Siswa'.", shouldExist: true },
+            { pattern: 's\\.nama', message: "Akses anggota struct menggunakan operator titik (s.nama).", shouldExist: true }
           ]
         }
       ]
@@ -1375,6 +1479,11 @@ Mode: \`"w"\`=tulis, \`"r"\`=baca, \`"a"\`=tambah.
           },
           testCases: [
             { expectedOutput: 'Total: 150\nRata-rata: 30', description: 'Hitung dan cetak total serta rata-rata array.' }
+          ],
+          validationRules: [
+            { pattern: 'for\\s*\\(', message: "Gunakan loop untuk menjumlahkan elemen array.", shouldExist: true },
+            { pattern: '\\/\\s*n', message: "Hitung rata-rata dengan membagi total dengan n.", shouldExist: true },
+            { pattern: 'printf\\s*\\(.*Total', message: "Cetak hasil Total menggunakan printf.", shouldExist: true }
           ]
         }
       ]
