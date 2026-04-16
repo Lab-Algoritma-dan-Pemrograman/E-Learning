@@ -349,12 +349,21 @@ export const AdminDashboard: React.FC = () => {
 
   const handleCommitChanges = async () => {
     try {
-      setResetLoading(true); // Reuse this loading state for simplicity or use isGenerating
+      console.log("Committing changes to Firebase...");
+      console.log("Draft Data Sample (First Level):", draftCurriculum[0]);
+      
+      setResetLoading(true); 
       const { curriculumService } = await import('../services/curriculumService');
+      
+      // Triple check sync data before saving
+      const hasRules = draftCurriculum.some(l => l.modules?.some(m => m.lessons?.some(les => les.validationRules && les.validationRules.length > 0)));
+      console.log("Does draft contain any validation rules?", hasRules);
+
       await curriculumService.saveFullCurriculum(draftCurriculum);
       setHasChanges(false);
       setShowModal({ type: 'alert', title: 'Berhasil', message: 'Semua perubahan berhasil disimpan ke database.' });
     } catch (error) {
+      console.error("Commit Error:", error);
       setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menyimpan perubahan ke database.' });
     } finally {
       setResetLoading(false);
@@ -380,6 +389,7 @@ export const AdminDashboard: React.FC = () => {
       message: 'Ini akan mensinkronkan aturan validasi statis dari file sistem ke database. Data materi Anda akan tetap aman. Lanjutkan?',
       onConfirm: async () => {
         try {
+          console.log("Starting Sync...");
           setResetLoading(true);
           const { curriculum: staticCurriculum } = await import('../data/curriculum');
           
@@ -406,8 +416,9 @@ export const AdminDashboard: React.FC = () => {
                                     staticMod.lessons?.find(sl => sl.title.toLowerCase().trim() === lesson.title.toLowerCase().trim()) ||
                                     staticMod.lessons?.[lesIdx];
                 
-                if (!staticLesson || !staticLesson.validationRules) return lesson;
+                if (!staticLesson || !staticLesson.validationRules || staticLesson.validationRules.length === 0) return lesson;
 
+                console.log(`Matched rules for lesson: ${lesson.title}`);
                 updatedCount++;
                 return {
                   ...lesson,
@@ -421,6 +432,7 @@ export const AdminDashboard: React.FC = () => {
             return { ...level, modules: updatedModules };
           });
 
+          console.log(`Sync complete. Lessons updated: ${updatedCount}`);
           setDraftCurriculum(updatedCurriculum);
           setHasChanges(true); 
           setShowModal({ 
@@ -429,6 +441,7 @@ export const AdminDashboard: React.FC = () => {
             message: `Berhasil memuat aturan validasi untuk ${updatedCount} pelajaran ke dalam Draft. Klik "Simpan ke Server" untuk menerapkannya.` 
           });
         } catch (error) {
+          console.error("Sync Error:", error);
           setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal sinkron: ' + (error instanceof Error ? error.message : 'Error') });
         } finally {
           setResetLoading(false);
