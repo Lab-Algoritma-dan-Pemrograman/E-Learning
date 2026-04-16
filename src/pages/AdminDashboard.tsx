@@ -377,28 +377,41 @@ export const AdminDashboard: React.FC = () => {
     setShowModal({
       type: 'confirm',
       title: 'Sinkronisasi Aturan Validasi',
-      message: 'Ini akan mensinkronkan aturan validasi statis (regex) dari file curriculum.ts ke database Firestore. Data pelajaran lainnya tidak akan terhapus. Lanjutkan?',
+      message: 'Ini akan mensinkronkan aturan validasi statis dari file sistem ke database. Data materi Anda akan tetap aman. Lanjutkan?',
       onConfirm: async () => {
         try {
           setResetLoading(true);
           const { curriculum: staticCurriculum } = await import('../data/curriculum');
-          const { curriculumService } = await import('../services/curriculumService');
           
-          const updatedCurriculum = draftCurriculum.map(level => {
-            const staticLevel = staticCurriculum.find(sl => sl.id === level.id);
+          let updatedCount = 0;
+          const updatedCurriculum = draftCurriculum.map((level, lIdx) => {
+            // Match Level: ID or Title or Index
+            const staticLevel = staticCurriculum.find(sl => sl.id === level.id) || 
+                               staticCurriculum.find(sl => sl.title.toLowerCase().trim() === level.title.toLowerCase().trim()) ||
+                               staticCurriculum[lIdx];
+            
             if (!staticLevel) return level;
 
-            const updatedModules = level.modules?.map(mod => {
-              const staticMod = staticLevel.modules?.find(sm => sm.title === mod.title);
+            const updatedModules = level.modules?.map((mod, mIdx) => {
+              // Match Module: ID or Title or Index
+              const staticMod = staticLevel.modules?.find(sm => sm.id === mod.id) ||
+                               staticLevel.modules?.find(sm => sm.title.toLowerCase().trim() === mod.title.toLowerCase().trim()) ||
+                               staticLevel.modules?.[mIdx];
+              
               if (!staticMod) return mod;
 
-              const updatedLessons = mod.lessons?.map(lesson => {
-                const staticLesson = staticMod.lessons?.find(sl => sl.title === lesson.title);
-                if (!staticLesson) return lesson;
+              const updatedLessons = mod.lessons?.map((lesson, lesIdx) => {
+                // Match Lesson: ID or Title or Index
+                const staticLesson = staticMod.lessons?.find(sl => sl.id === lesson.id) ||
+                                    staticMod.lessons?.find(sl => sl.title.toLowerCase().trim() === lesson.title.toLowerCase().trim()) ||
+                                    staticMod.lessons?.[lesIdx];
+                
+                if (!staticLesson || !staticLesson.validationRules) return lesson;
 
+                updatedCount++;
                 return {
                   ...lesson,
-                  validationRules: staticLesson.validationRules || []
+                  validationRules: JSON.parse(JSON.stringify(staticLesson.validationRules))
                 };
               });
 
@@ -409,14 +422,14 @@ export const AdminDashboard: React.FC = () => {
           });
 
           setDraftCurriculum(updatedCurriculum);
-          setHasChanges(true); // User needs to click "Save to Server" to commit
+          setHasChanges(true); 
           setShowModal({ 
             type: 'alert', 
-            title: 'Berhasil', 
-            message: 'Aturan validasi telah dimuat ke draft. Silakan klik "Simpan ke Server" untuk menerapkannya secara permanen.' 
+            title: 'Sinkronisasi Berhasil', 
+            message: `Berhasil memuat aturan validasi untuk ${updatedCount} pelajaran ke dalam Draft. Klik "Simpan ke Server" untuk menerapkannya.` 
           });
         } catch (error) {
-          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mensinkronkan aturan: ' + (error instanceof Error ? error.message : 'Unknown error') });
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal sinkron: ' + (error instanceof Error ? error.message : 'Error') });
         } finally {
           setResetLoading(false);
         }
