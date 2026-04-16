@@ -124,6 +124,26 @@ export const AdminDashboard: React.FC = () => {
     }
   }, [activeTab, currentCurriculum, draftCurriculum.length]);
 
+  useEffect(() => {
+    // Check if validation rules are missing in the database
+    if (activeTab === 'structure' && currentCurriculum.length > 0) {
+      const hasSomeRules = currentCurriculum.some(level => 
+        level.modules?.some(mod => 
+          mod.lessons?.some(lesson => lesson.validationRules && lesson.validationRules.length > 0)
+        )
+      );
+
+      if (!hasSomeRules && !hasChanges) {
+        setShowModal({
+          type: 'confirm',
+          title: '💡 Tip: Aturan Validasi Kosong',
+          message: 'Sepertinya database Anda belum memiliki aturan validasi statis. Apakah Anda ingin memuat aturan standar dari sistem sekarang? (Ini akan masuk ke Draft)',
+          onConfirm: handleSyncValidationRules
+        });
+      }
+    }
+  }, [activeTab, currentCurriculum.length]);
+
   const updateDraftLevel = (newLevel: Level) => {
     setDraftCurriculum(prev => prev.map(l => l.id === newLevel.id ? newLevel : l));
     setHasChanges(true);
@@ -349,6 +369,57 @@ export const AdminDashboard: React.FC = () => {
       onConfirm: () => {
         setDraftCurriculum(JSON.parse(JSON.stringify(currentCurriculum)));
         setHasChanges(false);
+      }
+    });
+  };
+
+  const handleSyncValidationRules = async () => {
+    setShowModal({
+      type: 'confirm',
+      title: 'Sinkronisasi Aturan Validasi',
+      message: 'Ini akan mensinkronkan aturan validasi statis (regex) dari file curriculum.ts ke database Firestore. Data pelajaran lainnya tidak akan terhapus. Lanjutkan?',
+      onConfirm: async () => {
+        try {
+          setResetLoading(true);
+          const { curriculum: staticCurriculum } = await import('../data/curriculum');
+          const { curriculumService } = await import('../services/curriculumService');
+          
+          const updatedCurriculum = draftCurriculum.map(level => {
+            const staticLevel = staticCurriculum.find(sl => sl.id === level.id);
+            if (!staticLevel) return level;
+
+            const updatedModules = level.modules?.map(mod => {
+              const staticMod = staticLevel.modules?.find(sm => sm.title === mod.title);
+              if (!staticMod) return mod;
+
+              const updatedLessons = mod.lessons?.map(lesson => {
+                const staticLesson = staticMod.lessons?.find(sl => sl.title === lesson.title);
+                if (!staticLesson) return lesson;
+
+                return {
+                  ...lesson,
+                  validationRules: staticLesson.validationRules || []
+                };
+              });
+
+              return { ...mod, lessons: updatedLessons };
+            });
+
+            return { ...level, modules: updatedModules };
+          });
+
+          setDraftCurriculum(updatedCurriculum);
+          setHasChanges(true); // User needs to click "Save to Server" to commit
+          setShowModal({ 
+            type: 'alert', 
+            title: 'Berhasil', 
+            message: 'Aturan validasi telah dimuat ke draft. Silakan klik "Simpan ke Server" untuk menerapkannya secara permanen.' 
+          });
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mensinkronkan aturan: ' + (error instanceof Error ? error.message : 'Unknown error') });
+        } finally {
+          setResetLoading(false);
+        }
       }
     });
   };
@@ -1050,6 +1121,15 @@ export const AdminDashboard: React.FC = () => {
                     <h2 className="text-xl font-bold">Kelola Struktur Kurikulum</h2>
                     <p className="text-zinc-500 text-sm">Atur urutan modul, buka/kunci level, edit judul, atau hapus konten.</p>
                   </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={handleSyncValidationRules}
+                    className="px-4 py-2 bg-rose-50 text-rose-700 font-bold rounded-xl hover:bg-rose-100 transition-all flex items-center gap-2 text-xs border border-rose-100"
+                  >
+                    <Terminal size={14} />
+                    Sync Validasi Statis
+                  </button>
                 </div>
               </div>
 
