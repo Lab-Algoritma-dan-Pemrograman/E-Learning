@@ -145,6 +145,7 @@ export const aiCurriculumService = {
            - Petunjuk (hint) yang membantu tanpa memberikan jawaban langsung.
            - Satu pertanyaan kuis pilihan ganda (quiz) untuk menguji pemahaman konsep dari materi.
            - Minimal satu test case untuk memvalidasi kode latihan (testCases). expectedOutput harus sesuai output program.
+           - Aturan Validasi (validationRules): WAJIB buat minimal 1-3 aturan regex untuk memastikan siswa tidak melakukan hardcode atau salah syntax. Contoh: { "pattern": "for\\s+i\\s+in", "message": "Gunakan perulangan for!", "shouldExist": true }.
         5. Gunakan Bahasa Indonesia yang profesional namun mudah dipahami.
         6. Pastikan ID unik untuk setiap level, module, dan lesson. Gunakan prefix "c-" atau "c1-", "c2-", "c3-" untuk level C dan "py-" atau "py1-", "py2-", "py3-" untuk level Python.
         7. Output HARUS dalam format JSON sesuai dengan struktur data yang diberikan.
@@ -202,6 +203,18 @@ export const aiCurriculumService = {
                           },
                           required: ["expectedOutput", "description"]
                         }
+                      },
+                      validationRules: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            pattern: { type: "string" },
+                            message: { type: "string" },
+                            shouldExist: { type: "boolean" }
+                          },
+                          required: ["pattern", "message", "shouldExist"]
+                        }
                       }
                     },
                     required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
@@ -230,7 +243,7 @@ Konteks/Topik Spesifik Permintaan: "${context}"
 Instruksi WAJIB:
 1. Buat 1 objek Module saja.
 2. Di dalam module tersebut, harus ada minimal 2 Lesson dan maksimal 4 Lesson yang relevan secara logis dengan Topik spesifik yang diminta.
-3. Struktur setiap Lesson sangat DIBUTUHKAN: title, explanation (mendalam), codeExample, initialCode (soal praktik), solution, hint, quiz (question, options, correctAnswer 0-3), dan testCases.
+3. Struktur setiap Lesson sangat DIBUTUHKAN: title, explanation (mendalam), codeExample, initialCode (soal praktik), solution, hint, quiz (question, options, correctAnswer 0-3), testCases, dan validationRules (regex validation).
 4. Pastikan ID unik (acak) untuk module dan lessons.
 5. Kembalikan secara langsung objek JSON Module tersebut.`,
       model: useStore.getState().selectedModel,
@@ -272,6 +285,18 @@ Instruksi WAJIB:
                     },
                     required: ["expectedOutput", "description"]
                   }
+                },
+                validationRules: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      pattern: { type: "string" },
+                      message: { type: "string" },
+                      shouldExist: { type: "boolean" }
+                    },
+                    required: ["pattern", "message", "shouldExist"]
+                  }
                 }
               },
               required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
@@ -305,7 +330,8 @@ Instruksi WAJIB:
 2. Panjang explanation harus minimal 2 paragraf, menggunakan markdown.
 3. Pastikan format syntax codeExample dan initialCode valid untuk ${levelLanguage}.
 4. Hasilkan testCases yang logis untuk kode solusinya.
-5. Beri ID yang valid (string acak kecil/huruf).`,
+5. Hasilkan validationRules (array of regex pattern, message, shouldExist) untuk mencegah siswa melakukan hardcode.
+6. Beri ID yang valid (string acak kecil/huruf).`,
       model: "gemini-3-flash",
       responseMimeType: "application/json",
       responseSchema: {
@@ -337,6 +363,18 @@ Instruksi WAJIB:
                 description: { type: "string" }
               },
               required: ["expectedOutput", "description"]
+            }
+          },
+          validationRules: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                pattern: { type: "string" },
+                message: { type: "string" },
+                shouldExist: { type: "boolean" }
+              },
+              required: ["pattern", "message", "shouldExist"]
             }
           }
         },
