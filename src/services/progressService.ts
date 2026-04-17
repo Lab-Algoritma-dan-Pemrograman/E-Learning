@@ -35,6 +35,13 @@ export const completeLesson = async (
       streakUpdate = isYesterday ? user.streak + 1 : 1;
     }
 
+    // ===== SECURITY: Double-check Firestore before granting XP =====
+    const progressDoc = await getDoc(progressRef);
+    if (progressDoc.exists() && progressDoc.data()?.completed) {
+      console.log(`⏭️ Lesson "${lessonId}" already verified in Firestore. Skipping XP.`);
+      return [];
+    }
+
     try {
       await updateDoc(userRef, {
         xp: increment(xpReward),
@@ -55,9 +62,9 @@ export const completeLesson = async (
     };
     await setDoc(progressRef, progress);
 
-    // Report aggregated progress to Supabase (1 row per user)
-    // The server will recalculate the actual counts from Firestore for security
-    await reportProgressToSupabase(user.nim);
+    // Report aggregated progress to Supabase (Background task)
+    // Removed await to prevent UI from hanging/unresponsiveness
+    reportProgressToSupabase(user.nim);
 
     const overall = getOverallProgress(lessonId, curriculum, completedLessons);
     if (overall.isAllCompleted) {

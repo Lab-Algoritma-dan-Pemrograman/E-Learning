@@ -70,6 +70,7 @@ export const LessonPage: React.FC = () => {
   const [showHint, setShowHint] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showLessonNav, setShowLessonNav] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -153,37 +154,46 @@ export const LessonPage: React.FC = () => {
 
 
   const nextLesson = async () => {
-    if (user) {
-      const newlyUnlocked = await completeLessonService(user, lesson.id, 50, curriculum, completedLessons);
-      if (newlyUnlocked && newlyUnlocked.length > 0) {
-        setUnlockedAchievement(newlyUnlocked[0]);
-      }
-    }
+    if (isCompleting) return;
+    setIsCompleting(true);
     
-    // Find next lesson
-    let nextId: string | null = null;
-    const currentLevel = curriculum[currentLevelIdx];
-    const currentModule = currentLevel?.modules?.[currentModuleIdx];
-    
-    if (currentModule && currentLessonIdx < (currentModule.lessons?.length || 0) - 1) {
-      nextId = currentModule.lessons[currentLessonIdx + 1].id;
-    } else if (currentLevel && currentModuleIdx < (currentLevel.modules?.length || 0) - 1) {
-      nextId = currentLevel.modules[currentModuleIdx + 1].lessons?.[0]?.id || null;
-    } else {
-      // Find next unlocked level
-      for (let i = currentLevelIdx + 1; i < curriculum.length; i++) {
-        if (!curriculum[i].locked) {
-          nextId = curriculum[i].modules?.[0]?.lessons?.[0]?.id || null;
-          break;
+    try {
+      if (user) {
+        const newlyUnlocked = await completeLessonService(user, lesson.id, 50, curriculum, completedLessons);
+        if (newlyUnlocked && newlyUnlocked.length > 0) {
+          setUnlockedAchievement(newlyUnlocked[0]);
         }
       }
-    }
+      
+      // Find next lesson
+      let nextId: string | null = null;
+      const currentLevel = curriculum[currentLevelIdx];
+      const currentModule = currentLevel?.modules?.[currentModuleIdx];
+      
+      if (currentModule && currentLessonIdx < (currentModule.lessons?.length || 0) - 1) {
+        nextId = currentModule.lessons[currentLessonIdx + 1].id;
+      } else if (currentLevel && currentModuleIdx < (currentLevel.modules?.length || 0) - 1) {
+        nextId = currentLevel.modules[currentModuleIdx + 1]?.lessons?.[0]?.id || null;
+      } else {
+        // Find next unlocked level
+        for (let i = currentLevelIdx + 1; i < curriculum.length; i++) {
+          if (!curriculum[i].locked) {
+            nextId = curriculum[i].modules?.[0]?.lessons?.[0]?.id || null;
+            break;
+          }
+        }
+      }
 
-    if (nextId) {
-      setCurrentLessonId(nextId);
-    } else {
-      // Course completed!
-      setShowSuccessModal(true);
+      if (nextId) {
+        setCurrentLessonId(nextId);
+      } else {
+        // Course completed!
+        setShowSuccessModal(true);
+      }
+    } catch (err) {
+      console.error('Error completing lesson:', err);
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -479,11 +489,18 @@ export const LessonPage: React.FC = () => {
                   </div>
                 </div>
                 <button 
-                  disabled={!isCorrect}
+                  disabled={!isCorrect || isCompleting}
                   onClick={nextLesson}
-                  className="w-full py-4 bg-rose-700 text-white font-bold rounded-2xl hover:bg-rose-600 disabled:opacity-50 transition-all shadow-lg shadow-rose-700/20 active:scale-95"
+                  className="w-full py-4 bg-rose-700 text-white font-bold rounded-2xl hover:bg-rose-600 disabled:opacity-50 transition-all shadow-lg shadow-rose-700/20 active:scale-95 flex items-center justify-center gap-2"
                 >
-                  Selesaikan Pelajaran
+                  {isCompleting ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      Memproses...
+                    </>
+                  ) : (
+                    "Selesaikan Pelajaran"
+                  )}
                 </button>
               </div>
             </motion.div>
