@@ -47,39 +47,22 @@ export const completeLesson = async (
     }
 
     // Save lesson progress to Firestore
-    const progress: LessonProgress = {
+    const progress = {
       userId: user.nim,
       lessonId,
       completed: true,
-      completedAt: new Date().toISOString(),
+      completedAt: serverTimestamp(),
     };
     await setDoc(progressRef, progress);
 
     // Report aggregated progress to Supabase (1 row per user)
-    if (curriculum.length > 0) {
-      const overall = getOverallProgress(lessonId, curriculum, completedLessons);
+    // The server will recalculate the actual counts from Firestore for security
+    await reportProgressToSupabase(user.nim);
 
-      // Extract level IDs from completed level titles (or use IDs if available)
-      // Since getOverallProgress returns titles, let's map them back to IDs if needed 
-      // or adjust getOverallProgress to return IDs.
-      const completedLevelIds = curriculum
-        .filter(l => overall.completedLevels.includes(l.title))
-        .map(l => l.id);
-
-      await reportProgressToSupabase({
-        nim: user.nim,
-        studentName: user.nama || '',
-        completedLessons: overall.completedCount,
-        totalLessons: overall.totalCount,
-        isCompleted: overall.isAllCompleted,
-        completedLevels: overall.completedLevels,
-        currentLevel: overall.currentLevel,
-      });
-
-        if (overall.isAllCompleted) {
-          console.log(`🎉 ALL lessons completed by ${user.nim}!`);
-        }
-      }
+    const overall = getOverallProgress(lessonId, curriculum, completedLessons);
+    if (overall.isAllCompleted) {
+      console.log(`🎉 ALL lessons completed by ${user.nim}!`);
+    }
 
       // Check for achievements
       const newlyUnlocked = await checkAndUnlockAchievements(user, { 
@@ -121,17 +104,7 @@ export const syncExistingProgressToSupabase = async (
   if (!user.nim || curriculum.length === 0 || completedLessons.length === 0) return;
 
   try {
-    const overall = getOverallProgress('', curriculum, completedLessons);
-
-    await reportProgressToSupabase({
-      nim: user.nim,
-      studentName: user.nama || '',
-      completedLessons: overall.completedCount,
-      totalLessons: overall.totalCount,
-      isCompleted: overall.isAllCompleted,
-      completedLevels: overall.completedLevels,
-      currentLevel: overall.currentLevel,
-    });
+    await reportProgressToSupabase(user.nim);
 
     console.log('🔄 Existing progress synced to Supabase');
   } catch (error) {

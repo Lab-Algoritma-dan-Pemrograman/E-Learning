@@ -1,20 +1,31 @@
 import { jwtVerify } from 'jose';
 import { createClient } from '@supabase/supabase-js';
+import admin from 'firebase-admin';
 
-export const config = {
-  runtime: 'edge',
-};
+// Initialize Firebase Admin (Only once)
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  } catch (error) {
+    console.error('Firebase Admin init error:', error);
+  }
+}
 
-export default async function handler(req: Request) {
+const db = admin.firestore();
+
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { token, payload: progressData } = await req.json();
+    const { token, nim } = req.body;
     
-    if (!token || !progressData) {
-      return new Response(JSON.stringify({ error: 'Missing data' }), { status: 400 });
+    if (!token || !nim) {
+      return res.status(400).json({ error: 'Missing token or nim' });
     }
 
     // 1. Verify token
@@ -22,52 +33,90 @@ export default async function handler(req: Request) {
     const { payload } = await jwtVerify(token, secret);
     const tokenPayload = payload as any;
 
-    // 2. Validate that the NIM in the token matches the NIM in the report
-    if (tokenPayload.nim !== progressData.nim) {
-      return new Response(JSON.stringify({ error: 'UNAUTHORIZED: Identity mismatch' }), { status: 403 });
+    if (tokenPayload.nim !== nim) {
+      return res.status(403).json({ error: 'Identity mismatch' });
     }
 
-    // 3. Initialize Supabase with SERVICE ROLE to bypass RLS for this system report
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || ''; // Can use VITE_ on server too, but process.env is safer
+    // 2. Fetch DATA from Firestore (Source of Truth)
+    // A. Get Total Lessons from Curriculum
+    const curriculumSnap = await db.collection('curriculum').get();
+    let totalLessons = 0;
+    const allLevelIds: string[] = [];
+    
+    curriculumSnap.forEach(doc => {
+      const data = doc.data();
+      allLevelIds.push(doc.id);
+      (data.modules || []).forEach((mod: any) => {
+        totalLessons += (mod.lessons || []).length;
+      });
+    });
+
+    // B. Get User Progress
+    const progressSnap = await db.collection('users').doc(nim).collection('progress').get();
+    const completedLessonIds = progressSnap.docs.map(d => d.id);
+    const completedCount = completedLessonIds.length;
+
+    // C. Calculate which levels are fully completed
+    const completedLevels: string[] = [];
+    let currentLevelTitle = '';
+
+    curriculumSnap.forEach(doc => {
+      const data = doc.data();
+      let levelTotal = 0;
+      let levelDone = 0;
+      
+      (data.modules || []).forEach((mod: any) => {
+        (mod.lessons || []).forEach((lsn: any) => {
+          levelTotal++;
+          if (completedLessonIds.includes(lsn.id)) {
+            levelDone++;
+          }
+        });
+      });
+
+      if (levelTotal > 0 && levelDone >= levelTotal) {
+        completedLevels.push(data.title);
+      } else if (levelDone > 0 && !currentLevelTitle) {
+        currentLevelTitle = data.title;
+      }
+    });
+
+    // 3. Sync to Supabase
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''; 
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-       return new Response(JSON.stringify({ error: 'Server configuration error' }), { status: 500 });
-    }
-
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const percentage = progressData.totalLessons > 0
-      ? Math.round((progressData.completedLessons / progressData.totalLessons) * 10000) / 100
-      : 0;
+    const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 10000) / 100 : 0;
 
-    const { error } = await supabase
+    const { error: supabaseError } = await supabase
       .from('elearning_progress')
       .upsert({
-        nim: progressData.nim,
-        student_name: progressData.studentName,
-        lessons_completed: progressData.completedLessons,
-        total_lessons: progressData.totalLessons,
+        nim: nim,
+        student_name: tokenPayload.nama || tokenPayload.full_name || 'Student',
+        lessons_completed: completedCount,
+        total_lessons: totalLessons,
         completion_percentage: percentage,
-        is_completed: progressData.isCompleted,
-        completed_levels: progressData.completedLevels,
-        current_level: progressData.currentLevel,
+        is_completed: totalLessons > 0 && completedCount >= totalLessons,
+        completed_levels: completedLevels,
+        current_level: currentLevelTitle || 'Introduction',
         last_accessed_at: new Date().toISOString(),
       }, {
         onConflict: 'nim',
       });
 
-    if (error) {
-       console.error('Supabase update error:', error);
-       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-    }
+    if (supabaseError) throw supabaseError;
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+    return res.status(200).json({ 
+      success: true, 
+      recalculated: { 
+        completed: completedCount, 
+        total: totalLessons,
+        percentage 
+      } 
     });
+
   } catch (error: any) {
     console.error('Report error:', error);
-    return new Response(JSON.stringify({ error: 'Auth failed or internal error' }), { status: 401 });
+    return res.status(error.status || 500).json({ error: error.message || 'Internal Server Error' });
   }
 }

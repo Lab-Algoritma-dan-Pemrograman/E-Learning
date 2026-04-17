@@ -56,8 +56,8 @@ service cloud.firestore {
     function isValidProgress(data) {
       return data.userId is string && 
              data.lessonId is string &&
-             data.completed is bool &&
-             isValidDateString(data.completedAt);
+             data.completed == true &&
+             data.completedAt == request.time;
     }
 
     // ===============================================================
@@ -84,9 +84,11 @@ service cloud.firestore {
 
       match /progress/{lessonId} {
         allow read: if isOwner(userId) || isAdmin();
+        // Only allow creation/update if it's the owner and data is valid.
+        // Once a lesson is completed, it shouldn't be changed (enforced by isValidProgress).
         allow create: if isOwner(userId) && isValidProgress(request.resource.data);
-        allow update: if isOwner(userId) && isValidProgress(request.resource.data);
-        allow delete: if isOwner(userId) || isAdmin();
+        allow update: if isOwner(userId) && isValidProgress(request.resource.data) && resource.data.completed != true;
+        allow delete: if isAdmin(); // Students cannot delete their own verified progress
       }
 
       match /game_history/{gameId} {

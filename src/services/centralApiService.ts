@@ -13,10 +13,10 @@ export interface ProgressSummaryPayload {
 }
 
 /**
- * Report aggregated progress (1 row per user) to Supabase central database.
+ * Report aggregated progress to Supabase central database.
  * This report is now handled server-side for security.
  */
-export async function reportProgressToSupabase(payload: ProgressSummaryPayload): Promise<void> {
+export async function reportProgressToSupabase(nim: string): Promise<void> {
   try {
     const token = getSavedToken();
     if (!token) {
@@ -24,11 +24,12 @@ export async function reportProgressToSupabase(payload: ProgressSummaryPayload):
       return;
     }
 
-    // Call server-side API instead of direct Supabase client
+    // Call server-side API instead of direct Supabase client.
+    // We only send token and nim. The server recalculates progress from Firestore.
     const response = await fetch('/api/report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, payload }),
+      body: JSON.stringify({ token, nim }),
     });
 
     if (!response.ok) {
@@ -37,11 +38,8 @@ export async function reportProgressToSupabase(payload: ProgressSummaryPayload):
         return;
     }
 
-    const percentage = payload.totalLessons > 0
-      ? Math.round((payload.completedLessons / payload.totalLessons) * 10000) / 100
-      : 0;
-
-    console.log(`📊 Progress reported via server: ${payload.nim} (${payload.completedLessons}/${payload.totalLessons} = ${percentage}%)`);
+    const data = await response.json();
+    console.log(`📊 Progress verified and synced via server for ${nim}`, data.recalculated);
   } catch (error) {
     console.error('Error reporting progress to server:', error);
   }
