@@ -1,4 +1,4 @@
-import { doc, setDoc, updateDoc, increment, collection, onSnapshot, query, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, increment, collection, onSnapshot, query, where, getDocs, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile } from '../store/useStore';
 import { LessonProgress } from '../store/useProgress';
