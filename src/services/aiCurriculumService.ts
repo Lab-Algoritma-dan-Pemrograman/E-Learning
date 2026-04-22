@@ -87,17 +87,16 @@ export const aiCurriculumService = {
     const totalModules = allModuleTasks.length;
     let completedModules = 0;
 
-    // Process in chunks of 2 to stay safe with rate limits and timeouts
-    for (let i = 0; i < allModuleTasks.length; i += 2) {
-      const chunk = allModuleTasks.slice(i, i + 2);
+    // Process one by one to ensure stability and avoid timeouts
+    for (let i = 0; i < allModuleTasks.length; i++) {
+      const task = allModuleTasks[i];
       
       if (onProgress) {
-        const titles = chunk.map(t => t.module.title).join(", ");
-        onProgress(`Menyusun konten: ${titles} (${completedModules + 1}-${Math.min(completedModules + chunk.length, totalModules)} dari ${totalModules})...`);
+        onProgress(`Menyusun konten: ${task.module.title} (${i + 1} dari ${totalModules})...`);
       }
 
       // Add a small delay between requests to stay under 15 RPM
-      if (i > 0) await sleep(3000);
+      if (i > 0) await sleep(2000);
 
       // Attempt with retry logic
       let success = false;
@@ -105,7 +104,7 @@ export const aiCurriculumService = {
       
       while (!success && retries > 0) {
         try {
-          const batchPrompt = this._getBatchModuleContentPrompt(chunk, material);
+          const batchPrompt = this._getBatchModuleContentPrompt([task], material);
           const moduleContentText = await callAiApi({
             prompt: batchPrompt,
             model: selectedModel,
@@ -117,33 +116,30 @@ export const aiCurriculumService = {
           const result = JSON.parse(moduleContentText);
           const batchResults = result.modules || [];
           
-          console.log(`DEBUG: Phase 2 Batch Result for [${chunk.map(c => c.module.title).join(', ')}]:`, batchResults);
-
-          if (batchResults.length < chunk.length) {
-            throw new Error(`AI hanya mengembalikan ${batchResults.length} dari ${chunk.length} modul yang diminta.`);
+          if (batchResults.length === 0) {
+            throw new Error(`AI tidak memberikan konten untuk modul "${task.module.title}".`);
           }
 
-          chunk.forEach((task, idx) => {
-            if (batchResults[idx] && batchResults[idx].lessons?.length > 0) {
-              console.log(`DEBUG: Filling content for module "${task.module.title}" with ${batchResults[idx].lessons?.length || 0} lessons.`);
-              task.module.lessons = batchResults[idx].lessons;
-            } else {
-              throw new Error(`Modul "${task.module.title}" tidak memiliki konten yang valid.`);
-            }
-          });
+          const moduleData = batchResults[0];
+          if (moduleData && moduleData.lessons?.length > 0) {
+            console.log(`DEBUG: Filling content for module "${task.module.title}" with ${moduleData.lessons.length} lessons.`);
+            task.module.lessons = moduleData.lessons;
+          } else {
+            throw new Error(`Modul "${task.module.title}" tidak memiliki konten yang valid.`);
+          }
           success = true;
         } catch (e) {
           retries--;
-          console.warn(`Retry attempt ${3 - retries} for batch starting at ${i}. Error: ${e instanceof Error ? e.message : 'Unknown'}`);
+          console.warn(`Retry attempt for module "${task.module.title}". Error: ${e instanceof Error ? e.message : 'Unknown'}`);
           if (retries > 0) {
-            await sleep(5000 + (3 - retries) * 2000); // Exponential backoff
+            await sleep(4000 + (3 - retries) * 1000); // Exponential backoff
           } else {
-            throw new Error(`Gagal menghasilkan konten untuk modul: ${chunk.map(c => c.module.title).join(", ")}. Silakan coba lagi.`);
+            throw new Error(`Gagal menghasilkan konten untuk modul: ${task.module.title}. Detail: ${e instanceof Error ? e.message : 'Silakan coba lagi'}`);
           }
         }
       }
       
-      completedModules += chunk.length;
+      completedModules++;
     }
 
     // Phase 3: Final Validation

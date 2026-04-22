@@ -1,9 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { jwtVerify } from 'jose';
 
-export const config = {
-  runtime: 'edge',
-};
 
 export default async function handler(req: Request) {
   if (req.method !== 'POST') {
@@ -95,7 +92,6 @@ export default async function handler(req: Request) {
           }
         });
 
-        // In @google/genai, result is the directly returned object with a .text property
         const text = result.text;
 
         return new Response(JSON.stringify({ text }), {
@@ -105,13 +101,19 @@ export default async function handler(req: Request) {
 
       } catch (error: any) {
         lastError = error;
-        console.error(`Attempt ${attempt + 1} with key ${currentApiKey.substring(0, 5)}... failed:`, error.message);
+        const errorMessage = error.message || 'Unknown error';
+        console.error(`Attempt ${attempt + 1} with key ${currentApiKey.substring(0, 5)}... failed:`, errorMessage);
+        
+        // If it's a safety filter or invalid model error, don't bother retrying with other keys
+        if (errorMessage.includes("safety") || errorMessage.includes("not found") || errorMessage.includes("404")) {
+           break;
+        }
         continue; 
       }
     }
 
     return new Response(JSON.stringify({ 
-      error: `All AI key attempts failed. Last error: ${lastError?.message || 'Unknown error'}` 
+      error: `Gagal memproses AI. Detail: ${lastError?.message || 'Unknown error'}` 
     }), { status: 500 });
 
   } catch (error: any) {
