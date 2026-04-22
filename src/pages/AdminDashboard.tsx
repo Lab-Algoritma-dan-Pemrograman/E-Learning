@@ -71,10 +71,14 @@ export const AdminDashboard: React.FC = () => {
     onConfirm?: () => void;
   } | null>(null);
 
-  // AI Granular Generation State
   const [aiGenModal, setAiGenModal] = useState<{ type: 'module' | 'lesson'; levelId: string; modIdx?: number; levelLanguage: string; } | null>(null);
   const [aiGenContext, setAiGenContext] = useState('');
   const [isAiTargetGenerating, setIsAiTargetGenerating] = useState(false);
+
+  // AI Game Question Generation State
+  const [showAiGameGenModal, setShowAiGameGenModal] = useState(false);
+  const [aiGameGenTopic, setAiGameGenTopic] = useState('');
+  const [isAiGameGenerating, setIsAiGameGenerating] = useState(false);
 
   const isAdmin = currentUser?.role === 'admin';
   const isEditor = currentUser?.role === 'editor';
@@ -584,6 +588,39 @@ export const AdminDashboard: React.FC = () => {
       ...lessonEditForm,
       quiz: { ...lessonEditForm.quiz, options: newOptions }
     });
+  };
+
+  // ===== AI GAME QUESTION GENERATION =====
+  const handleAiGameGeneration = async () => {
+    if (!aiGameGenTopic.trim()) return;
+    setIsAiGameGenerating(true);
+    try {
+      const { aiCurriculumService } = await import('../services/aiCurriculumService');
+      const lang = questionFilters.language === 'all' ? 'python' : questionFilters.language;
+      const result = await aiCurriculumService.generateBugHuntQuestion(aiGameGenTopic, lang, 'medium');
+      
+      // Open the existing editor with AI result
+      setEditingQuestion({
+        id: '', // New question
+        language: lang,
+        difficulty: 'medium',
+        title: result.title,
+        code: result.code,
+        bugLine: result.bugLine,
+        explanation: result.explanation
+      });
+      
+      setShowAiGameGenModal(false);
+      setAiGameGenTopic('');
+    } catch (error) {
+      setShowModal({ 
+        type: 'alert', 
+        title: 'Gagal', 
+        message: error instanceof Error ? error.message : 'Gagal generate soal via AI.' 
+      });
+    } finally {
+      setIsAiGameGenerating(false);
+    }
   };
 
   // ===== ADMIN: RESET USER PROGRESS =====
@@ -1599,10 +1636,16 @@ export const AdminDashboard: React.FC = () => {
                     <option value="python">Python</option>
                   </select>
                   <button 
+                    onClick={() => setShowAiGameGenModal(true)}
+                    className="bg-amber-500 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-amber-600 transition-all active:scale-95 shadow-lg shadow-amber-500/20"
+                  >
+                    <Sparkles size={16} /> Generate AI
+                  </button>
+                  <button 
                     onClick={() => {
                       setEditingQuestion({
                         id: '', 
-                        language: 'python', 
+                        language: questionFilters.language === 'all' ? 'python' : questionFilters.language, 
                         difficulty: 'easy', 
                         title: 'Soal Baru', 
                         code: '', 
@@ -2340,6 +2383,58 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* AI GAME QUESTION GEN MODAL */}
+        <AnimatePresence>
+          {showAiGameGenModal && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl relative border border-zinc-100"
+              >
+                <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-[1.5rem] flex items-center justify-center mb-8 shadow-inner">
+                  <Sparkles size={32} />
+                </div>
+                <h3 className="text-2xl font-black mb-3">
+                  Generate Soal {questionFilters.language === 'all' ? 'Python' : (questionFilters.language === 'c' ? 'Bahasa C' : 'Python')}
+                </h3>
+                <p className="text-sm text-zinc-500 mb-8 leading-relaxed">
+                  Masukkan topik spesifik (misal: "Pointers", "Recursion", "Loops") agar AI membuatkan soal Bug Hunt yang menantang.
+                </p>
+                <div className="space-y-4 mb-8">
+                  <label className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] px-1">Topik Tantangan</label>
+                  <textarea
+                    value={aiGameGenTopic}
+                    onChange={e => setAiGameGenTopic(e.target.value)}
+                    placeholder="Contoh: Array 2 Dimensi dan Nested Loops..."
+                    rows={3}
+                    className="w-full px-5 py-4 bg-zinc-50 border-2 border-zinc-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-400 transition-all resize-none"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleAiGameGeneration}
+                    disabled={!aiGameGenTopic.trim() || isAiGameGenerating}
+                    className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black hover:bg-amber-600 transition-all shadow-xl shadow-amber-500/30 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-[0.98]"
+                  >
+                    {isAiGameGenerating ? <Loader2 size={20} className="animate-spin" /> : <Zap size={20} />}
+                    {isAiGameGenerating ? 'Sedang Merancang Soal...' : 'Buat Soal Sekarang'}
+                  </button>
+                  <button
+                    onClick={() => { setShowAiGameGenModal(false); setAiGameGenTopic(''); }}
+                    disabled={isAiGameGenerating}
+                    className="w-full py-4 text-sm font-bold text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50"
+                  >
+                    Batal
+                  </button>
                 </div>
               </motion.div>
             </div>

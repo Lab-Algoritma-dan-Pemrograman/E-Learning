@@ -474,5 +474,47 @@ Instruksi:
       ],
       validationRules: []
     };
+  },
+
+  async generateBugHuntQuestion(topic: string, language: 'c' | 'python', difficulty: string): Promise<any> {
+    const selectedModel = useStore.getState().selectedModel;
+
+    const prompt = `Anda adalah pakar keamanan kode dan pengembang senior. 
+    TUGAS: Buat sebuah tantangan "Bug Hunt" untuk siswa.
+    
+    PARAMATER:
+    - Topik: ${topic}
+    - Bahasa: ${language === 'c' ? 'Bahasa C' : 'Python'}
+    - Kesulitan: ${difficulty}
+    
+    ATURAN SOAL:
+    1. Buat potongan kode (snippet) yang terlihat benar tapi memiliki TEPAT SATU bug (kesalahan logika atau sintaks).
+    2. Bug harus cukup halus (bukan typo yang terlalu jelas).
+    3. Identifikasi baris mana yang memiliki bug tersebut (indeks mulai dari 0).
+    4. Berikan penjelasan mengapa baris tersebut salah dan bagaimana seharusnya.
+    
+    Format JSON: { "title": "Judul Soal Singkat", "code": "Isi Kode...", "bugLine": 0, "explanation": "Penjelasan..." }`;
+
+    const resultText = await callAiApi({
+      prompt,
+      model: selectedModel,
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          code: { type: "string" },
+          bugLine: { type: "number" },
+          explanation: { type: "string" }
+        },
+        required: ["title", "code", "bugLine", "explanation"]
+      }
+    });
+
+    try {
+      return JSON.parse(resultText);
+    } catch (e) {
+      throw new Error('Gagal memproses jawaban AI.');
+    }
   }
 };
