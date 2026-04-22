@@ -37,6 +37,7 @@ export const AdminDashboard: React.FC = () => {
   const [aiMaterial, setAiMaterial] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState('');
   const [generatedCurriculum, setGeneratedCurriculum] = useState<Level[] | null>(null);
 
   const [currentCurriculum, setCurrentCurriculum] = useState<Level[]>([]);
@@ -165,6 +166,7 @@ export const AdminDashboard: React.FC = () => {
   const handleGenerateAi = async () => {
     if (!aiMaterial.trim() && !selectedFile) return;
     setIsGenerating(true);
+    setGenerationProgress('Menganalisis isi materi...');
     try {
       const { aiCurriculumService } = await import('../services/aiCurriculumService');
       
@@ -180,7 +182,11 @@ export const AdminDashboard: React.FC = () => {
         });
       }
 
-      const result = await aiCurriculumService.generateCurriculum(aiMaterial, fileData);
+      const result = await aiCurriculumService.generateCurriculum(
+        aiMaterial, 
+        fileData, 
+        (idx, title) => setGenerationProgress(`Menyusun ${title} (${idx + 1} dari 6)...`)
+      );
       setGeneratedCurriculum(result);
     } catch (error) {
       setShowModal({
@@ -190,6 +196,7 @@ export const AdminDashboard: React.FC = () => {
       });
     } finally {
       setIsGenerating(false);
+      setGenerationProgress('');
     }
   };
 
@@ -1964,7 +1971,7 @@ export const AdminDashboard: React.FC = () => {
                   {isGenerating ? (
                     <>
                       <Loader2 size={20} className="animate-spin" />
-                      AI sedang menyusun kurikulum...
+                      {generationProgress || 'AI sedang menyusun kurikulum...'}
                     </>
                   ) : (
                     <>
