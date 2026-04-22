@@ -1865,16 +1865,16 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest leading-none mb-1">Pilih Model AI</div>
-                    <div className="text-sm font-black">{useStore.getState().selectedModel === 'gemini-3-flash' ? 'Gemini 3 Flash (Terbaru)' : 'Gemini 2.5 Flash'}</div>
+                    <div className="text-sm font-black">{useStore.getState().selectedModel === 'gemini-3-flash-preview' ? 'Gemini 3 Flash (Terbaru)' : 'Gemini 2.5 Flash'}</div>
                   </div>
                 </div>
                 
                 <div className="flex gap-2 bg-white p-1 rounded-xl border border-zinc-200">
                   <button 
-                    onClick={() => useStore.getState().setSelectedModel('gemini-3-flash')}
+                    onClick={() => useStore.getState().setSelectedModel('gemini-3-flash-preview')}
                     className={cn(
                       "px-4 py-2 text-xs font-bold rounded-lg transition-all",
-                      useStore.getState().selectedModel === 'gemini-3-flash' 
+                      useStore.getState().selectedModel === 'gemini-3-flash-preview' 
                         ? "bg-rose-700 text-white shadow-md shadow-rose-700/20" 
                         : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
                     )}

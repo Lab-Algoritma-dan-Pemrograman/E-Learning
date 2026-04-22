@@ -65,8 +65,8 @@ export default async function handler(req: Request) {
     }
 
     // 4. Configure Gemini Model
-    const allowedModels = ["gemini-3-flash", "gemini-2.5-flash"];
-    const modelId = allowedModels.includes(requestedModel) ? requestedModel : "gemini-3-flash";
+    const allowedModels = ["gemini-3-flash-preview", "gemini-2.5-flash"];
+    const modelId = allowedModels.includes(requestedModel) ? requestedModel : "gemini-3-flash-preview";
 
     const genAI = new GoogleGenAI({ apiKey });
     

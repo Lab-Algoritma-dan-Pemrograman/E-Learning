@@ -332,7 +332,7 @@ Instruksi WAJIB:
 4. Hasilkan testCases yang logis untuk kode solusinya.
 5. Hasilkan validationRules (array of regex pattern, message, shouldExist) untuk mencegah siswa melakukan hardcode.
 6. Beri ID yang valid (string acak kecil/huruf).`,
-      model: "gemini-3-flash",
+      model: "gemini-3-flash-preview",
       responseMimeType: "application/json",
       responseSchema: {
         type: "object",
