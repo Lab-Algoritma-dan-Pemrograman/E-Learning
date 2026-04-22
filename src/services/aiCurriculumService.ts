@@ -178,9 +178,6 @@ export const aiCurriculumService = {
       required: ["id", "title", "description", "modules"]
     };
   },
-}
-    };
-  },
 
   async generateSingleModule(context: string, levelName: string, levelLanguage: string): Promise<Module> {
     // Reuse rate limit checker for module generation, allow 5 per minute
