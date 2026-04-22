@@ -79,9 +79,10 @@ export const LessonPage: React.FC = () => {
     ? curriculum[currentLevelIdx]?.modules?.[currentModuleIdx]?.lessons?.[currentLessonIdx]
     : null;
   
-  // Detect language from lesson content
-  const lessonLanguage: CodeLanguage = lesson 
-    ? detectLanguage(lesson.codeExample || lesson.initialCode || '') 
+  // Langsung cek bahasa murni berdasarkan level ID pembungkus dari struktur Curriculum (c-level vs py-level)
+  const currentLevel = curriculum[currentLevelIdx];
+  const lessonLanguage: CodeLanguage = currentLevel?.id.startsWith('c-') 
+    ? 'c' 
     : 'python';
   
   const { runCode, isLoading, error: runnerError } = useCodeRunner(lessonLanguage);
