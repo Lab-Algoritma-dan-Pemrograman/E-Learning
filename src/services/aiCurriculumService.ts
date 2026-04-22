@@ -39,16 +39,18 @@ async function callAiApi(params: {
   return data.text;
 }
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const aiCurriculumService = {
   async generateCurriculum(material: string, fileData?: string, onProgress?: (msg: string) => void): Promise<Level[]> {
-    const model = "gemini-1.5-flash"; // Force use Flash for high-granularity speed
+    const selectedModel = useStore.getState().selectedModel || "gemini-3-flash-preview";
 
     if (onProgress) onProgress("Menganalisis materi & menyusun kerangka (Skeleton)...");
 
     // Phase 1: Generate Structure (Skeleton)
     const skeletonText = await callAiApi({
       prompt: this._getSkeletonPrompt(material),
-      model,
+      model: selectedModel,
       responseMimeType: "application/json",
       responseSchema: this._getSkeletonSchema(),
       fileData
@@ -62,35 +64,61 @@ export const aiCurriculumService = {
       throw new Error("Gagal menyusun kerangka kurikulum.");
     }
 
-    // Phase 2: Iterate through levels and modules to fill them
-    let totalModules = 0;
-    levels.forEach(l => totalModules += l.modules.length);
-    let currentModuleIdx = 0;
+    // Phase 2: Batch Processing Modules (2 modules at a time)
+    const allModuleTasks: { level: Level, module: Module }[] = [];
+    levels.forEach(level => {
+      level.modules.forEach(module => {
+        allModuleTasks.push({ level, module });
+      });
+    });
 
-    for (const level of levels) {
-      for (const module of level.modules) {
-        currentModuleIdx++;
-        if (onProgress) onProgress(`Menyusun konten: ${level.title} - ${module.title} (${currentModuleIdx} dari ${totalModules})...`);
+    const totalModules = allModuleTasks.length;
+    let completedModules = 0;
 
-        const moduleContentText = await callAiApi({
-          prompt: this._getModuleContentPrompt(level.title, module.title, material),
-          model,
-          responseMimeType: "application/json",
-          responseSchema: this._getModuleContentSchema(),
-          fileData // Pass file data in each module request for context
-        });
+    // Process in chunks of 2 to stay safe with rate limits and timeouts
+    for (let i = 0; i < allModuleTasks.length; i += 2) {
+      const chunk = allModuleTasks.slice(i, i + 2);
+      
+      if (onProgress) {
+        const titles = chunk.map(t => t.module.title).join(", ");
+        onProgress(`Menyusun konten: ${titles} (${completedModules + 1}-${Math.min(completedModules + chunk.length, totalModules)} dari ${totalModules})...`);
+      }
 
+      // Add a small delay between requests to stay under 15 RPM
+      if (i > 0) await sleep(3000);
+
+      // Attempt with retry logic
+      let success = false;
+      let retries = 1;
+      
+      while (!success && retries >= 0) {
         try {
-          const fullModule = JSON.parse(moduleContentText) as Module;
-          module.lessons = fullModule.lessons;
-          // Ensure IDs are consistent with level IDs if possible (fallback logic)
-          if (!module.id) module.id = `${level.id}-m${currentModuleIdx}`;
+          const batchPrompt = this._getBatchModuleContentPrompt(chunk, material);
+          const moduleContentText = await callAiApi({
+            prompt: batchPrompt,
+            model: selectedModel,
+            responseMimeType: "application/json",
+            responseSchema: this._getBatchModuleContentSchema(),
+            fileData
+          });
+
+          const result = JSON.parse(moduleContentText);
+          const batchResults = result.modules || [];
+
+          chunk.forEach((task, idx) => {
+            if (batchResults[idx]) {
+              task.module.lessons = batchResults[idx].lessons;
+            }
+          });
+          success = true;
         } catch (e) {
-          console.warn(`Failed to fill content for module: ${module.title}`, moduleContentText);
-          // Don't crash the whole process, just keep empty lessons or retry (simple fallback: empty)
-          module.lessons = [];
+          console.warn(`Retry attempt ${1 - retries} for batch starting at ${i}`, e);
+          retries--;
+          if (retries >= 0) await sleep(5000); // Wait longer on error
         }
       }
+      
+      completedModules += chunk.length;
     }
 
     return levels;
@@ -100,18 +128,17 @@ export const aiCurriculumService = {
     return `Anda adalah pakar kurikulum. Berdasarkan materi yang diberikan (PDF/Teks), buatlah KERANGKA (SKELETON) Kurikulum 6 Level.
     
     STRUKTUR WAJIB (6 LEVEL):
-    1. Bahasa C Dasar
-    2. Bahasa C Menengah
-    3. Bahasa C Lanjutan
-    4. Python Dasar
-    5. Python Menengah
-    6. Python Lanjutan
+    1. Bahasa C Dasar (id: c-level-1)
+    2. Bahasa C Menengah (id: c-level-2)
+    3. Bahasa C Lanjutan (id: c-level-3)
+    4. Python Dasar (id: py-level-1)
+    5. Python Menengah (id: py-level-2)
+    6. Python Lanjutan (id: py-level-3)
     
     INSTRUKSI:
-    1. Setiap level harus memiliki 3-4 Module/Bab.
-    2. Setiap Module harus memiliki 2 Lesson titles (Judul saja).
+    1. Setiap level harus memiliki TEPAT 3 Module/Bab.
+    2. Setiap Module harus memiliki TEPAT 2 Lesson titles (Judul saja).
     3. Output harus berupa objek JSON berisi array "levels".
-    4. JANGAN menghasilkan penjelasan panjang, cukup ID, Title, dan struktur modul/lesson saja.
     
     MATERI:
     ${material || "Gunakan file PDF."}
@@ -162,98 +189,94 @@ export const aiCurriculumService = {
     };
   },
 
-  _getModuleContentPrompt(levelTitle: string, moduleTitle: string, material: string): string {
-    return `Anda adalah pakar kurikulum. Lengkapi MODUL CURRICULUM di bawah ini dengan materi MENDALAM.
+  _getBatchModuleContentPrompt(chunk: { level: Level, module: Module }[], material: string): string {
+    const targetModules = chunk.map(c => `[Level: ${c.level.title}, Module: ${c.module.title}]`).join(", ");
+    return `Anda adalah pakar kurikulum. Lengkapi detail untuk MODUL-MODUL di bawah ini:
     
-    KONTEKS:
-    - Level: ${levelTitle}
-    - Module: ${moduleTitle}
+    TARGET MODUL:
+    ${targetModules}
     
     MATERI SUMBER:
     ${material || "Berdasarkan file PDF."}
     
     INSTRUKSI:
-    1. Hasilkan TEPAT 2 Lesson untuk modul ini.
-    2. Setiap lesson harus memiliki: 
-       - explanation (min 3 paragraf markdown, mendalam).
-       - codeExample (syntax sesuai bahasa level).
-       - initialCode (soal praktik).
-       - solution.
-       - hint.
-       - quiz (1 soal).
-       - testCases (min 1).
-       - validationRules (regex check).
-    3. Pastikan kode valid. Jika Bahasa C, gunakan #include <stdio.h>.
+    1. Untuk SETIAP modul di atas, hasilkan detail untuk 2 Lesson yang judulnya sudah ada di skeleton.
+    2. Setiap lesson wajib memiliki: explanation (min 3 paragraf), codeExample, initialCode, solution, hint, kuis, testCases, dan validationRules (regex).
+    3. Gunakan bahasa pemrograman yang sesuai dengan levelnya (C atau Python).
     
-    Format: Objek JSON Module (title, lessons).`;
+    Format: { "modules": [ { "title": "...", "lessons": [...] }, { "title": "...", "lessons": [...] } ] }`;
   },
 
-  _getModuleContentSchema(): any {
+  _getBatchModuleContentSchema(): any {
     return {
       type: "object",
       properties: {
-        id: { type: "string" },
-        title: { type: "string" },
-        lessons: {
+        modules: {
           type: "array",
           items: {
             type: "object",
             properties: {
-              id: { type: "string" },
               title: { type: "string" },
-              explanation: { type: "string" },
-              codeExample: { type: "string" },
-              initialCode: { type: "string" },
-              solution: { type: "string" },
-              hint: { type: "string" },
-              quiz: {
-                type: "object",
-                properties: {
-                  question: { type: "string" },
-                  options: { type: "array", items: { type: "string" } },
-                  correctAnswer: { type: "number" }
-                },
-                required: ["question", "options", "correctAnswer"]
-              },
-              testCases: {
+              lessons: {
                 type: "array",
                 items: {
                   type: "object",
                   properties: {
-                    input: { type: "string" },
-                    expectedOutput: { type: "string" },
-                    description: { type: "string" }
+                    id: { type: "string" },
+                    title: { type: "string" },
+                    explanation: { type: "string" },
+                    codeExample: { type: "string" },
+                    initialCode: { type: "string" },
+                    solution: { type: "string" },
+                    hint: { type: "string" },
+                    quiz: {
+                      type: "object",
+                      properties: {
+                        question: { type: "string" },
+                        options: { type: "array", items: { type: "string" } },
+                        correctAnswer: { type: "number" }
+                      },
+                      required: ["question", "options", "correctAnswer"]
+                    },
+                    testCases: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          input: { type: "string" },
+                          expectedOutput: { type: "string" },
+                          description: { type: "string" }
+                        },
+                        required: ["expectedOutput", "description"]
+                      }
+                    },
+                    validationRules: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          pattern: { type: "string" },
+                          message: { type: "string" },
+                          shouldExist: { type: "boolean" }
+                        },
+                        required: ["pattern", "message", "shouldExist"]
+                      }
+                    }
                   },
-                  required: ["expectedOutput", "description"]
-                }
-              },
-              validationRules: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    pattern: { type: "string" },
-                    message: { type: "string" },
-                    shouldExist: { type: "boolean" }
-                  },
-                  required: ["pattern", "message", "shouldExist"]
+                  required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
                 }
               }
             },
-            required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
+            required: ["title", "lessons"]
           }
         }
       },
-      required: ["title", "lessons"]
+      required: ["modules"]
     };
   },
-
+  
   async generateSingleModule(context: string, levelName: string, levelLanguage: string): Promise<Module> {
-    // Reuse rate limit checker for module generation, allow 5 per minute
-    if (!checkRateLimit('ai_module_gen', 5, 60000)) {
-      throw new Error("Pencarian AI terlalu cepat. Tunggu sebentar sebelum mencoba lagi.");
-    }
-
+    const selectedModel = useStore.getState().selectedModel || "gemini-3-flash-preview";
     const text = await callAiApi({
       prompt: `Anda adalah pakar pembuat kurikulum programming. Buatkan 1 (SATU) struktur Module lengkap untuk disisipkan ke Level bernama "${levelName}" (Bahasa di level ini: ${levelLanguage}).
 Konteks/Topik Spesifik Permintaan: "${context}"
@@ -264,7 +287,7 @@ Instruksi WAJIB:
 3. Struktur setiap Lesson sangat DIBUTUHKAN: title, explanation (mendalam), codeExample, initialCode (soal praktik), solution, hint, quiz (question, options, correctAnswer 0-3), testCases, dan validationRules (regex validation).
 4. Pastikan ID unik (acak) untuk module dan lessons.
 5. Kembalikan secara langsung objek JSON Module tersebut.`,
-      model: useStore.getState().selectedModel,
+      model: selectedModel,
       responseMimeType: "application/json",
       responseSchema: {
         type: "object",
@@ -324,7 +347,7 @@ Instruksi WAJIB:
         required: ["id", "title", "lessons"]
       }
     });
-    
+
     try {
       return JSON.parse(text) as Module;
     } catch (e) {
@@ -333,24 +356,21 @@ Instruksi WAJIB:
   },
 
   async generateSingleLesson(context: string, moduleName: string, levelLanguage: string): Promise<Lesson> {
-    // Reuse rate limit checker for lesson generation, allow 10 per minute
-    if (!checkRateLimit('ai_lesson_gen', 10, 60000)) {
-      throw new Error("Pencarian AI terlalu cepat. Tunggu sebentar sebelum mencoba lagi.");
-    }
-
+    const selectedModel = useStore.getState().selectedModel || "gemini-3-flash-preview";
     const text = await callAiApi({
-      prompt: `Anda adalah pendidik pemrograman ahli. Buatkan 1 struktur Lesson/Pelajaran spesifik.
-Pelajaran ini akan dimasukkan ke Modul "${moduleName}" (Fokus Bahasa: ${levelLanguage}).
-Topik yang Diminta User: "${context}"
+      prompt: `Anda adalah pakar kurikulum. Buatkan 1 (SATU) materi pelajaran (Lesson) lengkap untuk modul bernama "${moduleName}" (Bahasa: ${levelLanguage}).
+Konteks Pelajaran: "${context}"
 
-Instruksi WAJIB:
-1. Kembalikan 1 objek Lesson dengan properti-propertinya.
-2. Panjang explanation harus minimal 2 paragraf, menggunakan markdown.
-3. Pastikan format syntax codeExample dan initialCode valid untuk ${levelLanguage}.
-4. Hasilkan testCases yang logis untuk kode solusinya.
-5. Hasilkan validationRules (array of regex pattern, message, shouldExist) untuk mencegah siswa melakukan hardcode.
-6. Beri ID yang valid (string acak kecil/huruf).`,
-      model: "gemini-3-flash-preview",
+Instruksi:
+1. Berikan penjelasan (explanation) dalam format Markdown yang mendalam (minimal 3 paragraf).
+2. Sertakan codeExample yang relevan.
+3. Sertakan initialCode sebagai latihan (soal praktik).
+4. Hasilkan solusi dan petunjuk (hint).
+5. Buat kuis dengan 1 pertanyaan pilihan ganda.
+6. Hasilkan testCases yang logis untuk kode solusinya.
+7. Hasilkan validationRules (array of regex pattern, message, shouldExist) untuk mencegah siswa melakukan hardcode.
+8. Beri ID yang valid (string acak kecil/huruf).`,
+      model: selectedModel,
       responseMimeType: "application/json",
       responseSchema: {
         type: "object",
