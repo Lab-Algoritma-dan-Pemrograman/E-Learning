@@ -32,7 +32,7 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Missing token' }), { status: 401 });
     }
 
-    // 1. Verify JWT token from Web Utama
+    // 1. Verify JWT token
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     let tokenPayload: any;
     try {
@@ -44,7 +44,7 @@ export default async function handler(req: Request) {
 
     const nim = tokenPayload.nim;
 
-    // 2. Fetch role from Firestore via REST API (Edge friendly)
+    // 2. Fetch role from Firestore via REST API
     const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
     if (!projectId) {
       return new Response(JSON.stringify({ error: 'Server configuration error (projectId missing)' }), { status: 500 });
@@ -60,7 +60,7 @@ export default async function handler(req: Request) {
     const userData = await firestoreRes.json();
     const role = userData.fields?.role?.stringValue || 'user';
 
-    // 3. SECURE RBAC: Only admin and editor allowed to use AI
+    // 3. SECURE RBAC
     if (role !== 'admin' && role !== 'editor') {
        return new Response(JSON.stringify({ error: 'Akses Ditolak: Fitur AI ini hanya tersedia untuk Admin atau Editor.' }), { status: 403 });
     }
@@ -69,7 +69,7 @@ export default async function handler(req: Request) {
     const allowedModels = ["gemini-3-flash-preview", "gemini-2.5-flash"];
     const modelId = allowedModels.includes(requestedModel) ? requestedModel : "gemini-3-flash-preview";
 
-    // Attempt generation with key rotation
+    // Attempt generation with key rotation (Unified SDK @google/genai syntax)
     let lastError: any = null;
     const maxAttempts = Math.min(apiKeys.length, 3); 
     const shuffledKeys = [...apiKeys].sort(() => Math.random() - 0.5);
@@ -77,29 +77,32 @@ export default async function handler(req: Request) {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const currentApiKey = shuffledKeys[attempt];
       try {
-        const genAI = new GoogleGenAI({ apiKey: currentApiKey });
-        const generationConfig: any = {};
-        if (responseMimeType) generationConfig.responseMimeType = responseMimeType;
-        if (responseSchema) generationConfig.responseSchema = responseSchema;
-
-        const model = genAI.getGenerativeModel({ model: modelId, generationConfig });
-        const contentParts: any[] = [{ text: prompt }];
-
+        const client = new GoogleGenAI({ apiKey: currentApiKey });
+        
+        // Prepare parts
+        const parts: any[] = [{ text: prompt }];
         if (fileData) {
-          contentParts.push({ inlineData: { mimeType: fileMimeType, data: fileData } });
+          parts.push({ inlineData: { mimeType: fileMimeType, data: fileData } });
         }
 
-        const result = await model.generateContent({
-          contents: [{ role: "user", parts: contentParts }]
+        // Generate content using modern Unified SDK syntax
+        const result = await client.models.generateContent({
+          model: modelId,
+          contents: [{ role: "user", parts }],
+          config: {
+            responseMimeType: responseMimeType || "text/plain",
+            responseSchema: responseSchema
+          }
         });
 
-        const response = await result.response;
-        const text = response.text();
+        // In @google/genai, result is the directly returned object with a .text property
+        const text = result.text;
 
         return new Response(JSON.stringify({ text }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         });
+
       } catch (error: any) {
         lastError = error;
         console.error(`Attempt ${attempt + 1} with key ${currentApiKey.substring(0, 5)}... failed:`, error.message);
@@ -112,7 +115,7 @@ export default async function handler(req: Request) {
     }), { status: 500 });
 
   } catch (error: any) {
-    console.error('AI Error:', error);
+    console.error('AI Proxy Error:', error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
