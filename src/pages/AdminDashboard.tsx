@@ -185,7 +185,7 @@ export const AdminDashboard: React.FC = () => {
       const result = await aiCurriculumService.generateCurriculum(
         aiMaterial, 
         fileData, 
-        (idx, title) => setGenerationProgress(`Menyusun ${title} (${idx + 1} dari 6)...`)
+        (msg) => setGenerationProgress(msg)
       );
       setGeneratedCurriculum(result);
     } catch (error) {

@@ -40,142 +40,211 @@ async function callAiApi(params: {
 }
 
 export const aiCurriculumService = {
-  async generateCurriculum(material: string, fileData?: string, onProgress?: (levelIdx: number, levelTitle: string) => void): Promise<Level[]> {
-    // Rate Limiting: Max 2 requests per minute for starting curriculum generation
-    if (!checkRateLimit('ai_curriculum_start', 2, 60000)) {
-      throw new Error("Pencarian AI terlalu cepat. Tunggu sebentar.");
+  async generateCurriculum(material: string, fileData?: string, onProgress?: (msg: string) => void): Promise<Level[]> {
+    const model = "gemini-1.5-flash"; // Force use Flash for high-granularity speed
+
+    if (onProgress) onProgress("Menganalisis materi & menyusun kerangka (Skeleton)...");
+
+    // Phase 1: Generate Structure (Skeleton)
+    const skeletonText = await callAiApi({
+      prompt: this._getSkeletonPrompt(material),
+      model,
+      responseMimeType: "application/json",
+      responseSchema: this._getSkeletonSchema(),
+      fileData
+    });
+
+    let levels: Level[];
+    try {
+      levels = JSON.parse(skeletonText).levels;
+    } catch (e) {
+      console.error("Failed to parse skeleton:", skeletonText);
+      throw new Error("Gagal menyusun kerangka kurikulum.");
     }
 
-    const levels: Level[] = [];
-    const levelConfigs = [
-      { id: "c-level-1", title: "Bahasa C Dasar", lang: "Bahasa C" },
-      { id: "c-level-2", title: "Bahasa C Menengah", lang: "Bahasa C" },
-      { id: "c-level-3", title: "Bahasa C Lanjutan", lang: "Bahasa C" },
-      { id: "py-level-1", title: "Python Dasar", lang: "Python" },
-      { id: "py-level-2", title: "Python Menengah", lang: "Python" },
-      { id: "py-level-3", title: "Python Lanjutan", lang: "Python" },
-    ];
+    // Phase 2: Iterate through levels and modules to fill them
+    let totalModules = 0;
+    levels.forEach(l => totalModules += l.modules.length);
+    let currentModuleIdx = 0;
 
-    for (let i = 0; i < levelConfigs.length; i++) {
-      const config = levelConfigs[i];
-      if (onProgress) onProgress(i, config.title);
+    for (const level of levels) {
+      for (const module of level.modules) {
+        currentModuleIdx++;
+        if (onProgress) onProgress(`Menyusun konten: ${level.title} - ${module.title} (${currentModuleIdx} dari ${totalModules})...`);
 
-      const previousTitles = levels.map(l => l.title).join(", ");
-      const prompt = this._getStepPrompt(i + 1, config, material, previousTitles);
+        const moduleContentText = await callAiApi({
+          prompt: this._getModuleContentPrompt(level.title, module.title, material),
+          model,
+          responseMimeType: "application/json",
+          responseSchema: this._getModuleContentSchema(),
+          fileData // Pass file data in each module request for context
+        });
 
-      const text = await callAiApi({
-        prompt: prompt,
-        model: useStore.getState().selectedModel,
-        responseMimeType: "application/json",
-        responseSchema: this._getLevelSchema(),
-        fileData
-      });
-
-      try {
-        const levelData = JSON.parse(text) as Level;
-        levels.push(levelData);
-      } catch (e) {
-        console.error(`Failed to parse AI response for level ${i + 1}:`, text);
-        throw new Error(`Gagal memproses JSON pada Level ${i + 1}.`);
+        try {
+          const fullModule = JSON.parse(moduleContentText) as Module;
+          module.lessons = fullModule.lessons;
+          // Ensure IDs are consistent with level IDs if possible (fallback logic)
+          if (!module.id) module.id = `${level.id}-m${currentModuleIdx}`;
+        } catch (e) {
+          console.warn(`Failed to fill content for module: ${module.title}`, moduleContentText);
+          // Don't crash the whole process, just keep empty lessons or retry (simple fallback: empty)
+          module.lessons = [];
+        }
       }
     }
 
     return levels;
   },
 
-  _getStepPrompt(step: number, config: { id: string, title: string, lang: string }, material: string, previousTitles: string): string {
-    return `Anda adalah pakar kurikulum. Buatlah TEPAT 1 Level kurikulum untuk kursus pemrograman.
+  _getSkeletonPrompt(material: string): string {
+    return `Anda adalah pakar kurikulum. Berdasarkan materi yang diberikan (PDF/Teks), buatlah KERANGKA (SKELETON) Kurikulum 6 Level.
     
-    KONTEKS UTAMA:
-    - Target Level: Level ${step} - "${config.title}"
-    - Bahasa Pemrograman: ${config.lang}
-    - Level yang sudah dibuat sebelumnya (JANGAN DIULANG): ${previousTitles || "Belum ada"}
+    STRUKTUR WAJIB (6 LEVEL):
+    1. Bahasa C Dasar
+    2. Bahasa C Menengah
+    3. Bahasa C Lanjutan
+    4. Python Dasar
+    5. Python Menengah
+    6. Python Lanjutan
     
-    MATERI SUMBER (MANDATORY):
-    ${material || "Gunakan isi file PDF yang diunggah."}
+    INSTRUKSI:
+    1. Setiap level harus memiliki 3-4 Module/Bab.
+    2. Setiap Module harus memiliki 2 Lesson titles (Judul saja).
+    3. Output harus berupa objek JSON berisi array "levels".
+    4. JANGAN menghasilkan penjelasan panjang, cukup ID, Title, dan struktur modul/lesson saja.
     
-    INSTRUKSI TEKNIS:
-    1. Fokus HANYA pada topik "${config.title}" dalam bahasa ${config.lang}.
-    2. Minimal 3 Module, maksimal 5 Module.
-    3. Setiap Module minimal 2 Lesson.
-    4. Penjelasan Lesson harus mendalam (min 3 paragraf markdown).
-    5. Masukkan contoh kode, initial code (soal), solusi, kuis, dan test case.
-    6. Gunakan ID "${config.id}" untuk level ini. Module ID gunakan prefix "${config.id.replace('level-', '')}m". Lesson ID gunakan prefix "${config.id.replace('level-', '')}l".
-    7. SELURUH KONTEN HARUS BERDASARKAN MATERI PDF/TEKS YANG DIBERIKAN.
-    8. Pastikan syntax kode valid untuk ${config.lang}. Untuk C sertakan #include <stdio.h>.
+    MATERI:
+    ${material || "Gunakan file PDF."}
     
-    Format output: 1 objek JSON Level.`;
+    Format output: { "levels": [ { "id": "...", "title": "...", "description": "...", "modules": [ { "id": "...", "title": "...", "lessons": [ { "id": "...", "title": "..." } ] } ] } ] }`;
   },
 
-  _getLevelSchema(): any {
+  _getSkeletonSchema(): any {
     return {
       type: "object",
       properties: {
-        id: { type: "string" },
-        title: { type: "string" },
-        description: { type: "string" },
-        modules: {
+        levels: {
           type: "array",
           items: {
             type: "object",
             properties: {
               id: { type: "string" },
               title: { type: "string" },
-              lessons: {
+              description: { type: "string" },
+              modules: {
                 type: "array",
                 items: {
                   type: "object",
                   properties: {
                     id: { type: "string" },
                     title: { type: "string" },
-                    explanation: { type: "string" },
-                    codeExample: { type: "string" },
-                    initialCode: { type: "string" },
-                    solution: { type: "string" },
-                    hint: { type: "string" },
-                    quiz: {
-                      type: "object",
-                      properties: {
-                        question: { type: "string" },
-                        options: { type: "array", items: { type: "string" } },
-                        correctAnswer: { type: "number" }
-                      },
-                      required: ["question", "options", "correctAnswer"]
-                    },
-                    testCases: {
+                    lessons: {
                       type: "array",
                       items: {
                         type: "object",
                         properties: {
-                          input: { type: "string" },
-                          expectedOutput: { type: "string" },
-                          description: { type: "string" }
+                          id: { type: "string" },
+                          title: { type: "string" }
                         },
-                        required: ["expectedOutput", "description"]
-                      }
-                    },
-                    validationRules: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          pattern: { type: "string" },
-                          message: { type: "string" },
-                          shouldExist: { type: "boolean" }
-                        },
-                        required: ["pattern", "message", "shouldExist"]
+                        required: ["id", "title"]
                       }
                     }
                   },
-                  required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
+                  required: ["id", "title", "lessons"]
                 }
               }
             },
-            required: ["id", "title", "lessons"]
+            required: ["id", "title", "description", "modules"]
           }
         }
       },
-      required: ["id", "title", "description", "modules"]
+      required: ["levels"]
+    };
+  },
+
+  _getModuleContentPrompt(levelTitle: string, moduleTitle: string, material: string): string {
+    return `Anda adalah pakar kurikulum. Lengkapi MODUL CURRICULUM di bawah ini dengan materi MENDALAM.
+    
+    KONTEKS:
+    - Level: ${levelTitle}
+    - Module: ${moduleTitle}
+    
+    MATERI SUMBER:
+    ${material || "Berdasarkan file PDF."}
+    
+    INSTRUKSI:
+    1. Hasilkan TEPAT 2 Lesson untuk modul ini.
+    2. Setiap lesson harus memiliki: 
+       - explanation (min 3 paragraf markdown, mendalam).
+       - codeExample (syntax sesuai bahasa level).
+       - initialCode (soal praktik).
+       - solution.
+       - hint.
+       - quiz (1 soal).
+       - testCases (min 1).
+       - validationRules (regex check).
+    3. Pastikan kode valid. Jika Bahasa C, gunakan #include <stdio.h>.
+    
+    Format: Objek JSON Module (title, lessons).`;
+  },
+
+  _getModuleContentSchema(): any {
+    return {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        title: { type: "string" },
+        lessons: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              title: { type: "string" },
+              explanation: { type: "string" },
+              codeExample: { type: "string" },
+              initialCode: { type: "string" },
+              solution: { type: "string" },
+              hint: { type: "string" },
+              quiz: {
+                type: "object",
+                properties: {
+                  question: { type: "string" },
+                  options: { type: "array", items: { type: "string" } },
+                  correctAnswer: { type: "number" }
+                },
+                required: ["question", "options", "correctAnswer"]
+              },
+              testCases: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    input: { type: "string" },
+                    expectedOutput: { type: "string" },
+                    description: { type: "string" }
+                  },
+                  required: ["expectedOutput", "description"]
+                }
+              },
+              validationRules: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    pattern: { type: "string" },
+                    message: { type: "string" },
+                    shouldExist: { type: "boolean" }
+                  },
+                  required: ["pattern", "message", "shouldExist"]
+                }
+              }
+            },
+            required: ["id", "title", "explanation", "codeExample", "initialCode", "solution", "hint", "quiz", "testCases"]
+          }
+        }
+      },
+      required: ["title", "lessons"]
     };
   },
 
