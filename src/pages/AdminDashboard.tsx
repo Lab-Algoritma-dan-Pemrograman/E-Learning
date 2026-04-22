@@ -522,9 +522,19 @@ export const AdminDashboard: React.FC = () => {
   const handleOpenLessonEditor = (levelId: string, modIdx: number, lessonIdx: number) => {
     const level = draftCurriculum.find(l => l.id === levelId);
     if (!level?.modules?.[modIdx]?.lessons?.[lessonIdx]) return;
-    const lesson = level.modules[modIdx].lessons[lessonIdx];
+    
+    // Deep clone and ensure basic structure exists to avoid Crashes
+    const lesson = JSON.parse(JSON.stringify(level.modules[modIdx].lessons[lessonIdx]));
+    
+    // Auto-repair missing fields if they are missing (e.g. from partial AI generation)
+    if (!lesson.quiz) {
+      lesson.quiz = { question: '', options: ['', '', '', ''], correctAnswer: 0 };
+    }
+    if (!Array.isArray(lesson.testCases)) lesson.testCases = [];
+    if (!Array.isArray(lesson.validationRules)) lesson.validationRules = [];
+
     setEditingLessonInfo({ levelId, modIdx, lessonIdx });
-    setLessonEditForm(JSON.parse(JSON.stringify(lesson))); // deep clone
+    setLessonEditForm(lesson);
   };
 
   const handleSaveLessonEdit = () => {
@@ -567,8 +577,8 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleUpdateQuizOption = (idx: number, value: string) => {
-    if (!lessonEditForm) return;
-    const newOptions = [...lessonEditForm.quiz.options];
+    if (!lessonEditForm || !lessonEditForm.quiz) return;
+    const newOptions = [...(lessonEditForm.quiz.options || ['', '', '', ''])];
     newOptions[idx] = value;
     setLessonEditForm({
       ...lessonEditForm,
@@ -2131,10 +2141,10 @@ export const AdminDashboard: React.FC = () => {
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pertanyaan</label>
                       <input
-                        value={lessonEditForm.quiz.question}
+                        value={lessonEditForm.quiz?.question || ''}
                         onChange={e => setLessonEditForm({
                           ...lessonEditForm,
-                          quiz: { ...lessonEditForm.quiz, question: e.target.value }
+                          quiz: { ...(lessonEditForm.quiz || { question: '', options: ['', '', '', ''], correctAnswer: 0 }), question: e.target.value }
                         })}
                         className="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                       />
@@ -2142,20 +2152,20 @@ export const AdminDashboard: React.FC = () => {
 
                     <div className="space-y-3">
                       <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pilihan Jawaban</label>
-                      {lessonEditForm.quiz.options.map((opt, oIdx) => (
+                      {(lessonEditForm.quiz?.options || ['', '', '', '']).map((opt, oIdx) => (
                         <div key={oIdx} className="flex items-center gap-3">
                           <button
                             onClick={() => setLessonEditForm({
                               ...lessonEditForm,
-                              quiz: { ...lessonEditForm.quiz, correctAnswer: oIdx }
+                              quiz: { ...(lessonEditForm.quiz || { question: '', options: ['', '', '', ''], correctAnswer: 0 }), correctAnswer: oIdx }
                             })}
                             className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0 transition-all",
-                              lessonEditForm.quiz.correctAnswer === oIdx
+                              lessonEditForm.quiz?.correctAnswer === oIdx
                                 ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
                                 : "bg-zinc-100 text-zinc-400 hover:bg-zinc-200"
                             )}
-                            title={lessonEditForm.quiz.correctAnswer === oIdx ? 'Jawaban Benar' : 'Klik untuk jadikan jawaban benar'}
+                            title={lessonEditForm.quiz?.correctAnswer === oIdx ? 'Jawaban Benar' : 'Klik untuk jadikan jawaban benar'}
                           >
                             {String.fromCharCode(65 + oIdx)}
                           </button>
@@ -2164,13 +2174,13 @@ export const AdminDashboard: React.FC = () => {
                             onChange={e => handleUpdateQuizOption(oIdx, e.target.value)}
                             className={cn(
                               "flex-1 px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all",
-                              lessonEditForm.quiz.correctAnswer === oIdx
+                              lessonEditForm.quiz?.correctAnswer === oIdx
                                 ? "bg-green-50 border-green-300 focus:ring-green-500/20 focus:border-green-500"
                                 : "bg-white border-zinc-200 focus:ring-amber-500/20 focus:border-amber-500"
                             )}
                             placeholder={`Pilihan ${String.fromCharCode(65 + oIdx)}`}
                           />
-                          {lessonEditForm.quiz.correctAnswer === oIdx && (
+                          {lessonEditForm.quiz?.correctAnswer === oIdx && (
                             <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-lg uppercase tracking-wider shrink-0">Benar</span>
                           )}
                         </div>

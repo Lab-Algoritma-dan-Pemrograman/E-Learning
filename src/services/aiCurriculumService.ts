@@ -58,7 +58,19 @@ export const aiCurriculumService = {
 
     let levels: Level[];
     try {
-      levels = JSON.parse(skeletonText).levels;
+      const parsed = JSON.parse(skeletonText);
+      levels = parsed.levels;
+      
+      // Data Hygiene: Pre-initialize all lessons with empty templates to prevent TypeErrors in UI
+      levels.forEach(level => {
+        level.modules.forEach(module => {
+          if (!module.lessons) module.lessons = [];
+          module.lessons = module.lessons.map(lesson => ({
+            ...this._createEmptyLesson(lesson.id || `l-${Math.random().toString(36).substr(2, 9)}`, lesson.title || 'Materi Baru'),
+            ...lesson
+          }));
+        });
+      });
     } catch (e) {
       console.error("Failed to parse skeleton:", skeletonText);
       throw new Error("Gagal menyusun kerangka kurikulum.");
@@ -425,5 +437,26 @@ Instruksi:
     } catch (e) {
       throw new Error('Invalid JSON format from AI.');
     }
+  },
+
+  _createEmptyLesson(id: string, title: string): Lesson {
+    return {
+      id: id || `l-${Math.random().toString(36).substr(2, 9)}`,
+      title: title || 'Materi Baru',
+      explanation: 'Memuat materi...',
+      codeExample: '// Kode akan muncul di sini',
+      initialCode: '// Ketik kode di sini',
+      solution: '// Solusi kode',
+      hint: 'Gunakan logika pemecahan masalah sesuai materi.',
+      quiz: {
+        question: 'Mempersiapkan pertanyaan...',
+        options: ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D'],
+        correctAnswer: 0
+      },
+      testCases: [
+        { expectedOutput: '', description: 'Verifikasi output standar' }
+      ],
+      validationRules: []
+    };
   }
 };
