@@ -136,9 +136,9 @@ export const Dashboard: React.FC = () => {
               <Zap size={32} />
             </div>
             <div className="max-w-md mx-auto">
-              <h2 className="text-xl font-bold text-rose-900">Database Anda Masih Kosong</h2>
+              <h2 className="text-xl font-bold text-rose-900">Database kamu Masih Kosong</h2>
               <p className="text-rose-700 text-sm mt-2">
-                Klik tombol di bawah untuk mengisi database Firestore Anda dengan kurikulum E-Learning standar secara otomatis.
+                Klik tombol di bawah untuk mengisi database Firestore kamu dengan kurikulum E-Learning standar secara otomatis.
               </p>
             </div>
             <button 
@@ -153,7 +153,7 @@ export const Dashboard: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Selamat datang kembali, {user?.nama?.split(' ')[0] || 'Penjelajah'}! 👋</h1>
-            <p className="text-zinc-500 mt-1">Anda membuat kemajuan besar. Pertahankan!</p>
+            <p className="text-zinc-500 mt-1">Kamu membuat kemajuan besar. Pertahankan!</p>
           </div>
           <div className="flex items-center gap-3 bg-white border border-zinc-200 p-2 rounded-2xl shadow-sm">
             <StatCard icon={<Zap className="text-amber-500" size={20} />} label="Beruntun" value={`${user?.streak || 0} hari`} />
@@ -175,8 +175,8 @@ export const Dashboard: React.FC = () => {
               
               <div className="relative z-10">
                 <div className="text-rose-400 text-sm font-bold uppercase tracking-widest mb-2">Lanjutkan Belajar</div>
-                <h2 className="text-3xl font-bold mb-4">{curriculum[0]?.title || 'Kursus Anda'}</h2>
-                <p className="text-zinc-400 mb-8 max-w-md">Kuasai materi yang telah disusun. Anda telah menyelesaikan <span className="text-white font-medium">{completedLessons.length}</span> dari <span className="text-white font-medium">{totalLessons}</span> pelajaran.</p>
+                <h2 className="text-3xl font-bold mb-4">{curriculum[0]?.title || 'Kursus kamu'}</h2>
+                <p className="text-zinc-400 mb-8 max-w-md">Kuasai materi yang telah disusun. Kamu telah menyelesaikan <span className="text-white font-medium">{completedLessons.length}</span> dari <span className="text-white font-medium">{totalLessons}</span> pelajaran.</p>
                 
                 <div className="flex items-center gap-6">
                   <button className="bg-rose-700 hover:bg-rose-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95">
@@ -257,7 +257,7 @@ export const Dashboard: React.FC = () => {
                     <ActivityItem key={lessonId} title={`Pelajaran ${lessonId}`} time={i === 0 ? "Baru saja" : `${i + 1} hari yang lalu`} xp={50} />
                   ))
                 ) : (
-                  <p className="text-sm text-zinc-500 italic">Belum ada aktivitas. Mulai pelajaran pertama Anda!</p>
+                  <p className="text-sm text-zinc-500 italic">Belum ada aktivitas. Mulai pelajaran pertama kamu!</p>
                 )}
               </div>
             </div>

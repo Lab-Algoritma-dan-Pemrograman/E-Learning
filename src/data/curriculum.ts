@@ -46,7 +46,7 @@ export interface Level {
 
 const pythonLevel1: Level = {
   id: 'py-level-1',
-  title: 'Python Dasar',
+  title: 'PENGENALAN DASAR BAHASA PYTHON',
   description: 'Kuasai fondasi pemrograman Python: print, variabel, tipe data, operator, dan input/output.',
   modules: [
     {
@@ -380,7 +380,7 @@ Jika ingin menerima angka, kita harus mengubahnya menggunakan **int()** atau **f
 
 const pythonLevel2: Level = {
   id: 'py-level-2',
-  title: 'Python Menengah',
+  title: 'PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON',
   description: 'Kuasai alur kontrol: kondisi, perulangan, fungsi, dan struktur data list.',
   modules: [
     {
@@ -683,7 +683,7 @@ print(len(data))  # 4
 
 const pythonLevel3: Level = {
   id: 'py-level-3',
-  title: 'Python Lanjutan',
+  title: 'LIST, DICTIONARY, DAN OPERASI FILE',
   description: 'Tingkatkan kemampuan dengan dictionary, string method, file handling, error handling, dan proyek akhir.',
   modules: [
     {
@@ -910,7 +910,7 @@ except Exception as e:
 
 const cLevel1: Level = {
   id: 'c-level-1',
-  title: 'Bahasa C Dasar',
+  title: 'DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C',
   description: 'Fondasi pemrograman C: struktur program, variabel, tipe data, operator, dan I/O.',
   modules: [
     {
@@ -1112,7 +1112,7 @@ printf("Umur Anda: %d\\n", umur);
 
 const cLevel2: Level = {
   id: 'c-level-2',
-  title: 'Bahasa C Menengah',
+  title: 'STRUKTUR KONTROL DALAM BAHASA C',
   description: 'Alur kontrol, perulangan, fungsi, array, dan string di bahasa C.',
   modules: [
     {
@@ -1303,7 +1303,7 @@ Gunakan **%s** untuk mencetak string. Library **string.h** menyediakan fungsi:
 
 const cLevel3: Level = {
   id: 'c-level-3',
-  title: 'Bahasa C Lanjutan',
+  title: 'ARRAY, STRUCT, dan OPERASI FILE',
   description: 'Tingkatkan kemampuan C: pointer, struct, memory management, file I/O, dan proyek akhir.',
   modules: [
     {
@@ -1496,10 +1496,10 @@ Mode: \`"w"\`=tulis, \`"r"\`=baca, \`"a"\`=tambah.
 // ============================================================
 
 export const curriculum: Level[] = [
-  pythonLevel1,
-  pythonLevel2,
-  pythonLevel3,
   cLevel1,
   cLevel2,
   cLevel3,
+  pythonLevel1,
+  pythonLevel2,
+  pythonLevel3,
 ];

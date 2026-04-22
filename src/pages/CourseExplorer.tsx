@@ -90,7 +90,7 @@ export const CourseExplorer: React.FC = () => {
         <div className="max-w-3xl">
           <h1 className="text-4xl font-black tracking-tight mb-4">Eksplorasi Kurikulum</h1>
           <p className="text-xl text-zinc-500">
-            Kuasai fondasi algoritma dan pemrograman. Pilih jalur belajar Anda: <span className="text-rose-700 font-bold">Python</span> untuk kemudahan dan data, atau <span className="text-blue-700 font-bold">Bahasa C</span> untuk pemahaman sistem yang mendalam.
+            Yuk mulai petualangan ngoding kamu! Pilih <span className="text-rose-700 font-bold">Python</span> untuk kemudahan dan dunia data, atau <span className="text-blue-700 font-bold">Bahasa C</span> untuk ngulik jeroan sistem lebih dalam.
           </p>
         </div>
 
