@@ -101,9 +101,9 @@ export const aiCurriculumService = {
 
       // Attempt with retry logic
       let success = false;
-      let retries = 1;
+      let retries = 3; // Increased retries from 1 to 3
       
-      while (!success && retries >= 0) {
+      while (!success && retries > 0) {
         try {
           const batchPrompt = this._getBatchModuleContentPrompt(chunk, material);
           const moduleContentText = await callAiApi({
@@ -119,26 +119,53 @@ export const aiCurriculumService = {
           
           console.log(`DEBUG: Phase 2 Batch Result for [${chunk.map(c => c.module.title).join(', ')}]:`, batchResults);
 
+          if (batchResults.length < chunk.length) {
+            throw new Error(`AI hanya mengembalikan ${batchResults.length} dari ${chunk.length} modul yang diminta.`);
+          }
+
           chunk.forEach((task, idx) => {
-            if (batchResults[idx]) {
+            if (batchResults[idx] && batchResults[idx].lessons?.length > 0) {
               console.log(`DEBUG: Filling content for module "${task.module.title}" with ${batchResults[idx].lessons?.length || 0} lessons.`);
               task.module.lessons = batchResults[idx].lessons;
             } else {
-              console.warn(`DEBUG: No data returned from AI for module "${task.module.title}" in this batch.`);
+              throw new Error(`Modul "${task.module.title}" tidak memiliki konten yang valid.`);
             }
           });
           success = true;
         } catch (e) {
-          console.warn(`Retry attempt ${1 - retries} for batch starting at ${i}`, e);
           retries--;
-          if (retries >= 0) await sleep(5000); // Wait longer on error
+          console.warn(`Retry attempt ${3 - retries} for batch starting at ${i}. Error: ${e instanceof Error ? e.message : 'Unknown'}`);
+          if (retries > 0) {
+            await sleep(5000 + (3 - retries) * 2000); // Exponential backoff
+          } else {
+            throw new Error(`Gagal menghasilkan konten untuk modul: ${chunk.map(c => c.module.title).join(", ")}. Silakan coba lagi.`);
+          }
         }
       }
       
       completedModules += chunk.length;
     }
 
+    // Phase 3: Final Validation
+    this._validateFinalCurriculum(levels);
+
     return levels;
+  },
+
+  _validateFinalCurriculum(levels: Level[]) {
+    levels.forEach(level => {
+      level.modules.forEach(module => {
+        if (!module.lessons || module.lessons.length === 0) {
+          throw new Error(`Validasi Gagal: Modul "${module.title}" tidak memiliki pelajaran.`);
+        }
+        module.lessons.forEach(lesson => {
+          if (lesson.explanation.includes("Memuat materi") || 
+              lesson.quiz.question.includes("Mempersiapkan pertanyaan")) {
+            throw new Error(`Validasi Gagal: Pelajaran "${lesson.title}" di modul "${module.title}" masih berisi data kosong (placeholder).`);
+          }
+        });
+      });
+    });
   },
 
   _getSkeletonPrompt(material: string): string {
@@ -229,10 +256,12 @@ export const aiCurriculumService = {
     
     PERINGATAN KERAS: 
     - JANGAN gunakan teks pengganti seperti "Memuat materi...", "Tulis di sini...", atau "Blah blah".
+    - ISI SETIAP KOLOM dengan data nyata yang edukatif.
+    - PASTIKAN jumlah module dan lesson yang dikembalikan SAMA dengan yang diminta.
     - JANGAN hanya mengulang judul.
     - Semua data harus dalam Bahasa Indonesia yang formal dan edukatif.
     
-    Format JSON: { "modules": [ { "title": "Judul Modul", "lessons": [ { "id": "...", "title": "...", "explanation": "Isi Panjang...", "quiz": {...}, ... } ] } ] }`;
+    Format JSON: { "modules": [ { "title": "Judul Modul", "lessons": [ { "id": "...", "title": "...", "explanation": "Isi Materi Lengkap 3-5 Paragraf...", "quiz": {...}, ... } ] } ] }`;
   },
 
   _getBatchModuleContentSchema(): any {
