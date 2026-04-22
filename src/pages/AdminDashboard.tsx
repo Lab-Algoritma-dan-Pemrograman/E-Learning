@@ -13,7 +13,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Level, Module, Lesson } from '../data/curriculum';
 import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
-import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings } from '../services/gameService';
+import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings, forceResetGameQuestions } from '../services/gameService';
 import { Achievement, getAchievements } from '../services/achievementService';
 import initialAchievements from '../data/achievements.json';
 
@@ -239,6 +239,29 @@ export const AdminDashboard: React.FC = () => {
           setShowModal({ type: 'alert', title: 'Berhasil', message: 'Kurikulum berhasil dikosongkan!' });
         } catch (error) {
           setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal menghapus kurikulum.' });
+        }
+      }
+    });
+  };
+
+  const handleResetGameQuestions = async () => {
+    setShowModal({
+      type: 'confirm',
+      title: 'Reset Bank Soal Bug Hunt',
+      message: 'Reset bank soal ke data default JSON? Aksi ini akan me-replace semua soal di database Anda.',
+      onConfirm: async () => {
+        try {
+          const gameQuestionsJson = await import('../data/gameQuestions.json');
+          await forceResetGameQuestions(gameQuestionsJson.default || gameQuestionsJson);
+          setShowModal({ type: 'alert', title: 'Berhasil', message: 'Bank soal game berhasil disinkronisasi ke 140+ database JSON!' });
+          // Refresh list by re-fetching
+          const [qList, pyList] = await Promise.all([
+            getGameQuestions('c', 100),
+            getGameQuestions('python', 100)
+          ]);
+          setAllQuestions([...qList, ...pyList]);
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mereset bank soal game.' });
         }
       }
     });
@@ -1626,6 +1649,14 @@ export const AdminDashboard: React.FC = () => {
                   <p className="text-zinc-500 text-xs">Total {allQuestions.length} soal terdaftar.</p>
                 </div>
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleResetGameQuestions}
+                    className="flex-1 bg-rose-50 border border-rose-100 text-rose-600 font-bold py-2 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-rose-100 transition shadow-sm"
+                    title="Otomatis Tarik 140+ Soal via File JSON lokal ke Firebase Game"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Reset Ke Default
+                  </button>
                   <select 
                     value={questionFilters.language}
                     onChange={(e) => setQuestionFilters({ language: e.target.value as any })}

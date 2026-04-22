@@ -100,6 +100,26 @@ export const seedInitialQuestions = async (questions: any[]): Promise<void> => {
   }
 };
 
+export const forceResetGameQuestions = async (questions: any[]): Promise<void> => {
+  try {
+    const questionsRef = collection(db, 'game_questions');
+    const snapshot = await getDocs(questionsRef);
+    
+    // Delete all existing documents
+    const deletePromises = snapshot.docs.map(docSnap => deleteDoc(doc(db, 'game_questions', docSnap.id)));
+    await Promise.all(deletePromises);
+    
+    // Insert new JSON data mapping
+    const insertPromises = questions.map(q => addDoc(questionsRef, q));
+    await Promise.all(insertPromises);
+    
+    console.log(`✅ Reset total ${questions.length} questions successfully`);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, 'game_questions');
+    throw error;
+  }
+};
+
 // ===== NEW: Question Management =====
 
 export const addGameQuestion = async (question: Omit<GameQuestion, 'id'>): Promise<string> => {
