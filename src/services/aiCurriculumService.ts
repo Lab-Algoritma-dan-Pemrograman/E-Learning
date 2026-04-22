@@ -32,7 +32,8 @@ async function callAiApi(params: {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `Server error: ${response.statusText}`);
+    const errorMessage = errorData.error || response.statusText || `Unknown Error (Status: ${response.status})`;
+    throw new Error(`Server error: ${errorMessage}`);
   }
 
   const data = await response.json();
