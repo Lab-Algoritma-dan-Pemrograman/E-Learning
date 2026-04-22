@@ -116,10 +116,15 @@ export const aiCurriculumService = {
 
           const result = JSON.parse(moduleContentText);
           const batchResults = result.modules || [];
+          
+          console.log(`DEBUG: Phase 2 Batch Result for [${chunk.map(c => c.module.title).join(', ')}]:`, batchResults);
 
           chunk.forEach((task, idx) => {
             if (batchResults[idx]) {
+              console.log(`DEBUG: Filling content for module "${task.module.title}" with ${batchResults[idx].lessons?.length || 0} lessons.`);
               task.module.lessons = batchResults[idx].lessons;
+            } else {
+              console.warn(`DEBUG: No data returned from AI for module "${task.module.title}" in this batch.`);
             }
           });
           success = true;
@@ -203,20 +208,31 @@ export const aiCurriculumService = {
 
   _getBatchModuleContentPrompt(chunk: { level: Level, module: Module }[], material: string): string {
     const targetModules = chunk.map(c => `[Level: ${c.level.title}, Module: ${c.module.title}]`).join(", ");
-    return `Anda adalah pakar kurikulum. Lengkapi detail untuk MODUL-MODUL di bawah ini:
+    return `Anda adalah pakar kurikulum dan penulis konten edukasi profesional. 
+    TUGAS: Lengkapi detail materi untuk MODUL-MODUL di bawah ini secara MENDALAM.
     
     TARGET MODUL:
     ${targetModules}
     
     MATERI SUMBER:
-    ${material || "Berdasarkan file PDF."}
+    ${material || "Gunakan pengetahuan luas Anda tentang standar kurikulum informatika jika file PDF tidak tersedia."}
     
-    INSTRUKSI:
-    1. Untuk SETIAP modul di atas, hasilkan detail untuk 2 Lesson yang judulnya sudah ada di skeleton.
-    2. Setiap lesson wajib memiliki: explanation (min 3 paragraf), codeExample, initialCode, solution, hint, kuis, testCases, dan validationRules (regex).
-    3. Gunakan bahasa pemrograman yang sesuai dengan levelnya (C atau Python).
+    INSTRUKSI KONTEN (WAJIB):
+    1. Untuk SETIAP modul, hasilkan detail Lengkap untuk 2 Lesson yang sudah ada di skeleton.
+    2. explanation: Minimal 3-5 paragraf penjelasan teknis yang mudah dipahami, gunakan format Markdown jika perlu.
+    3. codeExample: Contoh kode program yang relevan, lengkap, dan bisa jalan.
+    4. initialCode: Kode awal untuk dikerjakan siswa (biasanya ada bagian yang dikosongkan).
+    5. solution: Kode solusi lengkap.
+    6. quiz: Pertanyaan pilihan ganda yang menantang (1 soal per lesson).
+    7. testCases: Minimal 1 test case untuk memvalidasi output program.
+    8. validationRules: Gunakan regex untuk memastikan siswa menggunakan keyword tertentu (misal: ["for", "while"]).
     
-    Format: { "modules": [ { "title": "...", "lessons": [...] }, { "title": "...", "lessons": [...] } ] }`;
+    PERINGATAN KERAS: 
+    - JANGAN gunakan teks pengganti seperti "Memuat materi...", "Tulis di sini...", atau "Blah blah".
+    - JANGAN hanya mengulang judul.
+    - Semua data harus dalam Bahasa Indonesia yang formal dan edukatif.
+    
+    Format JSON: { "modules": [ { "title": "Judul Modul", "lessons": [ { "id": "...", "title": "...", "explanation": "Isi Panjang...", "quiz": {...}, ... } ] } ] }`;
   },
 
   _getBatchModuleContentSchema(): any {

@@ -70,17 +70,22 @@ export default async function handler(req: Request) {
 
     const genAI = new GoogleGenAI({ apiKey });
     
+    // 5. Build Generation Config
+    const generationConfig: any = {};
+    if (responseMimeType) generationConfig.responseMimeType = responseMimeType;
+    if (responseSchema) generationConfig.responseSchema = responseSchema;
+
+    const model = genAI.getGenerativeModel({ 
+      model: modelId,
+      generationConfig 
+    });
+    
     // Prepare contents
-    const contents: any[] = [
-      {
-        role: "user",
-        parts: [{ text: prompt }]
-      }
-    ];
+    const contentParts: any[] = [{ text: prompt }];
 
     // Add inline data (file) if provided
     if (fileData) {
-      contents[0].parts.push({
+      contentParts.push({
         inlineData: {
           mimeType: fileMimeType,
           data: fileData
@@ -88,19 +93,14 @@ export default async function handler(req: Request) {
       });
     }
 
-    // AI Generation config
-    const aiConfig: any = {};
-    if (responseMimeType) aiConfig.responseMimeType = responseMimeType;
-    if (responseSchema) aiConfig.responseSchema = responseSchema;
-
-    const model = genAI.models.generateContent({
-      model: modelId,
-      contents: contents,
-      config: aiConfig
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: contentParts }]
     });
 
-    const result = await model;
-    const text = result.text;
+    const response = await result.response;
+    const text = response.text();
+
+    return new Response(JSON.stringify({ text }), {
 
     return new Response(JSON.stringify({ text }), {
       status: 200,
