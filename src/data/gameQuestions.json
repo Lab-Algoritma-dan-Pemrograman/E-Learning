@@ -2,161 +2,1121 @@
   {
     "language": "c",
     "difficulty": "easy",
-    "title": "Titik Koma yang Hilang",
-    "code": "#include <stdio.h>\n\nint main() {\n    int a = 10\n    printf(\"Nilai a: %d\", a);\n    return 0;\n}",
+    "title": "Titik Koma yang Hilang Variabel y",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int y = 4\\n    printf(\"Nilai: %d\", y);\\n    return 0;\\n}",
     "bugLine": 3,
-    "explanation": "Variabel 'a' dideklarasikan tanpa titik koma (;)."
-  },
-  {
-    "language": "c",
-    "difficulty": "easy",
-    "title": "Format Specifier Salah",
-    "code": "#include <stdio.h>\n\nint main() {\n    float phi = 3.14;\n    printf(\"Nilai phi: %d\", phi);\n    return 0;\n}",
-    "bugLine": 4,
-    "explanation": "Menggunakan %d untuk float, seharusnya %f."
+    "explanation": "Variabel 'y' dideklarasikan tanpa titik koma (;)."
   },
   {
     "language": "c",
     "difficulty": "medium",
-    "title": "Assignment vs Comparison",
-    "code": "#include <stdio.h>\n\nint main() {\n    int x = 5;\n    if (x = 10) {\n        printf(\"X adalah sepuluh\");\n    }\n    return 0;\n}",
+    "title": "Assignment vs Comparison data",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int data = 50;\\n    if (data = 50) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
     "bugLine": 4,
-    "explanation": "Menggunakan '=' (assignment) di dalam 'if', seharusnya '==' (comparison)."
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
   },
   {
     "language": "c",
     "difficulty": "easy",
-    "title": "Header Salah",
-    "code": "#include <studio.h>\n\nint main() {\n    printf(\"Halo Dunia\");\n    return 0;\n}",
+    "title": "Lupa Ampersand Scanf skor",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int skor;\\n    scanf(\"%d\", skor);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Fungsi input scanf mutlak membutuhkan alamat memori variabel tujuannya. Tambahkan simbol '&' menjadi &skor."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison z",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int z = 100;\\n    if (z = 100) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char berat",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char berat = \"Halo\";\\n    printf(\"%s\", berat);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char berat[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char tinggi",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char tinggi = \"Halo\";\\n    printf(\"%s\", tinggi);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char tinggi[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment umur",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int umur = 1;\\n    while (umur < 99) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement umur++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Index Melebihi Batas x",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int x[3] = {10, 20, 30};\\n    printf(\"%d\", x[30]);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Array berkapasitas 3 hanya mentoleransi penggunaan indeks batas rentang [0], [1], dan mentok [2]. Index di luar itu memory error."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment jumlah",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int jumlah = 1;\\n    while (jumlah < 10) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement jumlah++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison temp",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int temp = 99;\\n    if (temp = 99) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment data",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int data = 1;\\n    while (data < 100) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement data++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Index Melebihi Batas temp",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int temp[3] = {10, 20, 30};\\n    printf(\"%d\", temp[30]);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Array berkapasitas 3 hanya mentoleransi penggunaan indeks batas rentang [0], [1], dan mentok [2]. Index di luar itu memory error."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel nilai",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int nilai = 99\\n    printf(\"Nilai: %d\", nilai);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'nilai' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char temp",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char temp = \"Halo\";\\n    printf(\"%s\", temp);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char temp[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment x",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int x = 1;\\n    while (x < 50) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement x++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Index Melebihi Batas y",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int y[3] = {10, 20, 30};\\n    printf(\"%d\", y[20]);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Array berkapasitas 3 hanya mentoleransi penggunaan indeks batas rentang [0], [1], dan mentok [2]. Index di luar itu memory error."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Lupa Ampersand Scanf poin",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int poin;\\n    scanf(\"%d\", poin);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Fungsi input scanf mutlak membutuhkan alamat memori variabel tujuannya. Tambahkan simbol '&' menjadi &poin."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Lupa Ampersand Scanf y",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int y;\\n    scanf(\"%d\", y);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Fungsi input scanf mutlak membutuhkan alamat memori variabel tujuannya. Tambahkan simbol '&' menjadi &y."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Lupa Ampersand Scanf poin",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int poin;\\n    scanf(\"%d\", poin);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Fungsi input scanf mutlak membutuhkan alamat memori variabel tujuannya. Tambahkan simbol '&' menjadi &poin."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char poin",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char poin = \"Halo\";\\n    printf(\"%s\", poin);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char poin[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Index Melebihi Batas poin",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int poin[3] = {10, 20, 30};\\n    printf(\"%d\", poin[3]);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Array berkapasitas 3 hanya mentoleransi penggunaan indeks batas rentang [0], [1], dan mentok [2]. Index di luar itu memory error."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel poin",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int poin = 100\\n    printf(\"Nilai: %d\", poin);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'poin' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Index Melebihi Batas poin",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int poin[3] = {10, 20, 30};\\n    printf(\"%d\", poin[30]);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Array berkapasitas 3 hanya mentoleransi penggunaan indeks batas rentang [0], [1], dan mentok [2]. Index di luar itu memory error."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char z",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char z = \"Halo\";\\n    printf(\"%s\", z);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char z[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel umur",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int umur = 50\\n    printf(\"Nilai: %d\", umur);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'umur' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel umur",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int umur = 20\\n    printf(\"Nilai: %d\", umur);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'umur' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Lupa Ampersand Scanf x",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int x;\\n    scanf(\"%d\", x);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Fungsi input scanf mutlak membutuhkan alamat memori variabel tujuannya. Tambahkan simbol '&' menjadi &x."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment z",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int z = 1;\\n    while (z < 15) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement z++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Index Melebihi Batas berat",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int berat[3] = {10, 20, 30};\\n    printf(\"%d\", berat[30]);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Array berkapasitas 3 hanya mentoleransi penggunaan indeks batas rentang [0], [1], dan mentok [2]. Index di luar itu memory error."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel skor",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int skor = 20\\n    printf(\"Nilai: %d\", skor);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'skor' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Format Specifier Float jumlah",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    float jumlah = 99.14;\\n    printf(\"Nilai: %d\", jumlah);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan %d untuk variabel float, seharusnya %f atau turunannya."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment umur",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int umur = 1;\\n    while (umur < 3) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement umur++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Lupa Ampersand Scanf poin",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int poin;\\n    scanf(\"%d\", poin);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Fungsi input scanf mutlak membutuhkan alamat memori variabel tujuannya. Tambahkan simbol '&' menjadi &poin."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Format Specifier Float jumlah",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    float jumlah = 20.14;\\n    printf(\"Nilai: %d\", jumlah);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan %d untuk variabel float, seharusnya %f atau turunannya."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char tinggi",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char tinggi = \"Halo\";\\n    printf(\"%s\", tinggi);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char tinggi[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel data",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int data = 4\\n    printf(\"Nilai: %d\", data);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'data' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Index Melebihi Batas data",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int data[3] = {10, 20, 30};\\n    printf(\"%d\", data[40]);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Array berkapasitas 3 hanya mentoleransi penggunaan indeks batas rentang [0], [1], dan mentok [2]. Index di luar itu memory error."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char umur",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char umur = \"Halo\";\\n    printf(\"%s\", umur);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char umur[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment x",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int x = 1;\\n    while (x < 5) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement x++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Lupa Ampersand Scanf z",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int z;\\n    scanf(\"%d\", z);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Fungsi input scanf mutlak membutuhkan alamat memori variabel tujuannya. Tambahkan simbol '&' menjadi &z."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison angka",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int angka = 4;\\n    if (angka = 4) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison tinggi",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int tinggi = 99;\\n    if (tinggi = 99) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel skor",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int skor = 15\\n    printf(\"Nilai: %d\", skor);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'skor' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison umur",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int umur = 4;\\n    if (umur = 4) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Lupa Ampersand Scanf nilai",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int nilai;\\n    scanf(\"%d\", nilai);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Fungsi input scanf mutlak membutuhkan alamat memori variabel tujuannya. Tambahkan simbol '&' menjadi &nilai."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison temp",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int temp = 2;\\n    if (temp = 2) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment skor",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int skor = 1;\\n    while (skor < 99) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement skor++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel berat",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int berat = 99\\n    printf(\"Nilai: %d\", berat);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'berat' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Format Specifier Float nilai",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    float nilai = 20.14;\\n    printf(\"Nilai: %d\", nilai);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan %d untuk variabel float, seharusnya %f atau turunannya."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char umur",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char umur = \"Halo\";\\n    printf(\"%s\", umur);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char umur[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Format Specifier Float berat",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    float berat = 100.14;\\n    printf(\"Nilai: %d\", berat);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan %d untuk variabel float, seharusnya %f atau turunannya."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment skor",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int skor = 1;\\n    while (skor < 15) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement skor++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison x",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int x = 3;\\n    if (x = 3) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char y",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char y = \"Halo\";\\n    printf(\"%s\", y);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char y[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment angka",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int angka = 1;\\n    while (angka < 5) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement angka++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel poin",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int poin = 10\\n    printf(\"Nilai: %d\", poin);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'poin' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment skor",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int skor = 1;\\n    while (skor < 4) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement skor++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison umur",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int umur = 2;\\n    if (umur = 2) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Index Melebihi Batas temp",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int temp[3] = {10, 20, 30};\\n    printf(\"%d\", temp[50]);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Array berkapasitas 3 hanya mentoleransi penggunaan indeks batas rentang [0], [1], dan mentok [2]. Index di luar itu memory error."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel angka",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int angka = 2\\n    printf(\"Nilai: %d\", angka);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'angka' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment nilai",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int nilai = 1;\\n    while (nilai < 50) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement nilai++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "Assignment vs Comparison skor",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int skor = 99;\\n    if (skor = 99) {\\n        printf(\"Benar\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan '=' (assignment/pengisian nilai) di dalam operator seleksi 'if'. Seharusnya menggunakan '==' (relasional comparison)."
+  },
+  {
+    "language": "c",
+    "difficulty": "medium",
+    "title": "String Literal char y",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    char y = \"Halo\";\\n    printf(\"%s\", y);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Untuk menyimpan string kata 'Halo', tipe data harus array karakter (char y[]) atau pointer (char *), bukan char tunggal."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Lupa Ampersand Scanf skor",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int skor;\\n    scanf(\"%d\", skor);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Fungsi input scanf mutlak membutuhkan alamat memori variabel tujuannya. Tambahkan simbol '&' menjadi &skor."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment y",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int y = 1;\\n    while (y < 2) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement y++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Format Specifier Float umur",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    float umur = 30.14;\\n    printf(\"Nilai: %d\", umur);\\n    return 0;\\n}",
+    "bugLine": 4,
+    "explanation": "Menggunakan %d untuk variabel float, seharusnya %f atau turunannya."
+  },
+  {
+    "language": "c",
+    "difficulty": "easy",
+    "title": "Titik Koma yang Hilang Variabel angka",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int angka = 3\\n    printf(\"Nilai: %d\", angka);\\n    return 0;\\n}",
+    "bugLine": 3,
+    "explanation": "Variabel 'angka' dideklarasikan tanpa titik koma (;)."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment berat",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int berat = 1;\\n    while (berat < 20) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement berat++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment tinggi",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int tinggi = 1;\\n    while (tinggi < 10) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement tinggi++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "c",
+    "difficulty": "hard",
+    "title": "Loop Infinite Lupa Increment jumlah",
+    "code": "#include <stdio.h>\\n\\nint main() {\\n    int jumlah = 1;\\n    while (jumlah < 50) {\\n        printf(\"Looping...\");\\n    }\\n    return 0;\\n}",
+    "bugLine": 6,
+    "explanation": "Perulangan While tidak memiliki statement jumlah++ (increment). Program akan macet infinite loop tak terhingga."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Lenyap If nilai",
+    "code": "if nilai > 2\\n    print(\"Lebih Besar\")",
     "bugLine": 0,
-    "explanation": "Nama header standard input-output adalah <stdio.h>, bukan <studio.h>."
-  },
-  {
-    "language": "c",
-    "difficulty": "medium",
-    "title": "Array Index Out of Bounds",
-    "code": "#include <stdio.h>\n\nint main() {\n    int angka[3] = {1, 2, 3};\n    printf(\"%d\", angka[3]);\n    return 0;\n}",
-    "bugLine": 4,
-    "explanation": "Array berukuran 3 hanya memiliki indeks 0, 1, dan 2. Indeks 3 di luar jangkauan."
-  },
-  {
-    "language": "c",
-    "difficulty": "easy",
-    "title": "Sintaks Loop Salah",
-    "code": "#include <stdio.h>\n\nint main() {\n    for (int i = 0, i < 5, i++) {\n        printf(\"%d \", i);\n    }\n    return 0;\n}",
-    "bugLine": 3,
-    "explanation": "Pemisah dalam 'for' harus menggunakan titik koma (;), bukan koma (,)."
-  },
-  {
-    "language": "c",
-    "difficulty": "hard",
-    "title": "Darah Pointer",
-    "code": "#include <stdio.h>\n\nint main() {\n    int *ptr;\n    *ptr = 100;\n    printf(\"%d\", *ptr);\n    return 0;\n}",
-    "bugLine": 4,
-    "explanation": "Pointer 'ptr' belum diinisialisasi ke alamat memori yang valid sebelum digunakan."
-  },
-  {
-    "language": "c",
-    "difficulty": "medium",
-    "title": "String Literal",
-    "code": "#include <stdio.h>\n\nint main() {\n    char nama = \"Budi\";\n    printf(\"%s\", nama);\n    return 0;\n}",
-    "bugLine": 3,
-    "explanation": "Variabel 'nama' harus bertipe 'char*' atau 'char[]' untuk menyimpan string, bukan 'char'."
-  },
-  {
-    "language": "c",
-    "difficulty": "hard",
-    "title": "Return Type Mismatch",
-    "code": "#include <stdio.h>\n\nvoid hitung() {\n    return 5;\n}\n\nint main() {\n    hitung();\n    return 0;\n}",
-    "bugLine": 3,
-    "explanation": "Fungsi bertipe 'void' tidak boleh mengembalikan nilai (return value)."
-  },
-  {
-    "language": "c",
-    "difficulty": "easy",
-    "title": "Case Sensitivity",
-    "code": "#include <stdio.h>\n\nint main() {\n    int Angka = 10;\n    printf(\"%d\", angka);\n    return 0;\n}",
-    "bugLine": 4,
-    "explanation": "Variabel 'Angka' dan 'angka' berbeda (case-sensitive). 'angka' tidak terdefinisi."
+    "explanation": "Sintaks deklarasi awal Control Statement condition block 'if' wajib ditutup akhiran karakter titik dua (:)."
   },
   {
     "language": "python",
     "difficulty": "easy",
-    "title": "Indentsasi yang Salah",
-    "code": "def sapa():\nprint(\"Halo!\")\n\nsapa()",
+    "title": "Typo Input temp",
+    "code": "print(\"Start\")\\ntemp = inputt(\"Data: \")",
     "bugLine": 1,
-    "explanation": "Baris di dalam fungsi 'def' harus menjorok ke dalam (indentasi)."
+    "explanation": "Fungsi bawaan interpreter python asli untuk prompt input adalah bernama 'input()', bukan 'inputt()'."
   },
   {
     "language": "python",
     "difficulty": "easy",
-    "title": "Titik Dua yang Hilang",
-    "code": "if 5 > 2\n    print(\"Lima lebih besar dari dua\")",
-    "bugLine": 0,
-    "explanation": "Pernyataan 'if' harus diakhiri dengan titik dua (:)."
+    "title": "Typo Input tinggi",
+    "code": "print(\"Start\")\\ntinggi = inputt(\"Data: \")",
+    "bugLine": 1,
+    "explanation": "Fungsi bawaan interpreter python asli untuk prompt input adalah bernama 'input()', bukan 'inputt()'."
   },
   {
     "language": "python",
     "difficulty": "medium",
-    "title": "Tipe Data Berbeda",
-    "code": "umur = 20\npesan = \"Umur saya \" + umur\nprint(pesan)",
+    "title": "Key Retrieval Dictionary Kosong tinggi",
+    "code": "data_tinggi = dict(id=10, nama='A')\\nprint(data_tinggi['umur'])",
     "bugLine": 1,
-    "explanation": "Tidak bisa menggabungkan string dengan integer langsung. Gunakan str(umur)."
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_tinggi'."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong data",
+    "code": "data_data = dict(id=20, nama='A')\\nprint(data_data['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_data'."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong berat",
+    "code": "data_berat = dict(id=30, nama='A')\\nprint(data_berat['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_berat'."
   },
   {
     "language": "python",
     "difficulty": "easy",
-    "title": "Nama Fungsi Salah",
-    "code": "print(\"Halo\")\ninput_user = Inpu(\"Masukkan nama: \")",
+    "title": "Indentsasi yang Hilang Function angka",
+    "code": "def angka():\\nprint(\"Action 2\")\\n\\nangka()",
     "bugLine": 1,
-    "explanation": "Fungsi untuk input adalah 'input()', bukan 'Inpu()'."
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
   },
   {
     "language": "python",
     "difficulty": "medium",
-    "title": "Index List Keluar Batas",
-    "code": "buah = [\"apel\", \"jeruk\"]\nprint(buah[2])",
+    "title": "Key Retrieval Dictionary Kosong umur",
+    "code": "data_umur = dict(id=100, nama='A')\\nprint(data_umur['umur'])",
     "bugLine": 1,
-    "explanation": "List hanya memiliki indeks 0 dan 1. Indeks 2 tidak tersedia."
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_umur'."
   },
   {
     "language": "python",
     "difficulty": "medium",
-    "title": "Key Dictionary Tidak Ada",
-    "code": "siswa = {\"nama\": \"Andi\", \"kelas\": 10}\nprint(siswa[\"umur\"])",
-    "bugLine": 1,
-    "explanation": "Key 'umur' tidak ada dalam dictionary 'siswa'."
-  },
-  {
-    "language": "python",
-    "difficulty": "easy",
-    "title": "Variabel Belum Didefinisikan",
-    "code": "x = 10\ny = x + z\nprint(y)",
-    "bugLine": 1,
-    "explanation": "Variabel 'z' digunakan sebelum diberikan nilai atau didefinisikan."
-  },
-  {
-    "language": "python",
-    "difficulty": "hard",
-    "title": "Immutable String",
-    "code": "teks = \"Halo\"\nteks[0] = \"h\"\nprint(teks)",
-    "bugLine": 1,
-    "explanation": "String di Python bersifat immutable (tidak bisa diubah karakternya secara langsung)."
-  },
-  {
-    "language": "python",
-    "difficulty": "medium",
-    "title": "Salah Menggunakan 'is' vs '=='",
-    "code": "a = [1, 2, 3]\nb = [1, 2, 3]\nif a is b:\n    print(\"Sama\")",
+    "title": "While Loop Infinite jumlah",
+    "code": "jumlah = 1\\nwhile jumlah < 40:\\n    print(jumlah)",
     "bugLine": 2,
-    "explanation": "'is' mengecek identitas objek, '==' mengecek nilai. Untuk list baru, nilainya sama tapi objek berbeda."
+    "explanation": "Loop ini tanpa batas henti akibat absennya instruksi penambahan increment jumlah += 1 didalam identasinya."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "While Loop Infinite y",
+    "code": "y = 1\\nwhile y < 10:\\n    print(y)",
+    "bugLine": 2,
+    "explanation": "Loop ini tanpa batas henti akibat absennya instruksi penambahan increment y += 1 didalam identasinya."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function umur",
+    "code": "def umur():\\nprint(\"Action 40\")\\n\\numur()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "While Loop Infinite data",
+    "code": "data = 1\\nwhile data < 10:\\n    print(data)",
+    "bugLine": 2,
+    "explanation": "Loop ini tanpa batas henti akibat absennya instruksi penambahan increment data += 1 didalam identasinya."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong jumlah",
+    "code": "data_jumlah = dict(id=30, nama='A')\\nprint(data_jumlah['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_jumlah'."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function nilai",
+    "code": "def nilai():\\nprint(\"Action 20\")\\n\\nnilai()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var angka",
+    "code": "angka = 20\\npesan = \"Isi nilai \" + angka\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(angka) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function jumlah",
+    "code": "def jumlah():\\nprint(\"Action 99\")\\n\\njumlah()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "While Loop Infinite x",
+    "code": "x = 1\\nwhile x < 2:\\n    print(x)",
+    "bugLine": 2,
+    "explanation": "Loop ini tanpa batas henti akibat absennya instruksi penambahan increment x += 1 didalam identasinya."
   },
   {
     "language": "python",
     "difficulty": "hard",
-    "title": "Scope Variabel LOKAL",
-    "code": "def hitung():\n    hasil = 10\n\nhitung()\nprint(hasil)",
-    "bugLine": 4,
-    "explanation": "Variabel 'hasil' didefinisikan di dalam fungsi (lokal) dan tidak bisa diakses di luar fungsi."
+    "title": "Manipulasi String Immutable jumlah",
+    "code": "jumlah = \"Halo\"\\njumlah[0] = \"J\"\\nprint(jumlah)",
+    "bugLine": 1,
+    "explanation": "Elemen karakter string tekstual di bahasa Python diklasifikasikan sebagai Immutable (Bisa dibaca tapi karakternya sama rupa tidak bisa diubah index individual per hurufnya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Manipulasi String Immutable tinggi",
+    "code": "tinggi = \"Halo\"\\ntinggi[0] = \"J\"\\nprint(tinggi)",
+    "bugLine": 1,
+    "explanation": "Elemen karakter string tekstual di bahasa Python diklasifikasikan sebagai Immutable (Bisa dibaca tapi karakternya sama rupa tidak bisa diubah index individual per hurufnya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var x",
+    "code": "x = 99\\npesan = \"Isi nilai \" + x\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(x) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Manipulasi String Immutable nilai",
+    "code": "nilai = \"Halo\"\\nnilai[0] = \"J\"\\nprint(nilai)",
+    "bugLine": 1,
+    "explanation": "Elemen karakter string tekstual di bahasa Python diklasifikasikan sebagai Immutable (Bisa dibaca tapi karakternya sama rupa tidak bisa diubah index individual per hurufnya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var x",
+    "code": "x = 10\\npesan = \"Isi nilai \" + x\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(x) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong z",
+    "code": "data_z = dict(id=5, nama='A')\\nprint(data_z['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_z'."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var umur",
+    "code": "umur = 20\\npesan = \"Isi nilai \" + umur\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(umur) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Lenyap If angka",
+    "code": "if angka > 30\\n    print(\"Lebih Besar\")",
+    "bugLine": 0,
+    "explanation": "Sintaks deklarasi awal Control Statement condition block 'if' wajib ditutup akhiran karakter titik dua (:)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong skor",
+    "code": "data_skor = dict(id=100, nama='A')\\nprint(data_skor['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_skor'."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function temp",
+    "code": "def temp():\\nprint(\"Action 10\")\\n\\ntemp()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong nilai",
+    "code": "data_nilai = dict(id=99, nama='A')\\nprint(data_nilai['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_nilai'."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong x",
+    "code": "data_x = dict(id=4, nama='A')\\nprint(data_x['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_x'."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function skor",
+    "code": "def skor():\\nprint(\"Action 99\")\\n\\nskor()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Manipulasi String Immutable berat",
+    "code": "berat = \"Halo\"\\nberat[0] = \"J\"\\nprint(berat)",
+    "bugLine": 1,
+    "explanation": "Elemen karakter string tekstual di bahasa Python diklasifikasikan sebagai Immutable (Bisa dibaca tapi karakternya sama rupa tidak bisa diubah index individual per hurufnya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong umur",
+    "code": "data_umur = dict(id=2, nama='A')\\nprint(data_umur['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_umur'."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var jumlah",
+    "code": "jumlah = 99\\npesan = \"Isi nilai \" + jumlah\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(jumlah) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong y",
+    "code": "data_y = dict(id=3, nama='A')\\nprint(data_y['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_y'."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function z",
+    "code": "def z():\\nprint(\"Action 5\")\\n\\nz()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Lenyap If poin",
+    "code": "if poin > 5\\n    print(\"Lebih Besar\")",
+    "bugLine": 0,
+    "explanation": "Sintaks deklarasi awal Control Statement condition block 'if' wajib ditutup akhiran karakter titik dua (:)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var y",
+    "code": "y = 30\\npesan = \"Isi nilai \" + y\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(y) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Lenyap If data",
+    "code": "if data > 3\\n    print(\"Lebih Besar\")",
+    "bugLine": 0,
+    "explanation": "Sintaks deklarasi awal Control Statement condition block 'if' wajib ditutup akhiran karakter titik dua (:)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function data",
+    "code": "def data():\\nprint(\"Action 99\")\\n\\ndata()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Manipulasi String Immutable temp",
+    "code": "temp = \"Halo\"\\ntemp[0] = \"J\"\\nprint(temp)",
+    "bugLine": 1,
+    "explanation": "Elemen karakter string tekstual di bahasa Python diklasifikasikan sebagai Immutable (Bisa dibaca tapi karakternya sama rupa tidak bisa diubah index individual per hurufnya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "While Loop Infinite poin",
+    "code": "poin = 1\\nwhile poin < 99:\\n    print(poin)",
+    "bugLine": 2,
+    "explanation": "Loop ini tanpa batas henti akibat absennya instruksi penambahan increment poin += 1 didalam identasinya."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function berat",
+    "code": "def berat():\\nprint(\"Action 30\")\\n\\nberat()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Manipulasi String Immutable berat",
+    "code": "berat = \"Halo\"\\nberat[0] = \"J\"\\nprint(berat)",
+    "bugLine": 1,
+    "explanation": "Elemen karakter string tekstual di bahasa Python diklasifikasikan sebagai Immutable (Bisa dibaca tapi karakternya sama rupa tidak bisa diubah index individual per hurufnya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Lenyap If y",
+    "code": "if y > 15\\n    print(\"Lebih Besar\")",
+    "bugLine": 0,
+    "explanation": "Sintaks deklarasi awal Control Statement condition block 'if' wajib ditutup akhiran karakter titik dua (:)."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Manipulasi String Immutable temp",
+    "code": "temp = \"Halo\"\\ntemp[0] = \"J\"\\nprint(temp)",
+    "bugLine": 1,
+    "explanation": "Elemen karakter string tekstual di bahasa Python diklasifikasikan sebagai Immutable (Bisa dibaca tapi karakternya sama rupa tidak bisa diubah index individual per hurufnya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong tinggi",
+    "code": "data_tinggi = dict(id=3, nama='A')\\nprint(data_tinggi['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_tinggi'."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function angka",
+    "code": "def angka():\\nprint(\"Action 10\")\\n\\nangka()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Manipulasi String Immutable y",
+    "code": "y = \"Halo\"\\ny[0] = \"J\"\\nprint(y)",
+    "bugLine": 1,
+    "explanation": "Elemen karakter string tekstual di bahasa Python diklasifikasikan sebagai Immutable (Bisa dibaca tapi karakternya sama rupa tidak bisa diubah index individual per hurufnya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "While Loop Infinite tinggi",
+    "code": "tinggi = 1\\nwhile tinggi < 3:\\n    print(tinggi)",
+    "bugLine": 2,
+    "explanation": "Loop ini tanpa batas henti akibat absennya instruksi penambahan increment tinggi += 1 didalam identasinya."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function y",
+    "code": "def y():\\nprint(\"Action 99\")\\n\\ny()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function temp",
+    "code": "def temp():\\nprint(\"Action 15\")\\n\\ntemp()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Lenyap If y",
+    "code": "if y > 30\\n    print(\"Lebih Besar\")",
+    "bugLine": 0,
+    "explanation": "Sintaks deklarasi awal Control Statement condition block 'if' wajib ditutup akhiran karakter titik dua (:)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function temp",
+    "code": "def temp():\\nprint(\"Action 50\")\\n\\ntemp()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var nilai",
+    "code": "nilai = 30\\npesan = \"Isi nilai \" + nilai\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(nilai) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "While Loop Infinite umur",
+    "code": "umur = 1\\nwhile umur < 20:\\n    print(umur)",
+    "bugLine": 2,
+    "explanation": "Loop ini tanpa batas henti akibat absennya instruksi penambahan increment umur += 1 didalam identasinya."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var angka",
+    "code": "angka = 100\\npesan = \"Isi nilai \" + angka\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(angka) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var y",
+    "code": "y = 4\\npesan = \"Isi nilai \" + y\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(y) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong z",
+    "code": "data_z = dict(id=5, nama='A')\\nprint(data_z['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_z'."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong berat",
+    "code": "data_berat = dict(id=50, nama='A')\\nprint(data_berat['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_berat'."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Lenyap If umur",
+    "code": "if umur > 10\\n    print(\"Lebih Besar\")",
+    "bugLine": 0,
+    "explanation": "Sintaks deklarasi awal Control Statement condition block 'if' wajib ditutup akhiran karakter titik dua (:)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function nilai",
+    "code": "def nilai():\\nprint(\"Action 2\")\\n\\nnilai()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Typo Input poin",
+    "code": "print(\"Start\")\\npoin = inputt(\"Data: \")",
+    "bugLine": 1,
+    "explanation": "Fungsi bawaan interpreter python asli untuk prompt input adalah bernama 'input()', bukan 'inputt()'."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Key Retrieval Dictionary Kosong tinggi",
+    "code": "data_tinggi = dict(id=20, nama='A')\\nprint(data_tinggi['umur'])",
+    "bugLine": 1,
+    "explanation": "Kunci Parameter/Key 'umur' sama sekali tak pernah didefinisikan / tidak ada jejaknya di dalam objek dictionary 'data_tinggi'."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var nilai",
+    "code": "nilai = 2\\npesan = \"Isi nilai \" + nilai\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(nilai) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "hard",
+    "title": "Manipulasi String Immutable nilai",
+    "code": "nilai = \"Halo\"\\nnilai[0] = \"J\"\\nprint(nilai)",
+    "bugLine": 1,
+    "explanation": "Elemen karakter string tekstual di bahasa Python diklasifikasikan sebagai Immutable (Bisa dibaca tapi karakternya sama rupa tidak bisa diubah index individual per hurufnya secara langsung)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Lenyap If jumlah",
+    "code": "if jumlah > 100\\n    print(\"Lebih Besar\")",
+    "bugLine": 0,
+    "explanation": "Sintaks deklarasi awal Control Statement condition block 'if' wajib ditutup akhiran karakter titik dua (:)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "Penggabungan Beda Tipe Var jumlah",
+    "code": "jumlah = 20\\npesan = \"Isi nilai \" + jumlah\\nprint(pesan)",
+    "bugLine": 1,
+    "explanation": "Compiler error. Mustahil menggabungkan untaian string text dengan basis integer number secara langsung lurus. Gunakan trik cast format str(jumlah) atau f-string."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Indentsasi yang Hilang Function poin",
+    "code": "def poin():\\nprint(\"Action 99\")\\n\\npoin()",
+    "bugLine": 1,
+    "explanation": "Baris eksekusi di dalam penamaan fungsi 'def' wajib mutlak harus menjorok ke dalam (indentasi space/tab)."
+  },
+  {
+    "language": "python",
+    "difficulty": "easy",
+    "title": "Titik Dua yang Lenyap If skor",
+    "code": "if skor > 40\\n    print(\"Lebih Besar\")",
+    "bugLine": 0,
+    "explanation": "Sintaks deklarasi awal Control Statement condition block 'if' wajib ditutup akhiran karakter titik dua (:)."
+  },
+  {
+    "language": "python",
+    "difficulty": "medium",
+    "title": "While Loop Infinite angka",
+    "code": "angka = 1\\nwhile angka < 40:\\n    print(angka)",
+    "bugLine": 2,
+    "explanation": "Loop ini tanpa batas henti akibat absennya instruksi penambahan increment angka += 1 didalam identasinya."
   }
 ]

@@ -55,13 +55,13 @@ const cLevel1: Level = {
         {
           id: 'c1-l1',
           title: 'Struktur Penulisan Program Bahasa C',
-          explanation: `Struktur dasar C dibagi menjadi dua bagian utama:\n\n1. **Bagian \`#include\`:** Berfungsi mengimpor fungsi dari *header file*. Contohnya \`<stdio.h>\` untuk deklarasi fungsi dasar \`printf()\` dan \`scanf()\`. \n2. **Bagian \`int main()\`:** Fungsi utama yang dieksekusi pertama kali. Di dalamnya berisi *statement* yang dikelompokkan dengan tanda \`{}\`.\n\nSetiap perintah wajib diakhiri titik koma (\`;\`). Perintah \`return 0;\` digunakan untuk menutup fungsi utama sekaligus mengakhiri program.`,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    printf("Halo, C!\\n");\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    // Tulis print "Selamat Datang di C!" di bawah\n    \n    return 0;\n}`,
+          explanation: `Struktur dasar C dibagi menjadi dua bagian utama:\n\n1. **Bagian \`#include\`:** Berfungsi mengimpor fungsi dari *header file*. Contohnya \`<stdio.h>\` untuk deklarasi fungsi dasar \`printf()\` dan \`scanf()\`. Kita juga bisa membuat header sendiri menggunakan penulisan \`#include "namafile.h"\`.\n2. **Bagian \`int main()\`:** Fungsi utama yang dieksekusi pertama kali. Di dalamnya berisi *statement* yang dikelompokkan dengan tanda \`{}\`.\n\nSetiap perintah wajib diakhiri titik koma (\`;\`). Perintah \`return 0;\` digunakan untuk menutup fungsi utama sekaligus mengakhiri program. Tanpa \`;\`, kode akan memicu Syntax Error.`,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    printf("Halo, C!\\n"); // Fungsi mencetak\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    // Tulis print "Selamat Datang di C!" di bawah\n    // Ingatlah untuk selalu menggunakan \\n saat ingin berpindah baris di akhir teks\n    \n    return 0;\n}`,
           solution: `#include <stdio.h>\n\nint main() {\n    printf("Selamat Datang di C!\\n");\n    return 0;\n}`,
-          hint: `Gunakan printf("Selamat Datang di C!\\n"); lalu pastikan ada tanda titik koma.`,
+          hint: `Ketik secara persis: printf("Selamat Datang di C!\\n"); lalu pastikan ada tanda titik koma.`,
           quiz: {
-            question: `Apakah fungsi utama yang dieksekusi pertama kali saat program C berjalan?`,
+            question: `Apakah fungsi utama yang wajib dieksekusi pertama kali saat program C berjalan?`,
             options: [`#include`, `int main()`, `return 0`, `printf()`],
             correctAnswer: 1
           },
@@ -69,25 +69,25 @@ const cLevel1: Level = {
             { expectedOutput: `Selamat Datang di C!\n`, description: `Menampilkan teks awalan` }
           ],
           validationRules: [
-            { pattern: `printf`, message: `Gunakan printf`, shouldExist: true },
-            { pattern: `;`, message: `Jangan lupa titik koma (;)!`, shouldExist: true }
+            { pattern: `printf`, message: `Gunakan printf secara persis`, shouldExist: true },
+            { pattern: `;`, message: `Jangan lupa titik koma (;)! C bukan Python.`, shouldExist: true }
           ]
         },
         {
           id: 'c1-l2',
           title: 'Tipe Data dan Variabel',
-          explanation: `Variabel adalah penampung data yang nilainya dapat berubah-ubah. Formatnya: \`Tipe_data Nama_variabel = <nilai>\`.\n\nAda 6 tipe data dasar dalam C:\n*   **char:** Karakter (Format: %c) atau String (Format: %s).\n*   **int:** Bilangan bulat (Format: %i atau %d).\n*   **float:** Bilangan pecahan (Format: %f).\n*   **double:** Bilangan pecahan kompleks (Format: %lf).\n*   **void:** Untyped, tidak menyimpan/mengembalikan nilai.\n*   **bool:** True/False (1 atau 0).`,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    int skor = 100;\n    float pi = 3.14;\n    printf("Skor: %d, Pi: %.2f\\n", skor, pi);\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    // Buat variabel integer bernama 'harga' bernilai 5000\n    \n    // Tampilkan variabel harga menggunakan printf\n    \n    return 0;\n}`,
-          solution: `#include <stdio.h>\n\nint main() {\n    int harga = 5000;\n    printf("Harga: %d\\n", harga);\n    return 0;\n}`,
-          hint: `Definisikan 'int harga = 5000;' lalu cetak dengan format '%d'`,
+          explanation: `Variabel adalah penampung data yang nilainya dapat berubah-ubah. C mewajibkan penentuan tipe datanya terlebih dahulu! Formatnya: \`Tipe_data Nama_variabel = <nilai>;\`.\n\nAda 6 tipe data dasar dalam C:\n*   **char:** Karakter (Format penentu print: \`%c\`) atau String (Format: \`%s\`). Range -128 s/d 127.\n*   **int:** Bilangan bulat. Format: \`%i\` atau \`%d\`.\n*   **float:** Bilangan pecahan. Format: \`%f\`. Untuk mengatur tampilannya bisa menggunakan format \`%m.nf\` dimana 'n' adalah jumlah digit di belakang koma (misal: \`%.2f\`).\n*   **double:** Pecahan kompleks panjang. Format: \`%lf\`.\n*   **void:** Untyped.\n*   **bool:** True/False (1 atau 0).`,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    int skor = 100;\n    float pi = 3.14159;\n    printf("Skor: %d, Pi: %.2f\\n", skor, pi); // Menampikan float dengan 2 desimal saja\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    // Buat variabel integer bernama 'harga' dan LANGSUNG berikan nilai awal (inisialisasi) yaitu 5000\n    \n    // Tampilkan variabel harga menggunakan printf dengan format "Harga barang: [nilai_variabel]\\n"\n    \n    return 0;\n}`,
+          solution: `#include <stdio.h>\n\nint main() {\n    int harga = 5000;\n    printf("Harga barang: %d\\n", harga);\n    return 0;\n}`,
+          hint: `Definisikan 'int harga = 5000;' lalu cetak memakai printf("Harga barang: %d\\n", harga);`,
           quiz: {
-            question: `Penentu format apa yang digunakan untuk menampilkan bilangan pecahan (float)?`,
-            options: [`%d`, `%c`, `%f`, `%s`],
+            question: `Jika Anda memiliki variabel float temperatur = 36.5678, Penentu (Specifier) format manakah yang paling pas didalam printf agar output yang tampil membulat HANYA "36.57" di layar?`,
+            options: [`%d`, `%.1f`, `%.2f`, `%lf`],
             correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `Harga: 5000\n`, description: `Mencetak nilai variabel integer.` }
+            { expectedOutput: `Harga barang: 5000\n`, description: `Mencetak nilai variabel integer menggunakan %d / %i.` }
           ]
         }
       ]
@@ -99,45 +99,46 @@ const cLevel1: Level = {
         {
           id: 'c1-l3',
           title: 'Menerima dan Menampilkan Data',
-          explanation: `**Mengambil Input (\`scanf\`):**\nMembaca input terformat. Sangat penting: Berikan panduan kepada pengguna menggunakan \`printf\` sebelum meminta input. Variabel penampung di dalam \`scanf\` wajib didahului operator alamat \`&\`.\n\n**Menampilkan Data (\`printf\` / \`puts\`):**\n\`printf()\` menampilkan teks tanpa enter otomatis. \`puts()\` menampilkan string dan otomatis menambahkan baris baru di akhir.`,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    int umur;\n    printf("Masukkan umur Anda: ");\n    scanf("%d", &umur);\n    printf("Umur Anda adalah %d tahun.\\n", umur);\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    int tahun;\n    // 1. Tampilkan perintah ke user: "Masukkan tahun lahir: " (tanpa newline)\n    \n    \n    // 2. Lakukan scanf untuk menerima input %d ke dalam variabel &tahun\n    \n    \n    // 3. Tampilkan hasilnya: "Tahun lahir: [variabel]\\n"\n    \n    return 0;\n}`,
-          solution: `#include <stdio.h>\n\nint main() {\n    int tahun;\n    printf("Masukkan tahun lahir: ");\n    scanf("%d", &tahun);\n    printf("Tahun lahir: %d\\n", tahun);\n    return 0;\n}`,
-          hint: `printf("Masukkan tahun lahir: "); lalu scanf("%d", &tahun); lalu printf("Tahun lahir: %d\\n", tahun);`,
+          explanation: `**Mengambil Input (\`scanf\`):**\nSangat penting! Sebelum meminta data, kita wajib menyiapkan variabel penampungnya dan \`memberikannya angka awal/inisialisasi nol\` untuk menghindari "Garbage Memory". Variabel di dalam \`scanf\` wajib memakai operator alamat memori \`&\`.\nContoh: \`int umur = 0; scanf("%d", &umur);\`\nCatatan: Dua scanf bertipe String yang berurutan sangat rentan bentrok dan butuh fungsi \`getchar()\` untuk membuang karakter Enter.\\n\n**Menampilkan Data (\`printf\` / \`puts\` / \`putchar\`):**\n\`printf()\` menampilkan teks tanpa enter otomatis. \`puts()\` khusus string dan otomatis enter di akhir.`,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    int umur = 0; // Berikan nilai awal (Inisialisasi)\n    printf("Masukkan umur Anda: ");\n    scanf("%d", &umur); // Gunakan & sebelum umur!\n    printf("Umur Anda adalah %d tahun.\\n", umur);\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    // 1. Deklarasikan variabel int tahun, lalu SET nilainya ke 0 (Inisialisasi awal)\n    \n    // 2. Tampilkan perintah ke user secara persis: "Masukkan tahun lahir: " (tanpa newline)\n    \n    // 3. Panggil fungsi scanf() untuk menerima input format %d dan simpan ke dalam alamat memori variabel tahun\n    \n    // 4. Secara paksa tampilkan respons persis: "Tahun lahir: [nilai]\\n"\n    \n    return 0;\n}`,
+          solution: `#include <stdio.h>\n\nint main() {\n    int tahun = 0;\n    printf("Masukkan tahun lahir: ");\n    scanf("%d", &tahun);\n    printf("Tahun lahir: %d\\n", tahun);\n    return 0;\n}`,
+          hint: `Langkah: int tahun = 0; > printf("Masukkan tahun lahir: "); > scanf("%d", &tahun); > printf("Tahun lahir: %d\\n", tahun);`,
           quiz: {
-            question: `Operator apa yang HARUS mendahului nama variabel angka saat ditaruh di dalam fungsi scanf()?`,
-            options: [`#`, `%`, `&`, `*`],
+            question: `Pada saat kita menerima dua buah isian tipe STRING karakter secara berturut-turut melalui scanf di bahasa C, program seringkali error/melewati pertanyaan kedua. Fungsi spesifik apakah yang perlu diselipkan di tengah-tengah dua scanf tersebut untuk membuang karakter enter?`,
+            options: [`puts()`, `system("pause")`, `getchar()`, `break()`],
             correctAnswer: 2
           },
           testCases: [
-            { input: `1998`, expectedOutput: `Masukkan tahun lahir: Tahun lahir: 1998\n`, description: `Memvalidasi input respon dari scanf.` }
+            { input: `1998`, expectedOutput: `Masukkan tahun lahir: Tahun lahir: 1998\n`, description: `Memvalidasi input respon text dan format angka scanf.` }
           ],
           validationRules: [
+            { pattern: `int\\s+tahun\\s*=\\s*0`, message: `Anda LUPA memberikan Inisialisasi! Berikan nilai 0 pada variabel terlebih dahulu sebelum melakukan scanf!`, shouldExist: true },
             { pattern: `scanf`, message: `Gunakan fungsi scanf() untuk membaca input!`, shouldExist: true },
-            { pattern: `&tahun`, message: `Kamu lupa menaruh simbol alamat '&' pada variabel tahun di scanf!`, shouldExist: true }
+            { pattern: `&tahun`, message: `Kamu lupa menaruh simbol alamat '&' pada variabel tahun di dalam scanf!`, shouldExist: true }
           ]
         }
       ]
     },
     {
       id: 'c1-m3',
-      title: 'Operator pada C',
+      title: 'Operator Dasar',
       lessons: [
         {
           id: 'c1-l4',
           title: 'Operator Aritmatika & Unary',
-          explanation: `**Operator Aritmatika:** Perkalian (\`*\`), Pembagian (\`/\`), Modulo/sisa bagi (\`%\`), Penambahan (\`+\`), Pengurangan (\`-\`).\n\n**Operator Unary:** Beroperasi pada satu variabel.\n- \`A++\` (Post-increment): Nilai diproses/ditampilkan dulu, baru ditambah 1.\n- \`++A\` (Pre-increment): Ditambah 1 dulu, baru diproses/ditampilkan.`,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    int a = 5;\n    printf("Aritmatika (10 %% 3): %d\\n", 10 % 3);\n    printf("Post-increment: %d\\n", a++); // Akan cetak 5, lalu a menjadi 6\n    printf("Pre-increment: %d\\n", ++a);  // a menjadi 7, lalu dicetak 7\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    // 1. Buat variabel x bernilai 15\n    \n    // 2. Tampilkan sisa bagi dari x dibagi 4 secara langsung di printf (x % 4)\n    \n    return 0;\n}`,
+          explanation: `**Operator Aritmatika:** Perkalian (\`*\`), Pembagian (\`/\`), Sisa Bagi / Modulo (\`%\`), Penambahan (\`+\`), Pengurangan (\`-\`).\n\n**Operator Unary:** Beroperasi tajam pada satu variabel saja.\n- \`A++\` (Post-increment): Nilainya diproses dulu / dikeluarkan di layar secara utuh, BARU ditambahkan 1 di memori.\n- \`++A\` (Pre-increment): Ditambahkan 1 di memori dahulu, siapapun yang panggil ini akan mendapatkan versi update barunya.\n- \`!A\` : Not (Berbalik logic).\n- \`&A\` : Alamat Memori.`,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    int a = 5;\n    printf("Sisa bagi 10 %% 3: %d\\n", 10 % 3);\n    printf("Post-increment A: %d\\n", a++); // Akan cetak 5, lalu a berubah jadi 6 di memori\n    printf("Pre-increment A: %d\\n", ++a);  // memori a diupdate jadi 7, lalu dicetak 7 ke layar\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    int x = 15;\n    // Hitung secara langsung (tanpa memakai variabel pembantu!)\n    // nilai dari x yang dimoduluskan/dicari sisa baginya terhadap 4.\n    // Gunakan printf dengan format format %d diikuti \\n\n    \n    return 0;\n}`,
           solution: `#include <stdio.h>\n\nint main() {\n    int x = 15;\n    printf("%d\\n", x % 4);\n    return 0;\n}`,
-          hint: `Deklarasi int x = 15; lalu printf("%d\\n", x % 4);`,
+          hint: `Deklarasi int x = 15; sudah ada. Kamu cukup menuliskan perintah pencetakan printf("%d\\n", x % 4);`,
           quiz: {
-            question: `Apa perbedaan utama antara A++ dan ++A?`,
-            options: [`A++ menambah nilai 2, ++A menambah 1.`, `Tidak ada yang beda, keduanya persis sama.`, `A++ dipakai di C, ++A dipakai di C++.`, `A++ (diproses dulu baru ditambah), ++A (ditambah dulu baru diproses).`],
-            correctAnswer: 3
+            question: `Bila "int num = 10". Pada perintah "printf('%d', num++);", angka berapa yang justru akan benar-benar tercetak muncul di layar console?`,
+            options: [`11`, `9`, `10`, `Terjadi Error / Syntax Exception`],
+            correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `3\n`, description: `Menghitung modulo` }
+            { expectedOutput: `3\n`, description: `Menghitung modulo/sisa pembagian dengan tepat pada console.` }
           ]
         }
       ]
@@ -151,7 +152,7 @@ const cLevel1: Level = {
 const cLevel2: Level = {
   id: 'c-level-2',
   title: 'STRUKTUR KONTROL DALAM BAHASA C',
-  description: 'Mempelajari kontrol alur program: Percabangan (If, Switch), Perulangan (While, For), dan Peloncatan.',
+  description: 'Mempelajari kontrol alur program seperti pengambilan keputusan komputasi terbatas If-Else, maupun perulangan besar dengan Do-While.',
   modules: [
     {
       id: 'c2-m1',
@@ -160,81 +161,81 @@ const cLevel2: Level = {
         {
           id: 'c2-l1',
           title: 'Struktur If, Else If, Else',
-          explanation: `Percabangan mengevaluasi sebuah kondisi (true/false).\n\n- \`if\`: Jika syarat terpenuhi, cabang dijalankan.\n- \`if - else\`: Jika \`if\` salah, otomatis menjalankan perintah \`else\`.\n- \`if - else if\`: Memiliki lebih dari dua kondisi. Jika satu kondisi di atas terpenuhi, sisa kondisi di bawahnya akan diabaikan.`,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    int nilai = 80;\n    if (nilai >= 90) {\n        printf("A\\n");\n    } else if (nilai >= 70) {\n        printf("B\\n");\n    } else {\n        printf("C\\n");\n    }\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    int skor = 65;\n    // Susun if-else if. \n    // Jika skor >= 80, cetak "Lulus".\n    // Jika skor >= 50, cetak "Remedial".\n    // Selain itu cetak "Gagal".\n\n    return 0;\n}`,
+          explanation: `Percabangan adalah syarat khusus yang mengevaluasi kondisi. \n- \`if\`: Percabangan tunggal. Jika syarat (true) masuk, jika (false) ia tidak melakukan apa-apa dan terus ke rute berikutnya.\n- \`if - else\`: Jika \`if\` salah, otomatis lari mengeksekusi blok \`else\` sebagai pembuangan akhir tanpa batasan kondisi.\n- \`if - else if\`: Memiliki lebih dari 2 logika paralel dan diperiksa otomatis berurutan lurus dari atas. Jika ada 1 kondisi tercapai, hirarki di bawahnya diboikot/diabaikan.`,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    int skor = 0;\n    printf("Masukkan skormu: ");\n    scanf("%d", &skor);\n    \n    if (skor >= 90) {\n        printf("Nilai: A\\n");\n    } else if (skor >= 70) {\n        printf("Nilai: B\\n");\n    } else {\n        printf("Nilai: C\\n");\n    }\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    int skor = 65;\n    \n    // Tulis struktur if-else if-else di sini.\n    // Jika nilai skor >= 80, printf "Lulus\\n" secara rapi.\n    // Jika skor ternyata >= 50, tetapi masih di rentang tengah, printf "Remedial\\n"\n    // Jika lolos dari semua kondisi atas, printf "Gagal\\n"\n\n    return 0;\n}`,
           solution: `#include <stdio.h>\n\nint main() {\n    int skor = 65;\n    if (skor >= 80) {\n        printf("Lulus\\n");\n    } else if (skor >= 50) {\n        printf("Remedial\\n");\n    } else {\n        printf("Gagal\\n");\n    }\n    return 0;\n}`,
-          hint: `Gunakan if () {}, else if () {}, dan else {}.`,
+          hint: `Logika C tidak menyulitkan. Susun saja urut -> if (skor >= 80) { bloknya } else if (skor >= 50) { bloknya } else { bloknya }`,
           quiz: {
-            question: `Pada struktur "if - else if", apa yang terjadi jika kondisi if (pertama) sudah bernilai BENAR?`,
-            options: [`Program akan crash`, `Kondisi di bawahnya ("else if") tetap diekstekusi`, `Kondisi di bawahnya otomatis diabaikan (dilewati)`, `Program keluar paksa dari main`],
+            question: `Di dalam suatu program struktur if - else if panjang berderet. Apa yang akan sistem eksekusi sekiranya program mendeteksi bahwa pengecekan 'if' (kondisi poin kesatu paling puncak) ternyata sudah langsung bernilai TRUE/BENAR?`,
+            options: [`Program langsung crash / Error Timeout`, `Pengecekan di rute bawahnya akan tetap dijalankan satu per satu demi validasi ganda`, `Blok lain (else if dan else bagian bawahnya) mutlak diabaikan dan ter-skip dengan sendirinya`, `Program keluar paksa (Exit Process Code 0)`],
             correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `Remedial\n`, description: `Menyeleksi kondisi Else-if.` }
+            { expectedOutput: `Remedial\n`, description: `Menilai ketepatan validasi logika percabangan bercabang kompleks` }
           ],
           validationRules: [
-            { pattern: `else if`, message: `Gunakan blok else if untuk kondisi kedua.`, shouldExist: true }
+            { pattern: `else if`, message: `Gunakan blok 'else if' sebagai opsi tengah evaluasi lanjutan.`, shouldExist: true }
           ]
         },
         {
           id: 'c2-l2',
-          title: 'Switch - Case',
-          explanation: `Switch Case lebih efektif untuk memeriksa variabel terhadap banyak pilihan nilai secara langsung (tanpa rentang `<` atau `>`).\n\nWajib memakai:\n1. \`case nilai:\`\n2. \`break;\` agar program tidak kebablasan menjalankan perintah di bawahnya.\n3. \`default:\` bertindak sebagai *else* ketika tidak ada case yang cocok.`,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    int menu = 2;\n    switch(menu) {\n        case 1:\n            printf("Menu 1\\n");\n            break;\n        case 2:\n            printf("Menu 2\\n");\n            break;\n        default:\n            printf("Menu Tidak Valid\\n");\n    }\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    int kode = 3;\n    // Buat switch(kode).\n    // case 1: cetak "Laptop", break;\n    // case 3: cetak "Tablet", break;\n    // default: cetak "Aksesoris"\n\n    return 0;\n}`,
+          title: 'Seleksi Menu: Switch - Case',
+          explanation: `Switch Case merupakan opsi percabangan yang *sangat efisien dan cepat* ketimbang if, khususnya jika kita menangani ratusan banyak pilihan nilai secara langsung (misal list karakter atau index angka). Ia tidak bisa menangani rentang syarat komparator seperti \`<` atau `>\`.\n\nStrukturnya bertumpu pada 3 kata sakti:\n1. \`case nilai:\` untuk membuat check poin.\n2. \`break;\` agar program terpotong dan tidak *kebablasan* menjalankan instruksi case milik orang di bawahnya!\n3. \`default:\` bertindak identik bagaikan *else* akhir jika tiada case satupun yang cocok/True.`,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    int menu = 2;\n    switch(menu) {\n        case 1:\n            printf("Memesan Kopi\\n");\n            break; // Wajib break agar case 2 di bawahnya tidak ikut nyala!\n        case 2:\n            printf("Memesan Teh\\n");\n            break;\n        default:\n            printf("Menu Tidak Valid\\n");\n    }\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    int kode = 3;\n    \n    // Buat statement blok switch(kode).\n    // case 1: bertugas cetak "Laptop\\n", jangan lupakan break;\n    // case 3: bertugas cetak "Tablet\\n", beri break;\n    // default: bertugas mencetak teguran "Aksesoris\\n"\n\n    return 0;\n}`,
           solution: `#include <stdio.h>\n\nint main() {\n    int kode = 3;\n    switch(kode) {\n        case 1:\n            printf("Laptop\\n");\n            break;\n        case 3:\n            printf("Tablet\\n");\n            break;\n        default:\n            printf("Aksesoris\\n");\n    }\n    return 0;\n}`,
-          hint: `Strukturnya switch(kode) { case 1: ... break; case 3: ... break; default: ... }`,
+          hint: `switch(kode) { case 1: ... break; case 3: ... break; default: ... }`,
           quiz: {
-            question: `Perintah apa yang digunakan untuk memaksa keluar dari sekumpulan "case" agar perintah di opsi case bawahnya tidak ikut dijalankan?`,
-            options: [`stop;`, `break;`, `exit 0;`, `continue;`],
-            correctAnswer: 1
+            question: `Apakah fungsi dari penulisan statemen instruksi \`break;\` disetiap pengakhiran satu blok kode 'case'?`,
+            options: [`Memperlambat memory clock limit processor`, `Keluar paksa dan menghentikan seluruh aplikasi windows`, `Membatalkan Switch dan meloncat keluar darinya agar blok case yang ada di bawahnya tidak ikut berjalan tak diundang`, `Menutup console interface`],
+            correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `Tablet\n`, description: `Memvalidasi eksekusi blok case ke-3` }
+            { expectedOutput: `Tablet\n`, description: `Menilai apakah switch menangkap identifikasi konstanta indeks 3 yang tepat.` }
           ],
           validationRules: [
-            { pattern: `break;`, message: `Jangan lupa titik koma (;)! setelah instruksi break`, shouldExist: true }
+            { pattern: `break;`, message: `Perhatian pada semicolon. Kamu kurang menambahkan perintah mutlak 'break;'`, shouldExist: true }
           ]
         }
       ]
     },
     {
       id: 'c2-m2',
-      title: 'Perulangan dan Peloncatan',
+      title: 'Perulangan dan Peloncatan Blok',
       lessons: [
         {
           id: 'c2-l3',
-          title: 'Looping: For, While, Do-While',
-          explanation: `**Syarat Looping:** Inisialisasi, Kondisi (Syarat henti), Step (+/-).\n\n- **While**: Kondisi diperiksa di awal. Jika dari awal sudah Salah, tidak pernah jalan.\n- **Do-While**: Kondisi di akhir. Program jalan minimal SATU kali.\n- **For**: Deklarasi praktis 1 baris. Rumus: \`for (inisialisasi; syarat; step)\`.`,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    for(int i = 1; i <= 3; i++) {\n        printf("Cetak: %d\\n", i);\n    }\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    // Cetak kata "Halo" sebanyak 3 kali menggunakan for loop (dari 0 hingga < 3)\n    for(int i = 0; i < 3; i++) {\n        \n    }\n    return 0;\n}`,
-          solution: `#include <stdio.h>\n\nint main() {\n    for(int i = 0; i < 3; i++) {\n        printf("Halo\\n");\n    }\n    return 0;\n}`,
-          hint: `Letakkan printf("Halo\\n"); di dalam blok kurung kurawal for.`,
+          title: 'Looping Bebas: While & Do-While',
+          explanation: `Dalam perulangan (Iterasi Loop) setidaknya harus punya: Inisialisasi Angka Awal, Kondisi Evaluasi Henti, dan instruksi Kenaikan/Penurunan Step nilainya (\`++\` Murni).\n\n- **While**: Kondisi diperiksa ketat di **PUNCAK AWAL**. Jika di iterasi awal sudah menghasilkan (False) / Salah, blok di dalamnya **haram berjalan, tidak akan pernah dieksekusi sekalipun**.\n- **Do-While**: Kondisi dievaluasi pelan di **AKHIR**. Sebagai kompensasinya, maka Program di dalam \`do\` akan Dijalankan **minimal SATU Kali** secara paksa (walau logika kondisinya sudah rusak sejak awal!).`,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    int x = 1;\n    while(x <= 3) {\n        printf("Tahap iterasi: %d\\n", x);\n        x++; // Jangan hilangkan increment ini atau program CRASH infinite Loop.\n    }\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    int iterasi = 1;\n    \n    // Terapkan statement do.. while() untuk iterasi.\n    // Cetak dan lompati baris tulisan "Angka: [iterasi]\\n"  tiap putaran.\n    // Ingatlah menambahkan step kenaikannya.\n    // Kondisi pengecekan berada di bawah dengan rumus syarat iterasi berada < (kurang dari) 3.\n    \n    return 0;\n}`,
+          solution: `#include <stdio.h>\n\nint main() {\n    int iterasi = 1;\n    do {\n        printf("Angka: %d\\n", iterasi);\n        iterasi++;\n    } while(iterasi < 3);\n    return 0;\n}`,
+          hint: `do { printf("Angka: %d\\n", iterasi); iterasi++; } while (iterasi < 3);`,
           quiz: {
-            question: `Jenis perulangan manakah yang dijamin akan tereksekusi MINIMAL 1 KALI meskipun syaratnya sudah False sejak awal?`,
-            options: [`for loop`, `do - while`, `while`, `semua perulangan dijamin jalan`],
-            correctAnswer: 1
+            question: `Sebuah looping menggunakan struktur \`Do-While\` dengan kondisi nilai syarat yang langsung bertuliskan \`while (0)\` (False konstan). Berapa banyak skrip di blok \`Do\` itu akan tetap diproses layar?`,
+            options: [`Nol Kali. Program menolak dari awal.`, `Error Crash karena tidak valid.`, `Mutlak akan dieksekusi minimal Satu Kali (1).`, `Infinite Loop hingga memory limit`],
+            correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `Halo\nHalo\nHalo\n`, description: `Loop iterasi dasar` }
+            { expectedOutput: `Angka: 1\nAngka: 2\n`, description: `Menilai kinerja simulasi loop mundur yang dibakukan pada sintaks do-while` }
           ]
         },
         {
           id: 'c2-l4',
-          title: 'Peloncatan: Break & Continue',
-          explanation: `Memaksa program memindahkan arah eksekusinya.\n\n- **break**: Menghentikan PAKSA seluruh iterasi (membuat keluar sepenuhnya dari blok perulangan di detik itu juga).\n- **continue**: Menghentikan iterasi yang sedang berjalan *saat itu saja*, lalu MELOMPAT kembali ke atas untuk melanjutkan proses iterasi putaran berikutnya.`,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    for(int i=1; i<=5; i++) {\n        if(i == 3) continue; // Langsung lompat ke iterasi ke-4\n        if(i == 5) break;    // Stop total perulangan\n        printf("%d\\n", i);\n    }\n    // Output: 1 2 4\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    for(int i=1; i<=3; i++) {\n        // Jika i sama dengan 2, lakukan continue;\n        \n        printf("%d\\n", i);\n    }\n    return 0;\n}`,
-          solution: `#include <stdio.h>\n\nint main() {\n    for(int i=1; i<=3; i++) {\n        if(i == 2) continue;\n        printf("%d\\n", i);\n    }\n    return 0;\n}`,
-          hint: `Tambahkan if (i == 2) continue; di atas baris printf.`,
+          title: 'For-Loop & Manuver Break/Continue',
+          explanation: `**Perulangan For**\nSangat dirancang untuk iterasi panjang dan banyak yang jumlah batasannya sudah mutlak pasti dipahami. Format gabungan praktis C: \`for (inisialisasi; syarat_kondisi; pergerakan_step)\`.\n\n**Perintah Peloncat (Lompatan Gahar)**\nPemrogram dituntut terkadang mensabotase iterasi di sebuah *state* loop.\n- **break**: Murni menghancurkan loop, perintah ini melompat keluar memberhentikan paksa **seluruh iterasi tersisa** secara penuh.\n- **continue**: Lebih licik, perintah logis ini membatalkan **1 buah iterasi detik itu saja** sedemikian ia melompat keatas lagi skip ke hitungan selanjutnya (mengacuhkan file di bawahnya).`,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    for(int i=1; i<=5; i++) {\n        if(i == 3) continue; // Langsung lompat ke atas untuk iterasi no-4, maka angka 3 terlewati (tidak dicetak)!\n        if(i == 5) break;    // Menghabisi iterasi total, angka 5 tidak pernah dieksekusi loop bawahnya.\n        printf("%d ", i);\n    }\n    // Hasil Print: 1 2 4 \n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    // Bikin For loop iterasi naik dari 1 sampai dengan nilai pas lurus 3 (inclusive <= 3).\n    for(int i=1; i<=3; i++) {\n        // SELIPKAN sebuah blok logic. \n        // Jika i mendeteksi di angka 2 persis, beri manipulasi continue; agar ia terskip!\n        \n        printf("Nomor %d\\n", i);\n    }\n    return 0;\n}`,
+          solution: `#include <stdio.h>\n\nint main() {\n    for(int i=1; i<=3; i++) {\n        if(i == 2) continue;\n        printf("Nomor %d\\n", i);\n    }\n    return 0;\n}`,
+          hint: `Tambahkan blok sejuk: if(i == 2) continue; tepat sebelum syntax pencetakan (printf).`,
           quiz: {
-            question: `Perintah apa yang menghentikan SATU putaran iterasi yang sedang berjalan, namun tetap melanjutkan putaran iterasi di angka berikutnya?`,
-            options: [`goto`, `break`, `continue`, `#include`],
-            correctAnswer: 2
+            question: `Syntax manakah di alam C yang fungsinya murni menghentikan serta memblokir SELURUH rentetan perulangan Loop bersisa di detik itu juga?`,
+            options: [`goto default;`, `break;`, `continue;`, `#include`],
+            correctAnswer: 1
           },
           testCases: [
-            { expectedOutput: `1\n3\n`, description: `Melewati angka 2 menggunakan fitur continue.` }
+            { expectedOutput: `Nomor 1\nNomor 3\n`, description: `Memvalidasi manipulasi skip iterasi` }
           ]
         }
       ]
@@ -248,67 +249,70 @@ const cLevel2: Level = {
 const cLevel3: Level = {
   id: 'c-level-3',
   title: 'ARRAY, STRUCT, DAN OPERASI FILE (C)',
-  description: 'Penguasaan struktur data Array, tipe memori gabungan Struct, dan tata cara baca-tulis dokumen File Text pada sistem komputer.',
+  description: 'Penyusunan arsitektur Array indeks berantai ganda, pengikatan tipe properti pada Struct object, hingga mode simulasi Stream File.',
   modules: [
     {
       id: 'c3-m1',
-      title: 'Tipe Data Terstruktur',
+      title: 'Struktur Data Seragam',
       lessons: [
         {
           id: 'c3-l1',
-          title: 'Array (List Berurutan)',
-          explanation: `Array menyimpan banyak sekumpulan variabel bertipe sama. Indeks di memori selalu dimulai dari 0.\n\nC mewajibkan String diimplementasikan secara statis sebagai Array karakter. Karakter tersebut selalu diakhiri \`\\0\` (null) sebagai penanda akhir batas sebuah String.\n\nDeklarasi 1 Dimensi (Kolom): \`int nilai[panjang]\`\nDeklarasi 2 Dimensi (Baris Kolom): \`int matriks[baris][kolom]\``,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    int nilai[4] = {10, 20, 30, 40};\n    printf("Elemen pertama: %d\\n", nilai[0]);\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    int a[3] = {500, 600, 700};\n    // Tampilkan elemen TERAKHIR dari array a\n    \n    return 0;\n}`,
-          solution: `#include <stdio.h>\n\nint main() {\n    int a[3] = {500, 600, 700};\n    printf("%d\\n", a[2]);\n    return 0;\n}`,
-          hint: `Elemen terakhir dari array 3 items adalah indeks [2]. Gunakan printf.`,
+          title: 'Array Multidimensi',
+          explanation: `Array memblokade dan menyimpan himpunan sekumpulan memori variabel bertipe data sama di lokasi yang saling bertetangga. Array selalu diakses berdasarkan kompas bilangan pemandu berurut yang konstan dihitung selalu sedari Index 0.\n\nDalam C (tidak seperti Python modern), sebuah variasi teks Text String sebetulnya hanyalah ilusi dari `Array tipe Karakter`. Dan harus selalu memiliki terminator ajaib berwujud \`\\0\` (null parameter mark) di akhir elemen array agar mesin compiler C tahu "Ooh, disini pangkal string teks nya stop!".\n\nBentuk Deklarasi:\nArray biasa (Kolom 1 dimensi): \`int poin[panjang]\`\nArray matriks (Papan Catur/Baris&Kolom): \`int grid[baris][kolom]\``,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    int skor_tim[4] = {100, 200, 300, 400};\n    printf("Elemen ke-2 (Indeks 1) adalah: %d\\n", skor_tim[1]);\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    // Program memanipulasi akses blok list terbatas\n    int kumpulan[3] = {500, 600, 700};\n    // Tantangan: Akses dan panggil elemen barisan index TERAKHIR dari limitasi array tersebut, cetak angkanya (%d) plus \\n\n    \n    return 0;\n}`,
+          solution: `#include <stdio.h>\n\nint main() {\n    int kumpulan[3] = {500, 600, 700};\n    printf("%d\\n", kumpulan[2]);\n    return 0;\n}`,
+          hint: `Karena slot array berjumlah 3, maka index maksimal yang absah hanyalah: 0, 1, dan 2. Maka panggil angka array pada index [2].`,
           quiz: {
-            question: `Apa tanda khusus penutup di dalam array tipe data character yang membuktikan bahwa itu adalah string text bahasa C?`,
-            options: [`\\s`, `\\n`, `\\0 (Null Terminated)`, `\\ EOF`],
+            question: `Apakah karakter 'Escape Boundary Marker' rahasia bahasa C yang posisinya selalu wajib ditanam mesin di barisan belakang sendiri pada sebuah array of characters sehingga ia baru sah dan lolos dipanggil sebagai 'String'?`,
+            options: [`\\s`, `\\n`, `\\0 (Null Terkunci)`, `Tidak ada penanda`],
             correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `700\n`, description: `Memanggil indeks paling tinggi.` }
+            { expectedOutput: `700\n`, description: `Menilai kalkulasi tebakan hitungan dimensi index programmer` }
+          ],
+          validationRules: [
+            { pattern: `\\[2\\]`, message: `Index terakhir untuk Array Limit=3 pastilah memanggil '[2]'. Perbaiki.`, shouldExist: true }
           ]
         },
         {
           id: 'c3-l2',
-          title: 'Struct (Objek Gabungan)',
-          explanation: `Berbeda dengan Array yang harus setipe, Struct menggabungkan tipe data *berbeda-beda* (misalnya 1 integer, 1 float, 1 string) ke dalam satu wadah kesatuan objek.\n\nElemen-elemen di dalamnya disebut sebagai **field**, yang diakses dengan format operator titik (\`.\`). \nContoh: \`variabel_struct.nama_field\`.`,
-          codeExample: `#include <stdio.h>\n\nstruct Pegawai {\n    int id;\n    float gaji;\n};\n\nint main() {\n    struct Pegawai p1;\n    p1.id = 101;\n    p1.gaji = 5500.50;\n    printf("Pegawai %d gajinya %.2f\\n", p1.id, p1.gaji);\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nstruct Produk {\n    int stok;\n};\n\nint main() {\n    // 1. Deklarasikan variabel 'p' dengan tipe 'struct Produk'\n    \n    // 2. Isi data p.stok = 50\n    \n    // 3. Tampilkan p.stok\n    \n    return 0;\n}`,
-          solution: `#include <stdio.h>\n\nint main() {\n    struct Produk p;\n    p.stok = 50;\n    printf("%d\\n", p.stok);\n    return 0;\n}`,
-          hint: `struct Produk p; p.stok = 50; printf("%d\\n", p.stok);`,
+          title: 'Structs (Wadah Objek C)',
+          explanation: `Sementara Array cacat karena cuma satu setipe data konstan di sekujur memori. **Struct** hadir sebagai kebalikan Array. Ia wadah mutakhir merangkul sekaligus pengelompokan puluhan tipe yang bisa berbeda-beda identitasnya sekalian (misal dalam sebongkah class ini ada float IPK, ada int Umur, serta string Nama di satu variabel induk tunggal).\n\nKomponen penyusun (Anakan) pada struct dinamakan **field**. Masing-masing field hanya sah bila diekstrak memakai alat potong syntax operator berupa karakter titik (\`.\`). \nFormat interaksi misal: \`variabel_tujuan.nama_field = 100\`.`,
+          codeExample: `#include <stdio.h>\n\n// Mendefinisikan 'cetakan/blueprint' utama diluar Main()\nstruct DatabasePegawai {\n    int id_karyawan;\n    float nominal_gaji;\n};\n\nint main() {\n    struct DatabasePegawai peg_01; // Mewariskan / Instansiasi Variabel Objek ke peg_01\n    peg_01.id_karyawan = 10;\n    peg_01.nominal_gaji = 5.500;\n    \n    printf("Peg Gaji=%.3f\\n", peg_01.nominal_gaji);\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nstruct DataProduk {\n    int kuantitas_stok;\n};\n\nint main() {\n    // 1. Instansiasi variabel penampung baru 'box_satu' yang mewarisi class cetakan tipe 'struct DataProduk'.\n    \n    // 2. Akses field-nya, oper/suntik nilai 50 ke kuantitas_stok pada box_satu tersebut.\n    \n    // 3. Tampilkan p.stok memanfaatkan perintah format print bilangan integer.\\n\n    \n    return 0;\n}`,
+          solution: `#include <stdio.h>\n\nint main() {\n    struct DataProduk box_satu;\n    box_satu.kuantitas_stok = 50;\n    printf("%d\\n", box_satu.kuantitas_stok);\n    return 0;\n}`,
+          hint: `Strukturnya -> struct DataProduk box_satu; -> box_satu.kuantitas_stok = 50; -> printf("%d\\n", box_satu.kuantitas_stok);`,
           quiz: {
-            question: `Simbol apakah yang menghubungkan nama variabel struct untuk dapat mengambil properti / field datanya di dalam memori?`,
-            options: [`Tanda Titik (.)`, `Panah (->)`, `Tanda Plus (+)`, `Titik Dua (:)`],
-            correctAnswer: 0
+            question: `Operator tunggal nan sakti yang menavigasi compiler ke dalam ruang arsitektur variabel untuk mengakses "field attributes" di dalam class Struct adalah operator ...?`,
+            options: [`Spasi/Space`, `Tanda Titik (.)`, `Tanda Panah (->)`, `Tanda Dollar ($)`],
+            correctAnswer: 1
           },
           testCases: [
-            { expectedOutput: `50\n`, description: `Akses elemen property suatu class struct` }
+            { expectedOutput: `50\n`, description: `Menilai perlakuan Object Binding Property Struct` }
           ]
         }
       ]
     },
     {
       id: 'c3-m2',
-      title: 'Interaksi File Eksternal',
+      title: 'Interaksi Berkas Input/Output Eksternal',
       lessons: [
         {
           id: 'c3-l3',
-          title: 'Operasi File',
-          explanation: `File diaktifkan melalui objek memori pointer: \`FILE *\`.\nFungsi utamanya \`fopen("nama", "mode")\`.\n\n**Mode Penting:**\n- \`"r"\`: Membaca.\n- \`"w"\`: Membuat/menulis file baru (yang lama terhapus / overwrite murni).\n- \`"a"\`: Append. Tambah isi text ke bagian paling bawah file tanpa menghapus teks aslinya.\n\nWajib: Tutup file di akhir memori Anda menggunakan \`fclose(pointer);\`.`,
-          codeExample: `#include <stdio.h>\n\nint main() {\n    FILE *f = fopen("test.txt", "w");\n    fputs("Hello World\\n", f);\n    fclose(f);\n    return 0;\n}`,
-          initialCode: `#include <stdio.h>\n\nint main() {\n    // Kita simulasikan penambahan sebuah kalimat (Mode Append)\n    FILE *file = fopen("log.txt", "a"); // Menggunakan parameter a\n    if (file != NULL) {\n        // fputs("Berhasil melakukan append text.\\n", file);\n        printf("Simulator: Proses file fputs berhasil.\\n");\n        fclose(file);\n    }\n    return 0;\n}`,
-          solution: `#include <stdio.h>\n\nint main() {\n    FILE *file = fopen("log.txt", "a");\n    if (file != NULL) {\n        printf("Simulator: Proses file fputs berhasil.\\n");\n        fclose(file);\n    }\n    return 0;\n}`,
-          hint: `Batalkan/buka comment di baris kode tersebut untuk lulus uji logika file.`,
+          title: 'Simulasi Sistem Open File (Mode Append)',
+          explanation: `Dalam operasional serius, C memanipulasi file (txt, log) lewat pointer file sakelar khusus bernotasi asteris (\`FILE *\`). \nCara bukaan pakemnya adalah `fopen("NamaFile", "ModePermisi");`.\n\n**Parameter Modes Hak Akses Penting:**\n- \`"r"\`: Read-Only (Aman). Membaca file. Bakal fatal error jika target direksinya fiktif.\n- \`"w"\`: Write Mode. Mode sadis! Menulis di file kosong ATAU membabat mereset bersih SEMUA isi file lama menjadi 0 bits jika file tersebut exist agar Anda bisa override dominan.\n- \`"a"\`: Append Mode (Penempel Teks). Tambah ekstra tulisan log tanpa melenyapkan/mengoverwrite teks terdahulu.\n\n**Wajib Mutlak Praktik Terbaik:** Tutup keran koneksi memory-loss dengan memanggil \`fclose(pointer);\`.`,
+          codeExample: `#include <stdio.h>\n\nint main() {\n    FILE *log = fopen("test.txt", "w");\n    fputs("Hello File Server\\n", log);\n    fclose(log);\n    return 0;\n}`,
+          initialCode: `#include <stdio.h>\n\nint main() {\n    // Lakukan simulasi pemanggilan function Append.\n    FILE *f_server = fopen("config.txt", "a"); // Catatan: "a" dipakai agar tidak menabrak overwrite (w).\n    \n    if (f_server != NULL) {\n        // Kita seolah mencetak fputs("Berhasil Modif File.\\n", f_server);\n        // Karena alasan proxy server keamanan eksekusi script ini, cukup print teks persis seperti baris di atas!\n        printf("Simulator: Sukses mengedit tanpa overwriting.\\n");\n        fclose(f_server);\n    }\n    return 0;\n}`,
+          solution: `#include <stdio.h>\n\nint main() {\n    FILE *f_server = fopen("config.txt", "a");\n    if (f_server != NULL) {\n        printf("Simulator: Sukses mengedit tanpa overwriting.\\n");\n        fclose(f_server);\n    }\n    return 0;\n}`,
+          hint: `Murni perhatikan teks string kembalian console printf-nya saja agar lolos verifikasi blok.`,
           quiz: {
-            question: `Apa parameter mode yang kita wajib sematkan pada fopen() jika niat kita ingin menambahkan kata di belakang file tanpa melenyapkan tulisan file terdahulunya?`,
-            options: [`"r"`, `"x"`, `"a"`, `"w+"`],
-            correctAnswer: 2
+            question: `Apakah paramater Mode penulisan (write format access) di fopen yang paling krusial sewaktu *requirement* OS mengharuskan kita MENGEDIT/MENAMBAHKAN teks string ke file system TANPA PERNAH menggantikan/mereset baris asalnya ke 0 lagi?`,
+            options: [`"update"`, `"w"`, `"r+"`, `"a" (Append Mode)`],
+            correctAnswer: 3
           },
           testCases: [
-            { expectedOutput: `Simulator: Proses file fputs berhasil.\n`, description: `Tes demonstrasi teori block struct tanpa file fisik beneran` }
+            { expectedOutput: `Simulator: Sukses mengedit tanpa overwriting.\n`, description: `Output string dummy simulator operasi sistem file non-destructive` }
           ]
         }
       ]
@@ -322,91 +326,94 @@ const cLevel3: Level = {
 const pyLevel1: Level = {
   id: 'py-level-1',
   title: 'PENGENALAN DASAR BAHASA PYTHON',
-  description: 'Pengenalan Python, Variabel, Tipe Data otomatis, dan fungsi input-output murni interaktif.',
+  description: 'Revolusi sintaks. Pemahaman Variabel Dynamic, deteksi otomatis Tipe Data, konversi Casting paksa angka string, formating f-string, dsb.',
   modules: [
     {
       id: 'py4-m1',
-      title: 'Dasar dan Casting Python',
+      title: 'Dasar Bebas Python',
       lessons: [
         {
           id: 'py4-l1',
-          title: 'Pendahuluan dan Variabel Dinamis',
-          explanation: `Python dirancang untuk kemudahan dan sintaks lebih ringkas daripada C.\n**Dynamic Typing:** Tipe data tidak perlu secara tertulis diawali (seperti tidak butuh \`int X\`). Python bisa berubah isi otomatis. Cukup tulis: \`nama = "Python"\`.\n\nTipe utamanya:\n- **Number**: Integer & Float\n- **String**: Kutip ganda ("..") tunggal ('..') atau tiga (\"\"\"...\"\"\") buat banyak baris.\n- **Boolean**: Kapital True dan False.`,
-          codeExample: `angka = 100\nteks = "Bahasa Python"\nprint(angka)\nprint(teks)`,
-          initialCode: `# Buat variabel bahasa dengan nama "Python"\n# Buat variabel rilis bertipe boolean True \n# Print menggunakan print(bahasa, rilis)\n`,
-          solution: `bahasa = "Python"\nrilis = True\nprint(bahasa, rilis)`,
-          hint: `bahasa = "Python" lalu print(bahasa, rilis)`,
+          title: 'Pendahuluan Singkat & Variabel Typeless',
+          explanation: `Python lahir menantang bahasa purba sebagai bahasa tingkat tinggi paling ringkas kodenya dan "pemaaf." Python mendukung OOP, prosedur dan fungsional.\n\n**Dynamic Typing Gila:** Tipe data tak butuh deklarasi tertulis baku (Bye \`int\` atau \`char\`!) Sistem interperter nebak nilai otomatis ketika variable dipanggil isian \`nama = "Python"\` saat runtime.\n\nType Dasar Esensial:\n- **Number**: Digabung yakni Integer & Float desimal.\n- **String**: Teks panjang. Bisa dikurung kutip tunggal (\`'..\`), ganda (\`"..\`) atau triple (\`""".."""\`) jika isinya memuncak multi-line / banyak enter!\n- **Boolean**: Saklar kebenaran mutlak. Diawali huruf awal *Sangat Besar (Kapital)*, yaitu: \`True\` & \`False\`.`,
+          codeExample: `skor_maksimal = 100\njejak_rekaman = "Pemain Top 1"\naktivitas = True\nprint(skor_maksimal, jejak_rekaman, aktivitas)`,
+          initialCode: `# Buat variabel bahasa, injeksikan nama string "Python"\n# Buat variabel engine, atur tipe valuenya ke logis boolean True \n# Cetak beriringan keduanya: print(bahasa, engine)\n`,
+          solution: `bahasa = "Python"\nengine = True\nprint(bahasa, engine)`,
+          hint: `Selalu pastikan memakai awalan T besar untuk boolean True di mesin Python.`,
           quiz: {
-            question: `Python tidak butuh perintah bertuliskan float, boolean, int di awal pembuatannya, fitur pintar ini di Python sering dikenal sebagai apa?`,
-            options: [`Magic Syntax`, `Dynamic Typing`, `Static Compiling`, `Auto Generate Object`],
+            question: `Tidak seperti C dkk, Python tidak mewajibkan programmer mencantumkan keyword bertuliskan semacam int, float, dan char di depan deklarasi nama variabelnya. Kemampuan sihir nebak tipe otomatis ini dipanggil dengan istilah teknis...?`,
+            options: [`Magical Code Syntax`, `Dynamic Typing`, `Static Compiling Execution`, `Auto Variable Predictor AI`],
             correctAnswer: 1
           },
           testCases: [
-            { expectedOutput: `Python True\n`, description: `Test eksekusi dua dynamic arguments.` }
+            { expectedOutput: `Python True\n`, description: `Test eksekusi dua arguments variable dynamis Python console interperter` }
           ],
           validationRules: [
-            { pattern: `True`, message: `Dalam python, boolean True wajib memiliki huruf pangkal T besar (kapital)`, shouldExist: true }
+            { pattern: `True`, message: `Dalam python, boolean True/False mutlak mensyaratkan awal huruf karakter Kapital.`, shouldExist: true }
           ]
         },
         {
           id: 'py4-l2',
-          title: 'Cepat Paham Casting (Konversi)',
-          explanation: `Python menebak angka di dalam input dan text string.\nJika ingin menjumlah \`"10"\` dan \`2\`, kita butuh Cast paksa.\n\nFungsi bawaan pengganti:\n- \`int()\`: Jadikan bulat\n- \`float()\`: Jadikan desimal pecahan point\n- \`str()\`: Jadikan teks string\n- \`bool()\`: Logic check.`,
-          codeExample: `angka_teks = "50"\nangka_asli = int(angka_teks)\nprint(angka_asli + 10) # Mencetak 60`,
-          initialCode: `bobot = "75"\n# Lakukan konversi int() ke bobot dan kurangi - 5!\n# print(...) hasilnya.\n`,
-          solution: `bobot = "75"\nprint(int(bobot) - 5)`,
-          hint: `print(int(bobot) - 5)`,
+          title: 'Seni Type Casting (Konversi Paksa)',
+          explanation: `Kerap kali Python butuh kepatuhan logis saat mencampuradukkan format matematis kalkulasi tipe antar string ke operasi integer matematis.\nJika Anda nekat "menambah" tipe string angka \`"10"\` dan int \`2\`, Python bingung mau menyatukan atau menambah. Anda wajib mengeksekusi Cast (Konversi Paksa) tipe yang beda ini terlebih dulu.\n\nFunction Kastanya:\n- \`int()\`: Jebak data jadi bulat.\n- \`float()\`: Pecahan desimal.\n- \`str()\`: Jadi teks biasa melinting variable.\n- \`bool()\`: Balikkin Nilai Truthy.\n- \`chr()\`: Konfigurasi ASCII char table.`,
+          codeExample: `angket_angka = "5000"\nnilai_riil = int(angket_angka)\nprint(nilai_riil + 500) # Kalkulasi bersih keluar 5500`,
+          initialCode: `kalori_kue = "350"\n# Instruksi: Konversi string kalori_kue dibungkus param int()\n# lalu langsung hitung dikurangi 50, \n# cetak via print() output matematikanya.\n`,
+          solution: `kalori_kue = "350"\nprint(int(kalori_kue) - 50)`,
+          hint: `Minta jalankan konversi: print(int(kalori_kue) - 50)`,
           quiz: {
-            question: `Untuk mengonversikan input text ke basis desimal presisi pecahan, kita menerapkan fungsi mana?`,
-            options: [`long()`, `int()`, `float()`, `str()`],
+            question: `Jika hasil dari sebuah variabel string yang kita baca adalah text seperti tulisan "12000.55". Jika mau murni menjadikannya di-kalkulasi operasi matematis kalkulator diskon, sintaksis yang aman merangkulnya kita sebut dengan bungkus param...?`,
+            options: [`long()`, `str()`, `float()`, `int()`],
             correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `70\n`, description: `Print string yang dihitung secara matematikal konversi integer.` }
+            { expectedOutput: `300\n`, description: `Menilai apakah hasil casting berjalan di operasi string-based math` }
+          ],
+          validationRules: [
+            { pattern: `int\\(.*\\)`, message: `Variabel teks tak mungkin lurus dikurangkan, wajib int(kalori_kue)!`, shouldExist: true }
           ]
         }
       ]
     },
     {
       id: 'py4-m2',
-      title: 'Operator & Input-Output Python',
+      title: 'Dinamika Ekspresi Input Output (I/O)',
       lessons: [
         {
           id: 'py4-l3',
-          title: 'Operator Spesial',
-          explanation: `Walau banyak mirip C, perhatikan perbedaan krusial:\n- Aritmatika pemangkatan ditulis \`**\` (contoh: \`10 ** 2\`).\n- Pembanding logika di-Alfabetiskan: Bukan pakai (\`&&\`, \`||\`, \`!\`), tetapi harus pakai bahasa inggris murni: **\`and\`**, **\`or\`**, **\`not\`**.`,
-          codeExample: `print(3 ** 3) # pangkat 3 dari 3, hasilnya 27\nprint(True and False)`,
-          initialCode: `# Operator Python!\n# Cetak langsung hasil dari 5 pangkat 2 pakai operator **\n`,
-          solution: `print(5 ** 2)`,
-          hint: `Perintah simpel 1 baris print(5 ** 2)`,
+          title: 'Operator Spesifik nan Moderen',
+          explanation: `Sembari berpedoman format standar matematika C, Python rombak total dan punya operator berkelas dan bersih:\n- Pemangkatan Aritmatikal ditulis \`**\` ganda. (cth: \`5 ** 3\` berarti lima pangkat 3 hitungannya 125).\n- Operator Logis Komparasi membuang notasi robotik (\`&&\`, \`||\`, \`!\`) dari bahasa C!\n- Python menerjemahkannya murni di bahasa inggris mentah nan puitis: **\`and\`**, **\`or\`**, **\`not\`**.`,
+          codeExample: `print(2 ** 4) # Eksekusi dua Pangkat Empat hasilnya adalah 16\n# Contoh Operator English Logic:\nprint(True and False) # Hasil False utuh`,
+          initialCode: `# Operator Unik Python Practice!\n# Cetak langsung hasil bersih eksekusi nilai kalkulator dari 6 pangkat 2 pakai operator bintang dobel.\n`,
+          solution: `print(6 ** 2)`,
+          hint: `Rumuskan matematika 6 ** 2`,
           quiz: {
-            question: `Operator pengganti nilai seru ! (Not) di bahasa C saat dipindahkan logikanya ke Python ditulis sebagai teks?`,
-            options: [`not`, `nought`, `No`, `False`],
-            correctAnswer: 0
+            question: `Secara khusus, simbol apakah yang menduplikasi (merepresentasikan) logic NOT ! Negasi (membalik logis) di bahasa struktural saat difungsikan dalam alam logika Python modern?`,
+            options: [`nO`, `False`, `not`, `!` ],
+            correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `25\n`, description: `Test hitung 5 ** 2` }
+            { expectedOutput: `36\n`, description: `Validasi perkalian pemangkatan logis ganda` }
           ]
         },
         {
           id: 'py4-l4',
-          title: 'Fungsi Input() dan F-Strings Output',
-          explanation: `**Mengambil Input (\`input()\`):**\nDapat memuat instruksi teks panduan secara langsung di dalam kurung. Contoh: \`input("Masukkan nama: ")\`. Penting diingat: Output dari fungsi \`input()\` selalu bertipe **String**.\n\n**Data F-String:**\nPenggabungan kalimat memanggil variabel di tengah teks dengan prefix \`f\`, contoh \`f"Luas: {variabel}"\`.`,
-          codeExample: `nama = input("Siapa nama kamu? ")\nprint(f"Oke, selamat pagi {nama}")`,
-          initialCode: `# 1. Buat input("Masukkan tahun: ") lalu letakkan / kemas mentah nilainya via konversi int() ke variabel tahun.\n# (Simulasi CLI kami menaruh autotyped bot "2024" sebagai input)\n\n# 2. Print kalimat "Tahun input adalah {tahun}" menggunakan F-string format.\n`,
-          solution: `tahun = int(input("Masukkan tahun: "))\nprint(f"Tahun input adalah {tahun}")`,
-          hint: `tahun = int(input("Masukkan tahun: "))\nprint(f"Tahun input adalah {tahun}")`,
+          title: 'Sihir input() Interaktif dan f-String Format',
+          explanation: `**Mengambil Interaktif CLI via \`input()\`:**\nSistem \`input()\` Python mampu memuat instruksi teks pesan / kalimat string panduan prompt SECARA LANSGUNG di dalam kurungan tanpa butuh perbantuan \`printf\` ekstra.\nContoh ideal pemakaian: \`input("Minta nama bosku: ")\`.\nSatu peringatan absolut: Output serapan semua teks masuknya **mutlak bertipe 'STRING' murni** sekalipun pemakai ketik angka 100! Butuh integer? Lakukan ini di tempat: \`int(input("Ketikan Umur: "))\` lho!\n\n**F-String Data Formatter:**\nMenghimpun variabel bertaburan tanpa koma-koma liar (Concatenate Plus+ dilarang). Taruh prefix \`f\` sebelum string quote. Variabel di dalam bungkus lewat \`{..}\`.\nStrukturnya: \`f"User is {user_name} and score: {poin_num}"\``,
+          codeExample: `umur_str = input("Masukkan nama: ")\numur = int(umur_str)\nprint(f"Hore user terdaftar, umurnya tepat di {umur} dong!")`,
+          initialCode: `# Instruksi Python I/O mutakhir:\n# 1. Deklarasi var 'target_year', tangkap isinya dari prompt user memakai cast string->int utuh.\n# (Simulasi input bot kami bakal test run input mengisi angka 2025 secara autotyped param ke test mesinnya ini)\n# CONTOH PENANGANAN => target_year = int(input("Masukkan tahun sasaran: "))\n\n# 2. Cetak satu statemen f-string. Pastikan hasil output akhirnya persis tercetak format teks: "Tahun sasaranmu ada di {target_year}"\n`,
+          solution: `target_year = int(input("Masukkan tahun sasaran: "))\nprint(f"Tahun sasaranmu ada di {target_year}")`,
+          hint: `Salin dan pastikan deklarasi lengkap pakai int(input("..")) lalu f"" syntax di print baris terakhirnya.`,
           quiz: {
-            question: `Apakah output data jenis pengembalian dasar *default* yang dilontarkan dari fungsi input() pada Python?`,
-            options: [`Sesuai yang user ketik, bisa Float/Int otomatis.`, `Satu Array`, `Selalu Boolean`, `Selalu menjadi tipe String`],
-            correctAnswer: 3
+            question: `Apakah default base jenis data mentah absolut yang selalu diserap (dikembalikan) ke memori program sewaktu memanggil basic fungsi 'input()' di Python Console Interpreter?`,
+            options: [`Format Data Array Bytes mentah OS`, `Berubah Cerdas Menerka Bisa Integer Ataupun Float seiring ketikan keyboard.`, `Selamanya menaruh output serapan menjadi text struktur String ("").`, `Dikembalikan sebagai Boolean Status Keberhasilan Input Ops`],
+            correctAnswer: 2
           },
           testCases: [
-            { input: `2030`, expectedOutput: `Masukkan tahun: Tahun input adalah 2030\n`, description: `Baca input 2030 ke template CLI format dan diprint konversi-nya` }
+            { input: `2099`, expectedOutput: `Masukkan tahun sasaran: Tahun sasaranmu ada di 2099\n`, description: `Evaluasi mesin baca serapan I/O konsumsi data bot.` }
           ],
           validationRules: [
-            { pattern: `input\\(`, message: `Mohon buat fungsi user input!`, shouldExist: true },
-            { pattern: `f["'].*\\{.*\\}.*["']`, message: `Ayo pakai struktur f-string f"" modern Python untuk output-nya.`, shouldExist: true }
+            { pattern: `int\\(\\s*input\\(`, message: `Validasi Cast Int gagal. Gunakan format int(input("..")) ! Ini penting agar format angka bisa ber-matematika ria.`, shouldExist: true },
+            { pattern: `f["'].*\\{.*\\}.*["']`, message: `Validasi format output terhenti! Biasakan pakai kekuatan super F-STRING format prefix di print string.`, shouldExist: true }
           ]
         }
       ]
@@ -420,90 +427,93 @@ const pyLevel1: Level = {
 const pyLevel2: Level = {
   id: 'py-level-2',
   title: 'PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON',
-  description: 'Python Control Flow Statement: Indentasi Blok, if-elif-else, iterasi range dan def custom functions.',
+  description: 'Python Control Block Rule: Regulasi blok identasi statment, fungsi logic If-Elif-Else berkesinambungan, literasi massal via iterasi Range (For) dan pembuatan function Custom (Def).',
   modules: [
     {
       id: 'py5-m1',
-      title: 'Pola Sintaks & Blok Percabangan',
+      title: 'Pola Sintaks Baru Pembentukan Blok',
       lessons: [
         {
           id: 'py5-l1',
-          title: 'Aturan Terpadu: Titik Dua (:) & Tab Spasi',
-          explanation: `Python **membuang** sistem Kurung Kurawal \`{}\` standar. Semua kondisi dimulai dengan Titik Dua (\`:\`) dan isi kepunyaannya bergeser 1 buah INDENTASI (Tab/4 spasi). Jaraknya harus lurus. Kesalahan urutan Spasi = Fatal Crash (IndentationError).\n\nIf memiliki 3 skema:\n- \`if\`: Blok percabangan sederhana.\n- \`elif\`: (Singkatan dari Else-If). Pengecekan berkelanjutan.\n- \`else\`: Sisa alternatif jika if dan semua elif tertolak.`,
-          codeExample: `nilai = 80\nif nilai > 90:\n    print("A")\nelif nilai > 70:\n    print("B")\nelse:\n    print("C")`,
-          initialCode: `angka = 10\n# Susun kondisinya:\n# Jika angka > 15 cetak "Besar"\n# Elif angka > 5 cetak "Sedang"\n# Else cetak "Kecil"\n`,
-          solution: `angka = 10\nif angka > 15:\n    print("Besar")\nelif angka > 5:\n    print("Sedang")\nelse:\n    print("Kecil")`,
-          hint: `Pastikan ada tab indentsi (geser kanan) di depan setiap kata print! Serta setiap elif pakai :`,
+          title: 'Regulasi Kuat Tanda Titik Dua (:) & Indentasi Tab',
+          explanation: `Python **melepaskan total** dominasi penjara Kurung Kurawal C \`{}\` serta membebaskan penulisan kurung di pembuka Statement Kondisinya.\n\nSebagai gantinya, Python mengawali eksekusi ruang blok instruksinya menggunakan **Titik Dua (\`:\`)** di bagian ekor deklarasi statemen if.. \nDan parahnya **Hukum Mutlak Kesekian**: Seluruh barisan baris kepunyaannya harus bergeser **1 step jarak Tab / 4 spasi (Indentasi Lurus)**. Salah mencadangkan identitasi? Error "IndentationError" menguasai code compiler mu!\n\nRute If:\n- \`if\`: Arah pembukaan utamanya.\n- \`elif\` (Sisa/Else If): Pengecekan berkelanjutan runtun blok persinggahan ke dua dst.\n- \`else\`: Penadah buang bilamana rute semua di atas ditendang dan tercacah.`,
+          codeExample: `bensin = 2\nif bensin > 10:\n    print("Jalan Kencang")\nelif bensin >= 2:\n    print("Pas-pasan boss.") # Rute Tengah\nelse:\n    print("Mati/Kosong!")`,
+          initialCode: `angka = 10\n# Susun kondisinya:\n# Bikin jika angka > 15 cetak "Angka Besar"\n# Pakai elif cek jika angka > 5 cetak string bernada "Angka Sedang"\n# Gunakan penadah else buat cetak pamungkas kata "Angka Kecil"\n`,
+          solution: `angka = 10\nif angka > 15:\n    print("Angka Besar")\nelif angka > 5:\n    print("Angka Sedang")\nelse:\n    print("Angka Kecil")`,
+          hint: `Harus lurus: if angka > 15: => lalu Tab indent printnya.. lalu elif.. dan else: di ujung`,
           quiz: {
-            question: `Kata penyambung antara if dan else (Else if) untuk skenario pengujian 3 rute di persingkat di python sebagai syntax apa?`,
-            options: [`else if`, `elseif`, `elif`, `if2`],
-            correctAnswer: 2
+            question: `Kata singkatan sambung jembatan rute ke 2 penengah percabangan (Sama seperti alias "Else if") pada rancang kode sintaks identasi komprehensif logikal Python dibakukan sebagai apa?`,
+            options: [`else if`, `if-second`, `elseif`, `elif`],
+            correctAnswer: 3
           },
           testCases: [
-            { expectedOutput: `Sedang\n`, description: `Test percabangan tengah pada Elif karena nilai asli = 10.` }
+            { expectedOutput: `Angka Sedang\n`, description: `Test tembusan validasi di route elif tengah nilai logic default` }
           ]
         }
       ]
     },
     {
       id: 'py5-m2',
-      title: 'Tipe Perulangan',
+      title: 'Dinamika Lingkaran Perulangan (Loops)',
       lessons: [
         {
           id: 'py5-l2',
-          title: 'For-Loop bersama Range()',
-          explanation: `Python \`for\` sering digunakan dengan fungsi generator \`in range(start, stop, step)\`. Di mana iterasi bekerja dan dijamin akan **berhenti** persis sebelum menyentuh batasan nilai indeks \`stop\`.`,
-          codeExample: `for i in range(2):\n    print("Halo") # Mencetak Halo Sebanyak 0 dan 1 (Total 2x)`,
-          initialCode: `# Buat blok iterasi for loop yang mutlak akan berjalan memanggil range sejumlah 3 Loop.\n# Di tiap blok, taruh instruksi print("Ulang")\n`,
-          solution: `for i in range(3):\n    print("Ulang")`,
-          hint: `Ketik for i in range(3): lalu didalamnya print("Ulang")`,
+          title: 'Metodologi For-Loop bersama Range() Generator',
+          explanation: `Python mendesain pemecahan iterasi For amat anggun yang dijepret dengan fungsi pembangkit iterasi \`in range(batas_start, batas_stop, pijakan_step)\`.\nIa disebut struktur Counted Loop karena secara kepastian mutlak **Batas Limit iteratif stop SELALU terjaga tidak tertembus**. Angka eksekutor hitungannya **pasti berhenti TEPAT SEBELUM menyentuh batas angka mutlak "stop" nya** (Iterasi batas minus 1).`,
+          codeExample: `for urutan in range(3):\n    # Mencetak perulangan text sebanyak urutan 0, urutan 1, dan Terakhir urutan ke-2 (Batas=3)\n    print("Proyek Sukses!") `,
+          initialCode: `# Bangun blok iterasi pengulangan memakai "for i in range" berjumlah pastian 4 putaran.\n# Blok menjoroknya menaruh instruksi panggilan print("Ulangi Dong")\n`,
+          solution: `for i in range(4):\n    print("Ulangi Dong")`,
+          hint: `Baris satu for i in range(4): => Baris bawah indent ditaruh print.`,
           quiz: {
-            question: `Misalkan kita mengklaim sintaks 'range(0, 5)'. Pada hitungan berapakah secara teoritis putaran iterasi ini berhenti mendadak?`,
-            options: [`Tepat saat nilai ke 5 termunculkan bersamaan di console`, `Pada langkah ke 6 karena 0 dihitung extra`, `Terhenti (stop) sebelum angka 5 tersentuh instruksinya.`, `Itu adalah infinite iterasi`],
-            correctAnswer: 2
+            question: `Misalkan tertulis statement skrip literasi blok baris 'for n in range(0, 10):'. Pada perputaran urutan eksekusi step nomor berapakah literasi baris ini mendadak distop total membiarkan urutannya lepas?`,
+            options: [`Hitungan persis di loop ke 10 berjalan penuh di layar.`, `Eksekusinya di rem tertutup (stop) pada putaran saat mencapai index poin-ke 9. Angka 10 dibuang.`, `Infinite looping OS crash.`, `Melewati batasnya dan berhenti di rute angka 11.`],
+            correctAnswer: 1
           },
           testCases: [
-            { expectedOutput: `Ulang\nUlang\nUlang\n`, description: `Tes 3x perulangan.` }
+            { expectedOutput: `Ulangi Dong\nUlangi Dong\nUlangi Dong\nUlangi Dong\n`, description: `Tes looping valid batas stop-range statik` }
           ]
         },
         {
           id: 'py5-l3',
-          title: 'While Loop Resiko Macet',
-          explanation: `While sangat fleksibel tetapi juga riskan (*uncounted loop*). Berjalan selama argument True. Python Mewajibkan programmer merakit manual perintah penambahan increment statemen (\`x += 1\`) di dasar blok While-nya. Lupa naroh? Infinite loop!`,
-          codeExample: `x = 1\nwhile x <= 3:\n    print(x)\n    x += 1`,
-          initialCode: `y = 1\n# Lakukan iterasi while asalkan y <= 2.\n# Beri perintah print(y)\n# Jangan lupakan step maju incrementnya (y += 1).\n`,
+          title: 'Resiko Infinite While Loop (Pengulangan Uncounted)',
+          explanation: `Iterasi While sungguh *rawan / riskan* karena program ini cuma bertumpu mengeksplor di ranah True Truthy-Boolean (*Uncounted Loop*). Terus.. terus berputar asalkan pengecekan awal selalu Valid di pikirannya.\n \nHindari kiamat komputasi (*Infinite Lag Loop*) dengan memastitkan kita SELALU memasukkan suntikan penambah angka limitasi yang menaikan batas nilainya sendiri (\`y += 1\`) di dasar ruangan identasi perulangan secara manual agar tercapai finish False.`,
+          codeExample: `timer = 1\nwhile timer <= 3:\n    print(timer)\n    timer += 1 # HARUS ADA! Tanpa baris ini, 1 selalu lebih kecil dari 3 selamanya!`,
+          initialCode: `y = 1\n# Cetakan while Loop di mana selama variabel y bernilai <= 2 berjalan terus!\n# Beri print mencetak angka integer (y) per putaran.\n# Sangat teramat diperingatkan, selipkan Increment step pendorong (y += 1).\n`,
           solution: `y = 1\nwhile y <= 2:\n    print(y)\n    y += 1`,
-          hint: `while y <= 2: print(y); y += 1 (pastikan y+=1 masuk ke dlm blok)`,
+          hint: `while y <= 2: => print(y) => y += 1 (indent di blok while)`,
           quiz: {
-            question: `Apakah akibat paling wajar dari kegagalan / kelalaian programmer men-setting skrip increment didalam satu blok statemen while?`,
-            options: [`File menjadi 10x Lipat Ukurannya`, `Browser me-restart sendiri`, `Program berjalan tanpa batasan henti (infinite loops) dan lag.`, `Nothing.. sistem bisa berinteraksi adaptif perbaiki bug`],
+            question: `Apakah bayaran mengerikan/Fatal dari kegagalan sepele si seorang programmer yang sampai kelupaan secara utuh menulis manual modifikasi skrip Incremental Variable Value (n += 1) didalam scope identasi satu struktur pemecahan Loop Sementara (While)?`,
+            options: [`Browser akan force tutup instan me-restart perangkat.`, `Loop tidak pernah menyala sekalipun.`, `Terciptanya fenomena Iterasi Lingkaran Jahat Tak Berujung (Infinite Looping / Memory Overflow)`, `Hanya menyebabkan skip program 1x`],
             correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `1\n2\n`, description: `While check berjalan dengan increment benar.` }
+            { expectedOutput: `1\n2\n`, description: `Check auto increment step logic bypass.` }
+          ],
+          validationRules: [
+            { pattern: `\\+=\\s*1`, message: `DILARANG KERAS MEMICU INFINITE LOOP TANPA INCREMENT OPERATOR += 1`, shouldExist: true }
           ]
         }
       ]
     },
     {
       id: 'py5-m3',
-      title: 'Fungsi Custom',
+      title: 'Pembuatan Modular Fungsi Custom',
       lessons: [
         {
           id: 'py5-l4',
-          title: 'Deklarasi Fungsi (Def)',
-          explanation: `Di Python, fungsi dideklarasikan dengan \`def nama_fungsi(parameter):\` beserta blok ber-indentasi. Boleh diakhiri \`return\` untuk pelemparan output value.\nCocok untuk modularisasi blok kode mandiri.`,
-          codeExample: `def salam():\n    print("Selamat Pagi")\nsalam() # Cara memanggil`,
-          initialCode: `# 1. Buat suatu blok deklarasi def panggil() yang didalamnya mencetak string "Hadir!".\n# 2. Segera jalankan (panggil) instruksinya dibagian line luarnya di bawah.\n`,
-          solution: `def panggil():\n    print("Hadir!")\n\npanggil()`,
-          hint: `Minta def panggil(): isinya print lalu eksekusi dari root level.`,
+          title: 'Pendeklarasian Blok Definisi Kode (Def Tool)',
+          explanation: `Pengulangan duplikat puluhan blok baris program amat diharamkan (DRY = Don't Repeat Yourself). Kita harus menyelipkannya dalam rancang wadah panggil ulang bernama Fungsi Dasar (Function Tool).\n\nAwali dengan instruksi kata saktinya \`def panggil_nama()\` diimbangi urutan parameternya dan block identasi titik dua perlakuan code. Dapat pula memukul bola feedback output-nya dengan melempar parameter baris tersembunyi ber-kata kunci awalan \`return obj;\` ke penangkapnya di luar void ini.`,
+          codeExample: `def fungsi_perkalian(a, b):\n    return a * b\n\n# Ini di blok publik luar Def\nprint(fungsi_perkalian(5, 5)) # Result output dilempar keluar sebagai 25`,
+          initialCode: `# 1. Jadikan satu kumpulan rutinitas lewat \`def absensi():\`\n# 2. Yang instruksinya hanya baris statis print("Aman Hadir!") \n# 3. Panggil dan eksekusi secepatnya method instansiasi objek func absensi() tadi di luar blok nya.\n`,
+          solution: `def absensi():\n    print("Aman Hadir!")\n\nabsensi()`,
+          hint: `Bungkus deklarasi nya, geser indent fungsinya, lalu panggi namnya di public scope di bawah sejajar ujung dinding console def-nya.`,
           quiz: {
-            question: `Berbeda dari bahasa "Static-Type" yang menggunakan jenis penamaan variabelnya dalam membuat fungsi/kelas. Python sekadar mewajibkan awalan pembuka pendek. Apakah teks tersebut?`,
-            options: [`func`, `void`, `call`, `def`],
-            correctAnswer: 3
+            question: `Karena karakter "Static-Type" (cth var types string, void int) ditanggalkan total dalam proses memanifes/menciptakan modul rancang blueprint sebuah fungsi kerja anyar (Function), perintah awalan baku keyword pengganti perantara function itu sendiri apa?`,
+            options: [`let func ==`, `class::()`, `def (define)`, `void main()`],
+            correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `Hadir!\n`, description: `Jalankan Def via interpreter.` }
+            { expectedOutput: `Aman Hadir!\n`, description: `Check ekses pemanggilan internal modul object scope runtime def.` }
           ]
         }
       ]
@@ -517,73 +527,76 @@ const pyLevel2: Level = {
 const pyLevel3: Level = {
   id: 'py-level-3',
   title: 'LIST, DICTIONARY, DAN OPERASI FILE (PYTHON)',
-  description: 'Python Lanjutan: Menguasai array multi-type via iterasi List [], pemetaan Key-Value Dictionary {}, berserta operasi tulis file canggih.',
+  description: 'Pengenalan Koleksi memori cerdik List Py [] Dinamis, Arsitektur pasang Kunci-Nilai spesifik (Key:Val) JSON style dari Data Dictionary {}, plus pengarahan manajemen manipulasi isi baris Berkas text File mumpuni.',
   modules: [
     {
       id: 'py6-m1',
-      title: 'List (Array Cerdas Python)',
+      title: 'Keranjang Kapasitas List (Array Mutasi Tipe Bebas)',
       lessons: [
         {
           id: 'py6-l1',
-          title: 'Sifat Mutable List Python',
-          explanation: `List Python (ditandakan siku \`[ ]\`) bersifat luar biasa *Mutable*. Angka dan huruf string bisa dicampur aduk dalam 1 keranjang memori. \nFungsi bawaan sakti Python List:\n- \`append()\`: Simpan paksa di posisi belakang data\n- \`insert(i, item)\`: Sisip elemen berdasar urutan baris id `i`.\n- \`pop()\`: Cabut satu elemen sisa terakhir dari ujung nya.\n- \`sort()\` / \`reverse()\`: Rombak susun balik data massalnya.`,
-          codeExample: `data = [99, "Sapi", True]\ndata.append(100)\nprint(data[3]) # mencetak 100 baru`,
-          initialCode: `angka = [1, 2, 3]\n# Eksekusilah method append untuk menaruh nilai Integer angka 4 ke dalam list angka tersebut.\n# Lalu terakhir Cetak list nya menggunakan print (untuk dicek log mesin kami).\n`,
-          solution: `angka = [1, 2, 3]\nangka.append(4)\nprint(angka)`,
-          hint: `Minta pakai append(4) saja ke variabel.`,
+          title: 'Karakter Ektrim Mutable & Method Tool',
+          explanation: `Keranjang memori dinamis di Python dilambangkan sanggul Kurung Siku Matrix \`[ ]\`. Jika kita berkaca sejenak pada limitasi tabung index C-Array di level lalu yang mensyaratkan keras seluruh gerbong gerbong memory wujud array mutlak dari turunan gen Tipe Data yang sama rata (entah kumpulan deret angka Integer semua, text murni). \n\nDi Python List ini \`Mutlak Boleh Dicampur Random!\` Angka Int, Float, String tulisan konyol dlm 1 row bisa! Semuanya terurut dari indeks nomor \`0\`. Ia berpredikat "MUTABLE" yang maknanya segala rupa fisiknya bisa diubah (Hapus, Inject, Ganti, Insert tengah) on the fly lewat puluhan Method-nya. \n\nCth Senjatanya:\n- \`append(<value>)\`: Taruh nilai baru ke posisi ujung baris paling paling belakang. (sering)\n- \`insert(titik_index, <value>)\`: Maksa menusuk data baru di susunan tengah ke i.\n- \`pop(titik?)\`: Menggunting nilai data index target keluar (atau sisa paling blåkang) & lalu menghilangkanya dari list array.\n- \`sort()\` dan \`reverse()\` : Ngatur sorting ASC / DESC otomatis di array memory aslinya membalik list pos.`,
+          codeExample: `row_db = [10.5, "Karyawan Y", True] # 3 jenis tipe yang gila\nrow_db.append(100) # Tergabung ke belakang\nprint(row_db[3]) # Meretrieve index terakhir ke 3 baru = 100`,
+          initialCode: `angka_deret = [1, 2, 3]\n# Misi Anda: Modifikasi angka_deret tersebut dan selipkan append() guna menginject/menambah angka nilai bulat 4 pada pos urutan terakhir ekor array itu.\n# Buktikan eksistensinya dengan mengeksekusi print(angka_deret)\n`,
+          solution: `angka_deret = [1, 2, 3]\nangka_deret.append(4)\nprint(angka_deret)`,
+          hint: `Ketikan angka_deret.append(4) barulah pungkasi print(angka_deret)`,
           quiz: {
-            question: `Salah satu keunggulan luar biasa karakteristik list Python berbanding memori tipe struct-array C kuno adalah?`,
-            options: [`List python memakan lebih banyak size disk per value nya.`, `List python mutlak terbatas 10 element.`, `List python sanggup dicampur berbagai tipe variabel dalam satu variabel (Heterogen Data).`, `Data List python tidak di index 0`],
+            question: `Apakah karakteristik identitas spesial dan memutus keterkungkungan batasan tipe Array-C jaman dahulu dari fitur sakti milik Python List Array ini tentang batasan tipe variabel memori yang diaturnya?`,
+            options: [`Membutuhkan header file import special`, `Bisa dipastikan di memori RAM teralokasi tidak butuh space bytes banyak di array C list`, `Ia mendukung penyimpanan segala gabungan bentuk variasi tipe data (Campuran Bool, Text, dll) didalam baris kurung himpunannya secara massal`, `Dia membuang pola arsitektur penghitungan index mulainya dari bilangan bulat angka Nol (0)`],
             correctAnswer: 2
           },
           testCases: [
-            { expectedOutput: `[1, 2, 3, 4]\n`, description: `Pastikan Output array terkonfigurasi masuk angka di pantauan Console` }
+            { expectedOutput: `[1, 2, 3, 4]\n`, description: `Uji pengetesan pemanggilan Method modifikator memori di level arsitektur py method array index list` }
+          ],
+          validationRules: [
+            { pattern: `\\.append\\s*\\(\\s*4\\s*\\)`, message: `Kamu belum menginject integer angka penambahnya menggunakan parameter function manipulasi Append yang mutlak!`, shouldExist: true }
           ]
         }
       ]
     },
     {
       id: 'py6-m2',
-      title: 'Dictionary',
+      title: 'Dictionary Key Mapping Database',
       lessons: [
         {
           id: 'py6-l2',
-          title: 'Dictionary Mode Key-Value',
-          explanation: `Menyimpan data memori dengan pasangan Kunci + Nilai (Mirip format tabel data JSON). Anda tidak menaruh query ke urutan Index 0, 1, atau seterusnya. Melainkan pakai penamaan *"Kunci"* parameter yang didampinginya.\nDibuat dengan kurung kurawal \`{\`..\`}\` berisi pemisah \`:\`.\n\nContoh: \`profil = {"nama" : "Andi"}\``,
-          codeExample: `motor = {"merek" : "Honda", "cc": 150}\nprint(motor["cc"]) # Memanggil value si Key CC`,
-          initialCode: `murid = {"id" : "12B", "tingkat" : "SMA"}\n# Tugas singkat: Beri perintah print untuk mengambil output data khusus kunci atribut "tingkat" dari dict itu.\n`,
-          solution: `murid = {"id": "12B", "tingkat": "SMA"}\nprint(murid["tingkat"])`,
-          hint: `Panggil saja index namanya: print(murid["tingkat"])`,
+          title: 'Pasangan Sejoli Format Json Kunci-Nilai (Dictionary)',
+          explanation: `Dalam simulasi pemformatan memori logis mirip pola Object Relational JSON milik NodeJS modern, anda mendefinisikannya melaluai peranan Dictionary. Tempat penyimpanan raksasa dimana parameter identifikasi lokasi data bukan mengandalkan pencarian kompas index \`[0/1]\`, melaikan di-Map lewat satu 'Text String Kunci Utama' yang mengikat 'Suatu Value Nominalnya'. Berbentuk apitan Bracket Kurung Kurawal \`{\`..\`}\` dgn pilar operator titik koma \`:\` pengikat pasangannya.\n\nContraction Map: \`tabel_murid = {"nickname" : "ProPlayer69", "tier" : "Epic"}\` \n\nMetode Pengaksesan Massalnya meliputi iteratif loop melalui tool tool ekstraktor sakti semisal:\n- \`.keys()\` membackup sekeranjang index namanya semata. \n- \`.values()\` sebaliknya. Hanya membacking output parameter variablenya (contoh isi text dari nickname ProPlayer69 td).\n- \`.get(nama\_property, 'Fallback Error')\` ambil aman.`,
+          codeExample: `config = {"host": "127.0.0.1", "port": 8080}\nprint(config["host"]) # Pengaksesan mutlak via Property key name`,
+          initialCode: `murid_dict = {"uuid" : "12B-01", "grade" : "Sekolah Menengah"}\n# Tugas singkat: Beri program fungsi statement print output yang me-retrieve dan \n# mengambil isi value string hanya khusus pada rute bagian atribut dictionary kunci string dari "grade".\n`,
+          solution: `murid_dict = {"uuid": "12B-01", "grade": "Sekolah Menengah"}\nprint(murid_dict["grade"])`,
+          hint: `Manfaatkan metode perujukan property dictionary pada object nya murid_dict["grade"]`,
           quiz: {
-            question: `Melihat arsitektur Python dictionary (Key:Value), Fungsi perintah method statik apa yang diketik jika Anda menginginkan pengembalian nilai khusus terhadap data Kunci parameternya saja untuk di loop massal?`,
-            options: [`.keys()`, `.json()`, `.hash()`, `.query()`],
+            question: `Dari ragam jenis properti tool bawaan metode ekstensi dictionary arsitektur mapping, Manakah tipe function getter yang sanggup merampingkan sekaligus menyedot pengumpulan deretan parameter string identitas KEY-nya saja secara sendirian tanpa menghiraukan isi konten nominal parameter didalam array dict object itu?`,
+            options: [`.keys()`, `.json()`, `.fetch.attributes()`, `.compile_idx()`],
             correctAnswer: 0
           },
           testCases: [
-            { expectedOutput: `SMA\n`, description: `Menilai apakah peserta mengakses index identifier custom yang tepat pada array` }
+            { expectedOutput: `Sekolah Menengah\n`, description: `Check dan test kemurnian property value retrieval mechanism dict structure model mapping string` }
           ]
         }
       ]
     },
     {
       id: 'py6-m3',
-      title: 'Berkas dan Sistem File Output',
+      title: 'Stream Operasional Edit Sistem Berkas (TXT) & IO',
       lessons: [
         {
           id: 'py6-l3',
-          title: 'Membaca serta Mengedit Modifikasi Berkas via Context Managers',
-          explanation: `File eksternal (contoh: format `.txt`) di Python dieksekusi efisien (mengindari error memori leak akibat lupa f.close()) bila dipadukan sintaks blok pelindung \`with open(..) as ..:\`\n\n**Mode Edit Existing File (Menambahkan):**\nGunakan parameter mode \`"a"\` (Append - Tidak menggangu data asli tapi memasukkan deret baris di posisi teks terdalam per kursor terakhir) atau \`"r+"\` (Baca dan Overwrite).\n\`write(teks)\` dipakai untuk menembakan memori.\n\nContoh edit di file lokal:\n\`\`\`python\nwith open("data.txt", "a") as f:\n    f.write("Tambahan ke arsip.\\n")\n\`\`\``,
-          codeExample: `with open("log.txt", "a") as config:\n    config.write("Admin Login Succes!\\n")\nprint("Selesai")`,
-          initialCode: `# Simulasikan block context "with open" mode Append "a" yang memanipulasi file db.txt.\n# Simpan 1 baris string "Data_Baru\\n" ke dalam handle alias f menggunakan f.write().\n# Terakhir tutup block indent dan cetak "Done".\n`,
-          solution: `with open("db.txt", "a") as f:\n    f.write("Data_Baru\\n")\nprint("Done")`,
-          hint: `Pakai mode "a"(append) untuk memastikan format script txt lama terjaga dari deletion saat edit data.`,
+          title: 'Proteksi Manipulator Memori Dengan Metode Context Manager [With Open]',
+          explanation: `Berinteraksi ke kedalaman akar directory (I/O Open Text Log atau db File config \`.txt\`) dipraktekkan sangat bersih pada ranah Python menggunakan sistem \`Context Managers\`. Yakni satu pelindung blok statement berwujud sakti:\n\`with open('nama.extensi', 'mode-sandi') as f:\`\n\nPenangan dan tanggung jawab wajib pendelegasian perintah manual pemutusan file disk (\`f.close()\` memory lock leak release function) seketika dibebastugaskan/dikerjakan sangat canggih dan absolut otomatis asalkan runtutan baris aljabar algoritma berhasil melewati block akhir *indentation* file tsb!\n\n**MODE SANDI File Manipulation:**\nKita menyimulasi Mode Sandi Akses Edit Paling Aman, Mode **\`"a"\`** singkatan dari Append (Tambah Belakang Ekstra). Tidak berbahaya menyelelmuti / membumi-hanguskan isi file log text di dalamnya layaknya mode pembantai ganas seperti W (*Writer Overwrite*)\nLalu anda sisipkan method pointer tembak isinya melalui: \`f.write("teksnya")\`.`,
+          codeExample: `# Karena proxy OS Vercel server web app mem-ban physical read and write pada direktori ini, kita pakai simulasi pemahamannya.\n# with open("C:\\User\\log_status.txt", "a") as configPointer:\n#     configPointer.write("Sukses masuk login.\\n")`,
+          initialCode: `# Simulasikan block virtual context manager super aman "with open" mode target Append text pada sandi parameter "a" memanipulasi target mock file "dummy.txt".\n# Simpan 1 baris string utuh bertulisan persis ini: "Log_Berhasil_Di_Inject\\n" ke handle alias object memanggil method .write().\n# Terakhir, tutuplah identasinya. Maju sejajar ke ujung kiri di luar statement lalu cetak print konfirmasi bertuliskan text literal >> "Prosedur Akses Beres"\n`,
+          solution: `with open("dummy.txt", "a") as f:\n    f.write("Log_Berhasil_Di_Inject\\n")\nprint("Prosedur Akses Beres")`,
+          hint: `Mulai with open("dummy.txt", "a") as f: -> f.write() -> keluar pindah ke baris ident ke akar -> print("Prosedur Akses Beres")`,
           quiz: {
-            question: `Mengapa block indent "with open()" disebut paling aman dan ideal dibanding format legacy Open file memori biasa dan dinilai sangat canggih?`,
-            options: [`Membuat size file lebih compress`, `Menutup file (file pointer closure) terselesaikan otomatis jika instruksinya exit dari blok indent tersebut.`, `Tidak perlu permission read storage OS`, `Hanya bisa jalan di Unix OS`],
+            question: `Apakah benefit mutlak terbesar / fungsi magic pelaksana utamanya sehingga tata cara programmer moderen sangat mengutamakan pemakain penanganan scope blok sistem *WITH Statement* 'With Open' di manipulasi file ketimbang metode lama pemanggil open biasa yang dilarutkan ke nama statik root variable?`,
+            options: [`Otomatis Bypass Proteksi Permission Error Hak Admin Windows Root Readonly`, `Fungsi ajaib nya otomatis memastikan 'Releasing' atau penutupan file object f.close() dilakukan otomatis ke kernel CPU setelah usai proses ekstrasinya tanpa harus capek dipanggil programmer secara eksplisit di code line bawahnya`, `Sanggup auto decrypt text file format ke Hash AES-256`, `Mempersingkat nama file read path format unix nya`],
             correctAnswer: 1
           },
           testCases: [
-            { expectedOutput: `Done\n`, description: `Mencetak indikator block success` }
+            { expectedOutput: `Prosedur Akses Beres\n`, description: `Indicator exit and mock out context function simulator block test.` }
           ]
         }
       ]
