@@ -182,19 +182,29 @@ export const getPlaysThisWeek = async (userId: string): Promise<number> => {
     // Get start of current week (Monday)
     const startOfWeek = new Date(now);
     const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
     startOfWeek.setDate(diff);
     startOfWeek.setHours(0, 0, 0, 0);
 
     const historyRef = collection(db, 'users', userId, 'game_history');
+    // Fetch all bug_hunt plays for this user and filter in memory to avoid composite index requirement
     const q = query(
       historyRef,
-      where('serverTimestamp', '>=', startOfWeek),
       where('gameType', '==', 'bug_hunt')
     );
     
     const snapshot = await getDocs(q);
-    return snapshot.size;
+    const weeklyPlays = snapshot.docs.filter(doc => {
+      const data = doc.data();
+      const ts = data.serverTimestamp;
+      if (!ts) return false;
+      
+      // Handle both Firestore Timestamp and regular Date/ISO string
+      const date = ts.toDate ? ts.toDate() : new Date(ts);
+      return date >= startOfWeek;
+    });
+    
+    return weeklyPlays.length;
   } catch (error) {
     console.error('Error counting weekly plays:', error);
     return 0;
