@@ -138,8 +138,10 @@ export const deleteGameQuestion = async (id: string): Promise<void> => {
 // ===== NEW: App Settings =====
 
 export interface GameSettings {
+  bugHuntActive: boolean; // Global toggle
   bugHuntCActive: boolean;
   bugHuntPythonActive: boolean;
+  bugHuntWeeklyLimit: number; // 0 for unlimited
 }
 
 export const getGameSettings = async (): Promise<GameSettings> => {
@@ -150,14 +152,51 @@ export const getGameSettings = async (): Promise<GameSettings> => {
       return docSnap.data() as GameSettings;
     }
     // Return default if not exists
-    return { bugHuntCActive: true, bugHuntPythonActive: true };
+    return { 
+      bugHuntActive: true,
+      bugHuntCActive: true, 
+      bugHuntPythonActive: true,
+      bugHuntWeeklyLimit: 3 // Default 3 times/week
+    };
   } catch (error) {
     console.error('Error fetching game settings:', error);
-    return { bugHuntCActive: true, bugHuntPythonActive: true };
+    return { 
+      bugHuntActive: true,
+      bugHuntCActive: true, 
+      bugHuntPythonActive: true,
+      bugHuntWeeklyLimit: 3
+    };
   }
 };
 
 export const updateGameSettings = async (settings: Partial<GameSettings>): Promise<void> => {
   const docRef = doc(db, 'app_settings', 'games');
   await setDoc(docRef, settings, { merge: true });
+};
+
+export const getPlaysThisWeek = async (userId: string): Promise<number> => {
+  if (!userId) return 0;
+  
+  try {
+    const now = new Date();
+    // Get start of current week (Monday)
+    const startOfWeek = new Date(now);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const historyRef = collection(db, 'users', userId, 'game_history');
+    const q = query(
+      historyRef,
+      where('serverTimestamp', '>=', startOfWeek),
+      where('gameType', '==', 'bug_hunt')
+    );
+    
+    const snapshot = await getDocs(q);
+    return snapshot.size;
+  } catch (error) {
+    console.error('Error counting weekly plays:', error);
+    return 0;
+  }
 };

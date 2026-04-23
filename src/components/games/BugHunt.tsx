@@ -121,6 +121,28 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
     );
   }
 
+  if (questions.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-zinc-900/90 backdrop-blur-sm z-[100] flex items-center justify-center">
+        <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl text-center space-y-6 max-w-sm">
+          <div className="w-16 h-16 bg-zinc-800 text-zinc-400 rounded-2xl flex items-center justify-center mx-auto">
+            <XCircle size={32} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">Tidak Ada Soal</h3>
+            <p className="text-zinc-500 text-sm mt-2">Maaf, saat ini tidak ada soal yang tersedia untuk bahasa ini. Silakan hubungi admin.</p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-bold transition-all"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const currentQuestion = questions[currentIndex];
 
   return (

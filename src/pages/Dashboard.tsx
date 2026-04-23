@@ -7,15 +7,21 @@ import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 import { cn } from '../lib/utils';
 import { BugHunt } from '../components/games/BugHunt';
-import { getGameSettings, GameSettings } from '../services/gameService';
-import { seedInitialQuestions } from '../services/gameService';
+import { getGameSettings, GameSettings, getPlaysThisWeek } from '../services/gameService';
 import gameQuestions from '../data/gameQuestions.json';
+import { AlertCircle } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const { user, setPage, currentLessonId, setCurrentLessonId, curriculum } = useStore();
   const { completedLessons } = useProgress();
   const [activeGame, setActiveGame] = useState<{ type: 'bug_hunt'; language: 'c' | 'python' } | null>(null);
-  const [gameSettings, setGameSettings] = useState<GameSettings>({ bugHuntCActive: true, bugHuntPythonActive: true });
+  const [gameSettings, setGameSettings] = useState<GameSettings>({ 
+    bugHuntActive: true, 
+    bugHuntCActive: true, 
+    bugHuntPythonActive: true,
+    bugHuntWeeklyLimit: 3
+  });
+  const [playsThisWeek, setPlaysThisWeek] = useState(0);
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
@@ -30,8 +36,16 @@ export const Dashboard: React.FC = () => {
       setGameSettings(settings);
     };
 
+    const fetchHistory = async () => {
+      if (user?.nim) {
+        const count = await getPlaysThisWeek(user.nim);
+        setPlaysThisWeek(count);
+      }
+    };
+
     seed();
     fetchSettings();
+    fetchHistory();
   }, [user]);
 
   const isLevelLockedDisplay = (level: any, idx: number) => {
@@ -274,61 +288,80 @@ export const Dashboard: React.FC = () => {
             <div className="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 relative overflow-hidden group shadow-xl">
               <div className="absolute top-0 right-0 w-32 h-32 bg-rose-700/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-rose-700/20 transition-all" />
               <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-rose-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-rose-700/20 group-hover:scale-110 transition-transform">
-                    <Bug size={24} />
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-rose-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-rose-700/20 group-hover:scale-110 transition-transform">
+                      <Bug size={24} />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-white text-xl">Bug Hunt! 🎯</h3>
+                      <p className="text-zinc-500 text-xs">Cari bug, dapatkan XP!</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-black text-white text-xl">Bug Hunt! 🎯</h3>
-                    <p className="text-zinc-500 text-xs">Cari bug, dapatkan XP!</p>
-                  </div>
+                  {gameSettings.bugHuntWeeklyLimit > 0 && (
+                    <div className="text-right">
+                      <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Sisa Minggu Ini</div>
+                      <div className={cn(
+                        "text-lg font-black",
+                        (gameSettings.bugHuntWeeklyLimit - playsThisWeek) <= 0 ? "text-rose-500" : "text-white"
+                      )}>
+                        {Math.max(0, gameSettings.bugHuntWeeklyLimit - playsThisWeek)}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
                   Uji ketelitian mata kamu dengan menemukan bug dalam potongan kode secepat mungkin. Tantang dirimu sekarang!
                 </p>
 
-                <div className="grid grid-cols-2 gap-3 mt-6">
-                  {gameSettings.bugHuntCActive ? (
-                    <button 
-                      onClick={() => setActiveGame({ type: 'bug_hunt', language: 'c' })}
-                      className="group/btn relative px-4 py-4 bg-zinc-900 text-white rounded-2xl font-bold text-sm hover:bg-zinc-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-zinc-900/20"
-                    >
-                      <div className="relative z-10 flex items-center justify-center gap-2">
-                        <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">C</span>
-                        Challenge
+                {(!gameSettings.bugHuntActive && !isAdmin) ? (
+                  <div className="col-span-2 px-4 py-4 bg-zinc-800/50 text-zinc-500 rounded-2xl font-bold text-xs text-center border border-zinc-800 italic">
+                    Game sedang dinonaktifkan oleh Admin 🛠️
+                  </div>
+                ) : playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin ? (
+                  <div className="col-span-2 px-4 py-4 bg-rose-900/20 text-rose-400 rounded-2xl font-bold text-xs text-center border border-rose-900/30 flex flex-col gap-1 items-center">
+                    <AlertCircle size={16} />
+                    Limit Mingguan Tercapai
+                    <span className="text-[9px] opacity-60">Kembali lagi minggu depan!</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 mt-6">
+                    {gameSettings.bugHuntCActive ? (
+                      <button 
+                        onClick={() => setActiveGame({ type: 'bug_hunt', language: 'c' })}
+                        className="group/btn relative px-4 py-4 bg-zinc-900 text-white rounded-2xl font-bold text-sm hover:bg-zinc-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-zinc-900/20"
+                      >
+                        <div className="relative z-10 flex items-center justify-center gap-2">
+                          <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">C</span>
+                          Challenge
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/10 to-blue-600/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
+                      </button>
+                    ) : isAdmin && (
+                      <div className="px-4 py-4 bg-zinc-800 text-zinc-500 rounded-2xl font-bold text-xs flex items-center justify-center border border-dashed border-zinc-700">
+                        C Nonaktif
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/10 to-blue-600/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
-                    </button>
-                  ) : isAdmin && (
-                    <div className="px-4 py-4 bg-zinc-100 text-zinc-400 rounded-2xl font-bold text-xs flex items-center justify-center border border-dashed border-zinc-200">
-                      C Nonaktif
-                    </div>
-                  )}
+                    )}
 
-                  {gameSettings.bugHuntPythonActive ? (
-                    <button 
-                      onClick={() => setActiveGame({ type: 'bug_hunt', language: 'python' })}
-                      className="group/btn relative px-4 py-4 bg-rose-700 text-white rounded-2xl font-bold text-sm hover:bg-rose-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-rose-700/20"
-                    >
-                      <div className="relative z-10 flex items-center justify-center gap-2">
-                        <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">Py</span>
-                        Challenge
+                    {gameSettings.bugHuntPythonActive ? (
+                      <button 
+                        onClick={() => setActiveGame({ type: 'bug_hunt', language: 'python' })}
+                        className="group/btn relative px-4 py-4 bg-rose-700 text-white rounded-2xl font-bold text-sm hover:bg-rose-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-rose-700/20"
+                      >
+                        <div className="relative z-10 flex items-center justify-center gap-2">
+                          <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">Py</span>
+                          Challenge
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
+                      </button>
+                    ) : isAdmin && (
+                      <div className="px-4 py-4 bg-zinc-800 text-zinc-500 rounded-2xl font-bold text-xs flex items-center justify-center border border-dashed border-zinc-700">
+                        Py Nonaktif
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
-                    </button>
-                  ) : isAdmin && (
-                    <div className="px-4 py-4 bg-zinc-100 text-zinc-400 rounded-2xl font-bold text-xs flex items-center justify-center border border-dashed border-zinc-200">
-                      Py Nonaktif
-                    </div>
-                  )}
-
-                  {!gameSettings.bugHuntCActive && !gameSettings.bugHuntPythonActive && !isAdmin && (
-                    <div className="col-span-2 px-4 py-4 bg-zinc-50 text-zinc-400 rounded-2xl font-bold text-xs text-center border border-zinc-100 italic">
-                      Tantangan akan segera kembali! 🛠️
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -339,8 +372,14 @@ export const Dashboard: React.FC = () => {
       <AnimatePresence>
         {activeGame && (
           <BugHunt 
-            language={activeGame} 
-            onClose={() => setActiveGame(null)} 
+            language={activeGame.language} 
+            onClose={() => {
+              setActiveGame(null);
+              // Refresh plays count after playing
+              if (user?.nim) {
+                getPlaysThisWeek(user.nim).then(setPlaysThisWeek);
+              }
+            }} 
           />
         )}
       </AnimatePresence>
