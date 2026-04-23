@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bug, Timer, CheckCircle2, XCircle, Trophy, ArrowRight, X, Terminal, Brain } from 'lucide-react';
+import { Bug, Timer, CheckCircle2, XCircle, Trophy, ArrowRight, X, Terminal, Brain, Loader2 } from 'lucide-react';
 import { GameQuestion, getGameQuestions, saveGameHistory } from '../../services/gameService';
 import { checkAndUnlockAchievements } from '../../services/achievementService';
 import { useStore } from '../../store/useStore';
@@ -17,6 +17,7 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [gameStatus, setGameStatus] = useState<'playing' | 'result' | 'finished'>('playing');
+  const [isSaving, setIsSaving] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
   const [score, setScore] = useState(0);
   const [totalXp, setTotalXp] = useState(0);
@@ -82,6 +83,7 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
   };
 
   const finishGame = async () => {
+    setIsSaving(true);
     setGameStatus('finished');
     try {
       if (user) {
@@ -107,6 +109,8 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
       }
     } catch (error) {
       console.error("Failed to save game history:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -333,9 +337,20 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
 
                 <button 
                   onClick={onClose}
-                  className="w-full bg-white text-black py-4 rounded-2xl font-bold hover:bg-zinc-200 transition-all active:scale-95"
+                  disabled={isSaving}
+                  className={cn(
+                    "w-full py-4 rounded-2xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2",
+                    isSaving 
+                      ? "bg-zinc-800 text-zinc-500 cursor-not-allowed" 
+                      : "bg-white text-black hover:bg-zinc-200"
+                  )}
                 >
-                  Kembali ke Dashboard
+                  {isSaving ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      Menyimpan...
+                    </>
+                  ) : "Kembali ke Dashboard"}
                 </button>
               </motion.div>
             )}

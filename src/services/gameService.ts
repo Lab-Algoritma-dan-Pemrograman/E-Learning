@@ -61,7 +61,7 @@ export const saveGameHistory = async (
     const historyRef = collection(db, 'users', userId, 'game_history');
     await addDoc(historyRef, {
       ...history,
-      serverTimestamp: serverTimestamp()
+      serverTimestamp: new Date()
     });
 
     // 2. Update User XP
