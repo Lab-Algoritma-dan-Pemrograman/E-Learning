@@ -1893,7 +1893,7 @@ export const AdminDashboard: React.FC = () => {
                         <div className="space-y-2">
                           <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Preview Baris Salah</label>
                           <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 text-xs font-mono truncate">
-                            {editingQuestion.code.split('\n')[editingQuestion.bugLine] || '(Baris tidak valid)'}
+                            {editingQuestion.code.replace(/\\n/g, '\n').split('\n')[editingQuestion.bugLine] || '(Baris tidak valid)'}
                           </div>
                         </div>
                       </div>

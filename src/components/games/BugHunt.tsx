@@ -194,7 +194,7 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar p-0 font-mono text-sm leading-relaxed relative">
-              {currentQuestion?.code.split('\n').map((line, i) => (
+              {currentQuestion?.code.replace(/\\n/g, '\n').split('\n').map((line, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -20 }}
