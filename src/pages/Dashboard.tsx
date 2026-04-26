@@ -49,6 +49,13 @@ export const Dashboard: React.FC = () => {
     fetchHistory();
   }, [user]);
 
+  // Refresh plays count when game is closed
+  useEffect(() => {
+    if (!activeGame && user?.nim) {
+      getPlaysThisWeek(user.nim).then(setPlaysThisWeek);
+    }
+  }, [activeGame, user?.nim]);
+
   const isLevelLockedDisplay = (level: any, idx: number) => {
     const userOverride = user?.levelAccessOverrides?.[level.id];
     if (userOverride && userOverride !== 'auto') return userOverride === 'locked';
@@ -329,9 +336,9 @@ export const Dashboard: React.FC = () => {
                 ) : (
                   <div className="grid grid-cols-2 gap-3 mt-6">
                     {gameSettings.bugHuntCActive ? (
-                    <button 
+                      <button 
                         onClick={async () => {
-                          if (isCheckingLimit) return;
+                          if (isCheckingLimit || (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin)) return;
                           setIsCheckingLimit(true);
                           try {
                             const check = await canPlayBugHunt(user!.nim);
@@ -343,12 +350,15 @@ export const Dashboard: React.FC = () => {
                             setIsCheckingLimit(false);
                           }
                         }}
-                        disabled={isCheckingLimit}
-                        className="group/btn relative px-4 py-4 bg-zinc-900 text-white rounded-2xl font-bold text-sm hover:bg-zinc-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-zinc-900/20 disabled:opacity-50"
+                        disabled={isCheckingLimit || (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin)}
+                        className={cn(
+                          "group/btn relative px-4 py-4 bg-zinc-900 text-white rounded-2xl font-bold text-sm hover:bg-zinc-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-zinc-900/20 disabled:opacity-50",
+                          (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) && "grayscale cursor-not-allowed"
+                        )}
                       >
                         <div className="relative z-10 flex items-center justify-center gap-2">
                           <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">C</span>
-                          Challenge
+                          {(playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) ? "Limit Habis" : "Challenge"}
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/10 to-blue-600/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
                       </button>
@@ -359,9 +369,9 @@ export const Dashboard: React.FC = () => {
                     )}
 
                     {gameSettings.bugHuntPythonActive ? (
-                    <button 
+                      <button 
                         onClick={async () => {
-                          if (isCheckingLimit) return;
+                          if (isCheckingLimit || (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin)) return;
                           setIsCheckingLimit(true);
                           try {
                             const check = await canPlayBugHunt(user!.nim);
@@ -373,12 +383,15 @@ export const Dashboard: React.FC = () => {
                             setIsCheckingLimit(false);
                           }
                         }}
-                        disabled={isCheckingLimit}
-                        className="group/btn relative px-4 py-4 bg-rose-700 text-white rounded-2xl font-bold text-sm hover:bg-rose-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-rose-700/20 disabled:opacity-50"
+                        disabled={isCheckingLimit || (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin)}
+                        className={cn(
+                          "group/btn relative px-4 py-4 bg-rose-700 text-white rounded-2xl font-bold text-sm hover:bg-rose-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-rose-700/20 disabled:opacity-50",
+                          (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) && "grayscale cursor-not-allowed"
+                        )}
                       >
                         <div className="relative z-10 flex items-center justify-center gap-2">
                           <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">Py</span>
-                          Challenge
+                          {(playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) ? "Limit Habis" : "Challenge"}
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
                       </button>

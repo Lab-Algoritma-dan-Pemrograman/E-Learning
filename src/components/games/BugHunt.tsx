@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bug, Timer, CheckCircle2, XCircle, Trophy, ArrowRight, X, Terminal, Brain, Loader2 } from 'lucide-react';
-import { GameQuestion, getGameQuestions, saveGameHistory, canPlayBugHunt } from '../../services/gameService';
+import { GameQuestion, getGameQuestions, saveGameHistory, canPlayBugHunt, getGameSettings } from '../../services/gameService';
 import { checkAndUnlockAchievements } from '../../services/achievementService';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../lib/utils';
@@ -29,7 +29,11 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
 
   useEffect(() => {
     const loadQuestions = async () => {
-      // Fresh limit check from Firestore before starting the game
+      // 1. Get settings first to know how many questions to fetch
+      const settings = await getGameSettings();
+      const questionCount = settings.bugHuntQuestionCount || 5;
+
+      // 2. Fresh limit check from Firestore before starting the game
       if (user?.nim) {
         const check = await canPlayBugHunt(user.nim);
         if (!check.allowed) {
@@ -39,7 +43,7 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
         }
       }
       
-      const q = await getGameQuestions(language, 5);
+      const q = await getGameQuestions(language, questionCount);
       setQuestions(q);
       setLoading(false);
       setGameStatus('playing');

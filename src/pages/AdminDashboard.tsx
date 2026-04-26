@@ -61,7 +61,8 @@ export const AdminDashboard: React.FC = () => {
     bugHuntActive: true,
     bugHuntCActive: true, 
     bugHuntPythonActive: true,
-    bugHuntWeeklyLimit: 3
+    bugHuntWeeklyLimit: 3,
+    bugHuntQuestionCount: 5
   });
   const [editingQuestion, setEditingQuestion] = useState<GameQuestion | null>(null);
   const [loadingGameData, setLoadingGameData] = useState(false);
@@ -1641,59 +1642,90 @@ export const AdminDashboard: React.FC = () => {
                     <p className="text-[10px] text-zinc-400 italic mt-1">*Set ke 0 untuk unlimited.</p>
                  </div>
 
-                 <div className="col-span-2 grid grid-cols-2 gap-4">
-                    <div className={cn(
-                      "p-4 rounded-2xl border transition-all flex items-center justify-between",
-                      gameSettings.bugHuntCActive ? "bg-blue-50/30 border-blue-100" : "bg-zinc-50 border-zinc-200 opacity-60"
-                    )}>
-                      <div className="flex items-center gap-3">
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs", gameSettings.bugHuntCActive ? "bg-blue-600 text-white" : "bg-zinc-200 text-zinc-500")}>C</div>
-                        <span className="text-sm font-bold">Bahasa C</span>
-                      </div>
-                      <button 
-                        onClick={async () => {
-                          const next = !gameSettings.bugHuntCActive;
-                          await updateGameSettings({ bugHuntCActive: next });
-                          setGameSettings(prev => ({ ...prev, bugHuntCActive: next }));
-                        }}
-                        className={cn(
-                          "w-10 h-5 rounded-full relative transition-colors",
-                          gameSettings.bugHuntCActive ? "bg-blue-600" : "bg-zinc-300"
-                        )}
-                      >
-                        <motion.div 
-                          animate={{ x: gameSettings.bugHuntCActive ? 22 : 3 }}
-                          className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" 
-                        />
-                      </button>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Terminal size={16} className="text-zinc-400" />
+                      <label className="text-xs font-black text-zinc-400 uppercase tracking-widest">Jumlah Soal Per Sesi</label>
                     </div>
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="number" 
+                        min="1"
+                        max="20"
+                        value={gameSettings.bugHuntQuestionCount}
+                        onChange={async (e) => {
+                          const val = parseInt(e.target.value) || 5;
+                          setGameSettings(prev => ({ ...prev, bugHuntQuestionCount: val }));
+                        }}
+                        onBlur={async () => {
+                          await updateGameSettings({ bugHuntQuestionCount: gameSettings.bugHuntQuestionCount });
+                        }}
+                        className="w-24 px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-mono font-bold text-center focus:ring-2 focus:ring-rose-700/20"
+                      />
+                      <span className="text-xs text-zinc-500 font-medium">soal / sesi</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-400 italic mt-1">*Default adalah 5 soal.</p>
+                  </div>
 
-                    <div className={cn(
-                      "p-4 rounded-2xl border transition-all flex items-center justify-between",
-                      gameSettings.bugHuntPythonActive ? "bg-rose-50/30 border-rose-100" : "bg-zinc-50 border-zinc-200 opacity-60"
-                    )}>
-                      <div className="flex items-center gap-3">
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs", gameSettings.bugHuntPythonActive ? "bg-rose-600 text-white" : "bg-zinc-200 text-zinc-500")}>Py</div>
-                        <span className="text-sm font-bold">Python</span>
-                      </div>
-                      <button 
-                        onClick={async () => {
-                          const next = !gameSettings.bugHuntPythonActive;
-                          await updateGameSettings({ bugHuntPythonActive: next });
-                          setGameSettings(prev => ({ ...prev, bugHuntPythonActive: next }));
-                        }}
-                        className={cn(
-                          "w-10 h-5 rounded-full relative transition-colors",
-                          gameSettings.bugHuntPythonActive ? "bg-rose-600" : "bg-zinc-300"
-                        )}
-                      >
-                        <motion.div 
-                          animate={{ x: gameSettings.bugHuntPythonActive ? 22 : 3 }}
-                          className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" 
-                        />
-                      </button>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap size={16} className="text-zinc-400" />
+                      <label className="text-xs font-black text-zinc-400 uppercase tracking-widest">Status Bahasa</label>
                     </div>
-                 </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className={cn(
+                        "p-3 rounded-xl border transition-all flex items-center justify-between",
+                        gameSettings.bugHuntCActive ? "bg-blue-50/30 border-blue-100" : "bg-zinc-50 border-zinc-200 opacity-60"
+                      )}>
+                        <div className="flex items-center gap-3">
+                          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px]", gameSettings.bugHuntCActive ? "bg-blue-600 text-white" : "bg-zinc-200 text-zinc-500")}>C</div>
+                          <span className="text-xs font-bold">Bahasa C</span>
+                        </div>
+                        <button 
+                          onClick={async () => {
+                            const next = !gameSettings.bugHuntCActive;
+                            await updateGameSettings({ bugHuntCActive: next });
+                            setGameSettings(prev => ({ ...prev, bugHuntCActive: next }));
+                          }}
+                          className={cn(
+                            "w-10 h-5 rounded-full relative transition-colors",
+                            gameSettings.bugHuntCActive ? "bg-blue-600" : "bg-zinc-300"
+                          )}
+                        >
+                          <motion.div 
+                            animate={{ x: gameSettings.bugHuntCActive ? 22 : 3 }}
+                            className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" 
+                          />
+                        </button>
+                      </div>
+
+                      <div className={cn(
+                        "p-3 rounded-xl border transition-all flex items-center justify-between",
+                        gameSettings.bugHuntPythonActive ? "bg-rose-50/30 border-rose-100" : "bg-zinc-50 border-zinc-200 opacity-60"
+                      )}>
+                        <div className="flex items-center gap-3">
+                          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px]", gameSettings.bugHuntPythonActive ? "bg-rose-600 text-white" : "bg-zinc-200 text-zinc-500")}>Py</div>
+                          <span className="text-xs font-bold">Python</span>
+                        </div>
+                        <button 
+                          onClick={async () => {
+                            const next = !gameSettings.bugHuntPythonActive;
+                            await updateGameSettings({ bugHuntPythonActive: next });
+                            setGameSettings(prev => ({ ...prev, bugHuntPythonActive: next }));
+                          }}
+                          className={cn(
+                            "w-10 h-5 rounded-full relative transition-colors",
+                            gameSettings.bugHuntPythonActive ? "bg-rose-600" : "bg-zinc-300"
+                          )}
+                        >
+                          <motion.div 
+                            animate={{ x: gameSettings.bugHuntPythonActive ? 22 : 3 }}
+                            className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" 
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
               </div>
             </div>
 

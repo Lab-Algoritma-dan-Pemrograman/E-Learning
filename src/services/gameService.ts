@@ -154,25 +154,36 @@ export const deleteGameQuestion = async (id: string): Promise<void> => {
 // ===== NEW: App Settings =====
 
 export interface GameSettings {
-  bugHuntActive: boolean; // Global toggle
+  bugHuntActive: boolean;
   bugHuntCActive: boolean;
   bugHuntPythonActive: boolean;
-  bugHuntWeeklyLimit: number; // 0 for unlimited
+  bugHuntWeeklyLimit: number;
+  bugHuntQuestionCount: number;
 }
 
 export const getGameSettings = async (): Promise<GameSettings> => {
   try {
     const docRef = doc(db, 'app_settings', 'games');
     const docSnap = await getDoc(docRef);
+    
     if (docSnap.exists()) {
-      return docSnap.data() as GameSettings;
+      const data = docSnap.data();
+      return {
+        bugHuntActive: data.bugHuntActive ?? true,
+        bugHuntCActive: data.bugHuntCActive ?? true,
+        bugHuntPythonActive: data.bugHuntPythonActive ?? true,
+        bugHuntWeeklyLimit: data.bugHuntWeeklyLimit ?? 3,
+        bugHuntQuestionCount: data.bugHuntQuestionCount ?? 5
+      };
     }
+    
     // Return default if not exists
     return { 
       bugHuntActive: true,
       bugHuntCActive: true, 
       bugHuntPythonActive: true,
-      bugHuntWeeklyLimit: 3 // Default 3 times/week
+      bugHuntWeeklyLimit: 3,
+      bugHuntQuestionCount: 5
     };
   } catch (error) {
     console.error('Error fetching game settings:', error);
@@ -180,7 +191,8 @@ export const getGameSettings = async (): Promise<GameSettings> => {
       bugHuntActive: true,
       bugHuntCActive: true, 
       bugHuntPythonActive: true,
-      bugHuntWeeklyLimit: 3
+      bugHuntWeeklyLimit: 3,
+      bugHuntQuestionCount: 5
     };
   }
 };
