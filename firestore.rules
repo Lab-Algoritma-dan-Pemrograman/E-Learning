@@ -8,6 +8,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // NIM is used as the Firebase Auth UID via Custom Token
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -20,21 +21,15 @@ service cloud.firestore {
     }
 
     function isModerator() {
-      return hasRole(['admin', 'editor']) || 
-             (request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com" && request.auth.token.get('email_verified', false) == true);
+      return hasRole(['admin', 'editor']);
     }
 
     function isAdmin() {
-      return hasRole(['admin']) || 
-             (request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com" && request.auth.token.get('email_verified', false) == true);
+      return hasRole(['admin']);
     }
 
     function isValidEmail(email) {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    }
-
-    function isValidUrl(url) {
-      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
     }
 
     function isValidDateString(dateStr) {
@@ -46,8 +41,7 @@ service cloud.firestore {
     // ===============================================================
 
     function isValidUser(data) {
-      return data.get('uid', '') is string && 
-             isValidEmail(data.get('email', '')) &&
+      return data.get('nim', '') is string && 
              data.get('xp', 0) is number && data.xp >= 0 &&
              data.get('level', 1) is number && data.level >= 1 &&
              (!('role' in data) || data.role in ['admin', 'editor', 'user']);
@@ -65,30 +59,34 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      // Any authenticated user can read user profiles (needed for leaderboard)
+      allow read: if isAuthenticated();
       
       // Prevent role escalation during creation
       allow create: if isOwner(userId) && 
                       isValidUser(request.resource.data) && 
-                      (request.resource.data.get('role', 'user') == 'user' || 
-                       (request.resource.data.get('role', 'user') == 'admin' && 
-                        request.auth.token.get('email', '').lower() == "a.faqodkurnia@gmail.com"));
+                      request.resource.data.get('role', 'user') == 'user';
       
-      // Strict update rules: no role changes, limited XP gains
+      // Strict update rules: no role changes, limited XP gains per write
       allow update: if isOwner(userId) && 
                       isValidUser(request.resource.data) && 
+                      // Cannot change own role
                       request.resource.data.get('role', 'user') == resource.data.get('role', 'user') &&
+                      // XP increase capped at 1000 per write (prevents huge jumps)
                       request.resource.data.get('xp', 0) <= resource.data.get('xp', 0) + 1000 &&
-                      (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
+                      // Cannot change UID
+                      (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid) &&
+                      // Cannot change NIM
+                      (!('nim' in request.resource.data) || request.resource.data.nim == resource.data.nim)
                     || isAdmin();
 
       match /progress/{lessonId} {
         allow read: if isOwner(userId) || isAdmin();
-        // Only allow creation/update if it's the owner and data is valid.
-        // Once a lesson is completed, it shouldn't be changed (enforced by isValidProgress).
+        // Only allow creation if it's the owner and data uses server timestamp
         allow create: if isOwner(userId) && isValidProgress(request.resource.data);
+        // Once completed, cannot be changed by the user
         allow update: if isOwner(userId) && isValidProgress(request.resource.data) && resource.data.completed != true;
-        allow delete: if isAdmin(); // Students cannot delete their own verified progress
+        allow delete: if isAdmin();
       }
 
       match /game_history/{gameId} {
@@ -97,12 +95,15 @@ service cloud.firestore {
                         request.resource.data.gameType in ['bug_hunt'] &&
                         request.resource.data.xpEarned <= 300 &&
                         isValidDateString(request.resource.data.playedAt);
+        // Game history is immutable — no updates or deletes by users
+        allow update, delete: if isAdmin();
       }
 
       match /unlocked_achievements/{achievementId} {
         allow read: if isOwner(userId) || isModerator();
-        // Achievements should ideally be verified, but for now we restrict creation to owner
         allow create: if isOwner(userId) && request.resource.data.unlockedAt is string;
+        // Achievements are immutable
+        allow update, delete: if isAdmin();
       }
     }
 

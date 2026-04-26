@@ -1,29 +1,63 @@
 import { jwtVerify } from 'jose';
+import admin from 'firebase-admin';
 
-export const config = {
-  runtime: 'edge',
-};
+// Node.js runtime required for Firebase Admin SDK
+// (Edge runtime does not support it)
 
-export default async function handler(req: Request) {
+// Initialize Firebase Admin (Only once)
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  } catch (error) {
+    console.error('Firebase Admin init error:', error);
+  }
+}
+
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { token } = await req.json();
+    const { token } = req.body;
     if (!token) {
-      return new Response(JSON.stringify({ error: 'Token is required' }), { status: 400 });
+      return res.status(400).json({ error: 'Token is required' });
     }
 
+    // 1. Verify the JWT from "web utama"
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
+    const tokenPayload = payload as any;
 
-    return new Response(JSON.stringify({ payload }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+    // 2. Validate required fields
+    if (!tokenPayload.nim || !tokenPayload.nama) {
+      return res.status(400).json({ error: 'Token missing required fields (nim, nama)' });
+    }
+
+    // 3. Generate Firebase Custom Token using NIM as UID
+    // This allows the client to call signInWithCustomToken()
+    // and makes request.auth.uid === nim in Firestore Security Rules
+    let firebaseToken: string | null = null;
+    try {
+      firebaseToken = await admin.auth().createCustomToken(tokenPayload.nim, {
+        nama: tokenPayload.nama,
+        kelas: tokenPayload.kelas || '',
+        role: 'user', // Default role; actual role is in Firestore doc
+      });
+    } catch (fbError) {
+      console.error('Failed to create Firebase Custom Token:', fbError);
+      // Continue without Firebase token — client will work in degraded mode
+    }
+
+    return res.status(200).json({
+      payload: tokenPayload,
+      firebaseToken, // null if Firebase Admin failed
     });
   } catch (error: any) {
     console.error('Token verification error:', error);
-    return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401 });
+    return res.status(401).json({ error: 'Invalid token' });
   }
 }

@@ -1,4 +1,6 @@
 import { jwtVerify, decodeJwt } from 'jose';
+import { signInWithCustomToken } from 'firebase/auth';
+import { auth } from '../firebase';
 
 export interface TokenPayload {
   nim: string;
@@ -7,6 +9,11 @@ export interface TokenPayload {
   email?: string;
   exp?: number;
   iat?: number;
+}
+
+export interface VerifyResult {
+  payload: TokenPayload;
+  firebaseToken: string | null;
 }
 
 // JWT_SECRET is no longer used in the client for security reasons.
@@ -45,8 +52,9 @@ export function clearToken(): void {
 /**
  * Verify token by calling the server-side API.
  * This keeps the JWT_SECRET hidden on the server.
+ * Now also returns a Firebase Custom Token for authentication.
  */
-export async function verifyToken(token: string): Promise<TokenPayload | null> {
+export async function verifyToken(token: string): Promise<VerifyResult | null> {
   try {
     // 1. Call server-side verification API
     const response = await fetch('/api/verify', {
@@ -60,8 +68,8 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
       return null;
     }
 
-    const { payload } = await response.json();
-    const tokenPayload = payload as TokenPayload;
+    const data = await response.json();
+    const tokenPayload = data.payload as TokenPayload;
 
     // 2. Validate required fields
     if (!tokenPayload.nim || !tokenPayload.nama) {
@@ -69,7 +77,10 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
       return null;
     }
 
-    return tokenPayload;
+    return {
+      payload: tokenPayload,
+      firebaseToken: data.firebaseToken || null,
+    };
   } catch (error) {
     console.error('Token verification error:', error);
     
@@ -78,8 +89,11 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
     try {
       const decoded = decodeJwt(token) as unknown as TokenPayload;
       if (import.meta.env.DEV) {
-          console.warn('DEV MODE: Falling back to unsafe local decoding.');
-          return decoded;
+          console.warn('DEV MODE: Falling back to unsafe local decoding. Firebase Auth will NOT be active.');
+          return {
+            payload: decoded,
+            firebaseToken: null,
+          };
       }
     } catch (e) {
       return null;
@@ -90,22 +104,38 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
 }
 
 /**
+ * Sign in to Firebase Auth using a Custom Token.
+ * This makes request.auth.uid available in Firestore Security Rules.
+ * Returns true if sign-in was successful.
+ */
+export async function signInToFirebase(firebaseToken: string): Promise<boolean> {
+  try {
+    const userCredential = await signInWithCustomToken(auth, firebaseToken);
+    console.log('✅ Firebase Auth: Signed in as', userCredential.user.uid);
+    return true;
+  } catch (error) {
+    console.error('❌ Firebase Auth sign-in failed:', error);
+    return false;
+  }
+}
+
+/**
  * Initialize user session from token.
  * Checks URL first, then sessionStorage.
  * Returns the decoded token payload or null.
  */
-export async function initializeFromToken(): Promise<TokenPayload | null> {
+export async function initializeFromToken(): Promise<VerifyResult | null> {
   // 1. Check URL parameter first (fresh redirect from web utama)
   const urlToken = getTokenFromUrl();
   if (urlToken) {
-    const payload = await verifyToken(urlToken);
-    if (payload) {
+    const result = await verifyToken(urlToken);
+    if (result) {
       saveToken(urlToken);
       // Clean URL to remove token parameter
       const url = new URL(window.location.href);
       url.searchParams.delete('token');
       window.history.replaceState({}, '', url.toString());
-      return payload;
+      return result;
     } else {
       const url = new URL(window.location.href);
       url.searchParams.delete('token');
@@ -116,9 +146,9 @@ export async function initializeFromToken(): Promise<TokenPayload | null> {
   // 2. Check sessionStorage (page refresh)
   const savedToken = getSavedToken();
   if (savedToken) {
-    const payload = await verifyToken(savedToken);
-    if (payload) {
-      return payload;
+    const result = await verifyToken(savedToken);
+    if (result) {
+      return result;
     }
     // Token expired or invalid, clear it
     clearToken();

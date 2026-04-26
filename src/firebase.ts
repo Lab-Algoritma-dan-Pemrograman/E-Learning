@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth, signOut } from 'firebase/auth';
 import { clearToken } from './services/tokenService';
 import firebaseConfigJson from '../firebase-applet-config.json';
 
@@ -37,6 +38,7 @@ if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('MASUKKAN')) {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
+export const auth = getAuth(app);
 
 export enum OperationType {
   CREATE = 'create',
@@ -68,6 +70,11 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
  * User will need to re-access from web utama to get a new token.
  */
 export const logout = async () => {
+  try {
+    await signOut(auth);
+  } catch (e) {
+    console.error('Firebase signOut error:', e);
+  }
   clearToken();
   window.location.reload();
 };

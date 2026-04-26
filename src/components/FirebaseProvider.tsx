@@ -5,7 +5,7 @@ import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 import { syncProgress, syncExistingProgressToSupabase } from '../services/progressService';
 import { curriculumService } from '../services/curriculumService';
-import { initializeFromToken, TokenPayload } from '../services/tokenService';
+import { initializeFromToken, signInToFirebase, TokenPayload } from '../services/tokenService';
 
 import { Loader2 } from 'lucide-react';
 
@@ -48,9 +48,9 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
 
       // Try to get token from URL or sessionStorage
-      const payload = await initializeFromToken();
+      const result = await initializeFromToken();
 
-      if (!payload) {
+      if (!result) {
         console.log("No valid token found. User must access from web utama.");
         setTokenPayload(null);
         setStoreUser(null);
@@ -64,12 +64,26 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
 
+      const payload = result.payload;
+
       console.log("Token valid for:", payload.nim, payload.nama);
       setTokenPayload(payload);
       setIsSyncing(true);
       setSyncError(null);
 
       try {
+        // Sign in to Firebase Auth FIRST (before any Firestore access)
+        if (result.firebaseToken) {
+          const signedIn = await signInToFirebase(result.firebaseToken);
+          if (signedIn) {
+            console.log('🔐 Firebase Auth active — Firestore Security Rules enforced');
+          } else {
+            console.warn('⚠️ Firebase Auth failed — Firestore access may be restricted');
+          }
+        } else {
+          console.warn('⚠️ No Firebase token received — running in degraded mode');
+        }
+
         console.log("Loading curriculum...");
         await loadCurriculum();
 

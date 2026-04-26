@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bug, Timer, CheckCircle2, XCircle, Trophy, ArrowRight, X, Terminal, Brain, Loader2 } from 'lucide-react';
-import { GameQuestion, getGameQuestions, saveGameHistory } from '../../services/gameService';
+import { GameQuestion, getGameQuestions, saveGameHistory, canPlayBugHunt } from '../../services/gameService';
 import { checkAndUnlockAchievements } from '../../services/achievementService';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../lib/utils';
@@ -16,8 +16,9 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
   const [questions, setQuestions] = useState<GameQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [gameStatus, setGameStatus] = useState<'playing' | 'result' | 'finished'>('playing');
+  const [gameStatus, setGameStatus] = useState<'loading' | 'blocked' | 'playing' | 'result' | 'finished'>('loading');
   const [isSaving, setIsSaving] = useState(false);
+  const [limitError, setLimitError] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
   const [score, setScore] = useState(0);
   const [totalXp, setTotalXp] = useState(0);
@@ -28,12 +29,23 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
 
   useEffect(() => {
     const loadQuestions = async () => {
+      // Fresh limit check from Firestore before starting the game
+      if (user?.nim) {
+        const check = await canPlayBugHunt(user.nim);
+        if (!check.allowed) {
+          setGameStatus('blocked');
+          setLoading(false);
+          return;
+        }
+      }
+      
       const q = await getGameQuestions(language, 5);
       setQuestions(q);
       setLoading(false);
+      setGameStatus('playing');
     };
     loadQuestions();
-  }, [language]);
+  }, [language, user]);
 
   useEffect(() => {
     if (gameStatus === 'playing' && !loading && questions.length > 0) {
@@ -107,8 +119,15 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
           setUnlockedAchievement(newlyUnlocked[0]);
         }
       }
-    } catch (error) {
-      console.error("Failed to save game history:", error);
+    } catch (error: any) {
+      if (error?.message === 'WEEKLY_LIMIT_REACHED') {
+        setLimitError(true);
+        // Reset XP display since it wasn't actually saved
+        setTotalXp(0);
+        console.warn('Game result NOT saved: weekly limit was reached');
+      } else {
+        console.error("Failed to save game history:", error);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -125,7 +144,29 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
     );
   }
 
-  if (questions.length === 0) {
+  if (gameStatus === 'blocked') {
+    return (
+      <div className="fixed inset-0 bg-zinc-900/90 backdrop-blur-sm z-[100] flex items-center justify-center">
+        <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl text-center space-y-6 max-w-sm">
+          <div className="w-16 h-16 bg-rose-900/30 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
+            <XCircle size={32} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">Limit Tercapai!</h3>
+            <p className="text-zinc-500 text-sm mt-2">Kamu sudah mencapai batas main Bug Hunt minggu ini. Kembali lagi minggu depan! 🎯</p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-bold transition-all"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0 && !loading) {
     return (
       <div className="fixed inset-0 bg-zinc-900/90 backdrop-blur-sm z-[100] flex items-center justify-center">
         <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl text-center space-y-6 max-w-sm">
@@ -331,7 +372,9 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
                   </div>
                   <div className="bg-rose-700 p-4 rounded-2xl">
                     <div className="text-[10px] text-rose-100 font-bold uppercase tracking-widest mb-1">Total XP</div>
-                    <div className="text-2xl font-black text-white">+{totalXp}</div>
+                <div className="text-2xl font-black text-white">
+                    {limitError ? '—' : `+${totalXp}`}
+                  </div>
                   </div>
                 </div>
 
@@ -349,6 +392,10 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
                     <>
                       <Loader2 size={20} className="animate-spin" />
                       Menyimpan...
+                    </>
+                  ) : limitError ? (
+                    <>
+                      ⚠️ Limit tercapai — XP tidak disimpan
                     </>
                   ) : "Kembali ke Dashboard"}
                 </button>

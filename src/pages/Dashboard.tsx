@@ -7,7 +7,7 @@ import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 import { cn } from '../lib/utils';
 import { BugHunt } from '../components/games/BugHunt';
-import { getGameSettings, GameSettings, getPlaysThisWeek } from '../services/gameService';
+import { getGameSettings, GameSettings, getPlaysThisWeek, canPlayBugHunt, seedInitialQuestions } from '../services/gameService';
 import gameQuestions from '../data/gameQuestions.json';
 import { AlertCircle } from 'lucide-react';
 
@@ -22,6 +22,7 @@ export const Dashboard: React.FC = () => {
     bugHuntWeeklyLimit: 3
   });
   const [playsThisWeek, setPlaysThisWeek] = useState(0);
+  const [isCheckingLimit, setIsCheckingLimit] = useState(false);
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
@@ -328,9 +329,22 @@ export const Dashboard: React.FC = () => {
                 ) : (
                   <div className="grid grid-cols-2 gap-3 mt-6">
                     {gameSettings.bugHuntCActive ? (
-                      <button 
-                        onClick={() => setActiveGame({ type: 'bug_hunt', language: 'c' })}
-                        className="group/btn relative px-4 py-4 bg-zinc-900 text-white rounded-2xl font-bold text-sm hover:bg-zinc-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-zinc-900/20"
+                    <button 
+                        onClick={async () => {
+                          if (isCheckingLimit) return;
+                          setIsCheckingLimit(true);
+                          try {
+                            const check = await canPlayBugHunt(user!.nim);
+                            setPlaysThisWeek(check.playsUsed);
+                            if (check.allowed) {
+                              setActiveGame({ type: 'bug_hunt', language: 'c' });
+                            }
+                          } finally {
+                            setIsCheckingLimit(false);
+                          }
+                        }}
+                        disabled={isCheckingLimit}
+                        className="group/btn relative px-4 py-4 bg-zinc-900 text-white rounded-2xl font-bold text-sm hover:bg-zinc-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-zinc-900/20 disabled:opacity-50"
                       >
                         <div className="relative z-10 flex items-center justify-center gap-2">
                           <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">C</span>
@@ -345,9 +359,22 @@ export const Dashboard: React.FC = () => {
                     )}
 
                     {gameSettings.bugHuntPythonActive ? (
-                      <button 
-                        onClick={() => setActiveGame({ type: 'bug_hunt', language: 'python' })}
-                        className="group/btn relative px-4 py-4 bg-rose-700 text-white rounded-2xl font-bold text-sm hover:bg-rose-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-rose-700/20"
+                    <button 
+                        onClick={async () => {
+                          if (isCheckingLimit) return;
+                          setIsCheckingLimit(true);
+                          try {
+                            const check = await canPlayBugHunt(user!.nim);
+                            setPlaysThisWeek(check.playsUsed);
+                            if (check.allowed) {
+                              setActiveGame({ type: 'bug_hunt', language: 'python' });
+                            }
+                          } finally {
+                            setIsCheckingLimit(false);
+                          }
+                        }}
+                        disabled={isCheckingLimit}
+                        className="group/btn relative px-4 py-4 bg-rose-700 text-white rounded-2xl font-bold text-sm hover:bg-rose-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-rose-700/20 disabled:opacity-50"
                       >
                         <div className="relative z-10 flex items-center justify-center gap-2">
                           <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">Py</span>
