@@ -303,6 +303,52 @@ export const AdminDashboard: React.FC = () => {
     updateDraftLevel({ ...level, accessMode: next, locked: next === 'locked' });
   };
 
+  /**
+   * Helper to make textareas behave more like a code editor.
+   * Supports Tab key (2 spaces) and auto-indent on Enter.
+   */
+  const handleCodeKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>, 
+    value: string, 
+    setter: (val: string) => void
+  ) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = e.currentTarget.selectionStart;
+      const end = e.currentTarget.selectionEnd;
+      
+      const newValue = value.substring(0, start) + "  " + value.substring(end);
+      setter(newValue);
+      
+      setTimeout(() => {
+        if (e.currentTarget) {
+          e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 2;
+        }
+      }, 0);
+    }
+    
+    if (e.key === 'Enter') {
+      const start = e.currentTarget.selectionStart;
+      const valueBefore = value.substring(0, start);
+      const lastLine = valueBefore.split('\n').pop() || '';
+      const indentMatch = lastLine.match(/^\s*/);
+      const indent = indentMatch ? indentMatch[0] : '';
+      
+      if (indent.length > 0) {
+        e.preventDefault();
+        const end = e.currentTarget.selectionEnd;
+        const newValue = value.substring(0, start) + '\n' + indent + value.substring(end);
+        setter(newValue);
+        
+        setTimeout(() => {
+          if (e.currentTarget) {
+            e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 1 + indent.length;
+          }
+        }, 0);
+      }
+    }
+  };
+
   // ===== REORDER MODULES =====
   const handleMoveModule = (levelId: string, modIdx: number, direction: 'up' | 'down') => {
     const level = draftCurriculum.find(l => l.id === levelId);
@@ -1907,6 +1953,7 @@ export const AdminDashboard: React.FC = () => {
                           rows={6}
                           value={editingQuestion.code}
                           onChange={(e) => setEditingQuestion({ ...editingQuestion, code: e.target.value })}
+                          onKeyDown={(e) => handleCodeKeyDown(e, editingQuestion.code, (val) => setEditingQuestion({ ...editingQuestion, code: val }))}
                           placeholder="Tulis kode di sini..."
                           className="w-full px-4 py-3 bg-zinc-900 text-emerald-400 font-mono text-sm border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
                         />
@@ -2256,6 +2303,7 @@ export const AdminDashboard: React.FC = () => {
                       <textarea
                         value={lessonEditForm.codeExample}
                         onChange={e => setLessonEditForm({ ...lessonEditForm, codeExample: e.target.value })}
+                        onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.codeExample || '', (val) => setLessonEditForm({ ...lessonEditForm, codeExample: val }))}
                         rows={5}
                         className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
                       />
@@ -2265,6 +2313,7 @@ export const AdminDashboard: React.FC = () => {
                       <textarea
                         value={lessonEditForm.initialCode}
                         onChange={e => setLessonEditForm({ ...lessonEditForm, initialCode: e.target.value })}
+                        onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.initialCode || '', (val) => setLessonEditForm({ ...lessonEditForm, initialCode: val }))}
                         rows={5}
                         className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
                       />
@@ -2278,6 +2327,7 @@ export const AdminDashboard: React.FC = () => {
                       <textarea
                         value={lessonEditForm.solution}
                         onChange={e => setLessonEditForm({ ...lessonEditForm, solution: e.target.value })}
+                        onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.solution || '', (val) => setLessonEditForm({ ...lessonEditForm, solution: val }))}
                         rows={4}
                         className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
                       />
