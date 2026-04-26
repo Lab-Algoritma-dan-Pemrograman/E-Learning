@@ -14,26 +14,20 @@ service cloud.firestore {
     }
 
     // Role check via user document
-    function hasRole(roles) {
-      if (!isAuthenticated()) return false;
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return userDoc.get('role', 'user') in roles;
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user');
     }
 
     function isModerator() {
-      return hasRole(['admin', 'editor']);
+      return isAuthenticated() && getUserRole() in ['admin', 'editor'];
     }
 
     function isAdmin() {
-      return hasRole(['admin']);
-    }
-
-    function isValidEmail(email) {
-      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+      return isAuthenticated() && getUserRole() == 'admin';
     }
 
     function isValidDateString(dateStr) {
-      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+      return dateStr is string && dateStr.size() > 10;
     }
 
     // ===============================================================
@@ -42,8 +36,8 @@ service cloud.firestore {
 
     function isValidUser(data) {
       return data.get('nim', '') is string && 
-             data.get('xp', 0) is number && data.xp >= 0 &&
-             data.get('level', 1) is number && data.level >= 1 &&
+             data.get('xp', 0) is number && data.get('xp', 0) >= 0 &&
+             data.get('level', 1) is number && data.get('level', 1) >= 1 &&
              (!('role' in data) || data.role in ['admin', 'editor', 'user']);
     }
 
@@ -62,22 +56,20 @@ service cloud.firestore {
       // Any authenticated user can read user profiles (needed for leaderboard)
       allow read: if isAuthenticated();
       
-      // Prevent role escalation during creation
+      // Prevent role escalation during creation — new users always get 'user' role
       allow create: if isOwner(userId) && 
                       isValidUser(request.resource.data) && 
                       request.resource.data.get('role', 'user') == 'user';
       
       // Strict update rules: no role changes, limited XP gains per write
-      allow update: if isOwner(userId) && 
+      allow update: if (isOwner(userId) && 
                       isValidUser(request.resource.data) && 
                       // Cannot change own role
                       request.resource.data.get('role', 'user') == resource.data.get('role', 'user') &&
                       // XP increase capped at 1000 per write (prevents huge jumps)
                       request.resource.data.get('xp', 0) <= resource.data.get('xp', 0) + 1000 &&
-                      // Cannot change UID
-                      (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid) &&
                       // Cannot change NIM
-                      (!('nim' in request.resource.data) || request.resource.data.nim == resource.data.nim)
+                      request.resource.data.get('nim', '') == resource.data.get('nim', ''))
                     || isAdmin();
 
       match /progress/{lessonId} {
@@ -93,8 +85,9 @@ service cloud.firestore {
         allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && 
                         request.resource.data.gameType in ['bug_hunt'] &&
+                        request.resource.data.xpEarned is number &&
                         request.resource.data.xpEarned <= 300 &&
-                        isValidDateString(request.resource.data.playedAt);
+                        request.resource.data.playedAt is string;
         // Game history is immutable — no updates or deletes by users
         allow update, delete: if isAdmin();
       }
