@@ -13,6 +13,7 @@ export interface TokenPayload {
 export interface VerifyResult {
   payload: TokenPayload;
   firebaseToken: string | null;
+  token?: string | null;
 }
 
 // JWT_SECRET is no longer used in the client for security reasons.
@@ -79,6 +80,7 @@ export async function verifyToken(token: string): Promise<VerifyResult | null> {
     return {
       payload: tokenPayload,
       firebaseToken: data.firebaseToken || null,
+      token: data.token || null
     };
   } catch (error) {
     console.error('Token verification error:', error);
@@ -114,7 +116,8 @@ export async function initializeFromToken(): Promise<VerifyResult | null> {
   if (urlToken) {
     const result = await verifyToken(urlToken);
     if (result) {
-      saveToken(urlToken);
+      // Save the translated database token instead of Web Utama token
+      saveToken(result.token || urlToken);
       // Clean URL to remove token parameter
       const url = new URL(window.location.href);
       url.searchParams.delete('token');
@@ -132,6 +135,9 @@ export async function initializeFromToken(): Promise<VerifyResult | null> {
   if (savedToken) {
     const result = await verifyToken(savedToken);
     if (result) {
+      if (result.token) {
+        saveToken(result.token); // Refresh token in storage if updated
+      }
       return result;
     }
     // Token expired or invalid, clear it
