@@ -1,294 +1,453 @@
 # Entity Relationship Diagram (ERD) & Skema Database
-## Fitur Asesmen (Pre-Test, Post-Test, Program Keterampilan, Ujian Praktik) & Monitoring Aktivitas
+## Arsitektur Relasional Supabase PostgreSQL
 
-| Dokumen | Entity Relationship Diagram (ERD) & Database Schema |
-|---|---|
-| **Database Utama** | Cloud Firestore (NoSQL Document-based Database) |
-| **Database Sinkronisasi** | Supabase (PostgreSQL Relational Database) |
+Dokumen ini mendefinisikan rancangan tabel relasional, tipe data, kunci primer/asing, dan kebijakan keamanan **Row Level Security (RLS)** untuk migrasi penuh dari Firebase ke **Supabase (PostgreSQL)**.
 
 ---
 
-## 1. Diagram Hubungan Entitas (ERD)
-
-Berikut adalah visualisasi hubungan data menggunakan diagram **Mermaid**. Hubungan ini memetakan interaksi data antara pengguna, bank soal, sesi pengerjaan, token ujian, dan log audit.
+## 1. Diagram Relasional Database (ERD)
 
 ```mermaid
 erDiagram
-    USERS ||--o{ ASSESSMENT_ATTEMPTS : "mempunya"
-    USERS ||--o{ ACTIVITY_LOGS : "mencatat"
-    USERS ||--o{ ACTIVE_SESSIONS : "mengecek status"
-    
-    ASSESSMENT_QUESTIONS ||--o{ ASSESSMENT_ATTEMPTS : "digunakan di"
-    
-    ASSESSMENT_TOKENS ||--o{ ASSESSMENT_ATTEMPTS : "mengunci"
-    USERS ||--o{ ASSESSMENT_TOKENS : "membuat (kordas/admin)"
+    users ||--o{ student_progress : "menyelesaikan"
+    users ||--o{ game_history : "bermain"
+    users ||--o{ unlocked_achievements : "membuka"
+    users ||--o{ assessment_attempts : "mengerjakan"
+    users ||--o{ assessment_tokens : "membuat"
+    users ||--o{ activity_logs : "mencatat"
+    users ||--o{ active_sessions : "memiliki status"
 
-    USERS {
-        string nim PK "Document ID"
-        string nama
-        string kelas
-        string email
-        string role "admin | kordas | asisten | user"
-        int xp
-        int level
-        int streak
-        string lastActive "timestamp"
-        string createdAt "timestamp"
-        map assessmentAccess "e.g. {pre_test: true, post_test: false}"
+    levels ||--o{ modules : "memiliki"
+    modules ||--o{ lessons : "memiliki"
+    lessons ||--o{ student_progress : "dicatat di"
+
+    assessment_questions ||--o{ assessment_attempts : "dinilai di"
+    assessment_tokens ||--o{ assessment_attempts : "digunakan di"
+
+    users {
+        text nim PK
+        text nama
+        text kelas
+        text email
+        text role "admin | kordas | asisten | user"
+        integer xp
+        integer level
+        integer streak
+        timestamp last_active
+        timestamp created_at
+        jsonb assessment_access
     }
 
-    ASSESSMENT_QUESTIONS {
-        string id PK "Document ID"
-        string menuType "pre_test | post_test | program_keterampilan | ujian_praktik"
-        string difficulty "easy | medium | hard"
-        string type "essay | short_answer | coding | flowchart_translation"
-        string title
-        string instruction "Markdown text"
-        int moduleAssociation "1 s.d. 6"
-        string initialCode "code template"
-        string referenceSolution "model solution"
-        array testCases "JSON array of inputs/expectedOutputs"
-        array validationRules "regex pattern validation constraints"
-        string flowchartUrl "optional image link for flowchart"
-        string createdAt "timestamp"
-        string createdBy "nim"
+    levels {
+        text id PK
+        text title
+        text description
+        text access_mode "auto | unlocked | locked"
+        boolean locked
     }
 
-    ASSESSMENT_ATTEMPTS {
-        string id PK "Document ID"
-        string nim FK "users/nim"
-        string menuType "pre_test | post_test | program_keterampilan | ujian_praktik"
-        string tokenUsed FK "optional token ID"
-        array selectedQuestions "array of question IDs"
-        map answers "key: questionId, value: {answerText, codeSubmitted, outputStandard, errors}"
-        map aiGrades "key: questionId, value: {scores, feedback, total_score}"
-        int finalScore "aggregate points"
-        string status "in_progress | submitted | graded"
-        string startedAt "timestamp"
-        string submittedAt "timestamp"
-        string gradedAt "timestamp"
-        int durationMinutes "allowed time limit"
+    modules {
+        text id PK
+        text level_id FK "levels/id"
+        text title
+        integer sort_order
     }
 
-    ASSESSMENT_TOKENS {
-        string token PK "Document ID (6-digit code)"
-        string createdBy FK "users/nim"
-        string createdAt "timestamp"
-        string expiredAt "timestamp"
-        string status "active | expired | used"
-        int usageLimit "max uses allowed"
-        int usageCount "current use count"
-        array targetClasses "e.g. ['3A', '3B']"
+    lessons {
+        text id PK
+        text module_id FK "modules/id"
+        text title
+        text explanation
+        text code_example
+        text initial_code
+        text solution
+        text hint
+        jsonb quiz
+        jsonb test_cases
+        jsonb validation_rules
+        integer sort_order
     }
 
-    ACTIVITY_LOGS {
-        string id PK "Document ID (UUID)"
-        string nim FK "users/nim"
-        string nama
-        string eventType "login | logout | start_test | submit_test | token_generated | token_used"
-        string timestamp
-        string details "Readable description text"
-        string ipAddress
+    assessment_questions {
+        uuid id PK
+        text menu_type "pre_test | post_test | program_keterampilan | ujian_praktik"
+        text difficulty "easy | medium | hard"
+        text type "essay | short_answer | coding | flowchart_translation"
+        text title
+        text instruction
+        integer module_association
+        text initial_code
+        text reference_solution
+        jsonb test_cases
+        jsonb validation_rules
+        text flowchart_url
+        timestamp created_at
+        text created_by FK "users/nim"
     }
 
-    ACTIVE_SESSIONS {
-        string nim PK "Document ID"
-        string nama
-        string kelas
-        string lastHeartbeat "timestamp"
-        string currentActivity "dashboard | lesson | taking_pre_test | taking_ujian_praktik"
-        string attemptId FK "optional assessment_attempts/id"
+    assessment_attempts {
+        uuid id PK
+        text nim FK "users/nim"
+        text menu_type
+        text token_used FK "assessment_tokens/token"
+        jsonb selected_questions "array of question IDs"
+        jsonb answers "JSON mapping questionId to submitted answer"
+        jsonb ai_grades "JSON mapping questionId to rubric grades"
+        integer final_score
+        text status "in_progress | submitted | graded"
+        timestamp started_at
+        timestamp submitted_at
+        timestamp graded_at
+        integer duration_minutes
+    }
+
+    assessment_tokens {
+        text token PK
+        text created_by FK "users/nim"
+        timestamp created_at
+        timestamp expired_at
+        text status "active | expired | used"
+        integer usage_limit
+        integer usage_count
+        jsonb target_classes
+    }
+
+    activity_logs {
+        uuid id PK
+        text nim FK "users/nim"
+        text nama
+        text event_type
+        timestamp timestamp
+        text details
+        text ip_address
+    }
+
+    active_sessions {
+        text nim PK "users/nim"
+        text nama
+        text kelas
+        timestamp last_heartbeat
+        text current_activity
+        uuid attempt_id FK "assessment_attempts/id"
+    }
+
+    achievements {
+        text id PK
+        text title
+        text description
+        integer xp_required
+        text icon
+    }
+
+    unlocked_achievements {
+        uuid id PK
+        text nim FK "users/nim"
+        text achievement_id FK "achievements/id"
+        timestamp unlocked_at
+    }
+
+    student_progress {
+        uuid id PK
+        text nim FK "users/nim"
+        text lesson_id FK "lessons/id"
+        boolean completed
+        timestamp completed_at
+    }
+
+    game_history {
+        uuid id PK
+        text nim FK "users/nim"
+        text game_type
+        integer xp_earned
+        timestamp played_at
+    }
+
+    game_settings {
+        text id PK "default"
+        boolean bug_hunt_active
+        boolean bug_hunt_c_active
+        boolean bug_hunt_python_active
+        integer bug_hunt_weekly_limit
     }
 ```
 
 ---
 
-## 2. Struktur Detail Koleksi Firestore (NoSQL Schema)
+## 2. Supabase SQL DDL (PostgreSQL Migration Script)
 
-Berikut adalah penjelasan skema struktur data per koleksi di Cloud Firestore.
-
-### A. Koleksi: `users`
-* **Path**: `/users/{nim}`
-* **Deskripsi**: Menyimpan data profil pengguna, peran (RBAC), serta status perizinan menu asesmen.
-* **Skema**:
-```json
-{
-  "nim": "220192831",
-  "nama": "Farhan Adityo",
-  "kelas": "3A - Teknik Informatika",
-  "email": "farhan@student.ac.id",
-  "role": "user", // "admin", "kordas", "asisten", "user"
-  "xp": 450,
-  "level": 3,
-  "streak": 5,
-  "lastActive": "2026-06-06T07:15:30.000Z",
-  "createdAt": "2026-05-10T04:20:11.000Z",
-  "photoURL": null,
-  "assessmentAccess": {
-    "pre_test": true,         // Diizinkan mengerjakan pre-test
-    "post_test": true,        // Diizinkan mengerjakan post-test
-    "program_keterampilan": false, // Dikunci oleh asisten
-    "ujian_praktik": false    // Dikunci oleh asisten
-  }
-}
-```
-
----
-
-### B. Koleksi: `assessment_questions`
-* **Path**: `/assessment_questions/{questionId}`
-* **Deskripsi**: Bank soal lengkap untuk semua menu asesmen.
-* **Skema**:
-```json
-{
-  "id": "q_pre_med_01",
-  "menuType": "pre_test", // pre_test, post_test, program_keterampilan, ujian_praktik
-  "difficulty": "medium", // easy, medium, hard
-  "type": "short_answer", // essay, short_answer, coding, flowchart_translation
-  "title": "Menganalisis Perulangan Nested Loop",
-  "instruction": "Tuliskan output dari kode C di bawah ini serta berikan penjelasan singkat mengapa output tersebut muncul.",
-  "moduleAssociation": 2, // Asosiasi modul 1-6 (untuk ujian praktik)
-  "initialCode": "#include <stdio.h>\nint main() {\n  for(int i=0; i<2; i++) {\n    for(int j=0; j<2; j++) {\n      printf(\"%d \", i+j);\n    }\n  }\n  return 0;\n}",
-  "referenceSolution": "Output: 0 1 1 2. Penjelasan: Perulangan i=0 berjalan dengan j=0 (cetak 0) dan j=1 (cetak 1). Lalu i=1 berjalan dengan j=0 (cetak 1) dan j=1 (cetak 2).",
-  "testCases": [], // Kosong untuk short_answer/essay
-  "validationRules": [], 
-  "flowchartUrl": "", // Diisi jika tipe 'flowchart_translation'
-  "createdAt": "2026-06-06T02:00:00.000Z",
-  "createdBy": "199208031" // NIM Kordas
-}
-```
-
----
-
-### C. Koleksi: `assessment_attempts`
-* **Path**: `/assessment_attempts/{attemptId}`
-* **Deskripsi**: Menyimpan rekaman riwayat pengerjaan mahasiswa, kode yang dikirim, dan penilaian terperinci dari AI.
-* **Skema**:
-```json
-{
-  "id": "att_220192831_pretest_001",
-  "nim": "220192831",
-  "menuType": "pre_test",
-  "tokenUsed": null,
-  "selectedQuestions": ["q_pre_easy_02", "q_pre_med_01", "q_pre_med_05", "q_pre_hard_01", "q_pre_hard_03"],
-  "answers": {
-    "q_pre_med_01": {
-      "answerText": "Outputnya 0 1 1 2 karena nested loop menjumlahkan i dan j di setiap iterasi.",
-      "codeSubmitted": "",
-      "outputStandard": "",
-      "errors": ""
-    },
-    "q_pre_hard_01": {
-      "answerText": "",
-      "codeSubmitted": "#include <stdio.h>\nint main() {\n ... \n}",
-      "outputStandard": "Output sukses",
-      "errors": null
-    }
-  },
-  "aiGrades": {
-    "q_pre_med_01": {
-      "scores": {
-        "correctness": 10,
-        "explanation": 5
-      },
-      "total_score": 15,
-      "feedback": "Jawaban benar dan penjelasan logis."
-    }
-  },
-  "finalScore": 85,
-  "status": "graded", // in_progress, submitted, graded
-  "startedAt": "2026-06-06T07:00:00.000Z",
-  "submittedAt": "2026-06-06T07:45:00.000Z",
-  "gradedAt": "2026-06-06T07:46:12.000Z",
-  "durationMinutes": 60
-}
-```
-
----
-
-### D. Koleksi: `assessment_tokens`
-* **Path**: `/assessment_tokens/{token}`
-* **Deskripsi**: Berisi daftar token aktif untuk mengunci menu Ujian Praktik.
-* **Skema**:
-```json
-{
-  "token": "XP99A2",
-  "createdBy": "199208031", // NIM Admin/Kordas
-  "createdAt": "2026-06-06T06:30:00.000Z",
-  "expiredAt": "2026-06-06T12:00:00.000Z",
-  "status": "active", // active, expired, used
-  "usageLimit": 40,   // Dapat digunakan maksimal oleh 40 mahasiswa
-  "usageCount": 18,   // Saat ini telah digunakan oleh 18 mahasiswa
-  "targetClasses": ["3A", "3B"]
-}
-```
-
----
-
-### E. Koleksi: `activity_logs`
-* **Path**: `/activity_logs/{logId}`
-* **Deskripsi**: Log audit aktivitas sistem (Write-only bagi pengguna biasa, read-only bagi asisten/kordas/admin).
-* **Skema**:
-```json
-{
-  "id": "log_550e8400-e29b-41d4-a716-446655440000",
-  "nim": "220192831",
-  "nama": "Farhan Adityo",
-  "eventType": "token_used", // login, logout, start_test, submit_test, token_generated, token_used
-  "timestamp": "2026-06-06T07:01:15.000Z",
-  "details": "Menggunakan token 'XP99A2' untuk mengakses Ujian Praktik",
-  "ipAddress": "192.168.1.15"
-}
-```
-
----
-
-### F. Koleksi: `active_sessions`
-* **Path**: `/active_sessions/{nim}`
-* **Deskripsi**: Dipakai untuk tracking status real-time ("Who is currently working") secara dinamis menggunakan Firestore Snapshot.
-* **Skema**:
-```json
-{
-  "nim": "220192831",
-  "nama": "Farhan Adityo",
-  "kelas": "3A",
-  "lastHeartbeat": "2026-06-06T07:15:00.000Z", // Diupdate client per 30 detik
-  "currentActivity": "taking_ujian_praktik", // dashboard, lesson, taking_pre_test, taking_ujian_praktik
-  "attemptId": "att_220192831_pretest_001"
-}
-```
-
----
-
-## 3. Sinkronisasi PostgreSQL (Supabase elearning_progress Schema)
-
-Nilai akhir dari asesmen ini akan direkap ke dalam Supabase untuk keperluan rekap nilai utama.
-
-### Tabel: `elearning_progress` (Updated)
-Ketika nilai mahasiswa dikalkulasi, data hasil asesmen akan disinkronisasikan ke Supabase melalui REST API `/api/report`. Kolom tambahan akan ditambahkan ke tabel `elearning_progress`:
+Jalankan perintah SQL ini di dalam **Supabase SQL Editor** untuk membangun skema tabel relasional:
 
 ```sql
--- Tambah kolom asesmen di tabel Supabase
-ALTER TABLE elearning_progress 
-ADD COLUMN IF NOT EXISTS pre_test_score INT DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS post_test_score INT DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS skill_program_score INT DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS ujian_praktik_score INT DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS assessment_status JSONB DEFAULT '{}'::jsonb;
+-- =========================================================================
+-- 1. EXTENSIONS & ENUMS
+-- =========================================================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- =========================================================================
+-- 2. TABEL PENGGUNA & SETTING
+-- =========================================================================
+CREATE TABLE users (
+    nim TEXT PRIMARY KEY,
+    nama TEXT NOT NULL,
+    kelas TEXT NOT NULL,
+    email TEXT,
+    role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'kordas', 'asisten', 'user')),
+    xp INTEGER NOT NULL DEFAULT 0 CHECK (xp >= 0),
+    level INTEGER NOT NULL DEFAULT 1 CHECK (level >= 1),
+    streak INTEGER NOT NULL DEFAULT 0 CHECK (streak >= 0),
+    last_active TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    assessment_access JSONB NOT NULL DEFAULT '{"pre_test": false, "post_test": false, "program_keterampilan": false, "ujian_praktik": false}'::jsonb
+);
+
+CREATE TABLE game_settings (
+    id TEXT PRIMARY KEY DEFAULT 'default',
+    bug_hunt_active BOOLEAN NOT NULL DEFAULT TRUE,
+    bug_hunt_c_active BOOLEAN NOT NULL DEFAULT TRUE,
+    bug_hunt_python_active BOOLEAN NOT NULL DEFAULT TRUE,
+    bug_hunt_weekly_limit INTEGER NOT NULL DEFAULT 3 CHECK (bug_hunt_weekly_limit >= 0)
+);
+
+-- =========================================================================
+-- 3. TABEL KURIKULUM & MATERI
+-- =========================================================================
+CREATE TABLE levels (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    access_mode TEXT NOT NULL DEFAULT 'auto' CHECK (access_mode IN ('auto', 'unlocked', 'locked')),
+    locked BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE modules (
+    id TEXT PRIMARY KEY,
+    level_id TEXT REFERENCES levels(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE lessons (
+    id TEXT PRIMARY KEY,
+    module_id TEXT REFERENCES modules(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    code_example TEXT NOT NULL,
+    initial_code TEXT NOT NULL,
+    solution TEXT NOT NULL,
+    hint TEXT,
+    quiz JSONB NOT NULL DEFAULT '{}'::jsonb,
+    test_cases JSONB NOT NULL DEFAULT '[]'::jsonb,
+    validation_rules JSONB NOT NULL DEFAULT '[]'::jsonb,
+    sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+-- =========================================================================
+-- 4. TABEL PROGRESS & PENCAPAIAN
+-- =========================================================================
+CREATE TABLE student_progress (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nim TEXT REFERENCES users(nim) ON DELETE CASCADE,
+    lesson_id TEXT REFERENCES lessons(id) ON DELETE CASCADE,
+    completed BOOLEAN NOT NULL DEFAULT TRUE,
+    completed_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    CONSTRAINT unique_nim_lesson UNIQUE (nim, lesson_id)
+);
+
+CREATE TABLE game_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nim TEXT REFERENCES users(nim) ON DELETE CASCADE,
+    game_type TEXT NOT NULL,
+    xp_earned INTEGER NOT NULL CHECK (xp_earned <= 300),
+    played_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+CREATE TABLE achievements (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    xp_required INTEGER NOT NULL,
+    icon TEXT
+);
+
+CREATE TABLE unlocked_achievements (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nim TEXT REFERENCES users(nim) ON DELETE CASCADE,
+    achievement_id TEXT REFERENCES achievements(id) ON DELETE CASCADE,
+    unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    CONSTRAINT unique_nim_achievement UNIQUE (nim, achievement_id)
+);
+
+-- =========================================================================
+-- 5. TABEL ASESMEN & UJIAN
+-- =========================================================================
+CREATE TABLE assessment_questions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    menu_type TEXT NOT NULL CHECK (menu_type IN ('pre_test', 'post_test', 'program_keterampilan', 'ujian_praktik')),
+    difficulty TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
+    type TEXT NOT NULL CHECK (type IN ('essay', 'short_answer', 'coding', 'flowchart_translation')),
+    title TEXT NOT NULL,
+    instruction TEXT NOT NULL,
+    module_association INTEGER CHECK (module_association BETWEEN 1 AND 6),
+    initial_code TEXT,
+    reference_solution TEXT,
+    test_cases JSONB NOT NULL DEFAULT '[]'::jsonb,
+    validation_rules JSONB NOT NULL DEFAULT '[]'::jsonb,
+    flowchart_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    created_by TEXT REFERENCES users(nim) ON DELETE SET NULL
+);
+
+CREATE TABLE assessment_tokens (
+    token TEXT PRIMARY KEY,
+    created_by TEXT REFERENCES users(nim) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    expired_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'expired', 'used')),
+    usage_limit INTEGER NOT NULL DEFAULT 1 CHECK (usage_limit >= 1),
+    usage_count INTEGER NOT NULL DEFAULT 0 CHECK (usage_count >= 0),
+    target_classes JSONB NOT NULL DEFAULT '[]'::jsonb
+);
+
+CREATE TABLE assessment_attempts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nim TEXT REFERENCES users(nim) ON DELETE CASCADE,
+    menu_type TEXT NOT NULL,
+    token_used TEXT REFERENCES assessment_tokens(token) ON DELETE SET NULL,
+    selected_questions JSONB NOT NULL DEFAULT '[]'::jsonb,
+    answers JSONB NOT NULL DEFAULT '{}'::jsonb,
+    ai_grades JSONB NOT NULL DEFAULT '{}'::jsonb,
+    final_score INTEGER DEFAULT NULL,
+    status TEXT NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'submitted', 'graded')),
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    submitted_at TIMESTAMP WITH TIME ZONE,
+    graded_at TIMESTAMP WITH TIME ZONE,
+    duration_minutes INTEGER NOT NULL
+);
+
+-- =========================================================================
+-- 6. MONITORING & AUDIT LOGS
+-- =========================================================================
+CREATE TABLE activity_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nim TEXT REFERENCES users(nim) ON DELETE SET NULL,
+    nama TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    details TEXT NOT NULL,
+    ip_address TEXT
+);
+
+CREATE TABLE active_sessions (
+    nim TEXT PRIMARY KEY REFERENCES users(nim) ON DELETE CASCADE,
+    nama TEXT NOT NULL,
+    kelas TEXT NOT NULL,
+    last_heartbeat TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    current_activity TEXT NOT NULL,
+    attempt_id UUID REFERENCES assessment_attempts(id) ON DELETE SET NULL
+);
 ```
 
-Struktur data JSON `assessment_status` pada Supabase:
-```json
-{
-  "pre_test": {
-    "score": 85,
-    "status": "graded",
-    "completed_at": "2026-06-06T07:46:12Z"
-  },
-  "post_test": {
-    "score": 90,
-    "status": "graded",
-    "completed_at": "2026-06-06T09:15:00Z"
-  }
-}
+---
+
+## 3. Kebijakan Keamanan Row Level Security (RLS)
+
+PostgreSQL menyediakan Row Level Security (RLS) untuk membatasi akses baca/tulis baris tabel secara langsung dari client SDK Supabase.
+
+```sql
+-- Mengaktifkan RLS pada tabel-tabel krusial
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE student_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE assessment_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE assessment_questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE assessment_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE active_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
+
+-- =========================================================================
+-- HELPER FUNCTIONS FOR RLS (Mengecek NIM dan Peran User dari Metadata JWT)
+-- =========================================================================
+CREATE OR REPLACE FUNCTION auth.nim() 
+RETURNS TEXT AS $$
+  -- Mendapatkan NIM mahasiswa dari JWT Claim custom 'nim' atau auth.uid()
+  SELECT COALESCE(
+    nullif(current_setting('request.jwt.claims', true)::json->>'nim', ''),
+    current_setting('request.jwt.claims', true)::json->>'sub'
+  )::text;
+$$ LANGUAGE sql STABLE;
+
+CREATE OR REPLACE FUNCTION auth.role() 
+RETURNS TEXT AS $$
+  -- Mendapatkan role user dari JWT Claim custom
+  SELECT COALESCE(
+    current_setting('request.jwt.claims', true)::json->>'role',
+    'user'
+  )::text;
+$$ LANGUAGE sql STABLE;
+
+-- =========================================================================
+-- KEBIJAKAN (POLICIES) RLS
+-- =========================================================================
+
+-- A. Kebijakan untuk Tabel: users
+CREATE POLICY "Mahasiswa hanya bisa baca & ubah data miliknya sendiri" ON users
+    FOR ALL USING (nim = auth.nim());
+
+CREATE POLICY "Asisten ke atas bisa membaca data seluruh user" ON users
+    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+
+CREATE POLICY "Admin & Kordas bisa melakukan modifikasi seluruh user" ON users
+    FOR ALL USING (auth.role() IN ('admin', 'kordas'));
+
+-- B. Kebijakan untuk Tabel: student_progress
+CREATE POLICY "Mahasiswa hanya bisa modifikasi progress-nya sendiri" ON student_progress
+    FOR ALL USING (nim = auth.nim());
+
+CREATE POLICY "Asisten ke atas bisa melihat progress semua mahasiswa" ON student_progress
+    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+
+-- C. Kebijakan untuk Tabel: assessment_attempts
+CREATE POLICY "Mahasiswa hanya bisa baca & tulis attempt miliknya" ON assessment_attempts
+    FOR ALL USING (nim = auth.nim());
+
+CREATE POLICY "Asisten ke atas bisa membaca attempt semua mahasiswa" ON assessment_attempts
+    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+
+CREATE POLICY "Staf pengajar bisa menilai (update) attempt mahasiswa" ON assessment_attempts
+    FOR UPDATE USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+
+-- D. Kebijakan untuk Tabel: assessment_questions
+CREATE POLICY "Semua user terautentikasi bisa membaca bank soal" ON assessment_questions
+    FOR SELECT USING (auth.role() IS NOT NULL);
+
+CREATE POLICY "Hanya Admin & Kordas yang bisa mengelola bank soal" ON assessment_questions
+    FOR ALL USING (auth.role() IN ('admin', 'kordas'));
+
+-- E. Kebijakan untuk Tabel: assessment_tokens
+CREATE POLICY "Semua user bisa melakukan verifikasi token" ON assessment_tokens
+    FOR SELECT USING (auth.role() IS NOT NULL);
+
+CREATE POLICY "Hanya Admin & Kordas yang bisa membuat token" ON assessment_tokens
+    FOR ALL USING (auth.role() IN ('admin', 'kordas'));
+
+-- F. Kebijakan untuk Tabel: active_sessions
+CREATE POLICY "Mahasiswa bisa update session heartbeat miliknya" ON active_sessions
+    FOR ALL USING (nim = auth.nim());
+
+CREATE POLICY "Asisten ke atas bisa memonitor seluruh sesi aktif" ON active_sessions
+    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+
+-- G. Kebijakan untuk Tabel: activity_logs
+CREATE POLICY "Mahasiswa hanya bisa menulis log aktivitas" ON activity_logs
+    FOR INSERT WITH CHECK (nim = auth.nim());
+
+CREATE POLICY "Asisten ke atas bisa membaca seluruh log audit" ON activity_logs
+    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
 ```
+
+---
+
+## 4. Keuntungan Migrasi Relasional PostgreSQL (Supabase)
+1. **Integritas Relasional**: Soal, pelajaran, modul, dan level kini memiliki integritas referensial (`FOREIGN KEY ON DELETE CASCADE`), mencegah data yatim piatu (orphan data) seperti di NoSQL Firestore.
+2. **Kueri Agregat Efisien**: Menghitung rata-rata nilai per-kelas, progres per-angkatan, dan distribusi kriteria rubrik dapat dilakukan langsung via query `SELECT AVG(final_score)` SQL yang tangguh, memangkas beban pemrosesan logika di client browser.
+3. **Penyimpanan Struktur Kompleks yang Kuat**: Struktur data nested seperti `test_cases`, `answers`, dan hasil penilaian AI disimpan aman sebagai tipe data **JSONB**, yang tetap mendukung fitur kueri indeks (indexing) di PostgreSQL.
+4. **Realtime Broadcast Native**: Menggunakan Supabase Channels untuk monitoring heartbeat mahasiswa aktif secara instan dan efisien dibandingkan metode snapshot Firestore yang memicu biaya baca dokumen yang tinggi.
