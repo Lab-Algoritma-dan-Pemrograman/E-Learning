@@ -208,6 +208,17 @@ CREATE TABLE game_settings (
     bug_hunt_weekly_limit INTEGER NOT NULL DEFAULT 3 CHECK (bug_hunt_weekly_limit >= 0)
 );
 
+CREATE TABLE game_questions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    language TEXT NOT NULL CHECK (language IN ('c', 'python')),
+    difficulty TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
+    title TEXT NOT NULL,
+    code TEXT NOT NULL,
+    bug_line INTEGER NOT NULL,
+    explanation TEXT NOT NULL
+);
+
+
 -- =========================================================================
 -- 3. TABEL KURIKULUM & MATERI
 -- =========================================================================
@@ -265,8 +276,9 @@ CREATE TABLE achievements (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
-    xp_required INTEGER NOT NULL,
-    icon TEXT
+    icon TEXT,
+    requirement_type TEXT NOT NULL,
+    requirement_value TEXT NOT NULL
 );
 
 CREATE TABLE unlocked_achievements (

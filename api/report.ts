@@ -1,20 +1,10 @@
 import { jwtVerify } from 'jose';
 import { createClient } from '@supabase/supabase-js';
-import admin from 'firebase-admin';
 
-// Initialize Firebase Admin (Only once)
-if (!admin.apps.length) {
-  try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-  } catch (error) {
-    console.error('Firebase Admin init error:', error);
-  }
-}
-
-const db = admin.firestore();
+// Initialize Supabase Client (Only once)
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -29,7 +19,7 @@ export default async function handler(req: any, res: any) {
     }
 
     // 1. Verify token
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const secret = new TextEncoder().encode(process.env.VITE_JWT_SECRET || process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
     const tokenPayload = payload as any;
 
@@ -37,35 +27,49 @@ export default async function handler(req: any, res: any) {
       return res.status(403).json({ error: 'Identity mismatch' });
     }
 
-    // 2. Fetch DATA from Firestore (Source of Truth)
-    // A. Get Total Lessons from Curriculum
-    const curriculumSnap = await db.collection('curriculum').get();
-    let totalLessons = 0;
-    const allLevelIds: string[] = [];
-    
-    curriculumSnap.forEach(doc => {
-      const data = doc.data();
-      allLevelIds.push(doc.id);
-      (data.modules || []).forEach((mod: any) => {
-        totalLessons += (mod.lessons || []).length;
-      });
-    });
+    // 2. Fetch DATA from Supabase relasional
+    // A. Get Total Lessons count
+    const { count: totalLessons, error: totalErr } = await supabase
+      .from('lessons')
+      .select('*', { count: 'exact', head: true });
 
-    // B. Get User Progress
-    const progressSnap = await db.collection('users').doc(nim).collection('progress').get();
-    const completedLessonIds = progressSnap.docs.map(d => d.id);
-    const completedCount = completedLessonIds.length;
+    if (totalErr) throw totalErr;
+    const totalCount = totalLessons || 0;
+
+    // B. Get Completed Lessons count
+    const { count: completedLessons, error: compErr } = await supabase
+      .from('student_progress')
+      .select('*', { count: 'exact', head: true })
+      .eq('nim', nim)
+      .eq('completed', true);
+
+    if (compErr) throw compErr;
+    const completedCount = completedLessons || 0;
 
     // C. Calculate which levels are fully completed
+    const { data: levels, error: lvlErr } = await supabase
+      .from('levels')
+      .select('*, modules(*, lessons(*))');
+
+    if (lvlErr) throw lvlErr;
+
+    const { data: userProgress, error: progErr } = await supabase
+      .from('student_progress')
+      .select('lesson_id')
+      .eq('nim', nim)
+      .eq('completed', true);
+
+    if (progErr) throw progErr;
+    const completedLessonIds = (userProgress || []).map(p => p.lesson_id);
+
     const completedLevels: string[] = [];
     let currentLevelTitle = '';
 
-    curriculumSnap.forEach(doc => {
-      const data = doc.data();
+    (levels || []).forEach(level => {
       let levelTotal = 0;
       let levelDone = 0;
       
-      (data.modules || []).forEach((mod: any) => {
+      (level.modules || []).forEach((mod: any) => {
         (mod.lessons || []).forEach((lsn: any) => {
           levelTotal++;
           if (completedLessonIds.includes(lsn.id)) {
@@ -75,28 +79,24 @@ export default async function handler(req: any, res: any) {
       });
 
       if (levelTotal > 0 && levelDone >= levelTotal) {
-        completedLevels.push(data.title);
+        completedLevels.push(level.title);
       } else if (levelDone > 0 && !currentLevelTitle) {
-        currentLevelTitle = data.title;
+        currentLevelTitle = level.title;
       }
     });
 
-    // 3. Sync to Supabase
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''; 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 10000) / 100 : 0;
 
-    const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 10000) / 100 : 0;
-
+    // 3. Sync to Supabase progress tracking table
     const { error: supabaseError } = await supabase
       .from('elearning_progress')
       .upsert({
         nim: nim,
         student_name: tokenPayload.nama || tokenPayload.full_name || 'Student',
         lessons_completed: completedCount,
-        total_lessons: totalLessons,
+        total_lessons: totalCount,
         completion_percentage: percentage,
-        is_completed: totalLessons > 0 && completedCount >= totalLessons,
+        is_completed: totalCount > 0 && completedCount >= totalCount,
         completed_levels: completedLevels,
         current_level: currentLevelTitle || 'Introduction',
         last_accessed_at: new Date().toISOString(),
@@ -110,7 +110,7 @@ export default async function handler(req: any, res: any) {
       success: true, 
       recalculated: { 
         completed: completedCount, 
-        total: totalLessons,
+        total: totalCount,
         percentage 
       } 
     });
@@ -120,3 +120,4 @@ export default async function handler(req: any, res: any) {
     return res.status(error.status || 500).json({ error: error.message || 'Internal Server Error' });
   }
 }
+

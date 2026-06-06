@@ -1,5 +1,4 @@
-import { collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { UserProfile } from '../store/useStore';
 
 export interface Achievement {
@@ -11,35 +10,67 @@ export interface Achievement {
   requirementValue: number | string;
 }
 
-export const checkAndUnlockAchievements = async (user: UserProfile, stats: { xp?: number; gamesPlayed?: number; perfectGames?: number; completedLevelIds?: string[] }): Promise<Achievement[]> => {
+export const checkAndUnlockAchievements = async (
+  user: UserProfile,
+  stats: { xp?: number; gamesPlayed?: number; perfectGames?: number; completedLevelIds?: string[] }
+): Promise<Achievement[]> => {
   if (!user.nim) return [];
   
   try {
-    // 1. Get all available achievements
-    const achSnapshot = await getDocs(collection(db, 'achievements'));
-    const allAchievements = achSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Achievement[];
+    // 1. Get all available achievements from Supabase
+    const { data: allAchievements, error: achError } = await supabase
+      .from('achievements')
+      .select('*');
+
+    if (achError || !allAchievements) throw achError;
+
+    // Map database snake_case fields to camelCase
+    const formattedAchievements = allAchievements.map(ach => ({
+      id: ach.id,
+      title: ach.title,
+      description: ach.description,
+      icon: ach.icon,
+      requirementType: ach.requirement_type as any,
+      requirementValue: isNaN(Number(ach.requirement_value)) ? ach.requirement_value : Number(ach.requirement_value)
+    })) as Achievement[];
     
-    // 2. Get user's unlocked achievements
-    const unlockedSnapshot = await getDocs(collection(db, 'users', user.nim, 'unlocked_achievements'));
-    const unlockedIds = new Set(unlockedSnapshot.docs.map(d => d.id));
+    // 2. Get user's unlocked achievements from Supabase
+    const { data: unlockedData, error: unlockError } = await supabase
+      .from('unlocked_achievements')
+      .select('achievement_id')
+      .eq('nim', user.nim);
+
+    if (unlockError) throw unlockError;
+    const unlockedIds = new Set((unlockedData || []).map(d => d.achievement_id));
     
     const newlyUnlocked: Achievement[] = [];
     
-    for (const ach of allAchievements) {
+    for (const ach of formattedAchievements) {
       if (unlockedIds.has(ach.id)) continue;
       
       let met = false;
-      if (ach.requirementType === 'xp' && (stats.xp || user.xp) >= (ach.requirementValue as number)) met = true;
-      if (ach.requirementType === 'streak' && user.streak >= (ach.requirementValue as number)) met = true;
+      const currentXp = stats.xp !== undefined ? stats.xp : (user.xp || 0);
+      const currentStreak = user.streak || 0;
+
+      if (ach.requirementType === 'xp' && currentXp >= (ach.requirementValue as number)) met = true;
+      if (ach.requirementType === 'streak' && currentStreak >= (ach.requirementValue as number)) met = true;
       if (ach.requirementType === 'level_completed' && stats.completedLevelIds?.includes(ach.requirementValue as string)) met = true;
       if (ach.requirementType === 'game_score' && (stats.perfectGames || 0) >= (ach.requirementValue as number)) met = true;
       
       if (met) {
-        await setDoc(doc(db, 'users', user.nim, 'unlocked_achievements', ach.id), {
-          unlockedAt: new Date().toISOString(),
-          serverTimestamp: serverTimestamp()
-        });
-        newlyUnlocked.push(ach);
+        const { error: insertErr } = await supabase
+          .from('unlocked_achievements')
+          .insert([{
+            nim: user.nim,
+            achievement_id: ach.id,
+            unlocked_at: new Date().toISOString()
+          }]);
+
+        if (!insertErr) {
+          newlyUnlocked.push(ach);
+        } else {
+          console.error(`Failed to unlock achievement ${ach.id}:`, insertErr);
+        }
       }
     }
     
@@ -51,6 +82,23 @@ export const checkAndUnlockAchievements = async (user: UserProfile, stats: { xp?
 };
 
 export const getAchievements = async (): Promise<Achievement[]> => {
-  const snapshot = await getDocs(collection(db, 'achievements'));
-  return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Achievement[];
+  try {
+    const { data, error } = await supabase
+      .from('achievements')
+      .select('*');
+
+    if (error) throw error;
+    
+    return (data || []).map(ach => ({
+      id: ach.id,
+      title: ach.title,
+      description: ach.description,
+      icon: ach.icon,
+      requirementType: ach.requirement_type as any,
+      requirementValue: isNaN(Number(ach.requirement_value)) ? ach.requirement_value : Number(ach.requirement_value)
+    }));
+  } catch (error) {
+    console.error('Error fetching achievements:', error);
+    return [];
+  }
 };

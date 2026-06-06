@@ -1,20 +1,4 @@
 import { jwtVerify } from 'jose';
-import admin from 'firebase-admin';
-
-// Node.js runtime required for Firebase Admin SDK
-// (Edge runtime does not support it)
-
-// Initialize Firebase Admin (Only once)
-if (!admin.apps.length) {
-  try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-  } catch (error) {
-    console.error('Firebase Admin init error:', error);
-  }
-}
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -28,7 +12,7 @@ export default async function handler(req: any, res: any) {
     }
 
     // 1. Verify the JWT from "web utama"
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const secret = new TextEncoder().encode(process.env.VITE_JWT_SECRET || process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
     const tokenPayload = payload as any;
 
@@ -37,27 +21,13 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Token missing required fields (nim, nama)' });
     }
 
-    // 3. Generate Firebase Custom Token using NIM as UID
-    // This allows the client to call signInWithCustomToken()
-    // and makes request.auth.uid === nim in Firestore Security Rules
-    let firebaseToken: string | null = null;
-    try {
-      firebaseToken = await admin.auth().createCustomToken(tokenPayload.nim, {
-        nama: tokenPayload.nama,
-        kelas: tokenPayload.kelas || '',
-        role: 'user', // Default role; actual role is in Firestore doc
-      });
-    } catch (fbError) {
-      console.error('Failed to create Firebase Custom Token:', fbError);
-      // Continue without Firebase token — client will work in degraded mode
-    }
-
     return res.status(200).json({
       payload: tokenPayload,
-      firebaseToken, // null if Firebase Admin failed
+      firebaseToken: null // Firebase is deprecated, return null for safety
     });
   } catch (error: any) {
     console.error('Token verification error:', error);
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
+

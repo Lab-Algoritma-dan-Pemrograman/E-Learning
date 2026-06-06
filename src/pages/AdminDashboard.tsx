@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { UserProfile, useStore } from '../store/useStore';
 import { cn } from '../lib/utils';
 import { 
@@ -87,7 +88,7 @@ export const AdminDashboard: React.FC = () => {
   const [isAiGameGenerating, setIsAiGameGenerating] = useState(false);
 
   const isAdmin = currentUser?.role === 'admin';
-  const isEditor = currentUser?.role === 'editor';
+  const isEditor = currentUser?.role === 'kordas';
   const isCoordinator = isAdmin && currentUser?.division === 'koordinator';
   const canAccess = isAdmin || isEditor;
 
@@ -783,22 +784,23 @@ export const AdminDashboard: React.FC = () => {
 
     // Role-based permissions
     const targetIsAdmin = selectedUser.role === 'admin';
-    const targetIsEditor = selectedUser.role === 'editor';
+    const targetIsKordas = selectedUser.role === 'kordas';
+    const targetIsAsisten = selectedUser.role === 'asisten';
     
-    if ((targetIsAdmin || targetIsEditor) && !isCoordinator) {
+    if ((targetIsAdmin || targetIsKordas || targetIsAsisten) && !isCoordinator) {
       setShowModal({
         type: 'alert',
         title: 'Aksi Ditolak',
-        message: 'Hanya Koordinator yang dapat menghapus akun Admin atau Editor.',
+        message: 'Hanya Koordinator yang dapat menghapus akun Admin, Kordas, atau Asisten.',
       });
       return;
     }
 
-    if (isEditor && (targetIsAdmin || targetIsEditor)) {
+    if ((currentUser?.role === 'kordas' || currentUser?.role === 'asisten') && (targetIsAdmin || targetIsKordas || targetIsAsisten)) {
        setShowModal({
         type: 'alert',
         title: 'Aksi Ditolak',
-        message: 'Editor hanya dapat menghapus akun dengan role User.',
+        message: 'Kordas atau Asisten hanya dapat menghapus akun dengan role User.',
       });
       return;
     }
@@ -836,8 +838,12 @@ export const AdminDashboard: React.FC = () => {
       else next = 'auto';
 
       const newOverrides = { ...overrides, [levelId]: next };
-      const userRef = doc(db, 'users', selectedUser.nim);
-      await updateDoc(userRef, { levelAccessOverrides: newOverrides });
+      const { error } = await supabase
+        .from('users')
+        .update({ level_access_overrides: newOverrides })
+        .eq('nim', selectedUser.nim);
+
+      if (error) throw error;
       
       const updatedUser = { ...selectedUser, levelAccessOverrides: newOverrides };
       setSelectedUser(updatedUser);
@@ -853,34 +859,77 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     if (!isAdmin || activeTab !== 'users') return;
 
-    const q = query(collection(db, 'users'), orderBy('xp', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const usersData = snapshot.docs.map(doc => doc.data() as UserProfile);
-      setUsers(usersData);
-      setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'users');
-      setLoading(false);
-    });
+    const fetchUsers = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('xp', { ascending: false });
 
-    return () => unsubscribe();
+      if (error) {
+        console.error("Failed to load users from Supabase:", error);
+        setLoading(false);
+        return;
+      }
+
+      setUsers((data || []).map(u => ({
+        nim: u.nim,
+        nama: u.nama,
+        kelas: u.kelas,
+        email: u.email,
+        xp: u.xp || 0,
+        level: u.level || 1,
+        streak: u.streak || 0,
+        lastActive: u.last_active || '',
+        createdAt: u.created_at || '',
+        role: u.role || 'user',
+        levelAccessOverrides: u.level_access_overrides || {},
+        assessmentAccess: u.assessment_access || {}
+      })) as UserProfile[]);
+      setLoading(false);
+    };
+
+    fetchUsers();
+
+    const channel = supabase
+      .channel('public:users-admin')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+        fetchUsers();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isAdmin, activeTab]);
 
   const fetchUserProgress = async (userId: string) => {
     setLoadingProgress(true);
     try {
-      const q = query(collection(db, 'users', userId, 'progress'), orderBy('completedAt', 'desc'));
-      const snapshot = await getDocs(q);
-      const progress = snapshot.docs.map(doc => doc.data() as LessonProgress);
+      const { data, error } = await supabase
+        .from('student_progress')
+        .select('*')
+        .eq('nim', userId)
+        .eq('completed', true)
+        .order('completed_at', { ascending: false });
+
+      if (error) throw error;
+
+      const progress = (data || []).map(p => ({
+        lessonId: p.lesson_id,
+        completed: p.completed,
+        completedAt: p.completed_at,
+        score: p.score
+      })) as LessonProgress[];
+
       setUserProgress(progress);
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, `users/${userId}/progress`);
+      console.error("Failed to load user progress:", error);
     } finally {
       setLoadingProgress(false);
     }
   };
 
-  const handleToggleRole = async (targetUser: UserProfile, newRole: 'admin' | 'editor' | 'user') => {
+  const handleToggleRole = async (targetUser: UserProfile, newRole: 'admin' | 'kordas' | 'asisten' | 'user') => {
     if (targetUser.nim === currentUser?.nim) {
       setShowModal({
         type: 'alert',
@@ -914,11 +963,14 @@ export const AdminDashboard: React.FC = () => {
       message: `Ubah peran ${targetUser.nama} menjadi ${newRole}?`,
       onConfirm: async () => {
         try {
-          await updateDoc(doc(db, 'users', targetUser.nim), {
-            role: newRole
-          });
+          const { error } = await supabase
+            .from('users')
+            .update({ role: newRole })
+            .eq('nim', targetUser.nim);
+          if (error) throw error;
         } catch (error) {
-          handleFirestoreError(error, OperationType.UPDATE, `users/${targetUser.nim}`);
+          console.error("Error updating user role:", error);
+          setShowModal({ type: 'alert', title: 'Error', message: 'Gagal mengubah peran user' });
         }
       }
     });
@@ -1158,12 +1210,12 @@ export const AdminDashboard: React.FC = () => {
                       <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Manajemen Peran</h3>
                       
                       <div className="flex flex-col gap-2">
-                        <div className="flex gap-1 bg-zinc-100 p-1 rounded-xl">
+                        <div className="flex gap-1 bg-zinc-100 p-1 rounded-xl flex-wrap animate-fade-in">
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'user')}
                             disabled={selectedUser.role === 'user' || (!isCoordinator && selectedUser.role === 'admin')}
                             className={cn(
-                              "flex-1 py-2 text-[10px] font-bold rounded-lg transition-all",
+                              "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
                               selectedUser.role === 'user' || (!selectedUser.role)
                                 ? "bg-white text-zinc-900 shadow-sm" 
                                 : "text-zinc-500 hover:text-zinc-900"
@@ -1172,22 +1224,34 @@ export const AdminDashboard: React.FC = () => {
                             User
                           </button>
                           <button 
-                            onClick={() => handleToggleRole(selectedUser, 'editor')}
-                            disabled={selectedUser.role === 'editor' || (!isCoordinator && selectedUser.role === 'admin')}
+                            onClick={() => handleToggleRole(selectedUser, 'asisten')}
+                            disabled={selectedUser.role === 'asisten' || (!isCoordinator && selectedUser.role === 'admin')}
                             className={cn(
-                              "flex-1 py-2 text-[10px] font-bold rounded-lg transition-all",
-                              selectedUser.role === 'editor'
+                              "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
+                              selectedUser.role === 'asisten'
+                                ? "bg-emerald-600 text-white shadow-sm" 
+                                : "text-zinc-500 hover:text-zinc-900"
+                            )}
+                          >
+                            Asisten
+                          </button>
+                          <button 
+                            onClick={() => handleToggleRole(selectedUser, 'kordas')}
+                            disabled={selectedUser.role === 'kordas' || (!isCoordinator && selectedUser.role === 'admin')}
+                            className={cn(
+                              "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
+                              selectedUser.role === 'kordas'
                                 ? "bg-blue-600 text-white shadow-sm" 
                                 : "text-zinc-500 hover:text-zinc-900"
                             )}
                           >
-                            Editor
+                            Kordas
                           </button>
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'admin')}
                             disabled={selectedUser.role === 'admin' || !isCoordinator}
                             className={cn(
-                              "flex-1 py-2 text-[10px] font-bold rounded-lg transition-all",
+                              "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
                               selectedUser.role === 'admin'
                                 ? "bg-purple-600 text-white shadow-sm" 
                                 : "text-zinc-500 hover:text-zinc-900",

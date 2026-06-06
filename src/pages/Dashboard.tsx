@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play, Lock, Bug } from 'lucide-react';
+import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play, Lock, Bug, FileText } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
@@ -19,7 +19,8 @@ export const Dashboard: React.FC = () => {
     bugHuntActive: true, 
     bugHuntCActive: true, 
     bugHuntPythonActive: true,
-    bugHuntWeeklyLimit: 3
+    bugHuntWeeklyLimit: 3,
+    bugHuntQuestionCount: 5
   });
   const [playsThisWeek, setPlaysThisWeek] = useState(0);
   const [isCheckingLimit, setIsCheckingLimit] = useState(false);
@@ -268,6 +269,53 @@ export const Dashboard: React.FC = () => {
 
           {/* Sidebar Stats */}
           <div className="space-y-8">
+            {/* Assessment Status Card for Student */}
+            {user?.role === 'user' && (
+              <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <FileText size={20} className="text-rose-700" />
+                  Asesmen & Ujian
+                </h3>
+                <p className="text-zinc-500 text-xs leading-relaxed">
+                  Periksa menu ujian yang dibuka oleh asisten laboratorium. Ujian Praktik membutuhkan kode/token khusus.
+                </p>
+                
+                <div className="space-y-2 text-xs font-bold">
+                  <div className="flex justify-between items-center bg-zinc-50 p-2 rounded-xl">
+                    <span className="text-zinc-500">PRE-TEST</span>
+                    <span className={cn(user.assessmentAccess?.pre_test ? "text-emerald-600" : "text-zinc-400")}>
+                      {user.assessmentAccess?.pre_test ? "Terbuka" : "Terkunci"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center bg-zinc-50 p-2 rounded-xl">
+                    <span className="text-zinc-500">POST-TEST</span>
+                    <span className={cn(user.assessmentAccess?.post_test ? "text-emerald-600" : "text-zinc-400")}>
+                      {user.assessmentAccess?.post_test ? "Terbuka" : "Terkunci"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center bg-zinc-50 p-2 rounded-xl">
+                    <span className="text-zinc-500">PROGRAM KETERAMPILAN</span>
+                    <span className={cn(user.assessmentAccess?.program_keterampilan ? "text-emerald-600" : "text-zinc-400")}>
+                      {user.assessmentAccess?.program_keterampilan ? "Terbuka" : "Terkunci"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center bg-zinc-50 p-2 rounded-xl">
+                    <span className="text-zinc-500">UJIAN PRAKTIK</span>
+                    <span className={cn(user.assessmentAccess?.ujian_praktik ? "text-emerald-600" : "text-zinc-400")}>
+                      {user.assessmentAccess?.ujian_praktik ? "Terbuka" : "Terkunci"}
+                    </span>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setPage('assessments')}
+                  className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl active:scale-95 transition-all text-center"
+                >
+                  Buka Menu Asesmen
+                </button>
+              </div>
+            )}
+
             <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm">
               <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
                 <Clock size={20} className="text-rose-700" />

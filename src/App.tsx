@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FirebaseProvider } from './components/FirebaseProvider';
+import { SupabaseProvider } from './components/SupabaseProvider';
 import { PyodideInitializer } from './components/PyodideInitializer';
 import { useStore } from './store/useStore';
 import { secureLog, secureError } from './lib/securityUtils';
@@ -15,6 +15,9 @@ import { Leaderboard } from './pages/Leaderboard';
 import { CourseExplorer } from './pages/CourseExplorer';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AssessmentPage } from './pages/AssessmentPage';
+import { MonitoringDashboard } from './pages/MonitoringDashboard';
+import { QuestionBankDashboard } from './pages/QuestionBankDashboard';
 
 function AppContent() {
   const { user, page, setPage } = useStore();
@@ -43,6 +46,9 @@ function AppContent() {
         case 'courses': return <CourseExplorer />;
         case 'profile': return <Profile />;
         case 'admin': return <AdminDashboard />;
+        case 'assessments': return <AssessmentPage />;
+        case 'monitoring': return <MonitoringDashboard />;
+        case 'bank_soal': return <QuestionBankDashboard />;
         default: return <Dashboard />;
       }
     } catch (error) {
@@ -63,6 +69,9 @@ function AppContent() {
         if (href === '/leaderboard') { e.preventDefault(); setPage('leaderboard'); }
         if (href === '/profile') { e.preventDefault(); setPage('profile'); }
         if (href === '/admin') { e.preventDefault(); setPage('admin'); }
+        if (href === '/assessments') { e.preventDefault(); setPage('assessments'); }
+        if (href === '/monitoring') { e.preventDefault(); setPage('monitoring'); }
+        if (href === '/bank_soal') { e.preventDefault(); setPage('bank_soal'); }
       }
     }}>
       {renderPage()}
@@ -72,9 +81,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <FirebaseProvider>
+    <SupabaseProvider>
       <PyodideInitializer />
       <AppContent />
-    </FirebaseProvider>
+    </SupabaseProvider>
   );
 }
+

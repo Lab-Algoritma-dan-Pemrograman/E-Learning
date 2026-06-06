@@ -1,6 +1,4 @@
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment, serverTimestamp, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
-import { UserProfile } from '../store/useStore';
+import { supabase } from '../lib/supabase';
 
 export interface GameQuestion {
   id: string;
@@ -12,34 +10,39 @@ export interface GameQuestion {
   explanation: string;
 }
 
-export interface GameResult {
-  userId: string;
-  gameType: 'bug_hunt';
-  language: 'c' | 'python';
-  score: number;
-  xpEarned: number;
-  playedAt: string;
+export interface GameSettings {
+  bugHuntActive: boolean;
+  bugHuntCActive: boolean;
+  bugHuntPythonActive: boolean;
+  bugHuntWeeklyLimit: number;
+  bugHuntQuestionCount: number;
 }
 
 export const getGameQuestions = async (language: 'c' | 'python', limit: number = 5): Promise<GameQuestion[]> => {
   try {
-    const q = query(
-      collection(db, 'game_questions'),
-      where('language', '==', language)
-    );
+    const { data, error } = await supabase
+      .from('game_questions')
+      .select('*')
+      .eq('language', language);
     
-    const snapshot = await getDocs(q);
-    const allQuestions = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as GameQuestion[];
+    if (error) throw error;
     
-    // Simple random shuffle for variety
+    const allQuestions = (data || []).map(q => ({
+      id: q.id,
+      language: q.language,
+      difficulty: q.difficulty,
+      title: q.title,
+      code: q.code,
+      bugLine: q.bug_line,
+      explanation: q.explanation
+    })) as unknown as GameQuestion[];
+    
+    // Random shuffle and slice
     return allQuestions
       .sort(() => Math.random() - 0.5)
       .slice(0, limit);
   } catch (error) {
-    handleFirestoreError(error, OperationType.LIST, 'game_questions');
+    console.error('Error fetching game questions:', error);
     return [];
   }
 };
@@ -57,133 +60,193 @@ export const saveGameHistory = async (
   if (!userId) return;
 
   try {
-    // Enforce weekly limit before saving
+    // Enforce weekly limit
     if (history.gameType === 'bug_hunt') {
       const settings = await getGameSettings();
       if (settings.bugHuntWeeklyLimit > 0) {
         const currentPlays = await getPlaysThisWeek(userId);
         if (currentPlays >= settings.bugHuntWeeklyLimit) {
-          console.warn(`⚠️ Weekly limit reached for ${userId}. Result NOT saved.`);
           throw new Error('WEEKLY_LIMIT_REACHED');
         }
       }
     }
 
-    // 1. Record in game_history with ISO string timestamp for consistent filtering
     const now = new Date().toISOString();
-    const historyRef = collection(db, 'users', userId, 'game_history');
-    await addDoc(historyRef, {
-      ...history,
-      savedAt: now
-    });
 
-    // 2. Update User XP
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      xp: increment(history.xpEarned),
-      lastActive: now
-    });
+    // 1. Record in game_history
+    const { error: historyErr } = await supabase
+      .from('game_history')
+      .insert([{
+        nim: userId,
+        game_type: history.gameType,
+        xp_earned: history.xpEarned,
+        played_at: now
+      }]);
+
+    if (historyErr) throw historyErr;
+
+    // 2. Fetch current user XP and increment it
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('xp')
+      .eq('nim', userId)
+      .single();
+
+    if (userProfile) {
+      const { error: userErr } = await supabase
+        .from('users')
+        .update({
+          xp: userProfile.xp + history.xpEarned,
+          last_active: now
+        })
+        .eq('nim', userId);
+
+      if (userErr) throw userErr;
+    }
 
     console.log(`✅ Game result saved: +${history.xpEarned} XP for ${userId}`);
   } catch (error) {
     if (error instanceof Error && error.message === 'WEEKLY_LIMIT_REACHED') {
-      throw error; // Re-throw limit error without wrapping
+      throw error;
     }
-    handleFirestoreError(error, OperationType.WRITE, `users/${userId}/game_history`);
+    console.error('Error saving game history:', error);
     throw error;
   }
 };
 
-/**
- * Seed questions from local JSON to Firestore.
- * Use this only once or in admin dashboard.
- */
 export const seedInitialQuestions = async (questions: any[]): Promise<void> => {
   try {
-    const questionsRef = collection(db, 'game_questions');
-    const snapshot = await getDocs(questionsRef);
-    
-    // Only seed if empty to avoid duplicates during dev
-    if (snapshot.empty) {
-      const promises = questions.map(q => addDoc(questionsRef, q));
-      await Promise.all(promises);
-      console.log('✅ Initial questions seeded successfully');
+    const { count, error } = await supabase
+      .from('game_questions')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) throw error;
+
+    // Only seed if empty
+    if (count === 0) {
+      const formatted = questions.map(q => ({
+        language: q.language,
+        difficulty: q.difficulty,
+        title: q.title,
+        code: q.code,
+        bug_line: q.bugLine,
+        explanation: q.explanation
+      }));
+
+      const { error: seedErr } = await supabase
+        .from('game_questions')
+        .insert(formatted);
+
+      if (seedErr) throw seedErr;
+      console.log('✅ Initial game questions seeded successfully');
     } else {
-      console.log('ℹ️ Questions already exist, skipping seed');
+      console.log('ℹ️ Game questions already exist, skipping seed');
     }
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, 'game_questions');
+    console.error('Error seeding game questions:', error);
   }
 };
 
 export const forceResetGameQuestions = async (questions: any[]): Promise<void> => {
   try {
-    const questionsRef = collection(db, 'game_questions');
-    const snapshot = await getDocs(questionsRef);
-    
-    // Delete all existing documents
-    const deletePromises = snapshot.docs.map(docSnap => deleteDoc(doc(db, 'game_questions', docSnap.id)));
-    await Promise.all(deletePromises);
-    
-    // Insert new JSON data mapping
-    const insertPromises = questions.map(q => addDoc(questionsRef, q));
-    await Promise.all(insertPromises);
-    
-    console.log(`✅ Reset total ${questions.length} questions successfully`);
+    // Delete all existing
+    const { data: allData } = await supabase.from('game_questions').select('id');
+    if (allData && allData.length > 0) {
+      const ids = allData.map(d => d.id);
+      await supabase.from('game_questions').delete().in('id', ids);
+    }
+
+    // Insert new
+    const formatted = questions.map(q => ({
+      language: q.language,
+      difficulty: q.difficulty,
+      title: q.title,
+      code: q.code,
+      bug_line: q.bugLine,
+      explanation: q.explanation
+    }));
+
+    const { error: insertErr } = await supabase
+      .from('game_questions')
+      .insert(formatted);
+
+    if (insertErr) throw insertErr;
+    console.log(`✅ Reset total ${questions.length} game questions successfully`);
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, 'game_questions');
+    console.error('Error force resetting game questions:', error);
     throw error;
   }
 };
 
-// ===== NEW: Question Management =====
-
 export const addGameQuestion = async (question: Omit<GameQuestion, 'id'>): Promise<string> => {
-  const ref = await addDoc(collection(db, 'game_questions'), question);
-  return ref.id;
+  const { data, error } = await supabase
+    .from('game_questions')
+    .insert([{
+      language: question.language,
+      difficulty: question.difficulty,
+      title: question.title,
+      code: question.code,
+      bug_line: question.bugLine,
+      explanation: question.explanation
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data.id;
 };
 
 export const updateGameQuestion = async (id: string, question: Partial<GameQuestion>): Promise<void> => {
-  await updateDoc(doc(db, 'game_questions', id), question);
+  const formatted: any = {};
+  if (question.language) formatted.language = question.language;
+  if (question.difficulty) formatted.difficulty = question.difficulty;
+  if (question.title) formatted.title = question.title;
+  if (question.code) formatted.code = question.code;
+  if (question.bugLine !== undefined) formatted.bug_line = question.bugLine;
+  if (question.explanation) formatted.explanation = question.explanation;
+
+  const { error } = await supabase
+    .from('game_questions')
+    .update(formatted)
+    .eq('id', id);
+
+  if (error) throw error;
 };
 
 export const deleteGameQuestion = async (id: string): Promise<void> => {
-  await deleteDoc(doc(db, 'game_questions', id));
+  const { error } = await supabase
+    .from('game_questions')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 };
-
-// ===== NEW: App Settings =====
-
-export interface GameSettings {
-  bugHuntActive: boolean;
-  bugHuntCActive: boolean;
-  bugHuntPythonActive: boolean;
-  bugHuntWeeklyLimit: number;
-  bugHuntQuestionCount: number;
-}
 
 export const getGameSettings = async (): Promise<GameSettings> => {
   try {
-    const docRef = doc(db, 'app_settings', 'games');
-    const docSnap = await getDoc(docRef);
+    const { data, error } = await supabase
+      .from('game_settings')
+      .select('*')
+      .eq('id', 'default')
+      .single();
     
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      return {
-        bugHuntActive: data.bugHuntActive ?? true,
-        bugHuntCActive: data.bugHuntCActive ?? true,
-        bugHuntPythonActive: data.bugHuntPythonActive ?? true,
-        bugHuntWeeklyLimit: data.bugHuntWeeklyLimit ?? 3,
-        bugHuntQuestionCount: data.bugHuntQuestionCount ?? 5
+    if (error || !data) {
+      // Return default if not found
+      return { 
+        bugHuntActive: true,
+        bugHuntCActive: true, 
+        bugHuntPythonActive: true,
+        bugHuntWeeklyLimit: 3,
+        bugHuntQuestionCount: 5
       };
     }
     
-    // Return default if not exists
-    return { 
-      bugHuntActive: true,
-      bugHuntCActive: true, 
-      bugHuntPythonActive: true,
-      bugHuntWeeklyLimit: 3,
-      bugHuntQuestionCount: 5
+    return {
+      bugHuntActive: data.bug_hunt_active,
+      bugHuntCActive: data.bug_hunt_c_active,
+      bugHuntPythonActive: data.bug_hunt_python_active,
+      bugHuntWeeklyLimit: data.bug_hunt_weekly_limit,
+      bugHuntQuestionCount: 5 // standard default
     };
   } catch (error) {
     console.error('Error fetching game settings:', error);
@@ -198,8 +261,17 @@ export const getGameSettings = async (): Promise<GameSettings> => {
 };
 
 export const updateGameSettings = async (settings: Partial<GameSettings>): Promise<void> => {
-  const docRef = doc(db, 'app_settings', 'games');
-  await setDoc(docRef, settings, { merge: true });
+  const formatted: any = {};
+  if (settings.bugHuntActive !== undefined) formatted.bug_hunt_active = settings.bugHuntActive;
+  if (settings.bugHuntCActive !== undefined) formatted.bug_hunt_c_active = settings.bugHuntCActive;
+  if (settings.bugHuntPythonActive !== undefined) formatted.bug_hunt_python_active = settings.bugHuntPythonActive;
+  if (settings.bugHuntWeeklyLimit !== undefined) formatted.bug_hunt_weekly_limit = settings.bugHuntWeeklyLimit;
+
+  const { error } = await supabase
+    .from('game_settings')
+    .upsert({ id: 'default', ...formatted });
+
+  if (error) throw error;
 };
 
 export const getPlaysThisWeek = async (userId: string): Promise<number> => {
@@ -207,55 +279,29 @@ export const getPlaysThisWeek = async (userId: string): Promise<number> => {
   
   try {
     const now = new Date();
-    // Get start of current week (Monday)
     const startOfWeek = new Date(now);
     const day = startOfWeek.getDay();
     const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
     startOfWeek.setDate(diff);
     startOfWeek.setHours(0, 0, 0, 0);
 
-    const historyRef = collection(db, 'users', userId, 'game_history');
-    // Fetch all bug_hunt plays for this user and filter in memory to avoid composite index requirement
-    const q = query(
-      historyRef,
-      where('gameType', '==', 'bug_hunt')
-    );
-    
-    const snapshot = await getDocs(q);
-    const weeklyPlays = snapshot.docs.filter(doc => {
-      const data = doc.data();
-      // Check multiple possible timestamp fields for backwards compatibility
-      const ts = data.savedAt || data.serverTimestamp || data.playedAt;
-      if (!ts) return false;
-      
-      // Handle Firestore Timestamp, Date object, or ISO string
-      let date: Date;
-      if (ts.toDate) {
-        date = ts.toDate(); // Firestore Timestamp
-      } else if (ts instanceof Date) {
-        date = ts;
-      } else {
-        date = new Date(ts); // ISO string
-      }
-      
-      // Validate that the date is valid
-      if (isNaN(date.getTime())) return false;
-      
-      return date >= startOfWeek;
-    });
-    
-    console.log(`📊 Weekly plays for ${userId}: ${weeklyPlays.length} (checked ${snapshot.docs.length} total records)`);
-    return weeklyPlays.length;
+    const startOfWeekIso = startOfWeek.toISOString();
+
+    const { count, error } = await supabase
+      .from('game_history')
+      .select('*', { count: 'exact', head: true })
+      .eq('nim', userId)
+      .eq('game_type', 'bug_hunt')
+      .gte('played_at', startOfWeekIso);
+
+    if (error) throw error;
+    return count || 0;
   } catch (error) {
     console.error('Error counting weekly plays:', error);
     return 0;
   }
 };
 
-/**
- * Pre-check if a user can play Bug Hunt right now.
- * This does a fresh Firestore read to avoid stale state issues.
- */
 export const canPlayBugHunt = async (userId: string): Promise<{ allowed: boolean; playsUsed: number; limit: number }> => {
   const settings = await getGameSettings();
   
@@ -264,7 +310,6 @@ export const canPlayBugHunt = async (userId: string): Promise<{ allowed: boolean
   }
   
   if (settings.bugHuntWeeklyLimit <= 0) {
-    // Unlimited
     return { allowed: true, playsUsed: 0, limit: 0 };
   }
   

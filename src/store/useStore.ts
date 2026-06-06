@@ -13,12 +13,13 @@ export interface UserProfile {
   streak: number;
   lastActive: string;
   createdAt: string;
-  role?: 'admin' | 'editor' | 'user';
+  role?: 'admin' | 'kordas' | 'asisten' | 'user';
   division?: string;
   levelAccessOverrides?: Record<string, 'auto' | 'unlocked' | 'locked'>;
+  assessmentAccess?: Record<string, boolean>;
 }
 
-type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin';
+type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin' | 'assessments' | 'monitoring' | 'bank_soal';
 
 interface AppState {
   user: UserProfile | null;

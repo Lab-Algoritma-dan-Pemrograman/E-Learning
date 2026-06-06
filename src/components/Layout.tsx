@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, Sparkles } from 'lucide-react';
+import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, Sparkles, FileText, Monitor, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { logout } from '../firebase';
@@ -9,6 +9,8 @@ import { AchievementPopup } from './AchievementPopup';
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isSidebarOpen, toggleSidebar, user, page, setPage, unlockedAchievement, setUnlockedAchievement } = useStore();
 
+  const isAssistantOrAbove = user?.role === 'admin' || user?.role === 'kordas' || user?.role === 'asisten';
+  const isKordasOrAdmin = user?.role === 'admin' || user?.role === 'kordas';
   const isAdmin = user?.role === 'admin';
 
   const handleLogout = async () => {
@@ -42,7 +44,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </button>
             </div>
 
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
               <SidebarItem 
                 icon={<LayoutDashboard size={20} />} 
                 label="Dasbor" 
@@ -71,10 +73,45 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 active={page === 'leaderboard'} 
                 onClick={(e) => { e.preventDefault(); setPage('leaderboard'); }}
               />
+              
+              {/* Assessments Menu for Students */}
+              {user?.role === 'user' && (
+                <SidebarItem 
+                  icon={<FileText size={20} className="text-zinc-500" />} 
+                  label="Asesmen & Ujian" 
+                  href="/assessments" 
+                  active={page === 'assessments'} 
+                  onClick={(e) => { e.preventDefault(); setPage('assessments'); }}
+                />
+              )}
+
+              {/* Monitoring Dashboard for Assistants and above */}
+              {isAssistantOrAbove && (
+                <SidebarItem 
+                  icon={<Monitor size={20} className="text-zinc-500" />} 
+                  label="Monitoring & Rekap" 
+                  href="/monitoring" 
+                  active={page === 'monitoring'} 
+                  onClick={(e) => { e.preventDefault(); setPage('monitoring'); }}
+                />
+              )}
+
+              {/* Question Bank for Kordas and above */}
+              {isKordasOrAdmin && (
+                <SidebarItem 
+                  icon={<Database size={20} className="text-zinc-500" />} 
+                  label="Bank Soal Asesmen" 
+                  href="/bank_soal" 
+                  active={page === 'bank_soal'} 
+                  onClick={(e) => { e.preventDefault(); setPage('bank_soal'); }}
+                />
+              )}
+
+              {/* Super Admin Control */}
               {isAdmin && (
                 <SidebarItem 
                   icon={<ShieldCheck size={20} />} 
-                  label="Admin" 
+                  label="Admin Panel" 
                   href="/admin" 
                   active={page === 'admin'} 
                   onClick={(e) => { e.preventDefault(); setPage('admin'); }}
