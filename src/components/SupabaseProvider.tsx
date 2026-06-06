@@ -95,7 +95,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               post_test: false,
               program_keterampilan: false,
               ujian_praktik: false
-            }
+            },
+            level_access_overrides: {}
           };
 
           const { error: insertError } = await supabase
@@ -119,7 +120,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             lastActive: newProfile.last_active,
             createdAt: newProfile.created_at,
             role: newProfile.role as any,
-            assessmentAccess: newProfile.assessment_access as any
+            assessmentAccess: newProfile.assessment_access as any,
+            levelAccessOverrides: newProfile.level_access_overrides as any
           };
           console.log("New profile created successfully in Supabase");
         } else {
@@ -137,7 +139,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             lastActive: userProfile.last_active,
             createdAt: userProfile.created_at,
             role: userProfile.role as any,
-            assessmentAccess: userProfile.assessment_access as any
+            assessmentAccess: userProfile.assessment_access as any,
+            levelAccessOverrides: userProfile.level_access_overrides || {}
           };
 
           // Update nama/kelas/role if changed in Web Utama
@@ -181,7 +184,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               lastActive: updated.last_active,
               createdAt: updated.created_at,
               role: updated.role,
-              assessmentAccess: updated.assessment_access
+              assessmentAccess: updated.assessment_access,
+              levelAccessOverrides: updated.level_access_overrides || {}
             });
           })
           .subscribe();
@@ -243,7 +247,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             post_test: false,
             program_keterampilan: false,
             ujian_praktik: false
-          }
+          },
+          levelAccessOverrides: {}
         };
         setStoreUser(fallbackProfile);
       } finally {
