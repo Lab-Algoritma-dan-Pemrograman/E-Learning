@@ -50,9 +50,18 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       const payload = result.payload;
+      
+      // Normalize and map 'koordinator' role from Web Utama to 'kordas' in E-Learning
+      const rawRole = (payload as any).role;
+      let mappedRole: 'admin' | 'kordas' | 'asisten' | 'user' = 'user';
+      if (rawRole === 'admin') mappedRole = 'admin';
+      else if (rawRole === 'kordas' || rawRole === 'koordinator') mappedRole = 'kordas';
+      else if (rawRole === 'asisten') mappedRole = 'asisten';
+      payload.role = mappedRole;
+
       const savedToken = sessionStorage.getItem('elearning_token') || '';
 
-      console.log("Token valid for Supabase:", payload.nim, payload.nama, "Role:", payload.role || "no role (default: user)");
+      console.log("Token valid for Supabase:", payload.nim, payload.nama, "Role:", payload.role);
       setTokenPayload(payload);
       setIsSyncing(true);
       setSyncError(null);
