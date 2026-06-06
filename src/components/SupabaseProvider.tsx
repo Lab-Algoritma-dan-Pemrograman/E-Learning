@@ -52,7 +52,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const payload = result.payload;
       const savedToken = sessionStorage.getItem('elearning_token') || '';
 
-      console.log("Token valid for Supabase:", payload.nim, payload.nama);
+      console.log("Token valid for Supabase:", payload.nim, payload.nama, "Role:", payload.role || "no role (default: user)");
       setTokenPayload(payload);
       setIsSyncing(true);
       setSyncError(null);
