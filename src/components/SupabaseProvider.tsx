@@ -89,7 +89,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             streak: 0,
             last_active: new Date().toISOString(),
             created_at: new Date().toISOString(),
-            role: 'user',
+            role: payload.role || 'user',
             assessment_access: {
               pre_test: false,
               post_test: false,
@@ -140,14 +140,18 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             assessmentAccess: userProfile.assessment_access as any
           };
 
-          // Update nama/kelas if changed in Web Utama
-          if (profileData.nama !== payload.nama || profileData.kelas !== payload.kelas) {
+          // Update nama/kelas/role if changed in Web Utama
+          if (profileData.nama !== payload.nama || profileData.kelas !== payload.kelas || (payload.role && profileData.role !== payload.role)) {
+            const updates: any = { nama: payload.nama, kelas: payload.kelas };
+            if (payload.role) updates.role = payload.role;
+
             await supabase
               .from('users')
-              .update({ nama: payload.nama, kelas: payload.kelas })
+              .update(updates)
               .eq('nim', nim);
             profileData.nama = payload.nama;
             profileData.kelas = payload.kelas;
+            if (payload.role) profileData.role = payload.role as any;
           }
         }
 
