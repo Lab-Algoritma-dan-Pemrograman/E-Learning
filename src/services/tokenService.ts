@@ -1,6 +1,4 @@
 import { jwtVerify, decodeJwt } from 'jose';
-import { signInWithCustomToken } from 'firebase/auth';
-import { auth } from '../firebase';
 
 export interface TokenPayload {
   nim: string;
@@ -103,21 +101,6 @@ export async function verifyToken(token: string): Promise<VerifyResult | null> {
   }
 }
 
-/**
- * Sign in to Firebase Auth using a Custom Token.
- * This makes request.auth.uid available in Firestore Security Rules.
- * Returns true if sign-in was successful.
- */
-export async function signInToFirebase(firebaseToken: string): Promise<boolean> {
-  try {
-    const userCredential = await signInWithCustomToken(auth, firebaseToken);
-    console.log('✅ Firebase Auth: Signed in as', userCredential.user.uid);
-    return true;
-  } catch (error) {
-    console.error('❌ Firebase Auth sign-in failed:', error);
-    return false;
-  }
-}
 
 /**
  * Initialize user session from token.

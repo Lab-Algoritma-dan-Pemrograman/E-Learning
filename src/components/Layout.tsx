@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, Sparkles, FileText, Monitor, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
-import { logout } from '../firebase';
+import { clearToken } from '../services/tokenService';
 import { AchievementPopup } from './AchievementPopup';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -15,7 +15,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const handleLogout = async () => {
     try {
-      await logout();
+      clearToken();
+      window.location.reload();
     } catch (error) {
       console.error('Logout failed:', error);
     }

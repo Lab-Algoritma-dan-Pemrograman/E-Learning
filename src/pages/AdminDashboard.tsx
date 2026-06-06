@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, getDocs } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
 import { supabase } from '../lib/supabase';
 import { UserProfile, useStore } from '../store/useStore';
 import { cn } from '../lib/utils';

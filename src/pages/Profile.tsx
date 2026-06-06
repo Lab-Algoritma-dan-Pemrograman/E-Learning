@@ -5,8 +5,7 @@ import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 import { useEffect, useState } from 'react';
-import { collection, onSnapshot, query } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { Achievement } from '../services/achievementService';
 import achievementsData from '../data/achievements.json';
 
@@ -17,11 +16,35 @@ export const Profile: React.FC = () => {
 
   useEffect(() => {
     if (!user?.nim) return;
-    const q = query(collection(db, 'users', user.nim, 'unlocked_achievements'));
-    return onSnapshot(q, (snapshot) => {
-      const ids = new Set(snapshot.docs.map(doc => doc.id));
-      setUnlockedIds(ids);
-    });
+    
+    const fetchUnlocked = async () => {
+      const { data, error } = await supabase
+        .from('unlocked_achievements')
+        .select('achievement_id')
+        .eq('nim', user.nim);
+        
+      if (!error && data) {
+        setUnlockedIds(new Set(data.map(d => d.achievement_id)));
+      }
+    };
+    
+    fetchUnlocked();
+
+    const channel = supabase
+      .channel(`public:unlocked_achievements:nim=${user.nim}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'unlocked_achievements', 
+        filter: `nim=eq.${user.nim}` 
+      }, () => {
+        fetchUnlocked();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.nim]);
 
   const joinedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'March 2026';
