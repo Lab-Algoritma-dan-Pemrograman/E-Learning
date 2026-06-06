@@ -1,25 +1,26 @@
 # Product Requirement Document (PRD)
-## Fitur Asesmen (Pre-Test, Post-Test, Program Keterampilan, Ujian Praktik), Monitoring Aktivitas, & Migrasi Supabase
+## Fitur Asesmen, Monitoring Aktivitas, Auto-Save, & Migrasi Supabase
 
 | Dokumen | Product Requirement Document (PRD) |
 |---|---|
-| **Fitur** | Menu Asesmen, Monitoring Dashboard, & Arsitektur Supabase |
-| **Status** | Draft (Planning Mode - Updated) |
+| **Fitur** | Menu Asesmen, Monitoring Dashboard, Auto-Save, & Arsitektur Supabase |
+| **Status** | Draft (Planning Mode - Updated v2) |
 | **Target Pengguna** | Mahasiswa (Student), Asisten Laboratorium (Assistant), Koordinator Asisten (Kordas), Admin |
-| **Model Evaluasi** | AI-Powered Grading (Gemini 3.5 Flash / 3-flash-preview) - Triggered by Assistant |
+| **Model Evaluasi** | AI-Powered Grading (Gemini / Custom Model GPT-OS) - Batch Evaluation by Assistant |
 
 ---
 
 ## 1. Latar Belakang & Tujuan
 Untuk mengukur dan mengevaluasi pemahaman mahasiswa secara berkala dan objektif, sistem E-Learning memerlukan fitur asesmen terstruktur yang terpisah dari alur belajar mandiri biasa. Terdapat empat jenis asesmen baru yang dirancang dengan karakteristik jumlah soal, tingkat kesulitan, dan kriteria penilaian yang spesifik.
 
-Penilaian seluruh asesmen ini akan diotomatisasi menggunakan kecerdasan buatan (AI) untuk menganalisis kebenaran logika, kualitas penjelasan, serta fungsionalitas kode program. 
+**Pembaharuan Alur AI Grading (Batch Evaluation & Multi-Model)**:
+- Penilaian AI dipicu secara manual oleh **Asisten/Kordas/Admin** via dashboard (single/bulk choice).
+- **Optimalisasi Call API**: AI mengevaluasi **seluruh soal dalam satu pengerjaan mahasiswa sekaligus (batch/single-call)** daripada melakukan call terpisah per-soal. Sebagai contoh, untuk Pre-Test (5 soal), sistem hanya melakukan 1 call API Gemini dengan menyematkan 5 soal dan 5 jawaban mahasiswa sekaligus. Hal ini memangkas konsumsi kuota API sebesar 80% dan mempercepat durasi penilaian massal.
+- **Dukungan Multi-Model**: Sistem mendukung rotasi kunci API (key rotation) serta integrasi model eksternal/Lokal (seperti GPT Open Source 120B / DeepSeek) untuk menangani request massal tanpa terhambat batas rate limit.
 
-**Perubahan Utama Alur Penilaian (AI Grading)**: 
-Untuk menghemat kuota API Gemini dan memberikan kendali penuh ke staf pengajar, **mahasiswa tidak memicu penilaian AI secara langsung**. Mahasiswa hanya melakukan submit hasil pengerjaan (status berubah menjadi `submitted`). Proses penilaian AI dipicu secara manual oleh **Asisten, Kordas, atau Admin** melalui dashboard, baik satu per satu (single grading) maupun secara serentak (bulk grading).
-
-**Migrasi Database**: 
-Untuk meningkatkan performa query relasional dan kemudahan integrasi, sistem berpindah sepenuhnya dari **Firebase Firestore** ke **Supabase PostgreSQL**.
+**Auto-Save & Rekap Jawaban**:
+- **Auto-Save**: Sistem melakukan sinkronisasi otomatis draf jawaban mahasiswa ke database Supabase setiap 30 detik (atau saat berpindah soal) untuk mencegah kehilangan data akibat listrik padam atau browser crash.
+- **Rekap Jawaban**: Dashboard Monitoring menyediakan sub-menu rekap jawaban untuk memantau status penyimpanan draf jawaban mahasiswa (apakah sudah terisi, masih kosong, atau sudah disubmit) sebelum penilaian dimulai.
 
 ---
 
@@ -29,9 +30,11 @@ Sistem memiliki 4 peran pengguna dengan kewenangan sebagai berikut:
 | Hak Akses / Fitur | Student (`user`) | Assistant (`asisten`) | Kordas (`kordas`) | Admin (`admin`) |
 |---|:---:|:---:|:---:|:---:|
 | Mengerjakan Asesmen yang Terbuka | ✅ | ❌ | ❌ | ❌ |
+| Auto-Save Jawaban Berkala | ✅ | ❌ | ❌ | ❌ |
 | Memasukkan Token Ujian Praktik | ✅ | ❌ | ❌ | ❌ |
 | Melihat Nilai & Riwayat Sendiri | ✅ | ❌ | ❌ | ❌ |
 | Memonitor Aktivitas Mahasiswa Real-Time | ❌ | ✅ | ✅ | ✅ |
+| Melihat Rekap Jawaban Mahasiswa | ❌ | ✅ | ✅ | ✅ |
 | Memicu Penilaian AI Mahasiswa (Single / Bulk Choice) | ❌ | ✅ | ✅ | ✅ |
 | Melihat Log Aktivitas Pengguna | ❌ | ✅ | ✅ | ✅ |
 | Membuka/Mengunci Menu Asesmen Mahasiswa | ❌ | ✅ | ✅ | ✅ |
@@ -134,21 +137,20 @@ Setiap menu asesmen memiliki struktur, distribusi soal, dan sistem penilaian yan
 
 ---
 
-## 4. Sistem Manajemen Aturan & Bank Soal (CRUD)
-Disediakan dashboard bagi **Admin/Kordas** di Supabase untuk mengelola aturan asesmen dan konten soal:
-1. **Aturan Asesmen**:
-   - Menghidupkan/mematikan asesmen tertentu.
-   - Durasi waktu pengerjaan masing-masing menu.
-   - Skema bobot nilai.
-2. **Manajemen Soal**:
-   - CRUD soal yang dikelompokkan berdasarkan menu asesmen (`pre_test`, `post_test`, `skill_program`, `ujian_praktik`).
-   - Penentuan tipe soal (`essay`, `short_answer`, `coding`, `flowchart_translation`).
-   - Kolom isian soal lengkap: Pertanyaan, Tingkat Kesulitan, Modul Asosiasi, Kode Awal, Kode Solusi Referensi, Input/Output Test Cases, dan Parameter Kriteria AI.
+## 4. Fitur Auto-Save Jawaban
+Untuk menjamin integritas data jawaban mahasiswa dari kegagalan teknis (listrik padam/koneksi terputus/tab tertutup):
+1. **Pemicu Sinkronisasi**:
+   - **Berdasarkan Waktu**: Setiap 30 detik, draf jawaban mahasiswa yang sedang aktif dikerjakan akan disimpan otomatis ke database.
+   - **Berdasarkan Event**: Ketika mahasiswa berpindah nomor soal, menutup tab (window onbeforeunload), atau kehilangan fokus jendela (page visibility hidden).
+2. **Indikator UI**: Terdapat teks kecil di pojok kanan atas editor yang menunjukkan status penyimpanan:
+   - `Menyimpan draf...` (selama proses sinkronisasi)
+   - `Draf disimpan otomatis pukul HH:MM:SS` (ketika sukses menyimpan)
+   - `Gagal menyimpan draf, mencoba kembali...` (jika koneksi terputus)
 
 ---
 
 ## 5. Sistem Evaluasi & Penilaian Berbasis AI (AI Grading Engine)
-Penilaian jawaban dilakukan dengan alur terkontrol (triggered by assistant):
+Penilaian dilakukan dengan menggunakan metode **Batch Evaluation** untuk meningkatkan efisiensi Call API:
 
 ```mermaid
 sequenceDiagram
@@ -156,68 +158,47 @@ sequenceDiagram
     actor A as Asisten / Kordas
     participant C as Client App
     participant S as Supabase DB
-    participant AI as AI Grading Service (Gemini)
+    participant AI as AI Grading Service (Gemini/GPT-OS)
 
+    M->>C: Auto-Save (Setiap 30 detik)
+    C->>S: Update jawaban draf
     M->>C: Klik "Submit Asesmen"
     C->>S: Simpan Jawaban (status = 'submitted')
-    A->>C: Masuk Dashboard, Pilih Mahasiswa (Single/Bulk)
+    A->>C: Pilih Mahasiswa di Rekap Jawaban
     A->>C: Klik "Mulai Penilaian AI"
-    C->>AI: Kirim Jawaban, Kode, & Kunci ke AI (Concurrently)
-    AI-->>C: Response Hasil Evaluasi JSON & Skor
+    C->>AI: Kirim Kumpulan Soal & Jawaban (1 Call API berisi semua soal pengerjaan)
+    AI-->>C: Response JSON Hasil Evaluasi Seluruh Soal & Total Skor
     C->>S: Simpan Hasil Penilaian & Update status = 'graded'
 ```
 
-### Prompt AI & Skema Output JSON
-AI (Gemini) bertindak sebagai evaluator yang objektif. Prompts yang dikirim ke AI wajib melampirkan parameter rubrik detail yang diisi oleh dosen/kordas. AI akan mengembalikan data terstruktur dalam format JSON agar dapat diparsing langsung oleh backend/client untuk masuk ke database.
-
-**Contoh Skema Respons JSON dari AI**:
-```json
-{
-  "scores": {
-    "syntax_ok": 7,
-    "instruction_adherence": 25,
-    "completion": 13
-  },
-  "total_score": 45,
-  "feedback": "Kode program berjalan dengan baik tanpa error. Seluruh instruksi variabel dan kontrol alur terpenuhi sesuai petunjuk.",
-  "analysis": {
-    "logic_errors": [],
-    "good_points": ["Menggunakan pointer secara tepat"],
-    "suggestions": []
-  }
-}
-```
+### Keunggulan Call Batch API:
+- Menilai 5 soal pre-test sekaligus hanya memerlukan 1 Call API ke model AI (Gemini / GPT OS).
+- Jika asisten menilai 15 mahasiswa secara serentak (bulk grading), sistem hanya melakukan **15 request API**, bukan 75 request. Ini mempermudah integrasi model AI tanpa terkena pembatasan rate limit.
 
 ---
 
 ## 6. Dashboard Monitoring & Log Aktivitas (Real-Time)
-Halaman khusus bagi Admin, Kordas, dan Asisten untuk mengawasi jalannya asesmen secara real-time.
+Halaman bagi Admin, Kordas, dan Asisten untuk mengawasi jalannya asesmen secara real-time.
 
-### A. Monitoring Aktivitas Real-Time
+### A. Monitoring & Rekap Jawaban
 1. **Siapa yang sedang Login (Active Users)**:
-   - Menampilkan daftar nama mahasiswa yang saat ini online (berdasarkan tracking status detak jantung/heartbeat login).
+   - Menampilkan daftar nama mahasiswa yang saat ini online (heartbeat login).
 2. **Siapa yang sedang Mengerjakan**:
-   - Detail pengerjaan: NIM, Nama, Kelas, Menu Asesmen yang sedang dikerjakan, Waktu Mulai, Sisa Waktu, dan status kemajuan pengerjaan (misal: Soal 3/6).
-3. **Belum Mengumpulkan (Unsubmitted Tracker)**:
-   - Daftar mahasiswa yang memiliki sesi aktif namun waktu pengerjaan hampir habis atau belum menekan tombol Submit.
-   - Pilihan bagi Kordas/Admin untuk memaksa pengumpulan (Force Submit) jika durasi ujian telah habis.
+   - Detail pengerjaan: NIM, Nama, Kelas, Menu Asesmen, Waktu Mulai, Sisa Waktu, dan status kemajuan pengerjaan.
+3. **Menu Rekap Jawaban (Answer Recap)**:
+   - Menampilkan matriks status jawaban untuk seluruh soal ujian mahasiswa (misal untuk Ujian Praktik: Soal 1 s.d. Soal 6).
+   - Indikator status visual per-soal:
+     - `Kuning (Draft Terisi)`: Draf jawaban sudah tersimpan otomatis di database namun belum disubmit.
+     - `Abu-Abu (Kosong)`: Mahasiswa belum mengisi atau menyimpan draf untuk soal tersebut.
+     - `Hijau (Submitted)`: Ujian telah disubmit penuh dan siap dinilai AI.
+     - `Biru (Graded)`: Nilai AI sudah keluar dan tersimpan.
+   - Asisten dapat mengeklik baris mahasiswa untuk menginspeksi isi draf kode/jawaban yang sedang aktif diketik mahasiswa secara real-time.
 4. **Penilaian Serentak (Bulk AI Grading)**:
-   - Asisten dapat menandai beberapa baris mahasiswa dengan status `submitted`.
-   - Mengklik tombol "Penilaian Massal (AI)" untuk menilai seluruh baris yang dipilih secara paralel dan otomatis.
-
-### B. Audit Log Activity
-Menyimpan dan menampilkan histori tindakan penting dalam sistem:
-- `[Login/Logout] NIM - Nama berhasil masuk/keluar sistem.`
-- `[Start Test] NIM - Nama memulai pengerjaan Pre-Test.`
-- `[Submit Test] NIM - Nama mengumpulkan pengerjaan Post-Test.`
-- `[AI Grading Complete] Asisten menilai pengerjaan NIM - Nama via AI. Nilai akhir: 85.`
-- `[Token Generated] Kordas/Admin menghasilkan Token 'A7B2C9' untuk Ujian Praktik.`
-- `[Token Used] NIM - Nama menggunakan Token 'A7B2C9' untuk membuka Ujian Praktik.`
+   - Asisten dapat menandai beberapa baris mahasiswa berstatus `submitted` dan memicu penilaian AI secara massal (bulk).
 
 ---
 
 ## 7. Transisi & Migrasi Supabase
-Untuk memindahkan backend data secara penuh dari Firebase ke Supabase:
-1. **Supabase Auth**: Menggantikan Firebase Authentication. Integrasi JWT custom dari web utama dilakukan dengan melakukan validasi token JWT di API serverless, lalu menggunakan data payload untuk menyinkronkan status user atau sign-in ke Supabase.
-2. **Supabase Database (PostgreSQL)**: Menggantikan Firestore NoSQL. Seluruh koleksi dokumen dikonversikan ke dalam tabel relasional dengan integritas data (Foreign Keys, Constraints) dan aturan Row Level Security (RLS) PostgreSQL.
-3. **Supabase Realtime**: Menggantikan Firestore real-time snapshot (`onSnapshot`) untuk monitoring detak jantung/aktifnya mahasiswa dan logs aktivitas.
+1. **Supabase Auth**: Menggantikan Firebase Authentication.
+2. **Supabase Database (PostgreSQL)**: Menggantikan Firestore NoSQL dengan integritas relasional penuh.
+3. **Supabase Realtime**: Menyediakan sinkronisasi real-time status auto-save jawaban dan visualisasi status pengerjaan mahasiswa untuk asisten.
