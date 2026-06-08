@@ -33,7 +33,7 @@ export const AssessmentPage: React.FC = () => {
   const [answers, setAnswers] = useState<Record<string, { answerText?: string; codeSubmitted?: string; outputStandard?: string; errors?: string }>>({});
   
   // Timer State
-  const [timeLeft, setTimeLeft] = useState<number>(0); // in seconds
+  const [timeLeft, setTimeLeft] = useState<number | null>(null); // in seconds
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Heartbeat monitoring
@@ -81,21 +81,20 @@ export const AssessmentPage: React.FC = () => {
   }, [assessmentType, user]);
 
   const loadAttemptDetails = async (activeAttempt: AssessmentAttempt) => {
-    setAttempt(activeAttempt);
-    setAnswers(activeAttempt.answers || {});
-
-    // Load question definitions
+    // Load question definitions first
     const { data: questionData, error: qError } = await supabaseQueryQuestions(activeAttempt.selected_questions);
     if (qError) throw qError;
     
-    setQuestions(questionData || []);
-    setActiveQuestionIdx(0);
-
     // Initialize timer
     const elapsedSeconds = Math.floor((Date.now() - new Date(activeAttempt.started_at).getTime()) / 1000);
     const totalDurationSeconds = activeAttempt.duration_minutes * 60;
     const remaining = Math.max(0, totalDurationSeconds - elapsedSeconds);
+
+    setQuestions(questionData || []);
+    setActiveQuestionIdx(0);
+    setAnswers(activeAttempt.answers || {});
     setTimeLeft(remaining);
+    setAttempt(activeAttempt);
   };
 
   // Helper to fetch matching questions order
@@ -114,15 +113,17 @@ export const AssessmentPage: React.FC = () => {
 
   // Timer countdown hook
   useEffect(() => {
-    if (timeLeft <= 0 || !attempt) {
-      if (timeLeft === 0 && attempt) {
-        handleAutoSubmit();
-      }
+    if (timeLeft === null || !attempt) {
+      return;
+    }
+
+    if (timeLeft <= 0) {
+      handleAutoSubmit();
       return;
     }
 
     timerIntervalRef.current = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
+      setTimeLeft(prev => (prev !== null ? prev - 1 : null));
     }, 1000);
 
     return () => {
@@ -286,7 +287,8 @@ export const AssessmentPage: React.FC = () => {
     }));
   };
 
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number | null) => {
+    if (seconds === null) return "--:--:--";
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
