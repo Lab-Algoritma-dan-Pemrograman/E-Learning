@@ -20,11 +20,12 @@ export const QuestionBankDashboard: React.FC = () => {
 
   // Import Word / PPT State
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importFiles, setImportFiles] = useState<File[]>([]);
   const [importType, setImportType] = useState<'auto' | 'pre_post' | 'pre_post_ppt' | 'keterampilan' | 'ujian_praktik'>('auto');
   const [parsedQuestions, setParsedQuestions] = useState<Omit<AssessmentQuestion, 'id'>[]>([]);
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [isDragActive, setIsDragActive] = useState(false);
   const [rubricItems, setRubricItems] = useState<{ desc: string; points: number }[]>([]);
 
   useEffect(() => {
@@ -99,12 +100,52 @@ export const QuestionBankDashboard: React.FC = () => {
     }
   };
 
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const validFiles: File[] = [];
+      for (let i = 0; i < e.dataTransfer.files.length; i++) {
+        const file = e.dataTransfer.files[i];
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (ext === 'docx' || ext === 'pptx') {
+          validFiles.push(file);
+        }
+      }
+      if (validFiles.length > 0) {
+        setImportFiles(prev => [...prev, ...validFiles]);
+        setImportError(null);
+        setParsedQuestions([]);
+      } else {
+        setImportError("Format file tidak didukung. Hanya file .docx dan .pptx yang diizinkan.");
+      }
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setImportFile(e.target.files[0]);
+      const validFiles: File[] = Array.from(e.target.files);
+      setImportFiles(prev => [...prev, ...validFiles]);
       setImportError(null);
       setParsedQuestions([]);
     }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setImportFiles(prev => prev.filter((_, i) => i !== index));
+    setParsedQuestions([]);
   };
 
   const handleAddRubricItem = () => {
@@ -122,7 +163,7 @@ export const QuestionBankDashboard: React.FC = () => {
   };
 
   const handleProcessImport = async () => {
-    if (!importFile) {
+    if (importFiles.length === 0) {
       setImportError("Silakan pilih file terlebih dahulu.");
       return;
     }
@@ -130,54 +171,73 @@ export const QuestionBankDashboard: React.FC = () => {
     setImportLoading(true);
     setImportError(null);
     try {
-      const filename = importFile.name;
-      const fileExt = filename.split('.').pop()?.toLowerCase();
-      
-      let detectedType = importType;
-      if (detectedType === 'auto') {
-        if (fileExt === 'pptx') {
-          if (filename.toLowerCase().includes("pre") || filename.toLowerCase().includes("post")) {
-            detectedType = 'pre_post_ppt';
+      let allParsed: any[] = [];
+      const errors: string[] = [];
+
+      for (const file of importFiles) {
+        const filename = file.name;
+        const fileExt = filename.split('.').pop()?.toLowerCase();
+        
+        let detectedType = importType;
+        if (detectedType === 'auto') {
+          if (fileExt === 'pptx') {
+            if (filename.toLowerCase().includes("pre") || filename.toLowerCase().includes("post")) {
+              detectedType = 'pre_post_ppt';
+            } else {
+              detectedType = 'ujian_praktik';
+            }
+          } else if (fileExt === 'docx') {
+            if (filename.toLowerCase().includes("keterampilan")) {
+              detectedType = 'keterampilan';
+            } else {
+              detectedType = 'pre_post';
+            }
           } else {
-            detectedType = 'ujian_praktik';
+            errors.push(`${filename}: Format file tidak didukung.`);
+            continue;
           }
-        } else if (fileExt === 'docx') {
-          if (filename.toLowerCase().includes("keterampilan")) {
-            detectedType = 'keterampilan';
+        }
+
+        try {
+          let parsed: any[] = [];
+          if (detectedType === 'pre_post') {
+            if (fileExt !== 'docx') throw new Error("Pre/Post-Test harus berupa file Word (.docx).");
+            const paragraphs = await extractDocxText(file);
+            parsed = parsePrePostTest(paragraphs, filename);
+          } else if (detectedType === 'pre_post_ppt') {
+            if (fileExt !== 'pptx') throw new Error("File PowerPoint (.pptx) dibutuhkan.");
+            const slides = await extractPptxSlides(file);
+            const isPre = filename.toLowerCase().includes("pre");
+            parsed = parsePrePostTestPpt(slides, filename, isPre ? 'pre_test' : 'post_test');
+          } else if (detectedType === 'keterampilan') {
+            if (fileExt !== 'docx') throw new Error("Program Keterampilan harus berupa file Word (.docx).");
+            const paragraphs = await extractDocxText(file);
+            parsed = parseProgramKeterampilan(paragraphs, filename);
+          } else if (detectedType === 'ujian_praktik') {
+            if (fileExt !== 'pptx') throw new Error("Ujian Praktik harus berupa file PowerPoint (.pptx).");
+            const slides = await extractPptxSlides(file);
+            parsed = parseUjianPraktik(slides, filename);
+          }
+
+          if (parsed.length === 0) {
+            errors.push(`${filename}: Tidak ada soal yang berhasil diekstrak.`);
           } else {
-            detectedType = 'pre_post';
+            allParsed = [...allParsed, ...parsed];
           }
-        } else {
-          throw new Error("Format file tidak didukung. Harap unggah file .docx atau .pptx.");
+        } catch (e: any) {
+          errors.push(`${filename}: ${e.message || "Gagal memproses file."}`);
         }
       }
 
-      let parsed: any[] = [];
-
-      if (detectedType === 'pre_post') {
-        if (fileExt !== 'docx') throw new Error("Pre/Post-Test harus berupa file Word (.docx).");
-        const paragraphs = await extractDocxText(importFile);
-        parsed = parsePrePostTest(paragraphs, filename);
-      } else if (detectedType === 'pre_post_ppt') {
-        if (fileExt !== 'pptx') throw new Error("File PowerPoint (.pptx) dibutuhkan.");
-        const slides = await extractPptxSlides(importFile);
-        const isPre = filename.toLowerCase().includes("pre");
-        parsed = parsePrePostTestPpt(slides, filename, isPre ? 'pre_test' : 'post_test');
-      } else if (detectedType === 'keterampilan') {
-        if (fileExt !== 'docx') throw new Error("Program Keterampilan harus berupa file Word (.docx).");
-        const paragraphs = await extractDocxText(importFile);
-        parsed = parseProgramKeterampilan(paragraphs, filename);
-      } else if (detectedType === 'ujian_praktik') {
-        if (fileExt !== 'pptx') throw new Error("Ujian Praktik harus berupa file PowerPoint (.pptx).");
-        const slides = await extractPptxSlides(importFile);
-        parsed = parseUjianPraktik(slides, filename);
+      if (allParsed.length === 0) {
+        throw new Error(errors.length > 0 ? errors.join("\n") : "Tidak ada soal yang berhasil diekstrak.");
       }
 
-      if (parsed.length === 0) {
-        throw new Error("Tidak ada soal yang berhasil diekstrak. Pastikan format dokumen sesuai.");
+      if (errors.length > 0) {
+        setImportError(`Selesai dengan beberapa error:\n${errors.join("\n")}`);
       }
 
-      setParsedQuestions(parsed);
+      setParsedQuestions(allParsed);
     } catch (e: any) {
       setImportError(e.message || "Gagal memproses file.");
     } finally {
@@ -199,7 +259,7 @@ export const QuestionBankDashboard: React.FC = () => {
       }
       alert(`Berhasil menyimpan ${successCount} soal ke dalam bank soal!`);
       setIsImportOpen(false);
-      setImportFile(null);
+      setImportFiles([]);
       setParsedQuestions([]);
       fetchQuestions();
     } catch (e: any) {
@@ -635,16 +695,69 @@ export const QuestionBankDashboard: React.FC = () => {
             <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
               <h3 className="text-xl font-bold">Import Soal Asesmen (Word / PPTX)</h3>
               <button 
-                onClick={() => { setIsImportOpen(false); setImportFile(null); setParsedQuestions([]); }}
+                onClick={() => { setIsImportOpen(false); setImportFiles([]); setParsedQuestions([]); }}
                 className="text-xs text-zinc-500 hover:text-rose-700 underline font-bold"
               >
                 Kembali ke Bank Soal
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            {/* DRAG AND DROP AREA */}
+            <div 
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDragLeave={handleDrag}
+              onDrop={handleDrop}
+              className={cn(
+                "border-2 border-dashed rounded-3xl p-8 text-center flex flex-col items-center justify-center transition-all cursor-pointer select-none",
+                isDragActive 
+                  ? "border-rose-700 bg-rose-50/50 scale-[0.99]" 
+                  : "border-zinc-200 bg-zinc-50 hover:bg-zinc-100/50"
+              )}
+            >
+              <input
+                type="file"
+                multiple
+                accept=".docx,.pptx"
+                onChange={handleFileChange}
+                className="hidden"
+                id="file-import-input"
+              />
+              <label htmlFor="file-import-input" className="cursor-pointer flex flex-col items-center justify-center w-full h-full">
+                <Upload size={40} className={cn("mb-3 transition-colors", isDragActive ? "text-rose-700" : "text-zinc-400")} />
+                <span className="text-zinc-800 font-bold text-base">Drag & Drop file Word/PPTX di sini</span>
+                <span className="text-zinc-400 text-xs mt-1">atau klik untuk menelusuri folder komputer</span>
+                <span className="text-[10px] text-zinc-400 mt-2 font-medium">Mendukung banyak file sekaligus (.docx, .pptx)</span>
+              </label>
+            </div>
+
+            {/* FILE PREVIEW LIST */}
+            {importFiles.length > 0 && (
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Tipe Dokumen</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest block">File Terpilih ({importFiles.length})</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {importFiles.map((file, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-zinc-50 border border-zinc-200 px-3.5 py-2.5 rounded-xl text-xs font-medium">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText size={15} className="text-rose-700 shrink-0" />
+                        <span className="text-zinc-700 truncate" title={file.name}>{file.name}</span>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => handleRemoveFile(idx)}
+                        className="text-zinc-400 hover:text-red-600 transition-colors font-bold ml-2 shrink-0 text-sm"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-4 pt-2">
+              <div className="space-y-2 flex-1 sm:max-w-xs">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest block">Tipe Dokumen</label>
                 <select
                   value={importType}
                   onChange={(e: any) => setImportType(e.target.value)}
@@ -658,35 +771,30 @@ export const QuestionBankDashboard: React.FC = () => {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pilih File Dokumentasi</label>
-                <div className="relative flex items-center border border-zinc-200 px-4 py-3 rounded-xl bg-zinc-50 text-sm font-bold focus-within:border-rose-700">
-                  <input
-                    type="file"
-                    accept=".docx,.pptx"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                  <FileText size={16} className="text-zinc-400 mr-2" />
-                  <span className="text-zinc-600 truncate">
-                    {importFile ? importFile.name : "Pilih file .docx atau .pptx"}
-                  </span>
-                </div>
+              <div className="flex gap-2">
+                {importFiles.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setImportFiles([]); setParsedQuestions([]); setImportError(null); }}
+                    className="px-5 py-3 border border-zinc-200 text-zinc-600 font-bold rounded-xl active:scale-95 transition-all text-sm hover:bg-zinc-50"
+                  >
+                    Bersihkan Semua
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleProcessImport}
+                  disabled={importFiles.length === 0 || importLoading}
+                  className="px-6 py-3 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md shadow-rose-700/10 flex items-center justify-center gap-1.5 text-sm shrink-0"
+                >
+                  {importLoading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                  Ekstrak & Preview Soal
+                </button>
               </div>
-
-              <button
-                type="button"
-                onClick={handleProcessImport}
-                disabled={!importFile || importLoading}
-                className="w-full py-3 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md shadow-rose-700/10 flex items-center justify-center gap-1.5 text-sm"
-              >
-                {importLoading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                Ekstrak & Preview Soal
-              </button>
             </div>
 
             {importError && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm font-medium">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm font-medium whitespace-pre-line">
                 {importError}
               </div>
             )}
