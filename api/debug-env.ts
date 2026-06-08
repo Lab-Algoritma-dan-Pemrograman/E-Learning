@@ -1,5 +1,5 @@
 import { jwtVerify } from 'jose';
-import { getSupabaseSecret, getWebUtamaSecret } from './auth';
+import { getSupabaseSecret, getWebUtamaSecret } from './auth.js';
 
 export default async function handler(req: any, res: any) {
   const { code, token } = req.query;

@@ -1,5 +1,5 @@
 import { SignJWT } from 'jose';
-import { verifyToken, getSupabaseSecret } from './auth';
+import { verifyToken, getSupabaseSecret } from './auth.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {

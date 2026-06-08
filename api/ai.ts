@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { verifyToken } from './auth';
+import { verifyToken } from './auth.js';
 
 
 export default async function handler(req: Request) {

@@ -1,4 +1,4 @@
-import { verifyToken } from './auth';
+import { verifyToken } from './auth.js';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase Client (Only once)
