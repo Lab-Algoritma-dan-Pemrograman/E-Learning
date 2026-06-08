@@ -108,8 +108,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 />
               )}
 
-              {/* Super Admin Control */}
-              {isAdmin && (
+              {/* Admin Panel for Kordas and Admin */}
+              {isKordasOrAdmin && (
                 <SidebarItem 
                   icon={<ShieldCheck size={20} />} 
                   label="Admin Panel" 
