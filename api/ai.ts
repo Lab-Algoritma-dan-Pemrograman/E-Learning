@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { jwtVerify } from 'jose';
+import { verifyToken } from './auth';
 
 
 export default async function handler(req: Request) {
@@ -30,11 +30,9 @@ export default async function handler(req: Request) {
     }
 
     // 1. Verify JWT token
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     let tokenPayload: any;
     try {
-      const { payload } = await jwtVerify(token, secret);
-      tokenPayload = payload;
+      tokenPayload = await verifyToken(token);
     } catch (e) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token' }), { status: 401 });
     }

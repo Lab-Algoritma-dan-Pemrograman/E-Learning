@@ -1,4 +1,4 @@
-import { jwtVerify } from 'jose';
+import { verifyToken } from './auth';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase Client (Only once)
@@ -19,9 +19,12 @@ export default async function handler(req: any, res: any) {
     }
 
     // 1. Verify token
-    const secret = new TextEncoder().encode(process.env.VITE_JWT_SECRET || process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
-    const tokenPayload = payload as any;
+    let tokenPayload: any;
+    try {
+      tokenPayload = await verifyToken(token);
+    } catch (e) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
 
     if (tokenPayload.nim !== nim) {
       return res.status(403).json({ error: 'Identity mismatch' });

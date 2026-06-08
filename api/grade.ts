@@ -1,4 +1,4 @@
-import { jwtVerify } from 'jose';
+import { verifyToken } from './auth';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from "@google/genai";
 
@@ -40,11 +40,9 @@ export default async function handler(req: any, res: any) {
     }
 
     // 1. Verify JWT token
-    const secret = new TextEncoder().encode(process.env.VITE_JWT_SECRET || process.env.JWT_SECRET);
     let tokenPayload: any;
     try {
-      const { payload } = await jwtVerify(token, secret);
-      tokenPayload = payload;
+      tokenPayload = await verifyToken(token);
     } catch (e) {
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
