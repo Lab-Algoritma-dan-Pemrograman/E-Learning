@@ -389,12 +389,13 @@ $$ LANGUAGE sql STABLE;
 
 CREATE OR REPLACE FUNCTION public.auth_role() 
 RETURNS TEXT AS $$
-  -- Mendapatkan role user dari JWT Claim custom, memetakan koordinator ke kordas dan user ke praktikan
+  -- Mendapatkan role user dari JWT Claim custom 'user_role' (bukan 'role' yang dipakai Supabase)
+  -- Memetakan koordinator ke kordas dan user ke praktikan
   SELECT COALESCE(
     CASE 
-      WHEN current_setting('request.jwt.claims', true)::json->>'role' = 'koordinator' THEN 'kordas'
-      WHEN current_setting('request.jwt.claims', true)::json->>'role' = 'user' THEN 'praktikan'
-      ELSE current_setting('request.jwt.claims', true)::json->>'role'
+      WHEN current_setting('request.jwt.claims', true)::json->>'user_role' = 'koordinator' THEN 'kordas'
+      WHEN current_setting('request.jwt.claims', true)::json->>'user_role' = 'user' THEN 'praktikan'
+      ELSE current_setting('request.jwt.claims', true)::json->>'user_role'
     END,
     'praktikan'
   )::text;
@@ -495,11 +496,12 @@ UPDATE users SET role = 'praktikan' WHERE role = 'user';
 -- =========================================================================
 CREATE OR REPLACE FUNCTION public.auth_role() 
 RETURNS TEXT AS $$
+  -- Membaca dari claim 'user_role' (bukan 'role' yang berisi 'authenticated' untuk Supabase)
   SELECT COALESCE(
     CASE 
-      WHEN current_setting('request.jwt.claims', true)::json->>'role' = 'koordinator' THEN 'kordas'
-      WHEN current_setting('request.jwt.claims', true)::json->>'role' = 'user' THEN 'praktikan'
-      ELSE current_setting('request.jwt.claims', true)::json->>'role'
+      WHEN current_setting('request.jwt.claims', true)::json->>'user_role' = 'koordinator' THEN 'kordas'
+      WHEN current_setting('request.jwt.claims', true)::json->>'user_role' = 'user' THEN 'praktikan'
+      ELSE current_setting('request.jwt.claims', true)::json->>'user_role'
     END,
     'praktikan'
   )::text;

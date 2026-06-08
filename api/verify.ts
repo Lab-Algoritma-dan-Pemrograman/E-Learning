@@ -32,8 +32,12 @@ export default async function handler(req: any, res: any) {
           nim: tokenPayload.nim,
           nama: tokenPayload.nama,
           kelas: tokenPayload.kelas,
-          role: tokenPayload.role || 'praktikan',
-          email: tokenPayload.email || null
+          role: 'authenticated',
+          user_role: tokenPayload.role || 'praktikan',
+          email: tokenPayload.email || null,
+          iss: 'supabase',
+          sub: tokenPayload.nim,
+          aud: 'authenticated'
         })
           .setProtectedHeader({ alg: 'HS256' })
           .setIssuedAt()
