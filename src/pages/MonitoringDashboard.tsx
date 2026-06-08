@@ -39,6 +39,8 @@ export const MonitoringDashboard: React.FC = () => {
 
   // Draft inspection modal state
   const [inspectingAttempt, setInspectingAttempt] = useState<any | null>(null);
+  const [classFilter, setClassFilter] = useState<string>('all');
+  const [majorFilter, setMajorFilter] = useState<string>('all');
 
   // Initialize data subscriptions
   useEffect(() => {
@@ -258,6 +260,40 @@ export const MonitoringDashboard: React.FC = () => {
     s.kelas.toLowerCase().includes(searchFilter.toLowerCase())
   );
 
+  // Derive unique classes from attempts data
+  const uniqueClasses = [...new Set(attempts.map((a: any) => a.users?.kelas).filter(Boolean))];
+
+  // Major detection from NIM prefix
+  const getMajorFromNim = (nim: string) => {
+    if (nim.startsWith('202515')) return 'Teknik Informatika';
+    if (nim.startsWith('202516')) return 'Sistem Informasi';
+    if (nim.startsWith('202517')) return 'Teknik Komputer';
+    return 'Lainnya';
+  };
+  const uniqueMajors = [...new Set(attempts.map((a: any) => getMajorFromNim(a.nim)).filter(Boolean))];
+
+  // Deduplicate attempts: keep only latest per NIM
+  const deduplicatedAttempts = (() => {
+    const map = new Map<string, any>();
+    for (const att of attempts) {
+      const existing = map.get(att.nim);
+      if (!existing || new Date(att.started_at) > new Date(existing.started_at)) {
+        map.set(att.nim, att);
+      }
+    }
+    return [...map.values()];
+  })();
+
+  // Apply class and major filters
+  const filteredAttempts = deduplicatedAttempts.filter(att => {
+    if (classFilter !== 'all' && att.users?.kelas !== classFilter) return false;
+    if (majorFilter !== 'all' && getMajorFromNim(att.nim) !== majorFilter) return false;
+    return true;
+  });
+
+  // Online sessions (heartbeat < 60s)
+  const onlineSessions = sessions.filter(s => (Date.now() - new Date(s.last_heartbeat).getTime()) < 60000);
+
   return (
     <Layout>
       <div className="space-y-8 max-w-7xl mx-auto">
@@ -314,6 +350,24 @@ export const MonitoringDashboard: React.FC = () => {
                     <option value="ujian_praktik">UJIAN PRAKTIK</option>
                   </select>
 
+                  <select
+                    value={classFilter}
+                    onChange={(e: any) => setClassFilter(e.target.value)}
+                    className="px-4 py-2 border border-zinc-200 rounded-xl outline-none font-bold text-sm bg-zinc-50 focus:border-rose-700"
+                  >
+                    <option value="all">Semua Kelas</option>
+                    {uniqueClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+
+                  <select
+                    value={majorFilter}
+                    onChange={(e: any) => setMajorFilter(e.target.value)}
+                    className="px-4 py-2 border border-zinc-200 rounded-xl outline-none font-bold text-sm bg-zinc-50 focus:border-rose-700"
+                  >
+                    <option value="all">Semua Jurusan</option>
+                    {uniqueMajors.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+
                   {selectedAttempts.length > 0 && (
                     <button 
                       onClick={handleBulkGrading}
@@ -360,8 +414,8 @@ export const MonitoringDashboard: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100 font-medium">
-                    {attempts.length > 0 ? (
-                      attempts.map((att) => {
+                    {filteredAttempts.length > 0 ? (
+                      filteredAttempts.map((att) => {
                         const isSubmitted = att.status === 'submitted';
                         const isSelected = selectedAttempts.includes(att.id);
                         
@@ -427,6 +481,56 @@ export const MonitoringDashboard: React.FC = () => {
                         <td colSpan={10} className="p-8 text-center text-zinc-500 italic">
                           Belum ada mahasiswa yang memulai pengerjaan asesmen {selectedMenu.toUpperCase()}.
                         </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Tabel Mahasiswa Online Real-time */}
+            <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Mahasiswa Online Saat Ini
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">Menampilkan mahasiswa dengan heartbeat aktif {'<'} 1 menit.</p>
+                </div>
+                <span className="text-2xl font-black text-emerald-700">{onlineSessions.length}</span>
+              </div>
+              <div className="overflow-x-auto border border-zinc-100 rounded-2xl">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100">
+                      <th className="p-3">NIM</th>
+                      <th className="p-3">Nama</th>
+                      <th className="p-3">Kelas</th>
+                      <th className="p-3">Lokasi / Aktivitas</th>
+                      <th className="p-3 text-center">Terakhir Aktif</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 font-medium">
+                    {onlineSessions.length > 0 ? (
+                      onlineSessions.map(s => (
+                        <tr key={s.nim} className="hover:bg-zinc-50/50">
+                          <td className="p-3 font-mono text-xs text-zinc-600">{s.nim}</td>
+                          <td className="p-3 font-bold text-zinc-900">{s.nama}</td>
+                          <td className="p-3 text-zinc-600">{s.kelas}</td>
+                          <td className="p-3">
+                            <span className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-bold">
+                              {s.current_activity?.replace(/_/g, ' ').replace(/taking /i, 'Mengerjakan ').replace(/entering /i, 'Memasuki ').replace('on assessment menu', 'Menu Asesmen') || 'Dashboard'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center text-xs text-zinc-400">
+                            {new Date(s.last_heartbeat).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'})}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="p-6 text-center text-zinc-500 italic">Tidak ada mahasiswa yang online saat ini.</td>
                       </tr>
                     )}
                   </tbody>
@@ -724,7 +828,28 @@ export const MonitoringDashboard: React.FC = () => {
                           </pre>
                         </div>
                       )}
-                      {!ans.answerText?.trim() && !ans.codeSubmitted?.trim() && (
+                      {/* AI Feedback */}
+                      {inspectingAttempt.ai_grades?.[qId] && (
+                        <div className="space-y-2 mt-2 border-t border-zinc-200 pt-3">
+                          <div className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Umpan Balik AI</div>
+                          <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl text-xs text-blue-800 leading-relaxed">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-bold">Skor: {inspectingAttempt.ai_grades[qId].total_score ?? '—'}</span>
+                              {inspectingAttempt.ai_grades[qId].scores && (
+                                <div className="flex gap-2 text-[9px]">
+                                  {Object.entries(inspectingAttempt.ai_grades[qId].scores).map(([key, val]: [string, any]) => (
+                                    <span key={key} className="bg-blue-100 px-1.5 py-0.5 rounded font-bold">
+                                      {key.replace(/_/g, ' ')}: {val}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <p className="whitespace-pre-wrap">{inspectingAttempt.ai_grades[qId].feedback || 'Tidak ada catatan.'}</p>
+                          </div>
+                        </div>
+                      )}
+                      {!ans.answerText?.trim() && !ans.codeSubmitted?.trim() && !inspectingAttempt.ai_grades?.[qId] && (
                         <div className="text-xs text-zinc-400 italic">Mahasiswa belum mengisi jawaban soal ini.</div>
                       )}
                     </div>

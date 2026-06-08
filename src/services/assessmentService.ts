@@ -31,6 +31,7 @@ export interface AssessmentAttempt {
   submitted_at?: string | null;
   graded_at?: string | null;
   duration_minutes: number;
+  tab_switch_count?: number;
 }
 
 export const assessmentService = {
@@ -165,11 +166,28 @@ export const assessmentService = {
     }
 
     // 3. Define time limits in minutes
-    let duration = 60; // default 1 hour
-    if (menuType === 'pre_test') duration = 30;
-    else if (menuType === 'post_test') duration = 45;
-    else if (menuType === 'program_keterampilan') duration = 90;
-    else if (menuType === 'ujian_praktik') duration = 120;
+    let duration = 60;
+    try {
+      const { data: rulesData } = await supabase
+        .from('assessment_grading_rules')
+        .select('rules')
+        .eq('id', menuType)
+        .single();
+      
+      if (rulesData && rulesData.rules && (rulesData.rules as any).duration_minutes) {
+        duration = Number((rulesData.rules as any).duration_minutes);
+      } else {
+        if (menuType === 'pre_test') duration = 15;
+        else if (menuType === 'post_test') duration = 15;
+        else if (menuType === 'program_keterampilan') duration = 90;
+        else if (menuType === 'ujian_praktik') duration = 120;
+      }
+    } catch (err) {
+      if (menuType === 'pre_test') duration = 15;
+      else if (menuType === 'post_test') duration = 15;
+      else if (menuType === 'program_keterampilan') duration = 90;
+      else if (menuType === 'ujian_praktik') duration = 120;
+    }
 
     // 4. Create attempt in Supabase
     const newAttempt: AssessmentAttempt = {

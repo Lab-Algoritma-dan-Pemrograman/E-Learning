@@ -102,7 +102,15 @@ export default async function handler(req: any, res: any) {
 
         const studentName = student?.nama || 'Mahasiswa';
 
-        // C. Fetch all questions details associated with this attempt
+        // C. Fetch dynamic grading rules from DB
+        const { data: gradingRulesData } = await supabase
+          .from('assessment_grading_rules')
+          .select('rules')
+          .eq('id', attempt.menu_type)
+          .single();
+        const dynamicRules = gradingRulesData?.rules || null;
+
+        // D. Fetch all questions details associated with this attempt
         const questionIds = attempt.selected_questions || [];
         if (questionIds.length === 0) {
           return { attemptId, success: false, error: 'Attempt tidak memiliki soal terasosiasi.' };
@@ -117,7 +125,7 @@ export default async function handler(req: any, res: any) {
           return { attemptId, success: false, error: `Gagal memuat soal: ${questionsError?.message}` };
         }
 
-        // D. Build Batch Prompt containing all questions and student answers
+        // E. Build Batch Prompt containing all questions and student answers
         let promptHeader = `Anda adalah Asisten Praktikum AI. Anda ditugaskan menilai pengerjaan ujian mahasiswa bernama "${studentName}" (NIM: ${attempt.nim}).
 Tipe Asesmen: ${attempt.menu_type.toUpperCase()}
 Evaluasi seluruh soal berikut dan berikan skor sesuai kriteria penilaian.
@@ -158,8 +166,27 @@ ${answer.codeSubmitted || 'KOSONG'}
 KRITERIA SCORING KHUSUS UNTUK SOAL INI:
 `;
 
-          // Add Rubric text based on type & difficulty
-          if (attempt.menu_type === 'pre_test') {
+          // Add Rubric text based on type & difficulty (using dynamic rules if available)
+          if (dynamicRules && attempt.menu_type === 'pre_test' && dynamicRules.difficulties?.[q.difficulty]) {
+            const diffRules = dynamicRules.difficulties[q.difficulty];
+            const criteriaStr = Object.entries(diffRules.criteria || {}).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v} poin`).join(', ');
+            promptBody += `- ${q.difficulty.toUpperCase()}: ${criteriaStr}\n`;
+          } else if (dynamicRules && attempt.menu_type === 'post_test' && dynamicRules.difficulties?.[q.difficulty]) {
+            const diffRules = dynamicRules.difficulties[q.difficulty];
+            const criteriaStr = Object.entries(diffRules.criteria || {}).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v} poin`).join(', ');
+            promptBody += `- ${q.difficulty.toUpperCase()}: ${criteriaStr}\n`;
+          } else if (dynamicRules && attempt.menu_type === 'program_keterampilan' && dynamicRules.criteria) {
+            const criteriaStr = dynamicRules.criteria.map((c: any) => `${c.label}: ${c.nilai} poin`).join(', ');
+            promptBody += `- Program Keterampilan: ${criteriaStr} (Total ${dynamicRules.total_max_score || 85}).\n`;
+          } else if (dynamicRules && attempt.menu_type === 'ujian_praktik') {
+            if (q.type === 'flowchart_translation' && dynamicRules.soal_6_flowchart) {
+              const criteriaStr = Object.entries(dynamicRules.soal_6_flowchart.criteria || {}).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v} poin`).join(', ');
+              promptBody += `- Flowchart to Program: ${criteriaStr}.\n`;
+            } else if (dynamicRules.soal_1_5) {
+              const criteriaStr = Object.entries(dynamicRules.soal_1_5.criteria || {}).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v} poin`).join(', ');
+              promptBody += `- Ujian Praktik Soal 1-5: ${criteriaStr}.\n`;
+            }
+          } else if (attempt.menu_type === 'pre_test') {
             if (q.difficulty === 'easy') {
               promptBody += `- Pilihan Ganda / Jawaban Singkat Easy: Jawaban Benar = 20 poin, Jawaban Salah = 8 poin, Kosong = 0 poin.\n`;
             } else if (q.difficulty === 'medium') {
@@ -215,23 +242,36 @@ Format respons JSON yang harus Anda hasilkan:
 
         const fullPrompt = promptHeader + promptBody + promptFooter;
 
-        // E. Call AI (Gemini or Custom Model)
+        // F. Call AI (Gemini or Custom Model)
         let aiResponseText = "";
 
         if (requestedModel === 'gpt-os-120b' && customAiEndpoint) {
-          // Send request to Custom API
-          console.log(`Calling Custom AI Endpoint: ${customAiEndpoint} for attempt ${attemptId}`);
-          const response = await fetch(customAiEndpoint, {
+          // Send request to Ollama via custom host (local tunnel or cloud endpoint)
+          console.log(`Calling Ollama API: ${customAiEndpoint} for attempt ${attemptId}`);
+          
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (process.env.OLLAMA_API_KEY) {
+            headers['Authorization'] = `Bearer ${process.env.OLLAMA_API_KEY}`;
+          }
+
+          const ollamaModel = process.env.OLLAMA_MODEL || 'gpt-oss:120b-cloud';
+
+          const response = await fetch(`${customAiEndpoint}/api/chat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: fullPrompt })
+            headers,
+            body: JSON.stringify({
+              model: ollamaModel,
+              messages: [{ role: 'user', content: fullPrompt }],
+              stream: false,
+              format: 'json'
+            })
           });
 
           if (!response.ok) {
-            throw new Error(`Custom AI Endpoint returned status: ${response.status}`);
+            throw new Error(`Ollama API returned status: ${response.status}`);
           }
           const resJson = await response.json();
-          aiResponseText = resJson.text || resJson.choices?.[0]?.text || JSON.stringify(resJson);
+          aiResponseText = resJson.message?.content || resJson.response || JSON.stringify(resJson);
         } else {
           // Gemini API with key rotation
           if (apiKeys.length === 0) {
@@ -270,7 +310,7 @@ Format respons JSON yang harus Anda hasilkan:
           }
         }
 
-        // F. Parse JSON result and write to DB
+        // G. Parse JSON result and write to DB
         const cleanJsonText = aiResponseText.trim().replace(/^```json/, '').replace(/```$/, '').trim();
         const gradingResult = JSON.parse(cleanJsonText);
 
