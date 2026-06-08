@@ -378,7 +378,7 @@ ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 -- =========================================================================
 -- HELPER FUNCTIONS FOR RLS (Mengecek NIM dan Peran User dari Metadata JWT)
 -- =========================================================================
-CREATE OR REPLACE FUNCTION auth.nim() 
+CREATE OR REPLACE FUNCTION public.auth_nim() 
 RETURNS TEXT AS $$
   -- Mendapatkan NIM mahasiswa dari JWT Claim custom 'nim' atau auth.uid()
   SELECT COALESCE(
@@ -387,7 +387,7 @@ RETURNS TEXT AS $$
   )::text;
 $$ LANGUAGE sql STABLE;
 
-CREATE OR REPLACE FUNCTION auth.role() 
+CREATE OR REPLACE FUNCTION public.auth_role() 
 RETURNS TEXT AS $$
   -- Mendapatkan role user dari JWT Claim custom, memetakan koordinator ke kordas dan user ke praktikan
   SELECT COALESCE(
@@ -406,58 +406,58 @@ $$ LANGUAGE sql STABLE;
 
 -- A. Kebijakan untuk Tabel: users
 CREATE POLICY "Mahasiswa hanya bisa baca & ubah data miliknya sendiri" ON users
-    FOR ALL USING (nim = auth.nim());
+    FOR ALL USING (nim = public.auth_nim());
 
 CREATE POLICY "Asisten ke atas bisa membaca data seluruh user" ON users
-    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
 
 CREATE POLICY "Admin & Kordas bisa melakukan modifikasi seluruh user" ON users
-    FOR ALL USING (auth.role() IN ('admin', 'kordas'));
+    FOR ALL USING (public.auth_role() IN ('admin', 'kordas'));
 
 -- B. Kebijakan untuk Tabel: student_progress
 CREATE POLICY "Mahasiswa hanya bisa modifikasi progress-nya sendiri" ON student_progress
-    FOR ALL USING (nim = auth.nim());
+    FOR ALL USING (nim = public.auth_nim());
 
 CREATE POLICY "Asisten ke atas bisa melihat progress semua mahasiswa" ON student_progress
-    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
 
 -- C. Kebijakan untuk Tabel: assessment_attempts
 CREATE POLICY "Mahasiswa hanya bisa baca & tulis attempt miliknya" ON assessment_attempts
-    FOR ALL USING (nim = auth.nim());
+    FOR ALL USING (nim = public.auth_nim());
 
 CREATE POLICY "Asisten ke atas bisa membaca attempt semua mahasiswa" ON assessment_attempts
-    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
 
 CREATE POLICY "Staf pengajar bisa menilai (update) attempt mahasiswa" ON assessment_attempts
-    FOR UPDATE USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+    FOR UPDATE USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
 
 -- D. Kebijakan untuk Tabel: assessment_questions
 CREATE POLICY "Semua user terautentikasi bisa membaca bank soal" ON assessment_questions
-    FOR SELECT USING (auth.role() IS NOT NULL);
+    FOR SELECT USING (public.auth_role() IS NOT NULL);
 
 CREATE POLICY "Hanya Admin & Kordas yang bisa mengelola bank soal" ON assessment_questions
-    FOR ALL USING (auth.role() IN ('admin', 'kordas'));
+    FOR ALL USING (public.auth_role() IN ('admin', 'kordas'));
 
 -- E. Kebijakan untuk Tabel: assessment_tokens
 CREATE POLICY "Semua user bisa melakukan verifikasi token" ON assessment_tokens
-    FOR SELECT USING (auth.role() IS NOT NULL);
+    FOR SELECT USING (public.auth_role() IS NOT NULL);
 
 CREATE POLICY "Hanya Admin & Kordas yang bisa membuat token" ON assessment_tokens
-    FOR ALL USING (auth.role() IN ('admin', 'kordas'));
+    FOR ALL USING (public.auth_role() IN ('admin', 'kordas'));
 
 -- F. Kebijakan untuk Tabel: active_sessions
 CREATE POLICY "Mahasiswa bisa update session heartbeat miliknya" ON active_sessions
-    FOR ALL USING (nim = auth.nim());
+    FOR ALL USING (nim = public.auth_nim());
 
 CREATE POLICY "Asisten ke atas bisa memonitor seluruh sesi aktif" ON active_sessions
-    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
 
 -- G. Kebijakan untuk Tabel: activity_logs
 CREATE POLICY "Mahasiswa hanya bisa menulis log aktivitas" ON activity_logs
-    FOR INSERT WITH CHECK (nim = auth.nim());
+    FOR INSERT WITH CHECK (nim = public.auth_nim());
 
 CREATE POLICY "Asisten ke atas bisa membaca seluruh log audit" ON activity_logs
-    FOR SELECT USING (auth.role() IN ('admin', 'kordas', 'asisten'));
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
 ```
 
 ---
@@ -470,12 +470,15 @@ CREATE POLICY "Asisten ke atas bisa membaca seluruh log audit" ON activity_logs
 
 ---
 
-## 5. SQL Migrasi Perubahan Peran (User ke Praktikan)
+## 5. SQL Migrasi Perubahan Peran (User ke Praktikan & Perbaikan RLS auth)
 
-Jalankan perintah SQL ini di dalam **Supabase SQL Editor** jika Anda memigrasikan database yang sudah memiliki tabel:
+Jalankan perintah SQL ini di dalam **Supabase SQL Editor** untuk memperbarui peran serta mengubah namespace RLS dari `auth` ke `public` schema (menyelesaikan error *permission denied for schema auth*):
 
 ```sql
--- Hapus constraint role lama
+-- =========================================================================
+-- A. MIGRASI PERAN & CONSTRAINT PADA TABEL USERS
+-- =========================================================================
+-- Hapus constraint check role lama
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 
 -- Buat constraint role baru dengan 'praktikan' menggantikan 'user'
@@ -487,8 +490,10 @@ ALTER TABLE users ALTER COLUMN role SET DEFAULT 'praktikan';
 -- Perbarui semua data yang memiliki role lama 'user'
 UPDATE users SET role = 'praktikan' WHERE role = 'user';
 
--- Perbarui fungsi auth.role() agar memetakan 'koordinator' ke 'kordas' dan 'user' ke 'praktikan'
-CREATE OR REPLACE FUNCTION auth.role() 
+-- =========================================================================
+-- B. MEMBUAT ULANG FUNGSI RLS DI SKEMA PUBLIC (BEBAS ERROR AUTH SCHEMA WRITES)
+-- =========================================================================
+CREATE OR REPLACE FUNCTION public.auth_role() 
 RETURNS TEXT AS $$
   SELECT COALESCE(
     CASE 
@@ -499,4 +504,85 @@ RETURNS TEXT AS $$
     'praktikan'
   )::text;
 $$ LANGUAGE sql STABLE;
+
+CREATE OR REPLACE FUNCTION public.auth_nim() 
+RETURNS TEXT AS $$
+  SELECT COALESCE(
+    nullif(current_setting('request.jwt.claims', true)::json->>'nim', ''),
+    current_setting('request.jwt.claims', true)::json->>'sub'
+  )::text;
+$$ LANGUAGE sql STABLE;
+
+-- =========================================================================
+-- C. MENGHAPUS & MEMBUAT ULANG KEBIJAKAN RLS MENGGUNAKAN FUNGSI SKEMA PUBLIC
+-- =========================================================================
+
+-- 1. Users
+DROP POLICY IF EXISTS "Mahasiswa hanya bisa baca & ubah data miliknya sendiri" ON users;
+DROP POLICY IF EXISTS "Asisten ke atas bisa membaca data seluruh user" ON users;
+DROP POLICY IF EXISTS "Admin & Kordas bisa melakukan modifikasi seluruh user" ON users;
+
+CREATE POLICY "Mahasiswa hanya bisa baca & ubah data miliknya sendiri" ON users
+    FOR ALL USING (nim = public.auth_nim());
+CREATE POLICY "Asisten ke atas bisa membaca data seluruh user" ON users
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+CREATE POLICY "Admin & Kordas bisa melakukan modifikasi seluruh user" ON users
+    FOR ALL USING (public.auth_role() IN ('admin', 'kordas'));
+
+-- 2. Student Progress
+DROP POLICY IF EXISTS "Mahasiswa hanya bisa modifikasi progress-nya sendiri" ON student_progress;
+DROP POLICY IF EXISTS "Asisten ke atas bisa melihat progress semua mahasiswa" ON student_progress;
+
+CREATE POLICY "Mahasiswa hanya bisa modifikasi progress-nya sendiri" ON student_progress
+    FOR ALL USING (nim = public.auth_nim());
+CREATE POLICY "Asisten ke atas bisa melihat progress semua mahasiswa" ON student_progress
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+
+-- 3. Assessment Attempts
+DROP POLICY IF EXISTS "Mahasiswa hanya bisa baca & tulis attempt miliknya" ON assessment_attempts;
+DROP POLICY IF EXISTS "Asisten ke atas bisa membaca attempt semua mahasiswa" ON assessment_attempts;
+DROP POLICY IF EXISTS "Staf pengajar bisa menilai (update) attempt mahasiswa" ON assessment_attempts;
+
+CREATE POLICY "Mahasiswa hanya bisa baca & tulis attempt miliknya" ON assessment_attempts
+    FOR ALL USING (nim = public.auth_nim());
+CREATE POLICY "Asisten ke atas bisa membaca attempt semua mahasiswa" ON assessment_attempts
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+CREATE POLICY "Staf pengajar bisa menilai (update) attempt mahasiswa" ON assessment_attempts
+    FOR UPDATE USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+
+-- 4. Assessment Questions
+DROP POLICY IF EXISTS "Semua user terautentikasi bisa membaca bank soal" ON assessment_questions;
+DROP POLICY IF EXISTS "Hanya Admin & Kordas yang bisa mengelola bank soal" ON assessment_questions;
+
+CREATE POLICY "Semua user terautentikasi bisa membaca bank soal" ON assessment_questions
+    FOR SELECT USING (public.auth_role() IS NOT NULL);
+CREATE POLICY "Hanya Admin & Kordas yang bisa mengelola bank soal" ON assessment_questions
+    FOR ALL USING (public.auth_role() IN ('admin', 'kordas'));
+
+-- 5. Assessment Tokens
+DROP POLICY IF EXISTS "Semua user bisa melakukan verifikasi token" ON assessment_tokens;
+DROP POLICY IF EXISTS "Hanya Admin & Kordas yang bisa membuat token" ON assessment_tokens;
+
+CREATE POLICY "Semua user bisa melakukan verifikasi token" ON assessment_tokens
+    FOR SELECT USING (public.auth_role() IS NOT NULL);
+CREATE POLICY "Hanya Admin & Kordas yang bisa membuat token" ON assessment_tokens
+    FOR ALL USING (public.auth_role() IN ('admin', 'kordas'));
+
+-- 6. Active Sessions
+DROP POLICY IF EXISTS "Mahasiswa bisa update session heartbeat miliknya" ON active_sessions;
+DROP POLICY IF EXISTS "Asisten ke atas bisa memonitor seluruh sesi aktif" ON active_sessions;
+
+CREATE POLICY "Mahasiswa bisa update session heartbeat miliknya" ON active_sessions
+    FOR ALL USING (nim = public.auth_nim());
+CREATE POLICY "Asisten ke atas bisa memonitor seluruh sesi aktif" ON active_sessions
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+
+-- 7. Activity Logs
+DROP POLICY IF EXISTS "Mahasiswa hanya bisa menulis log aktivitas" ON activity_logs;
+DROP POLICY IF EXISTS "Asisten ke atas bisa membaca seluruh log audit" ON activity_logs;
+
+CREATE POLICY "Mahasiswa hanya bisa menulis log aktivitas" ON activity_logs
+    FOR INSERT WITH CHECK (nim = public.auth_nim());
+CREATE POLICY "Asisten ke atas bisa membaca seluruh log audit" ON activity_logs
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
 ```
