@@ -389,10 +389,14 @@ $$ LANGUAGE sql STABLE;
 
 CREATE OR REPLACE FUNCTION auth.role() 
 RETURNS TEXT AS $$
-  -- Mendapatkan role user dari JWT Claim custom
+  -- Mendapatkan role user dari JWT Claim custom, memetakan koordinator ke kordas dan user ke praktikan
   SELECT COALESCE(
-    current_setting('request.jwt.claims', true)::json->>'role',
-    'user'
+    CASE 
+      WHEN current_setting('request.jwt.claims', true)::json->>'role' = 'koordinator' THEN 'kordas'
+      WHEN current_setting('request.jwt.claims', true)::json->>'role' = 'user' THEN 'praktikan'
+      ELSE current_setting('request.jwt.claims', true)::json->>'role'
+    END,
+    'praktikan'
   )::text;
 $$ LANGUAGE sql STABLE;
 
@@ -482,4 +486,17 @@ ALTER TABLE users ALTER COLUMN role SET DEFAULT 'praktikan';
 
 -- Perbarui semua data yang memiliki role lama 'user'
 UPDATE users SET role = 'praktikan' WHERE role = 'user';
+
+-- Perbarui fungsi auth.role() agar memetakan 'koordinator' ke 'kordas' dan 'user' ke 'praktikan'
+CREATE OR REPLACE FUNCTION auth.role() 
+RETURNS TEXT AS $$
+  SELECT COALESCE(
+    CASE 
+      WHEN current_setting('request.jwt.claims', true)::json->>'role' = 'koordinator' THEN 'kordas'
+      WHEN current_setting('request.jwt.claims', true)::json->>'role' = 'user' THEN 'praktikan'
+      ELSE current_setting('request.jwt.claims', true)::json->>'role'
+    END,
+    'praktikan'
+  )::text;
+$$ LANGUAGE sql STABLE;
 ```
