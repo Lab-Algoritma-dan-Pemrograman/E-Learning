@@ -1,5 +1,5 @@
 import { SignJWT } from 'jose';
-import { verifyToken, getSupabaseSecret } from './auth.js';
+import { verifyToken, detectSupabaseSecret } from './auth.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -27,26 +27,23 @@ export default async function handler(req: any, res: any) {
 
     // 3. Generate a new JWT token signed with Supabase JWT Secret if configured
     let returnedToken = token;
-    const supabaseSecretStr = process.env.SUPABASE_JWT_SECRET;
-    if (supabaseSecretStr) {
-      const secret = getSupabaseSecret(supabaseSecretStr);
-      if (secret) {
-        returnedToken = await new SignJWT({
-          nim: tokenPayload.nim,
-          nama: tokenPayload.nama,
-          kelas: tokenPayload.kelas || '',
-          role: 'authenticated',
-          user_role: appRole,
-          email: tokenPayload.email || null,
-          iss: 'supabase',
-          sub: tokenPayload.nim,
-          aud: 'authenticated'
-        })
-          .setProtectedHeader({ alg: 'HS256' })
-          .setIssuedAt()
-          .setExpirationTime('1d')
-          .sign(secret);
-      }
+    const supabaseSecret = await detectSupabaseSecret();
+    if (supabaseSecret) {
+      returnedToken = await new SignJWT({
+        nim: tokenPayload.nim,
+        nama: tokenPayload.nama,
+        kelas: tokenPayload.kelas || '',
+        role: 'authenticated',
+        user_role: appRole,
+        email: tokenPayload.email || null,
+        iss: 'supabase',
+        sub: tokenPayload.nim,
+        aud: 'authenticated'
+      })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('1d')
+        .sign(supabaseSecret);
     }
 
     return res.status(200).json({
