@@ -150,6 +150,41 @@ export const MonitoringDashboard: React.FC = () => {
     }
   };
 
+  // Batch toggle: Open/Lock ALL students for a specific assessment type
+  const handleBatchToggleAll = async (field: string, open: boolean) => {
+    if (!user) return;
+    const targetStudents = filteredStudents.length > 0 ? filteredStudents : students;
+    if (targetStudents.length === 0) return;
+
+    const confirmed = window.confirm(
+      `${open ? 'BUKA' : 'KUNCI'} akses ${field.replace(/_/g, ' ').toUpperCase()} untuk ${targetStudents.length} mahasiswa?`
+    );
+    if (!confirmed) return;
+
+    try {
+      // Update all students in batch
+      for (const s of targetStudents) {
+        const currentAccess = s.assessment_access || {};
+        const updatedAccess = { ...currentAccess, [field]: open };
+        await supabase
+          .from('users')
+          .update({ assessment_access: updatedAccess })
+          .eq('nim', s.nim);
+      }
+
+      await monitoringService.addAuditLog(
+        user.nim,
+        user.nama,
+        'access_modified',
+        `${open ? 'Membuka' : 'Mengunci'} akses ${field} untuk ${targetStudents.length} mahasiswa`
+      );
+      fetchStudents();
+    } catch (err) {
+      console.error('Batch toggle error:', err);
+      alert('Gagal mengubah izin secara massal.');
+    }
+  };
+
   // Bulk AI Grading call
   const handleBulkGrading = async () => {
     if (selectedAttempts.length === 0 || !user) return;
@@ -491,23 +526,67 @@ export const MonitoringDashboard: React.FC = () => {
               {/* Student Permissions Toggle Panel */}
               <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h3 className="font-bold text-lg">Izin Akses Asesmen Mahasiswa</h3>
+                  <div>
+                    <h3 className="font-bold text-lg">Kontrol Sesi Asesmen</h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">Buka / Kunci akses asesmen per-mahasiswa atau massal per-kelas.</p>
+                  </div>
                   <div className="flex items-center gap-2 border border-zinc-200 px-3 py-1.5 rounded-xl bg-zinc-50 w-full sm:w-64">
                     <Search size={16} className="text-zinc-400" />
                     <input 
                       type="text" 
-                      placeholder="Cari NIM/Nama..."
+                      placeholder="Cari NIM/Nama/Kelas..."
                       value={searchFilter}
                       onChange={(e) => setSearchFilter(e.target.value)}
                       className="bg-transparent text-sm w-full outline-none"
                     />
                   </div>
                 </div>
+
+                {/* Batch Control Buttons */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { field: 'pre_test', label: 'Pre-Test' },
+                    { field: 'post_test', label: 'Post-Test' },
+                    { field: 'program_keterampilan', label: 'Keterampilan' },
+                    { field: 'ujian_praktik', label: 'Ujian Praktik' },
+                  ].map(({ field, label }) => {
+                    const openCount = filteredStudents.filter(s => (s.assessment_access || {})[field]).length;
+                    const total = filteredStudents.length;
+                    const allOpen = total > 0 && openCount === total;
+                    return (
+                      <div key={field} className="bg-zinc-50 border border-zinc-200 rounded-2xl p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-zinc-600">{label}</span>
+                          <span className={cn(
+                            "text-[9px] px-1.5 py-0.5 rounded-full font-bold",
+                            allOpen ? "bg-emerald-50 text-emerald-700" : openCount > 0 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-700"
+                          )}>
+                            {openCount}/{total}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          <button 
+                            onClick={() => handleBatchToggleAll(field, true)}
+                            className="flex-1 text-[10px] font-bold py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all active:scale-95"
+                          >
+                            BUKA SEMUA
+                          </button>
+                          <button 
+                            onClick={() => handleBatchToggleAll(field, false)}
+                            className="flex-1 text-[10px] font-bold py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all active:scale-95"
+                          >
+                            KUNCI SEMUA
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
                 
                 <div className="overflow-x-auto max-h-[300px] custom-scrollbar border border-zinc-100 rounded-2xl">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100">
+                      <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100 sticky top-0">
                         <th className="p-3 w-64">NIM & Nama</th>
                         <th className="p-3 text-center">Pre-Test</th>
                         <th className="p-3 text-center">Post-Test</th>

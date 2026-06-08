@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
 import path from 'path';
+import { SignJWT } from 'jose';
 
 // Load environment variables
 dotenv.config();
@@ -165,6 +166,31 @@ async function migrateGameQuestions() {
 
 async function run() {
   try {
+    const jwtSecret = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET || '';
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY && jwtSecret) {
+      console.log('🔑 SUPABASE_SERVICE_ROLE_KEY not found. Generating an admin JWT token using JWT_SECRET...');
+      try {
+        const key = Buffer.from(jwtSecret, 'base64');
+        const token = await new SignJWT({
+          nim: '202211083', // kordas/admin NIM
+          nama: 'SYSTEM MIGRATION',
+          kelas: 'SYSTEM',
+          role: 'authenticated',
+          user_role: 'admin',
+          email: 'admin@e-learning.internal'
+        })
+          .setProtectedHeader({ alg: 'HS256' })
+          .setIssuedAt()
+          .setExpirationTime('1h')
+          .sign(key);
+        
+        (supabase as any).rest.headers['Authorization'] = `Bearer ${token}`;
+        console.log('✅ Admin JWT successfully injected.');
+      } catch (err: any) {
+        console.warn('⚠️ Failed to generate admin JWT:', err.message);
+      }
+    }
+
     await migrateCurriculum();
     await migrateGameQuestions();
     console.log('🎉 Migration finished successfully!');
