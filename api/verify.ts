@@ -18,9 +18,12 @@ export default async function handler(req: any, res: any) {
     }
 
     // Normalize 'koordinator' to 'kordas' in token payload
-    if (tokenPayload.role === 'koordinator') {
-      tokenPayload.role = 'kordas';
-    }
+    // When re-verifying a previously signed Supabase JWT, the real app role
+    // is in 'user_role' (since 'role' is 'authenticated' for Supabase PostgREST).
+    const rawAppRole = tokenPayload.user_role || tokenPayload.role;
+    let appRole = rawAppRole || 'praktikan';
+    if (appRole === 'koordinator') appRole = 'kordas';
+    if (appRole === 'authenticated' || appRole === 'anon') appRole = 'praktikan';
 
     // 3. Generate a new JWT token signed with Supabase JWT Secret if configured
     let returnedToken = token;
@@ -31,9 +34,9 @@ export default async function handler(req: any, res: any) {
         returnedToken = await new SignJWT({
           nim: tokenPayload.nim,
           nama: tokenPayload.nama,
-          kelas: tokenPayload.kelas,
+          kelas: tokenPayload.kelas || '',
           role: 'authenticated',
-          user_role: tokenPayload.role || 'praktikan',
+          user_role: appRole,
           email: tokenPayload.email || null,
           iss: 'supabase',
           sub: tokenPayload.nim,
@@ -47,7 +50,10 @@ export default async function handler(req: any, res: any) {
     }
 
     return res.status(200).json({
-      payload: tokenPayload,
+      payload: {
+        ...tokenPayload,
+        role: appRole, // Return the real app role, not 'authenticated'
+      },
       token: returnedToken,
       firebaseToken: null // Firebase is deprecated
     });
