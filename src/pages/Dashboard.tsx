@@ -270,7 +270,7 @@ export const Dashboard: React.FC = () => {
           {/* Sidebar Stats */}
           <div className="space-y-8">
             {/* Assessment Status Card for Student */}
-            {user?.role === 'user' && (
+            {user?.role === 'praktikan' && (
               <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
                 <h3 className="font-bold text-lg flex items-center gap-2">
                   <FileText size={20} className="text-rose-700" />

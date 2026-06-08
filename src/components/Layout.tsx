@@ -76,7 +76,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               />
               
               {/* Assessments Menu for Students */}
-              {user?.role === 'user' && (
+              {user?.role === 'praktikan' && (
                 <SidebarItem 
                   icon={<FileText size={20} className="text-zinc-500" />} 
                   label="Asesmen & Ujian" 

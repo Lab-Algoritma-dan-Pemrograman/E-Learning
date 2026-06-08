@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useStore } from '../store/useStore';
 import { assessmentService, AssessmentQuestion } from '../services/assessmentService';
-import { Plus, Edit, Trash, Search, ChevronLeft, Save, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash, Search, ChevronLeft, Save, AlertCircle, HelpCircle, Loader2, Upload, FileText, CheckCircle2 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { extractDocxText, extractPptxSlides, parsePrePostTest, parseProgramKeterampilan, parseUjianPraktik, parsePrePostTestPpt } from '../lib/documentParser';
 
 export const QuestionBankDashboard: React.FC = () => {
   const { user, setPage } = useStore();
@@ -16,6 +17,15 @@ export const QuestionBankDashboard: React.FC = () => {
   // Edit / Create Form State
   const [editingQuestion, setEditingQuestion] = useState<AssessmentQuestion | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Import Word / PPT State
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importType, setImportType] = useState<'auto' | 'pre_post' | 'pre_post_ppt' | 'keterampilan' | 'ujian_praktik'>('auto');
+  const [parsedQuestions, setParsedQuestions] = useState<Omit<AssessmentQuestion, 'id'>[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [rubricItems, setRubricItems] = useState<{ desc: string; points: number }[]>([]);
 
   useEffect(() => {
     fetchQuestions();
@@ -89,6 +99,116 @@ export const QuestionBankDashboard: React.FC = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setImportFile(e.target.files[0]);
+      setImportError(null);
+      setParsedQuestions([]);
+    }
+  };
+
+  const handleAddRubricItem = () => {
+    setRubricItems([...rubricItems, { desc: '', points: 0 }]);
+  };
+
+  const handleUpdateRubricItem = (index: number, desc: string, points: number) => {
+    const updated = [...rubricItems];
+    updated[index] = { desc, points };
+    setRubricItems(updated);
+  };
+
+  const handleRemoveRubricItem = (index: number) => {
+    setRubricItems(rubricItems.filter((_, i) => i !== index));
+  };
+
+  const handleProcessImport = async () => {
+    if (!importFile) {
+      setImportError("Silakan pilih file terlebih dahulu.");
+      return;
+    }
+
+    setImportLoading(true);
+    setImportError(null);
+    try {
+      const filename = importFile.name;
+      const fileExt = filename.split('.').pop()?.toLowerCase();
+      
+      let detectedType = importType;
+      if (detectedType === 'auto') {
+        if (fileExt === 'pptx') {
+          if (filename.toLowerCase().includes("pre") || filename.toLowerCase().includes("post")) {
+            detectedType = 'pre_post_ppt';
+          } else {
+            detectedType = 'ujian_praktik';
+          }
+        } else if (fileExt === 'docx') {
+          if (filename.toLowerCase().includes("keterampilan")) {
+            detectedType = 'keterampilan';
+          } else {
+            detectedType = 'pre_post';
+          }
+        } else {
+          throw new Error("Format file tidak didukung. Harap unggah file .docx atau .pptx.");
+        }
+      }
+
+      let parsed: any[] = [];
+
+      if (detectedType === 'pre_post') {
+        if (fileExt !== 'docx') throw new Error("Pre/Post-Test harus berupa file Word (.docx).");
+        const paragraphs = await extractDocxText(importFile);
+        parsed = parsePrePostTest(paragraphs, filename);
+      } else if (detectedType === 'pre_post_ppt') {
+        if (fileExt !== 'pptx') throw new Error("File PowerPoint (.pptx) dibutuhkan.");
+        const slides = await extractPptxSlides(importFile);
+        const isPre = filename.toLowerCase().includes("pre");
+        parsed = parsePrePostTestPpt(slides, filename, isPre ? 'pre_test' : 'post_test');
+      } else if (detectedType === 'keterampilan') {
+        if (fileExt !== 'docx') throw new Error("Program Keterampilan harus berupa file Word (.docx).");
+        const paragraphs = await extractDocxText(importFile);
+        parsed = parseProgramKeterampilan(paragraphs, filename);
+      } else if (detectedType === 'ujian_praktik') {
+        if (fileExt !== 'pptx') throw new Error("Ujian Praktik harus berupa file PowerPoint (.pptx).");
+        const slides = await extractPptxSlides(importFile);
+        parsed = parseUjianPraktik(slides, filename);
+      }
+
+      if (parsed.length === 0) {
+        throw new Error("Tidak ada soal yang berhasil diekstrak. Pastikan format dokumen sesuai.");
+      }
+
+      setParsedQuestions(parsed);
+    } catch (e: any) {
+      setImportError(e.message || "Gagal memproses file.");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleSaveImported = async () => {
+    if (parsedQuestions.length === 0) return;
+    setImportLoading(true);
+    try {
+      let successCount = 0;
+      for (const q of parsedQuestions) {
+        await assessmentService.saveQuestion({
+          ...q,
+          created_by: user?.nim
+        });
+        successCount++;
+      }
+      alert(`Berhasil menyimpan ${successCount} soal ke dalam bank soal!`);
+      setIsImportOpen(false);
+      setImportFile(null);
+      setParsedQuestions([]);
+      fetchQuestions();
+    } catch (e: any) {
+      alert(`Gagal menyimpan beberapa soal: ${e.message}`);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const filteredQuestions = questions.filter(q => {
     const matchesSearch = q.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           q.instruction.toLowerCase().includes(searchQuery.toLowerCase());
@@ -113,13 +233,22 @@ export const QuestionBankDashboard: React.FC = () => {
               <p className="text-zinc-500 text-xs">Kelola materi pertanyaan, draf compiler, dan rubrik asesmen.</p>
             </div>
           </div>
-          <button 
-            onClick={handleCreateNew}
-            className="bg-rose-700 hover:bg-rose-800 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md shadow-rose-700/10 active:scale-95 transition-all flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Tambah Soal Baru
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => { setIsImportOpen(true); setIsFormOpen(false); }}
+              className="bg-zinc-800 hover:bg-zinc-950 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all flex items-center gap-2"
+            >
+              <Upload size={16} />
+              Import Word/PPT
+            </button>
+            <button 
+              onClick={() => { handleCreateNew(); setIsImportOpen(false); }}
+              className="bg-rose-700 hover:bg-rose-800 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md shadow-rose-700/10 active:scale-95 transition-all flex items-center gap-2"
+            >
+              <Plus size={16} />
+              Tambah Soal Baru
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -130,7 +259,7 @@ export const QuestionBankDashboard: React.FC = () => {
         )}
 
         {/* QUESTIONS LISTING */}
-        {!isFormOpen && (
+        {!isFormOpen && !isImportOpen && (
           <div className="space-y-6">
             {/* Filter controls */}
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm">
@@ -310,6 +439,88 @@ export const QuestionBankDashboard: React.FC = () => {
               />
             </div>
 
+            {/* RUBRIC POIN HELPER */}
+            <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-3xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-zinc-700 uppercase tracking-widest">Helper Rubrik & Poin per Instruksi</h4>
+                  <p className="text-[10px] text-zinc-400 mt-0.5">Gunakan panel ini untuk menyusun pembagian poin per instruksi, lalu klik masukkan ke deskripsi atau kunci jawaban.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddRubricItem}
+                  className="px-3.5 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-xl text-xs font-bold transition-all active:scale-95"
+                >
+                  + Tambah Baris Poin
+                </button>
+              </div>
+
+              {rubricItems.length > 0 && (
+                <div className="space-y-3">
+                  {rubricItems.map((item, idx) => (
+                    <div key={idx} className="flex gap-3 items-center">
+                      <input
+                        type="text"
+                        placeholder="Deskripsi Instruksi (contoh: Mengimpor header stdio.h)"
+                        value={item.desc}
+                        onChange={(e) => handleUpdateRubricItem(idx, e.target.value, item.points)}
+                        className="flex-1 px-3 py-2.5 border border-zinc-200 rounded-xl bg-white text-xs outline-none focus:border-rose-700 font-medium"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Poin"
+                        value={item.points || ''}
+                        onChange={(e) => handleUpdateRubricItem(idx, item.desc, Number(e.target.value))}
+                        className="w-20 px-3 py-2.5 border border-zinc-200 rounded-xl bg-white text-xs text-center outline-none focus:border-rose-700 font-bold"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveRubricItem(idx)}
+                        className="text-xs text-red-600 hover:text-red-800 font-bold px-2 active:scale-95 transition-transform"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  ))}
+
+                  <div className="flex gap-2 pt-2 border-t border-zinc-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const formatted = rubricItems
+                          .map((item, i) => `${i + 1}. ${item.desc} (${item.points} poin)`)
+                          .join('\n');
+                        setEditingQuestion(prev => prev ? {
+                          ...prev,
+                          instruction: (prev.instruction ? prev.instruction + '\n' : '') + formatted
+                        } : null);
+                        setRubricItems([]);
+                      }}
+                      className="px-3 py-2 bg-zinc-800 text-white text-xs font-bold rounded-lg hover:bg-zinc-950 transition-all active:scale-95"
+                    >
+                      Masukkan ke Deskripsi Instruksi
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const formatted = rubricItems
+                          .map((item, i) => `// ${i + 1}. ${item.desc} (${item.points} poin)`)
+                          .join('\n');
+                        setEditingQuestion(prev => prev ? {
+                          ...prev,
+                          reference_solution: (prev.reference_solution ? prev.reference_solution + '\n' : '') + formatted
+                        } : null);
+                        setRubricItems([]);
+                      }}
+                      className="px-3 py-2 bg-rose-700 text-white text-xs font-bold rounded-lg hover:bg-rose-800 transition-all active:scale-95"
+                    >
+                      Masukkan ke Kunci Jawaban
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* FLOWCHART URL FOR TRANSLATION */}
             {editingQuestion.type === 'flowchart_translation' && (
               <div className="space-y-1">
@@ -416,6 +627,118 @@ export const QuestionBankDashboard: React.FC = () => {
               </button>
             </div>
           </form>
+        )}
+
+        {/* IMPORT FILE PANEL */}
+        {isImportOpen && (
+          <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+              <h3 className="text-xl font-bold">Import Soal Asesmen (Word / PPTX)</h3>
+              <button 
+                onClick={() => { setIsImportOpen(false); setImportFile(null); setParsedQuestions([]); }}
+                className="text-xs text-zinc-500 hover:text-rose-700 underline font-bold"
+              >
+                Kembali ke Bank Soal
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Tipe Dokumen</label>
+                <select
+                  value={importType}
+                  onChange={(e: any) => setImportType(e.target.value)}
+                  className="w-full px-4 py-3 border border-zinc-200 rounded-xl outline-none bg-zinc-50 text-sm font-bold focus:border-rose-700"
+                >
+                  <option value="auto">Auto-Detect dari File</option>
+                  <option value="pre_post">Pre-Test / Post-Test (Word .docx)</option>
+                  <option value="pre_post_ppt">Pre-Test / Post-Test (PowerPoint .pptx)</option>
+                  <option value="keterampilan">Program Keterampilan (Word .docx)</option>
+                  <option value="ujian_praktik">Ujian Praktik (PowerPoint .pptx)</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pilih File Dokumentasi</label>
+                <div className="relative flex items-center border border-zinc-200 px-4 py-3 rounded-xl bg-zinc-50 text-sm font-bold focus-within:border-rose-700">
+                  <input
+                    type="file"
+                    accept=".docx,.pptx"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                  <FileText size={16} className="text-zinc-400 mr-2" />
+                  <span className="text-zinc-600 truncate">
+                    {importFile ? importFile.name : "Pilih file .docx atau .pptx"}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleProcessImport}
+                disabled={!importFile || importLoading}
+                className="w-full py-3 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md shadow-rose-700/10 flex items-center justify-center gap-1.5 text-sm"
+              >
+                {importLoading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                Ekstrak & Preview Soal
+              </button>
+            </div>
+
+            {importError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm font-medium">
+                {importError}
+              </div>
+            )}
+
+            {/* PREVIEW EXTRACED QUESTIONS */}
+            {parsedQuestions.length > 0 && (
+              <div className="space-y-4 pt-4 border-t border-zinc-100">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-zinc-800">Preview Soal yang Berhasil Diekstrak ({parsedQuestions.length} soal)</h4>
+                  <button
+                    type="button"
+                    onClick={handleSaveImported}
+                    disabled={importLoading}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 size={16} />
+                    Simpan Semua ke Database
+                  </button>
+                </div>
+
+                <div className="max-h-96 overflow-y-auto space-y-4 pr-2 border border-zinc-200 p-4 rounded-2xl bg-zinc-50">
+                  {parsedQuestions.map((q, idx) => (
+                    <div key={idx} className="bg-white border border-zinc-200 p-4 rounded-xl shadow-xs space-y-2">
+                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        <span>{q.menu_type.replace('_', ' ')} • Modul {q.module_association || 'N/A'}</span>
+                        <span className={cn(
+                          "px-2 py-0.5 rounded",
+                          q.difficulty === 'easy' ? "bg-emerald-50 text-emerald-700" :
+                          q.difficulty === 'medium' ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
+                        )}>{q.difficulty}</span>
+                      </div>
+                      <h5 className="font-bold text-sm text-zinc-900">{q.title}</h5>
+                      <p className="text-zinc-600 text-xs whitespace-pre-wrap font-sans bg-zinc-50 p-2.5 rounded-lg border border-zinc-100 leading-relaxed">{q.instruction}</p>
+                      {q.type === 'flowchart_translation' && !q.flowchart_url && (
+                        <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-[10px] font-bold flex items-center gap-1.5 mt-2">
+                          <AlertCircle size={12} className="text-amber-700" />
+                          <span>Wajib melampirkan URL Gambar Flowchart. Edit soal ini di bank soal setelah di-import.</span>
+                        </div>
+                      )}
+                      {q.reference_solution && (
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Kunci Jawaban:</span>
+                          <pre className="text-zinc-700 text-xs font-mono bg-zinc-100 p-2.5 rounded-lg border border-zinc-200 max-h-40 overflow-y-auto overflow-x-auto whitespace-pre">{q.reference_solution}</pre>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                  }
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </Layout>

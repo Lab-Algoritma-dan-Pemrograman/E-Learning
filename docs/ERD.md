@@ -29,7 +29,7 @@ erDiagram
         text nama
         text kelas
         text email
-        text role "admin | kordas | asisten | user"
+        text role "admin | kordas | asisten | praktikan"
         integer xp
         integer level
         integer streak
@@ -191,7 +191,7 @@ CREATE TABLE users (
     nama TEXT NOT NULL,
     kelas TEXT NOT NULL,
     email TEXT,
-    role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'kordas', 'asisten', 'user')),
+    role TEXT NOT NULL DEFAULT 'praktikan' CHECK (role IN ('admin', 'kordas', 'asisten', 'praktikan')),
     xp INTEGER NOT NULL DEFAULT 0 CHECK (xp >= 0),
     level INTEGER NOT NULL DEFAULT 1 CHECK (level >= 1),
     streak INTEGER NOT NULL DEFAULT 0 CHECK (streak >= 0),
@@ -463,3 +463,23 @@ CREATE POLICY "Asisten ke atas bisa membaca seluruh log audit" ON activity_logs
 2. **Kueri Agregat Efisien**: Menghitung rata-rata nilai per-kelas, progres per-angkatan, dan distribusi kriteria rubrik dapat dilakukan langsung via query `SELECT AVG(final_score)` SQL yang tangguh, memangkas beban pemrosesan logika di client browser.
 3. **Penyimpanan Struktur Kompleks yang Kuat**: Struktur data nested seperti `test_cases`, `answers`, dan hasil penilaian AI disimpan aman sebagai tipe data **JSONB**, yang tetap mendukung fitur kueri indeks (indexing) di PostgreSQL.
 4. **Realtime Broadcast Native**: Menggunakan Supabase Channels untuk monitoring heartbeat mahasiswa aktif secara instan dan efisien dibandingkan metode snapshot Firestore yang memicu biaya baca dokumen yang tinggi.
+
+---
+
+## 5. SQL Migrasi Perubahan Peran (User ke Praktikan)
+
+Jalankan perintah SQL ini di dalam **Supabase SQL Editor** jika Anda memigrasikan database yang sudah memiliki tabel:
+
+```sql
+-- Hapus constraint role lama
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+
+-- Buat constraint role baru dengan 'praktikan' menggantikan 'user'
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'kordas', 'asisten', 'praktikan'));
+
+-- Ubah nilai default kolom role
+ALTER TABLE users ALTER COLUMN role SET DEFAULT 'praktikan';
+
+-- Perbarui semua data yang memiliki role lama 'user'
+UPDATE users SET role = 'praktikan' WHERE role = 'user';
+```

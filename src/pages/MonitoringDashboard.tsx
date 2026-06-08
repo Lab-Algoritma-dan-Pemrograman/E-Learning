@@ -76,7 +76,7 @@ export const MonitoringDashboard: React.FC = () => {
     const { data } = await supabase
       .from('users')
       .select('*')
-      .eq('role', 'user')
+      .eq('role', 'praktikan')
       .order('nim');
     setStudents(data || []);
   };

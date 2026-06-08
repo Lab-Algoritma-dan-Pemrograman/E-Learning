@@ -21,7 +21,7 @@ export const getLeaderboard = async (limitCount: number = 10): Promise<UserProfi
       streak: u.streak || 0,
       lastActive: u.last_active || '',
       createdAt: u.created_at || '',
-      role: u.role || 'user',
+      role: u.role || 'praktikan',
       assessmentAccess: u.assessment_access
     })) as UserProfile[];
   } catch (error) {

@@ -53,7 +53,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       // Normalize and map 'koordinator' role from Web Utama to 'kordas' in E-Learning
       const rawRole = (payload as any).role;
-      let mappedRole: 'admin' | 'kordas' | 'asisten' | 'user' = 'user';
+      let mappedRole: 'admin' | 'kordas' | 'asisten' | 'praktikan' = 'praktikan';
       if (rawRole === 'admin') mappedRole = 'admin';
       else if (rawRole === 'kordas' || rawRole === 'koordinator') mappedRole = 'kordas';
       else if (rawRole === 'asisten') mappedRole = 'asisten';
@@ -98,7 +98,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             streak: 0,
             last_active: new Date().toISOString(),
             created_at: new Date().toISOString(),
-            role: payload.role || 'user',
+            role: payload.role || 'praktikan',
             assessment_access: {
               pre_test: false,
               post_test: false,
@@ -250,7 +250,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           streak: 0,
           lastActive: new Date().toISOString(),
           createdAt: new Date().toISOString(),
-          role: 'user',
+          role: 'praktikan',
           assessmentAccess: {
             pre_test: false,
             post_test: false,

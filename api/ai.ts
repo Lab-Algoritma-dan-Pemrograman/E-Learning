@@ -55,7 +55,7 @@ export default async function handler(req: Request) {
     }
 
     const userData = await firestoreRes.json();
-    const role = userData.fields?.role?.stringValue || 'user';
+    const role = userData.fields?.role?.stringValue || 'praktikan';
 
     // 3. SECURE RBAC
     if (role !== 'admin' && role !== 'editor') {

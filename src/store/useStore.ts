@@ -13,7 +13,7 @@ export interface UserProfile {
   streak: number;
   lastActive: string;
   createdAt: string;
-  role?: 'admin' | 'kordas' | 'asisten' | 'user';
+  role?: 'admin' | 'kordas' | 'asisten' | 'praktikan';
   division?: string;
   levelAccessOverrides?: Record<string, 'auto' | 'unlocked' | 'locked'>;
   assessmentAccess?: Record<string, boolean>;

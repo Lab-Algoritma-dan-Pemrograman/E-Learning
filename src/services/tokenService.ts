@@ -4,7 +4,7 @@ export interface TokenPayload {
   nim: string;
   nama: string;
   kelas: string;
-  role?: 'admin' | 'kordas' | 'asisten' | 'user';
+  role?: 'admin' | 'kordas' | 'asisten' | 'praktikan';
   email?: string;
   exp?: number;
   iat?: number;

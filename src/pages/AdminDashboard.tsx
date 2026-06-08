@@ -879,7 +879,7 @@ export const AdminDashboard: React.FC = () => {
         streak: u.streak || 0,
         lastActive: u.last_active || '',
         createdAt: u.created_at || '',
-        role: u.role || 'user',
+        role: u.role || 'praktikan',
         levelAccessOverrides: u.level_access_overrides || {},
         assessmentAccess: u.assessment_access || {}
       })) as UserProfile[]);
@@ -927,7 +927,7 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleToggleRole = async (targetUser: UserProfile, newRole: 'admin' | 'kordas' | 'asisten' | 'user') => {
+  const handleToggleRole = async (targetUser: UserProfile, newRole: 'admin' | 'kordas' | 'asisten' | 'praktikan') => {
     if (targetUser.nim === currentUser?.nim) {
       setShowModal({
         type: 'alert',
@@ -1145,7 +1145,7 @@ export const AdminDashboard: React.FC = () => {
                                 "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider",
                                 u.role === 'admin' ? "bg-purple-100 text-purple-700" : "bg-zinc-100 text-zinc-600"
                               )}>
-                                {u.role || 'user'}
+                                {u.role || 'praktikan'}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
@@ -1210,16 +1210,16 @@ export const AdminDashboard: React.FC = () => {
                       <div className="flex flex-col gap-2">
                         <div className="flex gap-1 bg-zinc-100 p-1 rounded-xl flex-wrap animate-fade-in">
                           <button 
-                            onClick={() => handleToggleRole(selectedUser, 'user')}
-                            disabled={selectedUser.role === 'user' || (!isCoordinator && selectedUser.role === 'admin')}
+                            onClick={() => handleToggleRole(selectedUser, 'praktikan')}
+                            disabled={selectedUser.role === 'praktikan' || (!isCoordinator && selectedUser.role === 'admin')}
                             className={cn(
                               "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
-                              selectedUser.role === 'user' || (!selectedUser.role)
+                              selectedUser.role === 'praktikan' || (!selectedUser.role)
                                 ? "bg-white text-zinc-900 shadow-sm" 
                                 : "text-zinc-500 hover:text-zinc-900"
                             )}
                           >
-                            User
+                            Praktikan
                           </button>
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'asisten')}

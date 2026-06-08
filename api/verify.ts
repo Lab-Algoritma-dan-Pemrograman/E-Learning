@@ -52,7 +52,7 @@ export default async function handler(req: any, res: any) {
         nim: tokenPayload.nim,
         nama: tokenPayload.nama,
         kelas: tokenPayload.kelas,
-        role: tokenPayload.role || 'user',
+        role: tokenPayload.role || 'praktikan',
         email: tokenPayload.email || null
       })
         .setProtectedHeader({ alg: 'HS256' })
