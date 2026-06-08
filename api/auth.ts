@@ -6,15 +6,7 @@ import { jwtVerify } from 'jose';
  */
 export function getSupabaseSecret(secretStr: string | undefined): Uint8Array | null {
   if (!secretStr) return null;
-  try {
-    const clean = secretStr.trim();
-    if (clean.length === 88 || clean.endsWith('=')) {
-      return Buffer.from(clean, 'base64');
-    }
-  } catch (e) {
-    // Fallback
-  }
-  return new TextEncoder().encode(secretStr);
+  return new TextEncoder().encode(secretStr.trim());
 }
 
 /**
