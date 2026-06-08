@@ -1,6 +1,8 @@
+import { jwtVerify } from 'jose';
+import { getSupabaseSecret, getWebUtamaSecret } from './auth';
+
 export default async function handler(req: any, res: any) {
-  // Simple check to prevent exposing this publicly
-  const { code } = req.query;
+  const { code, token } = req.query;
   if (code !== 'faqod123') {
     return res.status(403).json({ error: 'Forbidden. Pass correct code query parameter.' });
   }
@@ -18,6 +20,47 @@ export default async function handler(req: any, res: any) {
     return { exists: true, length: len, preview };
   };
 
+  let tokenDiagnostics: any = null;
+
+  if (token) {
+    tokenDiagnostics = {
+      tokenLength: token.length,
+      attempts: {}
+    };
+
+    // Attempt 1: Supabase Secret
+    const supabaseSecretStr = process.env.SUPABASE_JWT_SECRET;
+    if (supabaseSecretStr) {
+      try {
+        const secret = getSupabaseSecret(supabaseSecretStr);
+        if (secret) {
+          const { payload } = await jwtVerify(token, secret);
+          tokenDiagnostics.attempts.supabase = { success: true, payload };
+        } else {
+          tokenDiagnostics.attempts.supabase = { success: false, error: 'Secret decoding returned null' };
+        }
+      } catch (err: any) {
+        tokenDiagnostics.attempts.supabase = { success: false, error: err.message, code: err.code };
+      }
+    } else {
+      tokenDiagnostics.attempts.supabase = { success: false, error: 'SUPABASE_JWT_SECRET not configured' };
+    }
+
+    // Attempt 2: Web Utama Secret
+    const webUtamaSecretStr = process.env.VITE_JWT_SECRET || process.env.JWT_SECRET;
+    if (webUtamaSecretStr) {
+      try {
+        const secret = getWebUtamaSecret();
+        const { payload } = await jwtVerify(token, secret);
+        tokenDiagnostics.attempts.webUtama = { success: true, payload };
+      } catch (err: any) {
+        tokenDiagnostics.attempts.webUtama = { success: false, error: err.message, code: err.code };
+      }
+    } else {
+      tokenDiagnostics.attempts.webUtama = { success: false, error: 'JWT_SECRET not configured' };
+    }
+  }
+
   return res.status(200).json({
     timestamp: new Date().toISOString(),
     env: {
@@ -27,6 +70,7 @@ export default async function handler(req: any, res: any) {
       JWT_SECRET: getEnvStats('JWT_SECRET'),
       VITE_JWT_SECRET: getEnvStats('VITE_JWT_SECRET'),
       SUPABASE_JWT_SECRET: getEnvStats('SUPABASE_JWT_SECRET'),
-    }
+    },
+    tokenDiagnostics
   });
 }
