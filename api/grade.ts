@@ -1,7 +1,6 @@
-import { verifyToken, detectSupabaseSecret } from './auth.js';
+import { verifyToken } from './auth.js';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from "@google/genai";
-import { SignJWT } from 'jose';
 
 // Initialize Supabase Client
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
@@ -51,46 +50,11 @@ export default async function handler(req: any, res: any) {
     const graderNim = tokenPayload.nim || tokenPayload.sub;
     const email = tokenPayload.email;
 
-    // Normalize app role
-    const rawAppRole = tokenPayload.user_role || tokenPayload.role;
-    let appRole = rawAppRole || 'praktikan';
-    if (appRole === 'koordinator') appRole = 'kordas';
-    if (appRole === 'authenticated' || appRole === 'anon') appRole = 'praktikan';
-
-    // Generate a new JWT token signed with Supabase JWT Secret if configured
-    let dbToken = token;
-    const supabaseSecret = await detectSupabaseSecret();
-    if (supabaseSecret) {
-      dbToken = await new SignJWT({
-        nim: tokenPayload.nim,
-        nama: tokenPayload.nama,
-        kelas: tokenPayload.kelas || '',
-        role: 'authenticated',
-        user_role: appRole,
-        email: tokenPayload.email || null,
-        iss: 'supabase',
-        sub: tokenPayload.nim || tokenPayload.sub,
-        aud: 'authenticated'
-      })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setExpirationTime('15m')
-        .sign(supabaseSecret);
-    }
-
-    const db = createClient(supabaseUrl, supabaseServiceKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${dbToken}`
-        }
-      }
-    });
-
     let graderProfile = null;
     let roleError = null;
 
     if (graderNim) {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('users')
         .select('role')
         .eq('nim', graderNim)
@@ -100,7 +64,7 @@ export default async function handler(req: any, res: any) {
     }
 
     if (!graderProfile && email) {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('users')
         .select('role')
         .eq('email', email)
@@ -137,7 +101,7 @@ export default async function handler(req: any, res: any) {
     const gradeSingleAttempt = async (attemptId: string) => {
       try {
         // A. Load attempt details
-        const { data: attempt, error: attemptError } = await db
+        const { data: attempt, error: attemptError } = await supabase
           .from('assessment_attempts')
           .select('*')
           .eq('id', attemptId)
@@ -152,7 +116,7 @@ export default async function handler(req: any, res: any) {
         }
 
         // B. Load student profile name
-        const { data: student } = await db
+        const { data: student } = await supabase
           .from('users')
           .select('nama')
           .eq('nim', attempt.nim)
@@ -161,7 +125,7 @@ export default async function handler(req: any, res: any) {
         const studentName = student?.nama || 'Mahasiswa';
 
         // C. Fetch dynamic grading rules from DB
-        const { data: gradingRulesData } = await db
+        const { data: gradingRulesData } = await supabase
           .from('assessment_grading_rules')
           .select('rules')
           .eq('id', attempt.menu_type)
@@ -174,7 +138,7 @@ export default async function handler(req: any, res: any) {
           return { attemptId, success: false, error: 'Attempt tidak memiliki soal terasosiasi.' };
         }
 
-        const { data: questions, error: questionsError } = await db
+        const { data: questions, error: questionsError } = await supabase
           .from('assessment_questions')
           .select('*')
           .in('id', questionIds);
@@ -381,7 +345,7 @@ Format respons JSON yang harus Anda hasilkan:
         const aiGradesMap = gradingResult.grades || {};
         const finalScore = gradingResult.total_overall_score || 0;
 
-        const { error: updateError } = await db
+        const { error: updateError } = await supabase
           .from('assessment_attempts')
           .update({
             ai_grades: aiGradesMap,
