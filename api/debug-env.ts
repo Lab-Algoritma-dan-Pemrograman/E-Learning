@@ -1,10 +1,27 @@
 import { jwtVerify } from 'jose';
 import { getSupabaseSecret, getWebUtamaSecret } from './auth.js';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(req: any, res: any) {
   const { code, token } = req.query;
   if (code !== 'faqod123') {
     return res.status(403).json({ error: 'Forbidden. Pass correct code query parameter.' });
+  }
+
+  let dbResult: any = null;
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('nim, nama, role')
+      .eq('nim', '202211083')
+      .maybeSingle();
+    dbResult = { data, error };
+  } catch (err: any) {
+    dbResult = { exception: err.message };
   }
 
   const getEnvStats = (key: string) => {
@@ -71,6 +88,7 @@ export default async function handler(req: any, res: any) {
       VITE_JWT_SECRET: getEnvStats('VITE_JWT_SECRET'),
       SUPABASE_JWT_SECRET: getEnvStats('SUPABASE_JWT_SECRET'),
     },
+    dbResult,
     tokenDiagnostics
   });
 }
