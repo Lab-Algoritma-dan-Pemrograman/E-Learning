@@ -50,11 +50,19 @@ export default async function handler(req: any, res: any) {
     const graderNim = tokenPayload.nim || tokenPayload.sub;
     const email = tokenPayload.email;
 
+    const db = createClient(supabaseUrl, supabaseServiceKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+
     let graderProfile = null;
     let roleError = null;
 
     if (graderNim) {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('users')
         .select('role')
         .eq('nim', graderNim)
@@ -64,7 +72,7 @@ export default async function handler(req: any, res: any) {
     }
 
     if (!graderProfile && email) {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('users')
         .select('role')
         .eq('email', email)
@@ -101,7 +109,7 @@ export default async function handler(req: any, res: any) {
     const gradeSingleAttempt = async (attemptId: string) => {
       try {
         // A. Load attempt details
-        const { data: attempt, error: attemptError } = await supabase
+        const { data: attempt, error: attemptError } = await db
           .from('assessment_attempts')
           .select('*')
           .eq('id', attemptId)
@@ -116,7 +124,7 @@ export default async function handler(req: any, res: any) {
         }
 
         // B. Load student profile name
-        const { data: student } = await supabase
+        const { data: student } = await db
           .from('users')
           .select('nama')
           .eq('nim', attempt.nim)
@@ -125,7 +133,7 @@ export default async function handler(req: any, res: any) {
         const studentName = student?.nama || 'Mahasiswa';
 
         // C. Fetch dynamic grading rules from DB
-        const { data: gradingRulesData } = await supabase
+        const { data: gradingRulesData } = await db
           .from('assessment_grading_rules')
           .select('rules')
           .eq('id', attempt.menu_type)
@@ -138,7 +146,7 @@ export default async function handler(req: any, res: any) {
           return { attemptId, success: false, error: 'Attempt tidak memiliki soal terasosiasi.' };
         }
 
-        const { data: questions, error: questionsError } = await supabase
+        const { data: questions, error: questionsError } = await db
           .from('assessment_questions')
           .select('*')
           .in('id', questionIds);
@@ -345,7 +353,7 @@ Format respons JSON yang harus Anda hasilkan:
         const aiGradesMap = gradingResult.grades || {};
         const finalScore = gradingResult.total_overall_score || 0;
 
-        const { error: updateError } = await supabase
+        const { error: updateError } = await db
           .from('assessment_attempts')
           .update({
             ai_grades: aiGradesMap,

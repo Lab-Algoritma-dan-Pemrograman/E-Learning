@@ -41,6 +41,16 @@ export const MonitoringDashboard: React.FC = () => {
   const [inspectingAttempt, setInspectingAttempt] = useState<any | null>(null);
   const [classFilter, setClassFilter] = useState<string>('all');
   const [majorFilter, setMajorFilter] = useState<string>('all');
+  const [questionsMetadata, setQuestionsMetadata] = useState<Record<string, { module_association: number | null; title: string; type: string }>>({});
+
+  const resolveAttemptDetails = (att: any) => {
+    const questionIds = att.selected_questions || [];
+    const firstQId = questionIds[0];
+    const qMeta = questionsMetadata[firstQId];
+    let moduleAssociation = qMeta?.module_association || null;
+    let type = qMeta?.type || '';
+    return { moduleAssociation, type };
+  };
 
   // Initialize data subscriptions
   useEffect(() => {
@@ -58,6 +68,25 @@ export const MonitoringDashboard: React.FC = () => {
 
     // 5. Fetch attempts
     fetchAttempts();
+
+    // Fetch questions metadata
+    const fetchQuestionsMetadata = async () => {
+      const { data } = await supabase
+        .from('assessment_questions')
+        .select('id, module_association, title, type');
+      if (data) {
+        const meta: Record<string, any> = {};
+        data.forEach(q => {
+          meta[q.id] = {
+            module_association: q.module_association,
+            title: q.title,
+            type: q.type
+          };
+        });
+        setQuestionsMetadata(meta);
+      }
+    };
+    fetchQuestionsMetadata();
 
     return () => {
       unsubSessions();
@@ -335,7 +364,7 @@ export const MonitoringDashboard: React.FC = () => {
             <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-bold text-lg">Rekap & Live Inspector {selectedMenu === 'ujian_praktik' ? 'Modul' : 'Soal'}</h3>
+                  <h3 className="font-bold text-lg">Rekap & Live Inspector {selectedMenu === 'ujian_praktik' ? 'Soal' : 'Modul'}</h3>
                   <p className="text-xs text-zinc-500 mt-1">Klik nama mahasiswa untuk menginspeksi kode draf hasil auto-save secara real-time.</p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -404,12 +433,12 @@ export const MonitoringDashboard: React.FC = () => {
                       <th className="p-4 w-12 text-center">Pilih</th>
                       <th className="p-4 w-64">Nama & Kelas</th>
                       <th className="p-4 w-44">Status Ujian</th>
-                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 1' : 'Soal 1'}</th>
-                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 2' : 'Soal 2'}</th>
-                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 3' : 'Soal 3'}</th>
-                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 4' : 'Soal 4'}</th>
-                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 5' : 'Soal 5'}</th>
-                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 6' : 'Soal 6'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Soal 1' : 'Modul 1'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Soal 2' : 'Modul 2'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Soal 3' : 'Modul 3'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Soal 4' : 'Modul 4'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Soal 5' : 'Modul 5'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Soal 6' : 'Modul 6'}</th>
                       <th className="p-4 text-center w-24">Skor Total</th>
                     </tr>
                   </thead>
@@ -449,27 +478,56 @@ export const MonitoringDashboard: React.FC = () => {
                                 {att.status}
                               </span>
                             </td>
-                            {/* Matrix cells for Q1 to Q6 */}
-                            {[0, 1, 2, 3, 4, 5].map((idx) => {
-                              const qId = att.selected_questions?.[idx];
-                              return (
-                                <td key={idx} className="p-3 text-center">
-                                  {qId ? (
-                                    <div 
-                                      onClick={() => setInspectingAttempt(att)}
-                                      className={cn(
-                                        "inline-flex w-14 h-9 rounded-lg border text-[10px] font-bold items-center justify-center transition-all hover:scale-105",
-                                        getCellColorClass(qId, att)
-                                      )}
-                                    >
-                                      {getCellLabel(qId, att)}
-                                    </div>
-                                  ) : (
-                                    <span className="text-zinc-200">—</span>
-                                  )}
-                                </td>
-                              );
-                            })}
+                            {selectedMenu === 'ujian_praktik' ? (
+                              /* Ujian Praktik: Soal 1 s.d. Soal 6 */
+                              [0, 1, 2, 3, 4, 5].map((idx) => {
+                                const qId = att.selected_questions?.[idx];
+                                return (
+                                  <td key={idx} className="p-3 text-center">
+                                    {qId ? (
+                                      <div 
+                                        onClick={() => setInspectingAttempt(att)}
+                                        className={cn(
+                                          "inline-flex w-14 h-9 rounded-lg border text-[10px] font-bold items-center justify-center transition-all hover:scale-105 cursor-pointer",
+                                          getCellColorClass(qId, att)
+                                        )}
+                                      >
+                                        {getCellLabel(qId, att)}
+                                      </div>
+                                    ) : (
+                                      <span className="text-zinc-200">—</span>
+                                    )}
+                                  </td>
+                                );
+                              })
+                            ) : (
+                              /* Non-Ujian Praktik: Modul 1 s.d. Modul 6 */
+                              [1, 2, 3, 4, 5, 6].map((m) => {
+                                const attModul = resolveAttemptDetails(att).moduleAssociation;
+                                const isMatch = attModul === m;
+                                return (
+                                  <td key={m} className="p-3 text-center">
+                                    {isMatch ? (
+                                      <div 
+                                        onClick={() => setInspectingAttempt(att)}
+                                        className={cn(
+                                          "inline-flex w-14 h-9 rounded-lg border text-[10px] font-bold items-center justify-center transition-all hover:scale-105 cursor-pointer",
+                                          att.status === 'graded' ? 'bg-blue-50 border-blue-200 text-blue-800 font-black' :
+                                          att.status === 'submitted' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+                                          att.status === 'in_progress' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                          'bg-zinc-100 border-zinc-200 text-zinc-400'
+                                        )}
+                                      >
+                                        {att.status === 'graded' ? att.final_score : 
+                                         att.status === 'submitted' ? 'SUBMIT' : 'DRAFT'}
+                                      </div>
+                                    ) : (
+                                      <span className="text-zinc-200">—</span>
+                                    )}
+                                  </td>
+                                );
+                              })
+                            )}
                             <td className="p-4 text-center font-black text-zinc-900 bg-zinc-50/50">
                               {att.final_score !== null && att.final_score !== undefined ? att.final_score : '—'}
                             </td>
@@ -812,7 +870,7 @@ export const MonitoringDashboard: React.FC = () => {
                   return (
                     <div key={qId} className="border border-zinc-200 rounded-2xl p-4 bg-zinc-50 space-y-3">
                       <h4 className="font-bold text-sm text-rose-800">
-                        {inspectingAttempt.menu_type === 'ujian_praktik' ? `Modul ${idx + 1}` : `Soal ${idx + 1}`} ({qId})
+                        {inspectingAttempt.menu_type === 'ujian_praktik' ? `Soal ${idx + 1}` : `Soal ${idx + 1} (Modul ${resolveAttemptDetails(inspectingAttempt).moduleAssociation || '?'})`} ({qId})
                       </h4>
                       {ans.answerText?.trim() && (
                         <div className="space-y-1">
