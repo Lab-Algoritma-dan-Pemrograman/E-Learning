@@ -50,13 +50,7 @@ export default async function handler(req: any, res: any) {
     const graderNim = tokenPayload.nim || tokenPayload.sub;
     const email = tokenPayload.email;
 
-    const db = createClient(supabaseUrl, supabaseServiceKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    });
+    const db = createClient(supabaseUrl, token);
 
     let graderProfile = null;
     let roleError = null;

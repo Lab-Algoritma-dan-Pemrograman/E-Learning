@@ -321,6 +321,7 @@ export const AssessmentPage: React.FC = () => {
   // Anti-Cheat: Tab Switch Detection
   const isHandlingBlur = useRef(false);
   const tabSwitchCountRef = useRef(0);
+  const isReloading = useRef(false);
 
   useEffect(() => {
     if (!attempt || attempt.status !== 'in_progress' || !user) return;
@@ -328,6 +329,7 @@ export const AssessmentPage: React.FC = () => {
     tabSwitchCountRef.current = attempt.tab_switch_count || 0;
 
     const handleTabSwitch = async () => {
+      if (isReloading.current) return;
       if (isHandlingBlur.current) return;
       isHandlingBlur.current = true;
 
@@ -369,12 +371,21 @@ export const AssessmentPage: React.FC = () => {
       handleTabSwitch();
     };
 
+    const handleBeforeUnload = () => {
+      isReloading.current = true;
+      setTimeout(() => {
+        isReloading.current = false;
+      }, 2000);
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [attempt, user]);
 
