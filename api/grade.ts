@@ -47,17 +47,39 @@ export default async function handler(req: any, res: any) {
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
 
-    const graderNim = tokenPayload.nim;
+    const graderNim = tokenPayload.nim || tokenPayload.sub;
+    const email = tokenPayload.email;
 
-    // 2. Fetch grader role from Supabase to enforce RBAC
-    const { data: graderProfile, error: roleError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('nim', graderNim)
-      .single();
+    let graderProfile = null;
+    let roleError = null;
 
-    if (roleError || !graderProfile) {
-      return res.status(403).json({ error: 'Akses Ditolak: Profil Anda tidak ditemukan.' });
+    if (graderNim) {
+      const { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('nim', graderNim)
+        .maybeSingle();
+      graderProfile = data;
+      roleError = error;
+    }
+
+    if (!graderProfile && email) {
+      const { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('email', email)
+        .maybeSingle();
+      if (data) {
+        graderProfile = data;
+        roleError = null;
+      } else if (error) {
+        roleError = error;
+      }
+    }
+
+    if (!graderProfile) {
+      console.error('RBAC check failed. Payload:', tokenPayload, 'Error:', roleError);
+      return res.status(403).json({ error: `Akses Ditolak: Profil Anda tidak ditemukan (NIM: ${graderNim || 'N/A'}, Email: ${email || 'N/A'}).` });
     }
 
     if (graderProfile.role !== 'admin' && graderProfile.role !== 'kordas' && graderProfile.role !== 'asisten') {

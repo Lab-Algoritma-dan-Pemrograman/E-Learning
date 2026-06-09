@@ -335,7 +335,7 @@ export const MonitoringDashboard: React.FC = () => {
             <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-bold text-lg">Rekap & Live Inspector Soal</h3>
+                  <h3 className="font-bold text-lg">Rekap & Live Inspector {selectedMenu === 'ujian_praktik' ? 'Modul' : 'Soal'}</h3>
                   <p className="text-xs text-zinc-500 mt-1">Klik nama mahasiswa untuk menginspeksi kode draf hasil auto-save secara real-time.</p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -404,12 +404,12 @@ export const MonitoringDashboard: React.FC = () => {
                       <th className="p-4 w-12 text-center">Pilih</th>
                       <th className="p-4 w-64">Nama & Kelas</th>
                       <th className="p-4 w-44">Status Ujian</th>
-                      <th className="p-4 text-center">Soal 1</th>
-                      <th className="p-4 text-center">Soal 2</th>
-                      <th className="p-4 text-center">Soal 3</th>
-                      <th className="p-4 text-center">Soal 4</th>
-                      <th className="p-4 text-center">Soal 5</th>
-                      <th className="p-4 text-center">Soal 6</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 1' : 'Soal 1'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 2' : 'Soal 2'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 3' : 'Soal 3'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 4' : 'Soal 4'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 5' : 'Soal 5'}</th>
+                      <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Modul 6' : 'Soal 6'}</th>
                       <th className="p-4 text-center w-24">Skor Total</th>
                     </tr>
                   </thead>
@@ -811,7 +811,9 @@ export const MonitoringDashboard: React.FC = () => {
                   const ans = inspectingAttempt.answers?.[qId] || {};
                   return (
                     <div key={qId} className="border border-zinc-200 rounded-2xl p-4 bg-zinc-50 space-y-3">
-                      <h4 className="font-bold text-sm text-rose-800">Soal {idx + 1} ({qId})</h4>
+                      <h4 className="font-bold text-sm text-rose-800">
+                        {inspectingAttempt.menu_type === 'ujian_praktik' ? `Modul ${idx + 1}` : `Soal ${idx + 1}`} ({qId})
+                      </h4>
                       {ans.answerText?.trim() && (
                         <div className="space-y-1">
                           <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Jawaban Teks</div>
