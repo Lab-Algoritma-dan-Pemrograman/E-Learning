@@ -16,6 +16,7 @@ import { cn } from '../lib/utils';
 export const AssessmentPage: React.FC = () => {
   const { user, setPage } = useStore();
   const [assessmentType, setAssessmentType] = useState<'pre_test' | 'post_test' | 'program_keterampilan' | 'ujian_praktik' | null>(null);
+  const [selectedModule, setSelectedModule] = useState<number | null>(null);
   const [tokenInput, setTokenInput] = useState('');
   const [tokenError, setTokenError] = useState('');
   const [isTokenValidating, setIsTokenValidating] = useState(false);
@@ -309,7 +310,8 @@ export const AssessmentPage: React.FC = () => {
       const newAttempt = await assessmentService.startAttempt(
         user.nim,
         assessmentType,
-        assessmentType === 'ujian_praktik' ? tokenInput.trim().toUpperCase() : null
+        assessmentType === 'ujian_praktik' ? tokenInput.trim().toUpperCase() : null,
+        selectedModule
       );
 
       // Increment token use if Ujian Praktik
@@ -361,6 +363,7 @@ export const AssessmentPage: React.FC = () => {
       confetti({ particleCount: 150, spread: 80 });
       setAttempt(null);
       setAssessmentType(null);
+      setSelectedModule(null);
       alert("Waktu habis! Jawaban Anda telah dikumpulkan secara otomatis.");
       setPage('dashboard');
     } catch (e) {
@@ -383,6 +386,7 @@ export const AssessmentPage: React.FC = () => {
       confetti({ particleCount: 150, spread: 80 });
       setAttempt(null);
       setAssessmentType(null);
+      setSelectedModule(null);
       setPage('dashboard');
     } catch (e: any) {
       setError(e.message || "Gagal mengumpulkan asesmen.");
@@ -422,8 +426,14 @@ export const AssessmentPage: React.FC = () => {
                 if (attempt) {
                   const check = window.confirm("Ujian sedang berlangsung! Pindah halaman akan tetap menjalankan timer. Lanjutkan?");
                   if (!check) return;
+                  setPage('dashboard');
+                } else if (selectedModule !== null) {
+                  setSelectedModule(null);
+                } else if (assessmentType !== null) {
+                  setAssessmentType(null);
+                } else {
+                  setPage('dashboard');
                 }
-                setPage('dashboard');
               }}
               className="p-2.5 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-xl transition-colors"
             >
@@ -541,6 +551,58 @@ export const AssessmentPage: React.FC = () => {
           </div>
         )}
 
+        {/* MODUL SELECTION SCREEN FOR PRE/POST TEST */}
+        {assessmentType && !attempt && (assessmentType === 'pre_test' || assessmentType === 'post_test') && selectedModule === null && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-3xl mx-auto space-y-6"
+          >
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-black text-zinc-900">Pilih Modul Asesmen</h3>
+              <p className="text-zinc-500 text-sm">
+                Pilih modul materi yang ingin Anda kerjakan untuk evaluasi **{assessmentType === 'pre_test' ? 'Pre-Test' : 'Post-Test'}**.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map(m => (
+                <button
+                  key={m}
+                  onClick={() => setSelectedModule(m)}
+                  className="bg-white border border-zinc-200 hover:border-rose-700 p-6 rounded-3xl text-left hover:shadow-lg transition-all group flex flex-col justify-between h-40 active:scale-95"
+                >
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full group-hover:bg-rose-700 group-hover:text-white transition-colors">
+                      Modul {m}
+                    </span>
+                    <h4 className="font-extrabold text-base text-zinc-800 mt-3 group-hover:text-zinc-955">
+                      {m === 1 ? 'Pengenalan Python / C' :
+                       m === 2 ? 'Variabel & Tipe Data' :
+                       m === 3 ? 'Percabangan / Kondisi' :
+                       m === 4 ? 'Perulangan / Loops' :
+                       m === 5 ? 'Fungsi / Functions' :
+                       'Struktur Data Dasar'}
+                    </h4>
+                  </div>
+                  <span className="text-xs font-bold text-rose-700 group-hover:underline mt-auto flex items-center gap-1">
+                    Mulai Asesmen &rarr;
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-center pt-4">
+              <button 
+                onClick={() => setAssessmentType(null)}
+                className="px-6 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl text-sm transition-all"
+              >
+                Kembali ke Menu Utama
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {/* 2. TOKEN INPUT GATE (FOR UJIAN PRAKTIK ONLY) */}
         {assessmentType === 'ujian_praktik' && !isTokenPassed && !attempt && (
           <motion.div 
@@ -586,7 +648,7 @@ export const AssessmentPage: React.FC = () => {
         )}
 
         {/* 3. EXAM CONFIRMATION SCREEN (Non-Token assessments or after token success) */}
-        {assessmentType && !attempt && (!questions || questions.length === 0) && (assessmentType !== 'ujian_praktik' || isTokenPassed) && (
+        {assessmentType && !attempt && (!questions || questions.length === 0) && (assessmentType !== 'ujian_praktik' || isTokenPassed) && ((assessmentType !== 'pre_test' && assessmentType !== 'post_test') || selectedModule !== null) && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -597,6 +659,11 @@ export const AssessmentPage: React.FC = () => {
             </div>
             <div className="space-y-3">
               <h3 className="text-2xl font-bold">Siap memulai pengerjaan?</h3>
+              {selectedModule !== null && (
+                <p className="text-xs font-bold text-rose-700 uppercase tracking-widest bg-rose-50 px-3 py-1 rounded-full inline-block border border-rose-100">
+                  Modul {selectedModule}
+                </p>
+              )}
               <div className="flex justify-center gap-4 py-2">
                 <span className="px-4 py-1.5 bg-zinc-100 text-zinc-700 rounded-xl text-xs font-bold flex items-center gap-1.5">
                   ⏱️ Durasi: {durations[assessmentType] || 0} Menit
@@ -608,14 +675,20 @@ export const AssessmentPage: React.FC = () => {
                 </span>
               </div>
               <p className="text-sm text-zinc-500 leading-relaxed">
-                Anda akan memulai pengerjaan **{assessmentType.toUpperCase().replace('_', ' ')}**. 
+                Anda akan memulai pengerjaan **{assessmentType.toUpperCase().replace(/_/g, ' ')}** {selectedModule !== null && `Modul ${selectedModule}`}. 
                 Waktu pengerjaan akan segera dihitung mundur setelah Anda menekan tombol di bawah.
                 Sistem auto-save aktif untuk mengamankan jawaban draf Anda.
               </p>
             </div>
             <div className="flex gap-4">
               <button 
-                onClick={() => setAssessmentType(null)}
+                onClick={() => {
+                  if (assessmentType === 'pre_test' || assessmentType === 'post_test') {
+                    setSelectedModule(null);
+                  } else {
+                    setAssessmentType(null);
+                  }
+                }}
                 className="flex-1 py-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-2xl transition-all"
               >
                 Kembali
@@ -883,20 +956,6 @@ export const AssessmentPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar Navigation */}
             <div className="space-y-4 lg:col-span-1">
-              {/* Timer Card */}
-              <div className={cn(
-                "border rounded-2xl p-4 shadow-sm text-center font-bold space-y-1 transition-all",
-                timeLeft !== null && timeLeft < 300 
-                  ? "bg-rose-50 border-rose-200 text-rose-700 animate-pulse" 
-                  : "bg-white border-zinc-200 text-zinc-800"
-              )}>
-                <div className="text-[10px] text-zinc-400 uppercase tracking-wider">Sisa Waktu</div>
-                <div className="text-2xl font-black font-mono flex items-center justify-center gap-2">
-                  <Timer size={20} />
-                  {formatTime(timeLeft)}
-                </div>
-              </div>
-
               <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm space-y-4">
                 <h4 className="font-bold text-sm text-zinc-500 uppercase tracking-widest">Daftar Soal</h4>
                 <div className="grid grid-cols-5 gap-2">
@@ -960,9 +1019,20 @@ export const AssessmentPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Instruction */}
-                  <div className="prose prose-zinc max-w-none text-zinc-700 leading-relaxed text-sm">
-                    <p className="whitespace-pre-wrap">{activeQuestion.instruction}</p>
+                  {/* Instruction per-kartu/box */}
+                  <div className="space-y-3">
+                    {activeQuestion.instruction.split('\n').map((line, lIdx) => {
+                      const trimmed = line.trim();
+                      if (!trimmed) return null;
+                      return (
+                        <div key={lIdx} className="bg-zinc-50/50 border border-zinc-200/80 p-4.5 rounded-2xl shadow-xs flex items-start gap-3.5 hover:border-zinc-300 transition-colors">
+                          <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border border-rose-100">
+                            {lIdx + 1}
+                          </div>
+                          <p className="text-zinc-700 text-sm leading-relaxed font-medium whitespace-pre-wrap flex-1">{trimmed}</p>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Flowchart Image if translation */}

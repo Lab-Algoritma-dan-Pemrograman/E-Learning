@@ -95,84 +95,134 @@ export const assessmentService = {
   async startAttempt(
     nim: string,
     menuType: 'pre_test' | 'post_test' | 'program_keterampilan' | 'ujian_praktik',
-    tokenUsed: string | null = null
+    tokenUsed: string | null = null,
+    moduleAssociation: number | null = null,
+    kode: string | null = null
   ): Promise<AssessmentAttempt> {
-    // 1. Fetch available questions for this menuType
-    const { data: allQuestions, error: qError } = await supabase
-      .from('assessment_questions')
-      .select('*')
-      .eq('menu_type', menuType);
-
-    if (qError) throw qError;
-    if (!allQuestions || allQuestions.length === 0) {
-      throw new Error(`Tidak ada soal yang tersedia untuk menu ${menuType}.`);
+    // Check if there's a pre-generated set of questions
+    let selectedIds: string[] = [];
+    try {
+      const { data: rulesDoc } = await supabase
+        .from('assessment_grading_rules')
+        .select('rules')
+        .eq('id', menuType)
+        .single();
+      if (rulesDoc && rulesDoc.rules) {
+        const generatedSets = (rulesDoc.rules as any).generated_sets || {};
+        const key = menuType === 'ujian_praktik' 
+          ? (kode ? `kode_${kode.toUpperCase()}` : '') 
+          : (moduleAssociation ? `modul_${moduleAssociation}` : '');
+        if (key && generatedSets[key] && Array.isArray(generatedSets[key]) && generatedSets[key].length > 0) {
+          selectedIds = generatedSets[key];
+        }
+      }
+    } catch (err) {
+      console.error("Failed to check pre-generated question sets:", err);
     }
 
-    // 2. Select randomized questions based on rubric constraints
-    const selectedIds: string[] = [];
-    const shuffle = (array: any[]) => [...array].sort(() => Math.random() - 0.5);
+    if (selectedIds.length === 0) {
+      // 1. Fetch available questions for this menuType
+      let qQuery = supabase.from('assessment_questions').select('*').eq('menu_type', menuType);
+      if (menuType !== 'program_keterampilan' && menuType !== 'ujian_praktik' && moduleAssociation) {
+        qQuery = qQuery.eq('module_association', moduleAssociation);
+      }
+      const { data: allQuestions, error: qError } = await qQuery;
 
-    if (menuType === 'pre_test') {
-      // pre test: 5 soal, 1 (easy), 2(medium) 2 (hard)
-      const easyQs = allQuestions.filter(q => q.difficulty === 'easy');
-      const medQs = allQuestions.filter(q => q.difficulty === 'medium');
-      const hardQs = allQuestions.filter(q => q.difficulty === 'hard');
-
-      if (easyQs.length < 1 || medQs.length < 2 || hardQs.length < 2) {
-        throw new Error("Bank soal Pre-Test belum lengkap (minimal harus ada 1 Easy, 2 Medium, 2 Hard).");
+      if (qError) throw qError;
+      if (!allQuestions || allQuestions.length === 0) {
+        throw new Error(`Tidak ada soal yang tersedia untuk menu ${menuType}.`);
       }
 
-      selectedIds.push(shuffle(easyQs)[0].id);
-      selectedIds.push(shuffle(medQs)[0].id, shuffle(medQs)[1].id);
-      selectedIds.push(shuffle(hardQs)[0].id, shuffle(hardQs)[1].id);
+      // 2. Select randomized questions based on rubric constraints
+      const shuffle = (array: any[]) => [...array].sort(() => Math.random() - 0.5);
 
-    } else if (menuType === 'post_test') {
-      // post test: 3 soal, 1 easy, 1 medium dan 1 hard
-      const easyQs = allQuestions.filter(q => q.difficulty === 'easy');
-      const medQs = allQuestions.filter(q => q.difficulty === 'medium');
-      const hardQs = allQuestions.filter(q => q.difficulty === 'hard');
+      if (menuType === 'pre_test') {
+        // pre test: 5 soal, 1 (easy), 2(medium) 2 (hard)
+        const easyQs = allQuestions.filter(q => q.difficulty === 'easy');
+        const medQs = allQuestions.filter(q => q.difficulty === 'medium');
+        const hardQs = allQuestions.filter(q => q.difficulty === 'hard');
 
-      if (easyQs.length < 1 || medQs.length < 1 || hardQs.length < 1) {
-        throw new Error("Bank soal Post-Test belum lengkap (minimal harus ada 1 Easy, 1 Medium, 1 Hard).");
-      }
+        if (easyQs.length < 1 || medQs.length < 2 || hardQs.length < 2) {
+          throw new Error("Bank soal Pre-Test belum lengkap (minimal harus ada 1 Easy, 2 Medium, 2 Hard).");
+        }
 
-      selectedIds.push(shuffle(easyQs)[0].id);
-      selectedIds.push(shuffle(medQs)[0].id);
-      selectedIds.push(shuffle(hardQs)[0].id);
+        selectedIds.push(shuffle(easyQs)[0].id);
+        selectedIds.push(shuffle(medQs)[0].id, shuffle(medQs)[1].id);
+        selectedIds.push(shuffle(hardQs)[0].id, shuffle(hardQs)[1].id);
 
-    } else if (menuType === 'program_keterampilan') {
-      // program keterampilan: 1 soal berdasarkan instruksi
-      selectedIds.push(shuffle(allQuestions)[0].id);
+      } else if (menuType === 'post_test') {
+        // post test: 3 soal, 1 easy, 1 medium dan 1 hard
+        const easyQs = allQuestions.filter(q => q.difficulty === 'easy');
+        const medQs = allQuestions.filter(q => q.difficulty === 'medium');
+        const hardQs = allQuestions.filter(q => q.difficulty === 'hard');
 
-    } else if (menuType === 'ujian_praktik') {
-      // ujian praktik: 6 soal. soal 1(modul 1), soal 2(modul 2), soal 3 (modul 3), soal 4 (modul 4&5), soal 5 (modul 6), soal 6 translate flowchart 2 program
-      
-      // Step 1: Identify all unique kodes
-      const kodes = Array.from(new Set(
-        allQuestions.map(q => {
-          const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
-          return match ? match[1].toUpperCase() : null;
-        }).filter(Boolean)
-      ));
+        if (easyQs.length < 1 || medQs.length < 1 || hardQs.length < 1) {
+          throw new Error("Bank soal Post-Test belum lengkap (minimal harus ada 1 Easy, 1 Medium, 1 Hard).");
+        }
 
-      // Step 2: Try to find a valid kode package
-      let selectedQuestionsSet: any[] = [];
-      const shuffledKodes = shuffle(kodes);
+        selectedIds.push(shuffle(easyQs)[0].id);
+        selectedIds.push(shuffle(medQs)[0].id);
+        selectedIds.push(shuffle(hardQs)[0].id);
 
-      for (const kode of shuffledKodes) {
-        const kodeQs = allQuestions.filter(q => {
-          const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
-          return match && match[1].toUpperCase() === kode;
-        });
+      } else if (menuType === 'program_keterampilan') {
+        // program keterampilan: 1 soal berdasarkan instruksi
+        selectedIds.push(shuffle(allQuestions)[0].id);
 
-        const q1 = kodeQs.filter(q => q.module_association === 1);
-        const q2 = kodeQs.filter(q => q.module_association === 2);
-        const q3 = kodeQs.filter(q => q.module_association === 3);
-        const q4 = kodeQs.filter(q => q.module_association === 4 || q.module_association === 5);
-        const q5 = kodeQs.filter(q => q.module_association === 6);
-        const q6 = kodeQs.filter(q => q.type === 'flowchart_translation');
+      } else if (menuType === 'ujian_praktik') {
+        // ujian praktik: 6 soal. soal 1(modul 1), soal 2(modul 2), soal 3 (modul 3), soal 4 (modul 4&5), soal 5 (modul 6), soal 6 translate flowchart 2 program
+        
+        // Step 1: Identify all unique kodes
+        const kodes = Array.from(new Set(
+          allQuestions.map(q => {
+            const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+            return match ? match[1].toUpperCase() : null;
+          }).filter(Boolean)
+        ));
 
-        if (q1.length >= 1 && q2.length >= 1 && q3.length >= 1 && q4.length >= 1 && q5.length >= 1 && q6.length >= 1) {
+        // Step 2: Try to find a valid kode package
+        let selectedQuestionsSet: any[] = [];
+        const activeKode = kode ? kode.toUpperCase() : null;
+        const shuffledKodes = activeKode ? [activeKode] : shuffle(kodes);
+
+        for (const k of shuffledKodes) {
+          const kodeQs = allQuestions.filter(q => {
+            const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+            return match && match[1].toUpperCase() === k;
+          });
+
+          const q1 = kodeQs.filter(q => q.module_association === 1);
+          const q2 = kodeQs.filter(q => q.module_association === 2);
+          const q3 = kodeQs.filter(q => q.module_association === 3);
+          const q4 = kodeQs.filter(q => q.module_association === 4 || q.module_association === 5);
+          const q5 = kodeQs.filter(q => q.module_association === 6);
+          const q6 = kodeQs.filter(q => q.type === 'flowchart_translation');
+
+          if (q1.length >= 1 && q2.length >= 1 && q3.length >= 1 && q4.length >= 1 && q5.length >= 1 && q6.length >= 1) {
+            selectedQuestionsSet = [
+              shuffle(q1)[0].id,
+              shuffle(q2)[0].id,
+              shuffle(q3)[0].id,
+              shuffle(q4)[0].id,
+              shuffle(q5)[0].id,
+              shuffle(q6)[0].id
+            ];
+            break; // Found a complete package
+          }
+        }
+
+        // Fallback if no complete package was found (global selection)
+        if (selectedQuestionsSet.length === 0) {
+          const q1 = allQuestions.filter(q => q.module_association === 1);
+          const q2 = allQuestions.filter(q => q.module_association === 2);
+          const q3 = allQuestions.filter(q => q.module_association === 3);
+          const q4 = allQuestions.filter(q => q.module_association === 4 || q.module_association === 5);
+          const q5 = allQuestions.filter(q => q.module_association === 6);
+          const q6 = allQuestions.filter(q => q.type === 'flowchart_translation');
+
+          if (q1.length < 1 || q2.length < 1 || q3.length < 1 || q4.length < 1 || q5.length < 1 || q6.length < 1) {
+            throw new Error("Bank soal Ujian Praktik belum lengkap. Harus terisi minimal 1 soal untuk masing-masing kriteria Modul 1, 2, 3, 4/5, 6, dan Flowchart Translation.");
+          }
+
           selectedQuestionsSet = [
             shuffle(q1)[0].id,
             shuffle(q2)[0].id,
@@ -181,34 +231,10 @@ export const assessmentService = {
             shuffle(q5)[0].id,
             shuffle(q6)[0].id
           ];
-          break; // Found a complete package
-        }
-      }
-
-      // Fallback if no complete package was found (global selection)
-      if (selectedQuestionsSet.length === 0) {
-        const q1 = allQuestions.filter(q => q.module_association === 1);
-        const q2 = allQuestions.filter(q => q.module_association === 2);
-        const q3 = allQuestions.filter(q => q.module_association === 3);
-        const q4 = allQuestions.filter(q => q.module_association === 4 || q.module_association === 5);
-        const q5 = allQuestions.filter(q => q.module_association === 6);
-        const q6 = allQuestions.filter(q => q.type === 'flowchart_translation');
-
-        if (q1.length < 1 || q2.length < 1 || q3.length < 1 || q4.length < 1 || q5.length < 1 || q6.length < 1) {
-          throw new Error("Bank soal Ujian Praktik belum lengkap. Harus terisi minimal 1 soal untuk masing-masing kriteria Modul 1, 2, 3, 4/5, 6, dan Flowchart Translation.");
         }
 
-        selectedQuestionsSet = [
-          shuffle(q1)[0].id,
-          shuffle(q2)[0].id,
-          shuffle(q3)[0].id,
-          shuffle(q4)[0].id,
-          shuffle(q5)[0].id,
-          shuffle(q6)[0].id
-        ];
+        selectedIds.push(...selectedQuestionsSet);
       }
-
-      selectedIds.push(...selectedQuestionsSet);
     }
 
     // 3. Define time limits in minutes
@@ -347,5 +373,144 @@ export const assessmentService = {
     const { data, error } = await query;
     if (error) throw error;
     return data || [];
+  },
+
+  async generateAndSaveQuestionSet(
+    menuType: 'pre_test' | 'post_test' | 'ujian_praktik',
+    moduleAssociation: number | null = null,
+    kode: string | null = null
+  ): Promise<AssessmentQuestion[]> {
+    // 1. Fetch available questions
+    let qQuery = supabase.from('assessment_questions').select('*').eq('menu_type', menuType);
+    if (menuType !== 'ujian_praktik' && moduleAssociation) {
+      qQuery = qQuery.eq('module_association', moduleAssociation);
+    }
+    const { data: allQuestions, error: qError } = await qQuery;
+    if (qError) throw qError;
+    if (!allQuestions || allQuestions.length === 0) {
+      throw new Error(`Tidak ada soal yang tersedia di bank soal untuk kriteria ini.`);
+    }
+
+    const selectedIds: string[] = [];
+    const shuffle = (array: any[]) => [...array].sort(() => Math.random() - 0.5);
+
+    if (menuType === 'pre_test') {
+      const easyQs = allQuestions.filter(q => q.difficulty === 'easy');
+      const medQs = allQuestions.filter(q => q.difficulty === 'medium');
+      const hardQs = allQuestions.filter(q => q.difficulty === 'hard');
+
+      if (easyQs.length < 1 || medQs.length < 2 || hardQs.length < 2) {
+        throw new Error("Bank soal Pre-Test untuk modul ini belum lengkap (minimal harus ada 1 Easy, 2 Medium, 2 Hard).");
+      }
+      selectedIds.push(shuffle(easyQs)[0].id);
+      selectedIds.push(shuffle(medQs)[0].id, shuffle(medQs)[1].id);
+      selectedIds.push(shuffle(hardQs)[0].id, shuffle(hardQs)[1].id);
+
+    } else if (menuType === 'post_test') {
+      const easyQs = allQuestions.filter(q => q.difficulty === 'easy');
+      const medQs = allQuestions.filter(q => q.difficulty === 'medium');
+      const hardQs = allQuestions.filter(q => q.difficulty === 'hard');
+
+      if (easyQs.length < 1 || medQs.length < 1 || hardQs.length < 1) {
+        throw new Error("Bank soal Post-Test untuk modul ini belum lengkap (minimal harus ada 1 Easy, 1 Medium, 1 Hard).");
+      }
+      selectedIds.push(shuffle(easyQs)[0].id);
+      selectedIds.push(shuffle(medQs)[0].id);
+      selectedIds.push(shuffle(hardQs)[0].id);
+
+    } else if (menuType === 'ujian_praktik') {
+      if (!kode) throw new Error("Kode paket wajib ditentukan untuk Ujian Praktik.");
+      const upperKode = kode.toUpperCase();
+      const kodeQs = allQuestions.filter(q => {
+        const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+        return match && match[1].toUpperCase() === upperKode;
+      });
+
+      const q1 = kodeQs.filter(q => q.module_association === 1);
+      const q2 = kodeQs.filter(q => q.module_association === 2);
+      const q3 = kodeQs.filter(q => q.module_association === 3);
+      const q4 = kodeQs.filter(q => q.module_association === 4 || q.module_association === 5);
+      const q5 = kodeQs.filter(q => q.module_association === 6);
+      const q6 = kodeQs.filter(q => q.type === 'flowchart_translation');
+
+      if (q1.length < 1 || q2.length < 1 || q3.length < 1 || q4.length < 1 || q5.length < 1 || q6.length < 1) {
+        throw new Error(`Bank soal Ujian Praktik Kode ${upperKode} belum lengkap. Harus terisi minimal 1 soal untuk masing-masing kriteria Modul 1, 2, 3, 4/5, 6, dan Flowchart.`);
+      }
+
+      selectedIds.push(
+        shuffle(q1)[0].id,
+        shuffle(q2)[0].id,
+        shuffle(q3)[0].id,
+        shuffle(q4)[0].id,
+        shuffle(q5)[0].id,
+        shuffle(q6)[0].id
+      );
+    }
+
+    // 2. Fetch current rules doc to merge
+    const { data: rulesDoc, error: getError } = await supabase
+      .from('assessment_grading_rules')
+      .select('*')
+      .eq('id', menuType)
+      .single();
+
+    if (getError) throw getError;
+
+    const currentRules = rulesDoc.rules || {};
+    const generatedSets = currentRules.generated_sets || {};
+    
+    const key = menuType === 'ujian_praktik' ? `kode_${kode!.toUpperCase()}` : `modul_${moduleAssociation}`;
+    generatedSets[key] = selectedIds;
+    
+    const updatedRules = {
+      ...currentRules,
+      generated_sets: generatedSets
+    };
+
+    const { error: updateError } = await supabase
+      .from('assessment_grading_rules')
+      .update({ rules: updatedRules })
+      .eq('id', menuType);
+
+    if (updateError) throw updateError;
+
+    // Fetch the detailed questions of selectedIds to return as preview
+    const { data: questionDetails, error: detailsError } = await supabase
+      .from('assessment_questions')
+      .select('*')
+      .in('id', selectedIds);
+
+    if (detailsError) throw detailsError;
+
+    // Sort to match selectedIds order
+    return selectedIds.map(id => questionDetails.find(q => q.id === id)).filter(Boolean);
+  },
+
+  async getGeneratedQuestionSet(
+    menuType: 'pre_test' | 'post_test' | 'ujian_praktik',
+    moduleAssociation: number | null = null,
+    kode: string | null = null
+  ): Promise<AssessmentQuestion[]> {
+    const { data: rulesDoc } = await supabase
+      .from('assessment_grading_rules')
+      .select('rules')
+      .eq('id', menuType)
+      .single();
+
+    if (!rulesDoc || !rulesDoc.rules) return [];
+    
+    const generatedSets = (rulesDoc.rules as any).generated_sets || {};
+    const key = menuType === 'ujian_praktik' ? `kode_${kode?.toUpperCase()}` : `modul_${moduleAssociation}`;
+    const selectedIds = generatedSets[key];
+
+    if (!selectedIds || !Array.isArray(selectedIds) || selectedIds.length === 0) return [];
+
+    const { data: questionDetails } = await supabase
+      .from('assessment_questions')
+      .select('*')
+      .in('id', selectedIds);
+
+    if (!questionDetails) return [];
+    return selectedIds.map(id => questionDetails.find(q => q.id === id)).filter(Boolean);
   }
 };

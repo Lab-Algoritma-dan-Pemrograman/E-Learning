@@ -14,10 +14,20 @@ export const QuestionBankDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kodeFilter, setKodeFilter] = useState<string>('all');
+  const [modulFilter, setModulFilter] = useState<string>('all');
 
   // Edit / Create Form State
   const [editingQuestion, setEditingQuestion] = useState<AssessmentQuestion | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Generate Paket Soal State
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [genMenuType, setGenMenuType] = useState<'pre_test' | 'post_test' | 'ujian_praktik'>('pre_test');
+  const [genModul, setGenModul] = useState<number>(1);
+  const [genKode, setGenKode] = useState<string>('A');
+  const [genQuestions, setGenQuestions] = useState<AssessmentQuestion[]>([]);
+  const [genLoading, setGenLoading] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
 
   // Import Word / PPT State
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -208,8 +218,29 @@ export const QuestionBankDashboard: React.FC = () => {
           } else if (detectedType === 'pre_post_ppt') {
             if (fileExt !== 'pptx') throw new Error("File PowerPoint (.pptx) dibutuhkan.");
             const slides = await extractPptxSlides(file);
-            const isPre = filename.toLowerCase().includes("pre");
-            parsed = parsePrePostTestPpt(slides, filename, isPre ? 'pre_test' : 'post_test');
+            const lowerFilename = filename.toLowerCase();
+            const hasPost = lowerFilename.includes("post");
+            const hasPre = lowerFilename.includes("pre");
+            let detectedPrePost: 'pre_test' | 'post_test';
+            if (hasPost && !hasPre) {
+              detectedPrePost = 'post_test';
+            } else if (hasPre && !hasPost) {
+              detectedPrePost = 'pre_test';
+            } else {
+              // scan slides text for pre/post
+              const slidesText = slides.slice(0, 3).map(s => s.texts.join(' ')).join(' ').toLowerCase();
+              const contentHasPost = slidesText.includes('post test') || slidesText.includes('post-test') || (!slidesText.includes('pre test') && !slidesText.includes('pre-test') && slidesText.includes('post'));
+              const contentHasPre = slidesText.includes('pre test') || slidesText.includes('pre-test') || slidesText.includes('pre');
+              
+              if (contentHasPost && !contentHasPre) {
+                detectedPrePost = 'post_test';
+              } else if (contentHasPre && !contentHasPost) {
+                detectedPrePost = 'pre_test';
+              } else {
+                detectedPrePost = contentHasPre ? 'pre_test' : 'post_test';
+              }
+            }
+            parsed = parsePrePostTestPpt(slides, filename, detectedPrePost);
           } else if (detectedType === 'keterampilan') {
             if (fileExt !== 'docx') throw new Error("Program Keterampilan harus berupa file Word (.docx).");
             const paragraphs = await extractDocxText(file);
@@ -281,8 +312,13 @@ export const QuestionBankDashboard: React.FC = () => {
       const kode = kodeMatch ? kodeMatch[1].toUpperCase() : 'NO_KODE';
       matchesKode = kode === kodeFilter;
     }
+
+    let matchesModul = true;
+    if (modulFilter !== 'all') {
+      matchesModul = q.module_association === Number(modulFilter);
+    }
     
-    return matchesSearch && matchesMenu && matchesKode;
+    return matchesSearch && matchesMenu && matchesKode && matchesModul;
   });
 
   const uniqueKodes = Array.from(new Set(
@@ -293,6 +329,50 @@ export const QuestionBankDashboard: React.FC = () => {
         return match ? match[1].toUpperCase() : 'NO_KODE';
       })
   )).sort();
+
+  const renderQuestionCard = (q: AssessmentQuestion) => (
+    <div key={q.id} className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4 hover:border-zinc-300 transition-all hover:shadow-md flex flex-col justify-between">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full">
+            {q.menu_type.replace('_', ' ')}
+          </span>
+          <span className={cn(
+            "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
+            q.difficulty === 'easy' ? "bg-emerald-50 text-emerald-700" :
+            q.difficulty === 'medium' ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
+          )}>
+            {q.difficulty}
+          </span>
+        </div>
+        <h3 className="font-bold text-base text-zinc-900 line-clamp-1">{q.title}</h3>
+        <p className="text-zinc-500 text-xs line-clamp-3 leading-relaxed">{q.instruction}</p>
+      </div>
+      
+      <div className="flex items-center justify-between border-t border-zinc-100 pt-4 mt-4 text-xs font-bold text-zinc-400">
+        <div>
+          Tipe: <span className="text-zinc-700 uppercase">{q.type.replace('_', ' ')}</span>
+          {q.module_association && ` • Modul ${q.module_association}`}
+        </div>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => handleEdit(q)}
+            type="button"
+            className="p-2 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 rounded-lg transition-colors"
+          >
+            <Edit size={14} />
+          </button>
+          <button 
+            onClick={() => handleDelete(q.id!)}
+            type="button"
+            className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+          >
+            <Trash size={14} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Layout>
@@ -313,14 +393,20 @@ export const QuestionBankDashboard: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => { setIsImportOpen(true); setIsFormOpen(false); }}
+              onClick={() => { setIsGenerateOpen(true); setIsImportOpen(false); setIsFormOpen(false); }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all flex items-center gap-2"
+            >
+              🎲 Generate Paket Soal
+            </button>
+            <button 
+              onClick={() => { setIsImportOpen(true); setIsFormOpen(false); setIsGenerateOpen(false); }}
               className="bg-zinc-800 hover:bg-zinc-950 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all flex items-center gap-2"
             >
               <Upload size={16} />
               Import Word/PPT
             </button>
             <button 
-              onClick={() => { handleCreateNew(); setIsImportOpen(false); }}
+              onClick={() => { handleCreateNew(); setIsImportOpen(false); setIsGenerateOpen(false); }}
               className="bg-rose-700 hover:bg-rose-800 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md shadow-rose-700/10 active:scale-95 transition-all flex items-center gap-2"
             >
               <Plus size={16} />
@@ -337,7 +423,7 @@ export const QuestionBankDashboard: React.FC = () => {
         )}
 
         {/* QUESTIONS LISTING */}
-        {!isFormOpen && !isImportOpen && (
+        {!isFormOpen && !isImportOpen && !isGenerateOpen && (
           <div className="space-y-6">
             {/* Filter controls */}
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm">
@@ -359,6 +445,7 @@ export const QuestionBankDashboard: React.FC = () => {
                     onClick={() => {
                       setMenuFilter(type as any);
                       if (type !== 'ujian_praktik') setKodeFilter('all');
+                      setModulFilter('all');
                     }}
                     className={cn(
                       "px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap active:scale-95",
@@ -373,30 +460,48 @@ export const QuestionBankDashboard: React.FC = () => {
               </div>
             </div>
 
-            {menuFilter === 'ujian_praktik' && uniqueKodes.length > 0 && (
-              <div className="flex items-center gap-2 bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm overflow-x-auto">
-                <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest shrink-0">Filter Paket Kode:</span>
-                <button
-                  onClick={() => setKodeFilter('all')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap",
-                    kodeFilter === 'all' ? "bg-rose-700 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                  )}
-                >
-                  Semua Kode
-                </button>
-                {uniqueKodes.map(kode => (
-                  <button
-                    key={kode}
-                    onClick={() => setKodeFilter(kode)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap",
-                      kodeFilter === kode ? "bg-rose-700 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                    )}
+            {(menuFilter === 'pre_test' || menuFilter === 'post_test' || menuFilter === 'ujian_praktik') && (
+              <div className="flex flex-wrap items-center gap-4 bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest shrink-0">Filter Modul:</span>
+                  <select
+                    value={modulFilter}
+                    onChange={(e) => setModulFilter(e.target.value)}
+                    className="px-3 py-1.5 border border-zinc-200 bg-zinc-50 rounded-lg text-xs font-bold focus:border-rose-700 outline-none cursor-pointer"
                   >
-                    {kode === 'NO_KODE' ? 'Tanpa Kode' : `Kode ${kode}`}
-                  </button>
-                ))}
+                    <option value="all">Semua Modul</option>
+                    {[1, 2, 3, 4, 5, 6].map(m => (
+                      <option key={m} value={m.toString()}>Modul {m}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {menuFilter === 'ujian_praktik' && uniqueKodes.length > 0 && (
+                  <div className="flex items-center gap-2 border-l border-zinc-200 pl-4">
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest shrink-0">Filter Kode:</span>
+                    <button
+                      onClick={() => setKodeFilter('all')}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap",
+                        kodeFilter === 'all' ? "bg-rose-700 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      )}
+                    >
+                      Semua Kode
+                    </button>
+                    {uniqueKodes.map(kode => (
+                      <button
+                        key={kode}
+                        onClick={() => setKodeFilter(kode)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap",
+                          kodeFilter === kode ? "bg-rose-700 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                        )}
+                      >
+                        {kode === 'NO_KODE' ? 'Tanpa Kode' : `Kode ${kode}`}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -405,52 +510,106 @@ export const QuestionBankDashboard: React.FC = () => {
                 <Loader2 className="animate-spin text-rose-700" size={32} />
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredQuestions.length > 0 ? (
-                  filteredQuestions.map(q => (
-                    <div key={q.id} className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4 hover:border-zinc-300 transition-colors flex flex-col justify-between">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full">
-                            {q.menu_type.replace('_', ' ')}
-                          </span>
-                          <span className={cn(
-                            "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
-                            q.difficulty === 'easy' ? "bg-emerald-50 text-emerald-700" :
-                            q.difficulty === 'medium' ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
-                          )}>
-                            {q.difficulty}
+              <div className="space-y-8">
+                {(menuFilter === 'pre_test' || menuFilter === 'post_test') ? (
+                  [1, 2, 3, 4, 5, 6].map(modNo => {
+                    const modQuestions = filteredQuestions.filter(q => q.module_association === modNo);
+                    if (modQuestions.length === 0) return null;
+                    return (
+                      <div key={modNo} className="space-y-4 bg-zinc-50/40 p-6 rounded-3xl border border-zinc-200/50">
+                        <div className="flex items-center gap-2 border-b border-zinc-100 pb-2">
+                          <h3 className="font-extrabold text-base text-zinc-800">Modul {modNo}</h3>
+                          <span className="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-100">
+                            {modQuestions.length} Soal
                           </span>
                         </div>
-                        <h3 className="font-bold text-lg text-zinc-900 line-clamp-1">{q.title}</h3>
-                        <p className="text-zinc-500 text-xs line-clamp-3 leading-relaxed">{q.instruction}</p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between border-t border-zinc-100 pt-4 mt-4 text-xs font-bold text-zinc-400">
-                        <div>
-                          Tipe: <span className="text-zinc-700 uppercase">{q.type.replace('_', ' ')}</span>
-                          {q.module_association && ` • Modul ${q.module_association}`}
-                        </div>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => handleEdit(q)}
-                            className="p-2 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 rounded-lg transition-colors"
-                          >
-                            <Edit size={14} />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(q.id!)}
-                            className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
-                          >
-                            <Trash size={14} />
-                          </button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {modQuestions.map(q => renderQuestionCard(q))}
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
+                ) : menuFilter === 'ujian_praktik' ? (
+                  (() => {
+                    const kodesInFiltered = Array.from(new Set(
+                      filteredQuestions.map(q => {
+                        const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+                        return match ? match[1].toUpperCase() : 'NO_KODE';
+                      })
+                    )).sort();
+
+                    if (kodesInFiltered.length === 0 || filteredQuestions.length === 0) {
+                      return <div className="p-12 text-center text-zinc-400 italic bg-white border border-zinc-200 rounded-3xl">Tidak ada soal ditemukan.</div>;
+                    }
+
+                    return kodesInFiltered.map(k => {
+                      const kodeQuestions = filteredQuestions.filter(q => {
+                        const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+                        const qKode = match ? match[1].toUpperCase() : 'NO_KODE';
+                        return qKode === k;
+                      });
+
+                      if (kodeQuestions.length === 0) return null;
+
+                      return (
+                        <div key={k} className="space-y-6 bg-zinc-50/50 p-6 rounded-3xl border border-zinc-200/60">
+                          <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+                            <h3 className="font-black text-lg text-zinc-950">
+                              {k === 'NO_KODE' ? 'TANPA KODE' : `PAKET KODE ${k}`}
+                            </h3>
+                            <span className="text-xs bg-rose-50 text-rose-700 font-bold px-3 py-1 rounded-full border border-rose-100">
+                              Total: {kodeQuestions.length} Soal
+                            </span>
+                          </div>
+
+                          <div className="space-y-6">
+                            {[1, 2, 3, 4, 5, 6].map(modNo => {
+                              const modQs = kodeQuestions.filter(q => q.module_association === modNo);
+                              const flowchartQs = kodeQuestions.filter(q => q.type === 'flowchart_translation' && modNo === 6);
+                              const mergedQs = modNo === 6 
+                                ? [...modQs, ...flowchartQs.filter(fq => !modQs.find(mq => mq.id === fq.id))] 
+                                : modQs;
+
+                              if (mergedQs.length === 0) return null;
+
+                              return (
+                                <div key={modNo} className="space-y-3 pl-3 border-l-2 border-rose-700">
+                                  <h4 className="font-bold text-sm text-zinc-700">
+                                    Modul {modNo} {modNo === 6 && "(inc. Flowchart Translation)"}
+                                  </h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {mergedQs.map(q => renderQuestionCard(q))}
+                                  </div>
+                                </div>
+                              );
+                            })}
+
+                            {(() => {
+                              const leftovers = kodeQuestions.filter(q => !q.module_association && q.type !== 'flowchart_translation');
+                              if (leftovers.length === 0) return null;
+                              return (
+                                <div className="space-y-3 pl-3 border-l-2 border-zinc-300">
+                                  <h4 className="font-bold text-sm text-zinc-700">Lain-lain / Tanpa Modul</h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {leftovers.map(q => renderQuestionCard(q))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()
                 ) : (
-                  <div className="col-span-2 p-12 text-center text-zinc-400 italic">
-                    Tidak ada soal ditemukan.
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {filteredQuestions.length > 0 ? (
+                      filteredQuestions.map(q => renderQuestionCard(q))
+                    ) : (
+                      <div className="col-span-2 p-12 text-center text-zinc-400 italic bg-white border border-zinc-200 rounded-3xl">
+                        Tidak ada soal ditemukan.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -924,6 +1083,173 @@ export const QuestionBankDashboard: React.FC = () => {
                     </div>
                   ))
                   }
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* GENERATE PAKET SOAL PANEL */}
+        {isGenerateOpen && (
+          <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+              <div>
+                <h3 className="text-xl font-bold text-zinc-950">Generate & Acak Paket Soal Ujian</h3>
+                <p className="text-xs text-zinc-400 mt-1">Admin/Kordas/Asisten dapat mengacak set soal aktif untuk digunakan oleh praktikan.</p>
+              </div>
+              <button 
+                onClick={() => { setIsGenerateOpen(false); setGenQuestions([]); setGenError(null); }}
+                className="text-xs text-zinc-500 hover:text-rose-700 underline font-bold"
+              >
+                Kembali ke Bank Soal
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-zinc-50 p-6 rounded-2xl border border-zinc-200/50">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Jenis Asesmen</label>
+                <select
+                  value={genMenuType}
+                  onChange={(e: any) => {
+                    setGenMenuType(e.target.value);
+                    setGenQuestions([]);
+                    setGenError(null);
+                  }}
+                  className="w-full px-4 py-3 border border-zinc-200 rounded-xl outline-none bg-white text-sm font-bold focus:border-rose-700"
+                >
+                  <option value="pre_test">Pre-Test</option>
+                  <option value="post_test">Post-Test</option>
+                  <option value="ujian_praktik">Ujian Praktik</option>
+                </select>
+              </div>
+
+              {genMenuType !== 'ujian_praktik' ? (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pilih Modul</label>
+                  <select
+                    value={genModul}
+                    onChange={(e: any) => {
+                      setGenModul(Number(e.target.value));
+                      setGenQuestions([]);
+                      setGenError(null);
+                    }}
+                    className="w-full px-4 py-3 border border-zinc-200 rounded-xl outline-none bg-white text-sm font-bold focus:border-rose-700"
+                  >
+                    {[1, 2, 3, 4, 5, 6].map(m => (
+                      <option key={m} value={m}>Modul {m}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Kode Paket Ujian</label>
+                  <input
+                    type="text"
+                    value={genKode}
+                    maxLength={5}
+                    onChange={(e: any) => {
+                      setGenKode(e.target.value.toUpperCase());
+                      setGenQuestions([]);
+                      setGenError(null);
+                    }}
+                    placeholder="CONTOH: A"
+                    className="w-full px-4 py-3 border border-zinc-200 rounded-xl outline-none bg-white text-sm font-bold focus:border-rose-700"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-end gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setGenLoading(true);
+                    setGenError(null);
+                    try {
+                      const data = await assessmentService.getGeneratedQuestionSet(
+                        genMenuType,
+                        genMenuType === 'ujian_praktik' ? null : genModul,
+                        genMenuType === 'ujian_praktik' ? genKode : null
+                      );
+                      setGenQuestions(data);
+                      if (data.length === 0) {
+                        setGenError("Belum ada paket soal ter-generate untuk kriteria ini.");
+                      }
+                    } catch (e: any) {
+                      setGenError(e.message || "Gagal memuat paket soal.");
+                    } finally {
+                      setGenLoading(false);
+                    }
+                  }}
+                  disabled={genLoading}
+                  className="flex-1 py-3 border border-zinc-200 text-zinc-700 hover:bg-zinc-100 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1 bg-white"
+                >
+                  Lihat Paket Aktif
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const check = window.confirm("Apakah Anda yakin ingin melakukan generate/acak paket soal baru? Set sebelumnya akan diganti.");
+                    if (!check) return;
+                    setGenLoading(true);
+                    setGenError(null);
+                    try {
+                      const data = await assessmentService.generateAndSaveQuestionSet(
+                        genMenuType,
+                        genMenuType === 'ujian_praktik' ? null : genModul,
+                        genMenuType === 'ujian_praktik' ? genKode : null
+                      );
+                      setGenQuestions(data);
+                      alert("Berhasil menghasilkan paket soal acak baru dan menyimpannya sebagai paket ujian aktif!");
+                    } catch (e: any) {
+                      setGenError(e.message || "Gagal melakukan generate paket soal.");
+                    } finally {
+                      setGenLoading(false);
+                    }
+                  }}
+                  disabled={genLoading}
+                  className="flex-1 py-3 bg-rose-700 hover:bg-rose-800 text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1 shadow-md shadow-rose-700/10"
+                >
+                  {genLoading ? <Loader2 size={12} className="animate-spin" /> : "Acak Paket Baru"}
+                </button>
+              </div>
+            </div>
+
+            {genError && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-xs font-bold text-center">
+                ⚠️ {genError}
+              </div>
+            )}
+
+            {/* PREVIEW GENERATED QUESTIONS */}
+            {genQuestions.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="font-extrabold text-sm text-zinc-800 uppercase tracking-widest border-b border-zinc-100 pb-2">
+                  Daftar Soal Aktif ({genQuestions.length} Soal)
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {genQuestions.map((q, idx) => (
+                    <div key={q.id || idx} className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full">
+                          Soal {idx + 1}
+                        </span>
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
+                          q.difficulty === 'easy' ? "bg-emerald-50 text-emerald-700" :
+                          q.difficulty === 'medium' ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
+                        )}>
+                          {q.difficulty}
+                        </span>
+                      </div>
+                      <h5 className="font-bold text-sm text-zinc-900">{q.title}</h5>
+                      <p className="text-zinc-500 text-xs line-clamp-3 leading-relaxed">{q.instruction}</p>
+                      <div className="text-[10px] text-zinc-400 font-bold border-t border-zinc-100 pt-2 flex justify-between">
+                        <span>TIPE: {q.type.toUpperCase().replace('_', ' ')}</span>
+                        {q.module_association && <span>MODUL: {q.module_association}</span>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

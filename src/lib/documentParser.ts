@@ -91,8 +91,29 @@ export function parsePrePostTest(paragraphs: string[], filename: string): Omit<A
   const moduleAssociation = modMatch ? parseInt(modMatch[1], 10) : null;
   
   // 2. Determine Pre-Test or Post-Test
-  const isPreTest = filename.toLowerCase().includes("pre");
-  const menuType = isPreTest ? "pre_test" : "post_test";
+  const lowerFilename = filename.toLowerCase();
+  const hasPost = lowerFilename.includes("post");
+  const hasPre = lowerFilename.includes("pre");
+  
+  let menuType: 'pre_test' | 'post_test';
+  if (hasPost && !hasPre) {
+    menuType = 'post_test';
+  } else if (hasPre && !hasPost) {
+    menuType = 'pre_test';
+  } else {
+    // Ambiguous filename or both - scan document content (first 15 paragraphs)
+    const contentSample = paragraphs.slice(0, 15).join(' ').toLowerCase();
+    const contentHasPost = contentSample.includes('post test') || contentSample.includes('post-test') || (!contentSample.includes('pre test') && !contentSample.includes('pre-test') && contentSample.includes('post'));
+    const contentHasPre = contentSample.includes('pre test') || contentSample.includes('pre-test') || contentSample.includes('pre');
+    
+    if (contentHasPost && !contentHasPre) {
+      menuType = 'post_test';
+    } else if (contentHasPre && !contentHasPost) {
+      menuType = 'pre_test';
+    } else {
+      menuType = contentHasPre ? 'pre_test' : 'post_test';
+    }
+  }
   
   let currentDifficulty: 'easy' | 'medium' | 'hard' = 'easy';
   let currentQuestionText = "";
