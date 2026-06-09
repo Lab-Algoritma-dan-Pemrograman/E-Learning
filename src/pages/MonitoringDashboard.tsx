@@ -39,6 +39,87 @@ export const MonitoringDashboard: React.FC = () => {
 
   // Draft inspection modal state
   const [inspectingAttempt, setInspectingAttempt] = useState<any | null>(null);
+  const [editScores, setEditScores] = useState<Record<string, { total_score: number; feedback: string }>>({});
+  const [editFinalScore, setEditFinalScore] = useState<number>(0);
+  const [isSavingManualGrade, setIsSavingManualGrade] = useState(false);
+
+  useEffect(() => {
+    if (inspectingAttempt) {
+      const initialScores: Record<string, { total_score: number; feedback: string }> = {};
+      inspectingAttempt.selected_questions?.forEach((qId: string) => {
+        const qGrade = inspectingAttempt.ai_grades?.[qId] || {};
+        initialScores[qId] = {
+          total_score: qGrade.total_score !== undefined && qGrade.total_score !== null ? Number(qGrade.total_score) : 0,
+          feedback: qGrade.feedback || ''
+        };
+      });
+      setEditScores(initialScores);
+      setEditFinalScore(inspectingAttempt.final_score !== undefined && inspectingAttempt.final_score !== null ? Number(inspectingAttempt.final_score) : 0);
+    } else {
+      setEditScores({});
+      setEditFinalScore(0);
+    }
+  }, [inspectingAttempt]);
+
+  const handleQuestionScoreChange = (qId: string, val: number) => {
+    setEditScores(prev => {
+      const next = {
+        ...prev,
+        [qId]: {
+          ...prev[qId],
+          total_score: val
+        }
+      };
+      const values = Object.values(next).map(x => x.total_score);
+      const avg = values.length > 0 ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0;
+      setEditFinalScore(avg);
+      return next;
+    });
+  };
+
+  const handleSaveManualGrade = async () => {
+    if (!inspectingAttempt || !user) return;
+    setIsSavingManualGrade(true);
+    try {
+      const nextAiGrades = { ...(inspectingAttempt.ai_grades || {}) };
+      inspectingAttempt.selected_questions.forEach((qId: string) => {
+        const existingQGrade = nextAiGrades[qId] || {};
+        nextAiGrades[qId] = {
+          ...existingQGrade,
+          total_score: editScores[qId]?.total_score ?? 0,
+          feedback: editScores[qId]?.feedback ?? ''
+        };
+      });
+
+      const { error } = await supabase
+        .from('assessment_attempts')
+        .update({
+          ai_grades: nextAiGrades,
+          final_score: Number(editFinalScore),
+          status: 'graded',
+          graded_at: new Date().toISOString()
+        })
+        .eq('id', inspectingAttempt.id);
+
+      if (error) throw error;
+
+      await monitoringService.addAuditLog(
+        user.nim,
+        user.nama,
+        'ai_grading',
+        `Menilai manual pengerjaan NIM ${inspectingAttempt.nim} (${inspectingAttempt.menu_type}) dengan skor ${editFinalScore}`
+      );
+
+      alert("Nilai manual berhasil disimpan!");
+      setInspectingAttempt(null);
+      fetchAttempts();
+    } catch (err: any) {
+      alert(`Gagal menyimpan nilai manual: ${err.message}`);
+    } finally {
+      setIsSavingManualGrade(false);
+    }
+  };
+
   const [classFilter, setClassFilter] = useState<string>('all');
   const [majorFilter, setMajorFilter] = useState<string>('all');
   const [questionsMetadata, setQuestionsMetadata] = useState<Record<string, { module_association: number | null; title: string; type: string }>>({});
@@ -445,19 +526,32 @@ export const MonitoringDashboard: React.FC = () => {
                   <tbody className="divide-y divide-zinc-100 font-medium">
                     {filteredAttempts.length > 0 ? (
                       filteredAttempts.map((att) => {
-                        const isSubmitted = att.status === 'submitted';
-                        const isSelected = selectedAttempts.includes(att.id);
+                        const studentSubmittedAttempts = attempts.filter(
+                          a => a.nim === att.nim && a.status === 'submitted'
+                        );
                         
                         return (
                           <tr key={att.id} className="hover:bg-zinc-50/50">
                             <td className="p-4 text-center">
-                              {isSubmitted ? (
-                                <button 
-                                  onClick={() => toggleSelectAttempt(att.id)}
-                                  className="text-rose-700 hover:scale-105 transition-transform"
-                                >
-                                  {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
-                                </button>
+                              {studentSubmittedAttempts.length > 0 ? (
+                                <div className="flex flex-col gap-1 items-center justify-center">
+                                  {studentSubmittedAttempts.map(sa => {
+                                    const saDetails = resolveAttemptDetails(sa);
+                                    const label = selectedMenu === 'ujian_praktik' ? 'Ujian' : `M${saDetails.moduleAssociation || '?'}`;
+                                    const isSelected = selectedAttempts.includes(sa.id);
+                                    return (
+                                      <button 
+                                        key={sa.id}
+                                        onClick={() => toggleSelectAttempt(sa.id)}
+                                        className="text-rose-700 hover:scale-105 transition-transform flex items-center gap-1 text-[10px] font-bold bg-zinc-50 border border-zinc-200 px-1.5 py-0.5 rounded shadow-sm"
+                                        title={`Pilih ${label} untuk dinilai`}
+                                      >
+                                        {isSelected ? <CheckSquare size={12} /> : <Square size={12} />}
+                                        <span>{label}</span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
                               ) : (
                                 <span className="text-zinc-300">-</span>
                               )}
@@ -503,23 +597,24 @@ export const MonitoringDashboard: React.FC = () => {
                             ) : (
                               /* Non-Ujian Praktik: Modul 1 s.d. Modul 6 */
                               [1, 2, 3, 4, 5, 6].map((m) => {
-                                const attModul = resolveAttemptDetails(att).moduleAssociation;
-                                const isMatch = attModul === m;
+                                const matchAttempt = attempts.find(
+                                  a => a.nim === att.nim && resolveAttemptDetails(a).moduleAssociation === m
+                                );
                                 return (
                                   <td key={m} className="p-3 text-center">
-                                    {isMatch ? (
+                                    {matchAttempt ? (
                                       <div 
-                                        onClick={() => setInspectingAttempt(att)}
+                                        onClick={() => setInspectingAttempt(matchAttempt)}
                                         className={cn(
                                           "inline-flex w-14 h-9 rounded-lg border text-[10px] font-bold items-center justify-center transition-all hover:scale-105 cursor-pointer",
-                                          att.status === 'graded' ? 'bg-blue-50 border-blue-200 text-blue-800 font-black' :
-                                          att.status === 'submitted' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
-                                          att.status === 'in_progress' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                          matchAttempt.status === 'graded' ? 'bg-blue-50 border-blue-200 text-blue-800 font-black' :
+                                          matchAttempt.status === 'submitted' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+                                          matchAttempt.status === 'in_progress' ? 'bg-amber-50 border-amber-200 text-amber-700' :
                                           'bg-zinc-100 border-zinc-200 text-zinc-400'
                                         )}
                                       >
-                                        {att.status === 'graded' ? att.final_score : 
-                                         att.status === 'submitted' ? 'SUBMIT' : 'DRAFT'}
+                                        {matchAttempt.status === 'graded' ? matchAttempt.final_score : 
+                                         matchAttempt.status === 'submitted' ? 'SUBMIT' : 'DRAFT'}
                                       </div>
                                     ) : (
                                       <span className="text-zinc-200">—</span>
@@ -528,8 +623,24 @@ export const MonitoringDashboard: React.FC = () => {
                                 );
                               })
                             )}
-                            <td className="p-4 text-center font-black text-zinc-900 bg-zinc-50/50">
-                              {att.final_score !== null && att.final_score !== undefined ? att.final_score : '—'}
+                            <td className="p-4 text-center font-black text-zinc-955 bg-zinc-50/50">
+                              {selectedMenu === 'ujian_praktik' ? (
+                                att.final_score !== null && att.final_score !== undefined ? att.final_score : '—'
+                              ) : (
+                                <div className="flex flex-col gap-0.5 text-xs">
+                                  {attempts
+                                    .filter(a => a.nim === att.nim && a.status === 'graded')
+                                    .map(a => {
+                                      const mAssoc = resolveAttemptDetails(a).moduleAssociation;
+                                      return (
+                                        <div key={a.id} className="text-[10px] text-zinc-500 whitespace-nowrap">
+                                          Modul {mAssoc}: <span className="font-extrabold text-zinc-800">{a.final_score}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  {attempts.filter(a => a.nim === att.nim && a.status === 'graded').length === 0 && '—'}
+                                </div>
+                              )}
                             </td>
                           </tr>
                         );
@@ -912,10 +1023,78 @@ export const MonitoringDashboard: React.FC = () => {
                       {!ans.answerText?.trim() && !ans.codeSubmitted?.trim() && !inspectingAttempt.ai_grades?.[qId] && (
                         <div className="text-xs text-zinc-400 italic">Mahasiswa belum mengisi jawaban soal ini.</div>
                       )}
+
+                      {/* Penilaian Manual */}
+                      {['admin', 'kordas', 'asisten'].includes(user?.role || '') && (
+                        <div className="mt-4 pt-3 border-t border-zinc-200 space-y-3 bg-white p-3 rounded-xl border border-zinc-100">
+                          <div className="text-[10px] font-black text-rose-800 uppercase tracking-widest">Penilaian Manual Asisten</div>
+                          <div className="flex items-center gap-3">
+                            <label className="text-xs font-bold text-zinc-500 shrink-0">Skor Soal (0-100):</label>
+                            <input 
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={editScores[qId]?.total_score ?? 0}
+                              onChange={(e) => handleQuestionScoreChange(qId, Number(e.target.value))}
+                              className="w-20 px-2.5 py-1.5 border border-zinc-200 rounded-lg text-xs font-bold bg-zinc-50 focus:border-rose-700 outline-none"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-zinc-500">Umpan Balik Manual:</label>
+                            <textarea
+                              rows={2}
+                              value={editScores[qId]?.feedback ?? ''}
+                              onChange={(e) => setEditScores(prev => ({
+                                ...prev,
+                                [qId]: { ...prev[qId], feedback: e.target.value }
+                              }))}
+                              placeholder="Tulis masukan/evaluasi untuk soal ini..."
+                              className="w-full p-2.5 border border-zinc-200 rounded-xl text-xs bg-zinc-50 focus:border-rose-700 outline-none resize-none"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
+
+              {/* Manual Grading Action Bar */}
+              {['admin', 'kordas', 'asisten'].includes(user?.role || '') && (
+                <div className="border-t border-zinc-100 pt-4 mt-6 space-y-4">
+                  <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-200 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-zinc-500">Nilai Akhir Total</div>
+                      <div className="text-[10px] text-zinc-400">Rata-rata otomatis atau sesuaikan manual</div>
+                    </div>
+                    <input 
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editFinalScore}
+                      onChange={(e) => setEditFinalScore(Number(e.target.value))}
+                      className="w-24 px-3 py-2 border border-zinc-300 rounded-xl text-center font-black text-lg text-rose-800 bg-white focus:border-rose-700 outline-none"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSaveManualGrade}
+                    disabled={isSavingManualGrade}
+                    className="w-full py-3.5 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold rounded-2xl active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
+                  >
+                    {isSavingManualGrade ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Menyimpan Nilai...
+                      </>
+                    ) : (
+                      <>
+                        <Database size={16} />
+                        Simpan Nilai Manual
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </motion.div>
           </>
         )}

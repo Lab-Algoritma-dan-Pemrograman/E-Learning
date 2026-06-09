@@ -881,7 +881,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!isAdmin || activeTab !== 'users') return;
+    if (!canAccess || activeTab !== 'users') return;
 
     const fetchUsers = async () => {
       const { data, error } = await supabase
@@ -924,7 +924,7 @@ export const AdminDashboard: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [isAdmin, activeTab]);
+  }, [canAccess, activeTab]);
 
   const fetchUserProgress = async (userId: string) => {
     setLoadingProgress(true);
