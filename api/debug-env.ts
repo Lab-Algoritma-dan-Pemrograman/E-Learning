@@ -24,6 +24,19 @@ export default async function handler(req: any, res: any) {
     dbResult = { exception: err.message };
   }
 
+  let dbResultAnon: any = null;
+  try {
+    const anonClient = createClient(supabaseUrl, process.env.VITE_SUPABASE_ANON_KEY || '');
+    const { data, error } = await anonClient
+      .from('users')
+      .select('nim, nama, role')
+      .eq('nim', '202211083')
+      .maybeSingle();
+    dbResultAnon = { data, error };
+  } catch (err: any) {
+    dbResultAnon = { exception: err.message };
+  }
+
   const getEnvStats = (key: string) => {
     const value = process.env[key];
     if (!value) {
@@ -84,11 +97,13 @@ export default async function handler(req: any, res: any) {
       NODE_ENV: process.env.NODE_ENV || 'N/A',
       VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || 'N/A',
       VITE_SUPABASE_ANON_KEY: getEnvStats('VITE_SUPABASE_ANON_KEY'),
+      SUPABASE_SERVICE_ROLE_KEY: getEnvStats('SUPABASE_SERVICE_ROLE_KEY'),
       JWT_SECRET: getEnvStats('JWT_SECRET'),
       VITE_JWT_SECRET: getEnvStats('VITE_JWT_SECRET'),
       SUPABASE_JWT_SECRET: getEnvStats('SUPABASE_JWT_SECRET'),
     },
     dbResult,
+    dbResultAnon,
     tokenDiagnostics
   });
 }
