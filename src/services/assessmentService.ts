@@ -146,23 +146,69 @@ export const assessmentService = {
 
     } else if (menuType === 'ujian_praktik') {
       // ujian praktik: 6 soal. soal 1(modul 1), soal 2(modul 2), soal 3 (modul 3), soal 4 (modul 4&5), soal 5 (modul 6), soal 6 translate flowchart 2 program
-      const q1 = allQuestions.filter(q => q.module_association === 1);
-      const q2 = allQuestions.filter(q => q.module_association === 2);
-      const q3 = allQuestions.filter(q => q.module_association === 3);
-      const q4 = allQuestions.filter(q => q.module_association === 4 || q.module_association === 5);
-      const q5 = allQuestions.filter(q => q.module_association === 6);
-      const q6 = allQuestions.filter(q => q.type === 'flowchart_translation');
+      
+      // Step 1: Identify all unique kodes
+      const kodes = Array.from(new Set(
+        allQuestions.map(q => {
+          const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+          return match ? match[1].toUpperCase() : null;
+        }).filter(Boolean)
+      ));
 
-      if (q1.length < 1 || q2.length < 1 || q3.length < 1 || q4.length < 1 || q5.length < 1 || q6.length < 1) {
-        throw new Error("Bank soal Ujian Praktik belum lengkap. Harus terisi minimal 1 soal untuk masing-masing kriteria Modul 1, 2, 3, 4/5, 6, dan Flowchart Translation.");
+      // Step 2: Try to find a valid kode package
+      let selectedQuestionsSet: any[] = [];
+      const shuffledKodes = shuffle(kodes);
+
+      for (const kode of shuffledKodes) {
+        const kodeQs = allQuestions.filter(q => {
+          const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+          return match && match[1].toUpperCase() === kode;
+        });
+
+        const q1 = kodeQs.filter(q => q.module_association === 1);
+        const q2 = kodeQs.filter(q => q.module_association === 2);
+        const q3 = kodeQs.filter(q => q.module_association === 3);
+        const q4 = kodeQs.filter(q => q.module_association === 4 || q.module_association === 5);
+        const q5 = kodeQs.filter(q => q.module_association === 6);
+        const q6 = kodeQs.filter(q => q.type === 'flowchart_translation');
+
+        if (q1.length >= 1 && q2.length >= 1 && q3.length >= 1 && q4.length >= 1 && q5.length >= 1 && q6.length >= 1) {
+          selectedQuestionsSet = [
+            shuffle(q1)[0].id,
+            shuffle(q2)[0].id,
+            shuffle(q3)[0].id,
+            shuffle(q4)[0].id,
+            shuffle(q5)[0].id,
+            shuffle(q6)[0].id
+          ];
+          break; // Found a complete package
+        }
       }
 
-      selectedIds.push(shuffle(q1)[0].id);
-      selectedIds.push(shuffle(q2)[0].id);
-      selectedIds.push(shuffle(q3)[0].id);
-      selectedIds.push(shuffle(q4)[0].id);
-      selectedIds.push(shuffle(q5)[0].id);
-      selectedIds.push(shuffle(q6)[0].id);
+      // Fallback if no complete package was found (global selection)
+      if (selectedQuestionsSet.length === 0) {
+        const q1 = allQuestions.filter(q => q.module_association === 1);
+        const q2 = allQuestions.filter(q => q.module_association === 2);
+        const q3 = allQuestions.filter(q => q.module_association === 3);
+        const q4 = allQuestions.filter(q => q.module_association === 4 || q.module_association === 5);
+        const q5 = allQuestions.filter(q => q.module_association === 6);
+        const q6 = allQuestions.filter(q => q.type === 'flowchart_translation');
+
+        if (q1.length < 1 || q2.length < 1 || q3.length < 1 || q4.length < 1 || q5.length < 1 || q6.length < 1) {
+          throw new Error("Bank soal Ujian Praktik belum lengkap. Harus terisi minimal 1 soal untuk masing-masing kriteria Modul 1, 2, 3, 4/5, 6, dan Flowchart Translation.");
+        }
+
+        selectedQuestionsSet = [
+          shuffle(q1)[0].id,
+          shuffle(q2)[0].id,
+          shuffle(q3)[0].id,
+          shuffle(q4)[0].id,
+          shuffle(q5)[0].id,
+          shuffle(q6)[0].id
+        ];
+      }
+
+      selectedIds.push(...selectedQuestionsSet);
     }
 
     // 3. Define time limits in minutes

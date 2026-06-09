@@ -8,7 +8,7 @@ import { assessmentService, AssessmentAttempt, AssessmentQuestion } from '../ser
 import { assessmentTokenService } from '../services/assessmentTokenService';
 import { monitoringService } from '../services/monitoringService';
 import { useCodeRunner, CodeLanguage } from '../hooks/useCodeRunner';
-import { Timer, Send, Key, ChevronLeft, ChevronRight, Lock, Loader2, Save, FileText, CheckCircle2, AlertTriangle, Play } from 'lucide-react';
+import { Timer, Send, Key, ChevronLeft, ChevronRight, Lock, Loader2, Save, FileText, CheckCircle2, AlertTriangle, Play, Terminal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { cn } from '../lib/utils';
@@ -649,8 +649,50 @@ export const AssessmentPage: React.FC = () => {
                   </span>
                 </div>
                 <h3 className="text-xl font-black text-zinc-900">{questions[0]?.title}</h3>
-                <div className="prose prose-zinc max-w-none text-zinc-700 leading-relaxed text-sm">
-                  <p className="whitespace-pre-wrap">{questions[0]?.instruction}</p>
+                {/* Instruction Content formatted beautifully */}
+                <div className="space-y-4">
+                  {questions[0]?.instruction?.split(/(?=\n\d+\.)|(?=\nContoh Output)/i).map((part, idx) => {
+                    const trimmed = part.trim();
+                    if (!trimmed) return null;
+                    
+                    if (trimmed.toLowerCase().startsWith('contoh output')) {
+                      return (
+                        <div key={idx} className="bg-zinc-900 rounded-xl overflow-hidden shadow-sm mt-6">
+                          <div className="bg-zinc-800 px-4 py-2 text-[10px] font-mono text-zinc-400 font-bold tracking-widest uppercase flex items-center gap-2">
+                            <Terminal size={12} className="text-emerald-400" />
+                            Contoh Output Program
+                          </div>
+                          <pre className="p-4 text-emerald-400 font-mono text-xs whitespace-pre-wrap">
+                            {trimmed.replace(/^Contoh Output.*?:?/i, '').trim()}
+                          </pre>
+                        </div>
+                      );
+                    }
+                    
+                    const isNumbered = /^\d+\./.test(trimmed);
+                    if (isNumbered) {
+                      const match = trimmed.match(/^(\d+)\.\s*(.*)/s);
+                      if (match) {
+                        return (
+                          <div key={idx} className="flex gap-3 items-start bg-zinc-50 border border-zinc-100 p-4 rounded-2xl">
+                            <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                              {match[1]}
+                            </div>
+                            <div className="text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap">
+                              {match[2]}
+                            </div>
+                          </div>
+                        );
+                      }
+                    }
+
+                    // Regular text
+                    return (
+                      <p key={idx} className="text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap">
+                        {trimmed}
+                      </p>
+                    );
+                  })}
                 </div>
               </div>
               {/* Retro Terminal Mockup */}

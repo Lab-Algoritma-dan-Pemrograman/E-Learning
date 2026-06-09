@@ -13,6 +13,7 @@ export const QuestionBankDashboard: React.FC = () => {
   const [menuFilter, setMenuFilter] = useState<'all' | 'pre_test' | 'post_test' | 'program_keterampilan' | 'ujian_praktik'>('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [kodeFilter, setKodeFilter] = useState<string>('all');
 
   // Edit / Create Form State
   const [editingQuestion, setEditingQuestion] = useState<AssessmentQuestion | null>(null);
@@ -273,8 +274,25 @@ export const QuestionBankDashboard: React.FC = () => {
     const matchesSearch = q.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           q.instruction.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesMenu = menuFilter === 'all' || q.menu_type === menuFilter;
-    return matchesSearch && matchesMenu;
+    
+    let matchesKode = true;
+    if (menuFilter === 'ujian_praktik' && kodeFilter !== 'all') {
+      const kodeMatch = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+      const kode = kodeMatch ? kodeMatch[1].toUpperCase() : 'NO_KODE';
+      matchesKode = kode === kodeFilter;
+    }
+    
+    return matchesSearch && matchesMenu && matchesKode;
   });
+
+  const uniqueKodes = Array.from(new Set(
+    questions
+      .filter(q => q.menu_type === 'ujian_praktik')
+      .map(q => {
+        const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+        return match ? match[1].toUpperCase() : 'NO_KODE';
+      })
+  )).sort();
 
   return (
     <Layout>
@@ -338,7 +356,10 @@ export const QuestionBankDashboard: React.FC = () => {
                 {['all', 'pre_test', 'post_test', 'program_keterampilan', 'ujian_praktik'].map(type => (
                   <button
                     key={type}
-                    onClick={() => setMenuFilter(type as any)}
+                    onClick={() => {
+                      setMenuFilter(type as any);
+                      if (type !== 'ujian_praktik') setKodeFilter('all');
+                    }}
                     className={cn(
                       "px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap active:scale-95",
                       menuFilter === type 
@@ -351,6 +372,33 @@ export const QuestionBankDashboard: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {menuFilter === 'ujian_praktik' && uniqueKodes.length > 0 && (
+              <div className="flex items-center gap-2 bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm overflow-x-auto">
+                <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest shrink-0">Filter Paket Kode:</span>
+                <button
+                  onClick={() => setKodeFilter('all')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap",
+                    kodeFilter === 'all' ? "bg-rose-700 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                  )}
+                >
+                  Semua Kode
+                </button>
+                {uniqueKodes.map(kode => (
+                  <button
+                    key={kode}
+                    onClick={() => setKodeFilter(kode)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap",
+                      kodeFilter === kode ? "bg-rose-700 text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                    )}
+                  >
+                    {kode === 'NO_KODE' ? 'Tanpa Kode' : `Kode ${kode}`}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {loading ? (
               <div className="flex justify-center p-12">
@@ -584,14 +632,47 @@ export const QuestionBankDashboard: React.FC = () => {
             {/* FLOWCHART URL FOR TRANSLATION */}
             {editingQuestion.type === 'flowchart_translation' && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Flowchart Image URL</label>
-                <input 
-                  type="text" 
-                  value={editingQuestion.flowchart_url || ''}
-                  onChange={(e) => setEditingQuestion({ ...editingQuestion, flowchart_url: e.target.value })}
-                  className="w-full px-4 py-3 border border-zinc-200 rounded-xl outline-none focus:border-rose-700 bg-zinc-50 text-sm font-bold"
-                  placeholder="https://image-bucket.com/flowchart_01.png"
-                />
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Flowchart Image (Upload atau Link URL)</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={editingQuestion.flowchart_url || ''}
+                    onChange={(e) => setEditingQuestion({ ...editingQuestion, flowchart_url: e.target.value })}
+                    className="w-full px-4 py-3 border border-zinc-200 rounded-xl outline-none focus:border-rose-700 bg-zinc-50 text-sm font-bold"
+                    placeholder="https://... atau upload file"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="flowchart-upload"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        if (ev.target?.result) {
+                          setEditingQuestion({ ...editingQuestion, flowchart_url: ev.target.result as string });
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  <label 
+                    htmlFor="flowchart-upload"
+                    className="px-4 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl cursor-pointer text-sm whitespace-nowrap flex items-center gap-2"
+                  >
+                    <Upload size={16} /> Upload Gambar
+                  </label>
+                </div>
+                {editingQuestion.flowchart_url && editingQuestion.flowchart_url.length > 200 && (
+                  <p className="text-[10px] text-zinc-400 mt-1">Gambar menggunakan format Data URI Base64.</p>
+                )}
+                {editingQuestion.flowchart_url && (
+                  <div className="mt-2 border border-zinc-200 rounded-xl p-2 bg-zinc-50 flex justify-center">
+                    <img src={editingQuestion.flowchart_url} alt="Preview" className="max-h-40 object-contain" />
+                  </div>
+                )}
               </div>
             )}
 

@@ -178,6 +178,20 @@ export function parsePrePostTest(paragraphs: string[], filename: string): Omit<A
     }
   }
 
+  // Push the final text if there is any pending question that hasn't been pushed
+  if (!isOpsiMode && currentQuestionText) {
+    questions.push({
+      menu_type: menuType,
+      difficulty: currentDifficulty,
+      type: 'essay',
+      title: currentQuestionText.substring(0, 50) + (currentQuestionText.length > 50 ? "..." : ""),
+      instruction: currentQuestionText.trim(),
+      module_association: moduleAssociation,
+      test_cases: [],
+      validation_rules: []
+    });
+  }
+
   // Push the final coding question if we were in opsi mode
   if (isOpsiMode && currentOpsiTitle && currentOpsiInstruction) {
     questions.push({
