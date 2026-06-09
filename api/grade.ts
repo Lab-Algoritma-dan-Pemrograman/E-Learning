@@ -64,7 +64,7 @@ export default async function handler(req: any, res: any) {
       return res.status(403).json({ error: 'Akses Ditolak: Hanya Asisten, Kordas, atau Admin yang bisa menilai.' });
     }
 
-    const { attemptIds, requestedModel = 'gemini-3-flash-preview' } = req.body;
+    const { attemptIds, requestedModel = 'gpt-os-120b' } = req.body;
 
     if (!attemptIds || !Array.isArray(attemptIds) || attemptIds.length === 0) {
       return res.status(400).json({ error: 'Invalid payload: attemptIds array is required' });
@@ -179,7 +179,13 @@ KRITERIA SCORING KHUSUS UNTUK SOAL INI:
             const criteriaStr = dynamicRules.criteria.map((c: any) => `${c.label}: ${c.nilai} poin`).join(', ');
             promptBody += `- Program Keterampilan: ${criteriaStr} (Total ${dynamicRules.total_max_score || 85}).\n`;
           } else if (dynamicRules && attempt.menu_type === 'ujian_praktik') {
-            if (q.type === 'flowchart_translation' && dynamicRules.soal_6_flowchart) {
+            const questionIndex = questionIds.indexOf(q.id);
+            const soalKey = `soal_${questionIndex + 1}`;
+            const specificSoalRule = dynamicRules[soalKey];
+            if (specificSoalRule) {
+              const criteriaStr = Object.entries(specificSoalRule.criteria || {}).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v} poin`).join(', ');
+              promptBody += `- Ujian Praktik ${soalKey.toUpperCase().replace('_', ' ')}: ${criteriaStr} (Maks ${specificSoalRule.max_score || 0} poin).\n`;
+            } else if (q.type === 'flowchart_translation' && dynamicRules.soal_6_flowchart) {
               const criteriaStr = Object.entries(dynamicRules.soal_6_flowchart.criteria || {}).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v} poin`).join(', ');
               promptBody += `- Flowchart to Program: ${criteriaStr}.\n`;
             } else if (dynamicRules.soal_1_5) {

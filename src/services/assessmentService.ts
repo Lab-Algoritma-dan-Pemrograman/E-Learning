@@ -109,9 +109,21 @@ export const assessmentService = {
         .single();
       if (rulesDoc && rulesDoc.rules) {
         const generatedSets = (rulesDoc.rules as any).generated_sets || {};
-        const key = menuType === 'ujian_praktik' 
-          ? (kode ? `kode_${kode.toUpperCase()}` : '') 
-          : (moduleAssociation ? `modul_${moduleAssociation}` : '');
+        let key = '';
+        if (menuType === 'ujian_praktik') {
+          if (kode) {
+            key = `kode_${kode.toUpperCase()}`;
+          } else {
+            const availableKeys = Object.keys(generatedSets).filter(k => k.startsWith('kode_') && Array.isArray(generatedSets[k]) && generatedSets[k].length > 0);
+            if (availableKeys.length > 0) {
+              const shuffle = (array: any[]) => [...array].sort(() => Math.random() - 0.5);
+              key = shuffle(availableKeys)[0];
+            }
+          }
+        } else {
+          key = moduleAssociation ? `modul_${moduleAssociation}` : '';
+        }
+        
         if (key && generatedSets[key] && Array.isArray(generatedSets[key]) && generatedSets[key].length > 0) {
           selectedIds = generatedSets[key];
         }
@@ -338,7 +350,7 @@ export const assessmentService = {
   /**
    * Triggers the backend AI evaluation for a list of attempt IDs
    */
-  async triggerAIGrading(attemptIds: string[], model: string = 'gemini-3-flash-preview'): Promise<any> {
+  async triggerAIGrading(attemptIds: string[], model: string = 'gpt-os-120b'): Promise<any> {
     const sessionToken = sessionStorage.getItem('elearning_token') || '';
     const response = await fetch('/api/grade', {
       method: 'POST',
@@ -376,7 +388,7 @@ export const assessmentService = {
   },
 
   async generateAndSaveQuestionSet(
-    menuType: 'pre_test' | 'post_test' | 'ujian_praktik',
+    menuType: 'pre_test' | 'post_test' | 'program_keterampilan' | 'ujian_praktik',
     moduleAssociation: number | null = null,
     kode: string | null = null
   ): Promise<AssessmentQuestion[]> {
@@ -387,14 +399,14 @@ export const assessmentService = {
     }
     const { data: allQuestions, error: qError } = await qQuery;
     if (qError) throw qError;
-    if (!allQuestions || allQuestions.length === 0) {
-      throw new Error(`Tidak ada soal yang tersedia di bank soal untuk kriteria ini.`);
-    }
 
     const selectedIds: string[] = [];
     const shuffle = (array: any[]) => [...array].sort(() => Math.random() - 0.5);
 
     if (menuType === 'pre_test') {
+      if (!allQuestions || allQuestions.length === 0) {
+        throw new Error(`Tidak ada soal yang tersedia di bank soal untuk kriteria ini.`);
+      }
       const easyQs = allQuestions.filter(q => q.difficulty === 'easy');
       const medQs = allQuestions.filter(q => q.difficulty === 'medium');
       const hardQs = allQuestions.filter(q => q.difficulty === 'hard');
@@ -407,6 +419,9 @@ export const assessmentService = {
       selectedIds.push(shuffle(hardQs)[0].id, shuffle(hardQs)[1].id);
 
     } else if (menuType === 'post_test') {
+      if (!allQuestions || allQuestions.length === 0) {
+        throw new Error(`Tidak ada soal yang tersedia di bank soal untuk kriteria ini.`);
+      }
       const easyQs = allQuestions.filter(q => q.difficulty === 'easy');
       const medQs = allQuestions.filter(q => q.difficulty === 'medium');
       const hardQs = allQuestions.filter(q => q.difficulty === 'hard');
@@ -418,33 +433,80 @@ export const assessmentService = {
       selectedIds.push(shuffle(medQs)[0].id);
       selectedIds.push(shuffle(hardQs)[0].id);
 
+    } else if (menuType === 'program_keterampilan') {
+      if (!allQuestions || allQuestions.length === 0) {
+        throw new Error(`Tidak ada soal yang tersedia di bank soal untuk kriteria ini.`);
+      }
+      selectedIds.push(shuffle(allQuestions)[0].id);
+
     } else if (menuType === 'ujian_praktik') {
       if (!kode) throw new Error("Kode paket wajib ditentukan untuk Ujian Praktik.");
       const upperKode = kode.toUpperCase();
-      const kodeQs = allQuestions.filter(q => {
-        const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
-        return match && match[1].toUpperCase() === upperKode;
-      });
 
-      const q1 = kodeQs.filter(q => q.module_association === 1);
-      const q2 = kodeQs.filter(q => q.module_association === 2);
-      const q3 = kodeQs.filter(q => q.module_association === 3);
-      const q4 = kodeQs.filter(q => q.module_association === 4 || q.module_association === 5);
-      const q5 = kodeQs.filter(q => q.module_association === 6);
-      const q6 = kodeQs.filter(q => q.type === 'flowchart_translation');
+      if (upperKode === 'MIX') {
+        // Dynamic Mix Mode: 5 coding questions from post_test (module 1 to 5/6) and 1 flowchart question
+        const { data: postTestCodingQs, error: ptError } = await supabase
+          .from('assessment_questions')
+          .select('*')
+          .eq('menu_type', 'post_test')
+          .eq('type', 'coding');
+        
+        const { data: flowchartQs, error: fcError } = await supabase
+          .from('assessment_questions')
+          .select('*')
+          .eq('type', 'flowchart_translation');
+          
+        if (ptError) throw ptError;
+        if (fcError) throw fcError;
 
-      if (q1.length < 1 || q2.length < 1 || q3.length < 1 || q4.length < 1 || q5.length < 1 || q6.length < 1) {
-        throw new Error(`Bank soal Ujian Praktik Kode ${upperKode} belum lengkap. Harus terisi minimal 1 soal untuk masing-masing kriteria Modul 1, 2, 3, 4/5, 6, dan Flowchart.`);
+        const q1 = (postTestCodingQs || []).filter(q => q.module_association === 1);
+        const q2 = (postTestCodingQs || []).filter(q => q.module_association === 2);
+        const q3 = (postTestCodingQs || []).filter(q => q.module_association === 3);
+        const q4 = (postTestCodingQs || []).filter(q => q.module_association === 4 || q.module_association === 5);
+        const q5 = (postTestCodingQs || []).filter(q => q.module_association === 6);
+        const q6 = flowchartQs || [];
+
+        if (q1.length < 1 || q2.length < 1 || q3.length < 1 || q4.length < 1 || q5.length < 1 || q6.length < 1) {
+          throw new Error("Bank soal Post-Test Coding / Flowchart belum lengkap untuk menyusun Ujian Praktik MIX MODE. Pastikan setiap modul memiliki minimal 1 soal post-test coding.");
+        }
+
+        selectedIds.push(
+          shuffle(q1)[0].id,
+          shuffle(q2)[0].id,
+          shuffle(q3)[0].id,
+          shuffle(q4)[0].id,
+          shuffle(q5)[0].id,
+          shuffle(q6)[0].id
+        );
+      } else {
+        if (!allQuestions || allQuestions.length === 0) {
+          throw new Error(`Tidak ada soal yang tersedia di bank soal untuk kriteria ini.`);
+        }
+        const kodeQs = allQuestions.filter(q => {
+          const match = q.title.match(/\[Kode\s*([^\]]+)\]/i);
+          return match && match[1].toUpperCase() === upperKode;
+        });
+
+        const q1 = kodeQs.filter(q => q.module_association === 1);
+        const q2 = kodeQs.filter(q => q.module_association === 2);
+        const q3 = kodeQs.filter(q => q.module_association === 3);
+        const q4 = kodeQs.filter(q => q.module_association === 4 || q.module_association === 5);
+        const q5 = kodeQs.filter(q => q.module_association === 6);
+        const q6 = kodeQs.filter(q => q.type === 'flowchart_translation');
+
+        if (q1.length < 1 || q2.length < 1 || q3.length < 1 || q4.length < 1 || q5.length < 1 || q6.length < 1) {
+          throw new Error(`Bank soal Ujian Praktik Kode ${upperKode} belum lengkap. Harus terisi minimal 1 soal untuk masing-masing kriteria Modul 1, 2, 3, 4/5, 6, dan Flowchart.`);
+        }
+
+        selectedIds.push(
+          shuffle(q1)[0].id,
+          shuffle(q2)[0].id,
+          shuffle(q3)[0].id,
+          shuffle(q4)[0].id,
+          shuffle(q5)[0].id,
+          shuffle(q6)[0].id
+        );
       }
-
-      selectedIds.push(
-        shuffle(q1)[0].id,
-        shuffle(q2)[0].id,
-        shuffle(q3)[0].id,
-        shuffle(q4)[0].id,
-        shuffle(q5)[0].id,
-        shuffle(q6)[0].id
-      );
     }
 
     // 2. Fetch current rules doc to merge
@@ -458,13 +520,16 @@ export const assessmentService = {
 
     const currentRules = rulesDoc.rules || {};
     const generatedSets = currentRules.generated_sets || {};
+    const lastGeneratedAt = currentRules.last_generated_at || {};
     
     const key = menuType === 'ujian_praktik' ? `kode_${kode!.toUpperCase()}` : `modul_${moduleAssociation}`;
     generatedSets[key] = selectedIds;
+    lastGeneratedAt[key] = new Date().toISOString();
     
     const updatedRules = {
       ...currentRules,
-      generated_sets: generatedSets
+      generated_sets: generatedSets,
+      last_generated_at: lastGeneratedAt
     };
 
     const { error: updateError } = await supabase
@@ -487,7 +552,7 @@ export const assessmentService = {
   },
 
   async getGeneratedQuestionSet(
-    menuType: 'pre_test' | 'post_test' | 'ujian_praktik',
+    menuType: 'pre_test' | 'post_test' | 'program_keterampilan' | 'ujian_praktik',
     moduleAssociation: number | null = null,
     kode: string | null = null
   ): Promise<AssessmentQuestion[]> {
@@ -512,5 +577,72 @@ export const assessmentService = {
 
     if (!questionDetails) return [];
     return selectedIds.map(id => questionDetails.find(q => q.id === id)).filter(Boolean);
+  },
+
+  async getQuestionSetStatus(
+    menuType: 'pre_test' | 'post_test' | 'program_keterampilan' | 'ujian_praktik',
+    moduleAssociation: number | null = null,
+    kode: string | null = null
+  ): Promise<{ lastGeneratedAt: string | null; isSessionActive: boolean }> {
+    let lastGeneratedAt: string | null = null;
+    let isSessionActive = false;
+
+    try {
+      const { data: rulesDoc } = await supabase
+        .from('assessment_grading_rules')
+        .select('rules')
+        .eq('id', menuType)
+        .single();
+        
+      if (rulesDoc && rulesDoc.rules) {
+        const rules = rulesDoc.rules as any;
+        const key = menuType === 'ujian_praktik' 
+          ? `kode_${kode?.toUpperCase()}` 
+          : `modul_${moduleAssociation}`;
+        
+        if (rules.last_generated_at && rules.last_generated_at[key]) {
+          lastGeneratedAt = rules.last_generated_at[key];
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching last_generated_at:", err);
+    }
+
+    try {
+      const activeQuestions = await this.getGeneratedQuestionSet(menuType, moduleAssociation, kode);
+      const questionIds = activeQuestions.map(q => q.id).filter(Boolean) as string[];
+
+      if (questionIds.length > 0) {
+        const { data: activeAttempts } = await supabase
+          .from('assessment_attempts')
+          .select('id, selected_questions')
+          .eq('menu_type', menuType)
+          .eq('status', 'in_progress');
+          
+        if (activeAttempts) {
+          isSessionActive = activeAttempts.some(att => {
+            const attQs = att.selected_questions || [];
+            return attQs.some((qId: string) => questionIds.includes(qId));
+          });
+        }
+      }
+
+      if (!isSessionActive) {
+        const { data: unlockedUsers } = await supabase
+          .from('users')
+          .select('nim')
+          .eq('role', 'praktikan')
+          .eq(`assessment_access->>${menuType}`, 'true')
+          .limit(1);
+          
+        if (unlockedUsers && unlockedUsers.length > 0) {
+          isSessionActive = true;
+        }
+      }
+    } catch (err) {
+      console.error("Error checking session activity:", err);
+    }
+
+    return { lastGeneratedAt, isSessionActive };
   }
 };

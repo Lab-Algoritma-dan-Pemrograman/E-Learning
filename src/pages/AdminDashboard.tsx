@@ -2368,7 +2368,19 @@ export const AdminDashboard: React.FC = () => {
                 <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-lg">Program Keterampilan</h3>
-                    <span className="text-xs font-bold text-zinc-400">Total Maks: {gradingRules.program_keterampilan?.total_max_score || 85}</span>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-bold text-zinc-400">Total Maks Poin:</label>
+                      <input
+                        type="number"
+                        value={gradingRules.program_keterampilan?.total_max_score ?? 85}
+                        onChange={(e) => {
+                          const updated = { ...gradingRules };
+                          updated.program_keterampilan = { ...updated.program_keterampilan, total_max_score: Number(e.target.value) };
+                          setGradingRules({ ...updated });
+                        }}
+                        className="w-20 text-center py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
+                      />
+                    </div>
                   </div>
                   <div className="overflow-x-auto border border-zinc-100 rounded-2xl">
                     <table className="w-full text-sm border-collapse">
@@ -2422,7 +2434,19 @@ export const AdminDashboard: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-lg">{type === 'pre_test' ? 'Pre-Test' : 'Post-Test'}</h3>
                       <div className="flex items-center gap-4">
-                        <span className="text-xs font-bold text-zinc-400">Total Maks: {gradingRules[type]?.total_max_score || 100}</span>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs font-bold text-zinc-400">Total Maks Poin:</label>
+                          <input
+                            type="number"
+                            value={gradingRules[type]?.total_max_score ?? 100}
+                            onChange={(e) => {
+                              const updated = { ...gradingRules };
+                              updated[type] = { ...updated[type], total_max_score: Number(e.target.value) };
+                              setGradingRules({ ...updated });
+                            }}
+                            className="w-20 text-center py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
+                          />
+                        </div>
                         <div className="flex items-center gap-2">
                           <label className="text-xs font-bold text-zinc-400">Durasi:</label>
                           <input
@@ -2483,7 +2507,19 @@ export const AdminDashboard: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-lg">Ujian Praktik</h3>
                     <div className="flex items-center gap-4">
-                      <span className="text-xs font-bold text-zinc-400">Total Maks: {gradingRules.ujian_praktik?.total_max_score || 100}</span>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs font-bold text-zinc-400">Total Maks Poin:</label>
+                        <input
+                          type="number"
+                          value={gradingRules.ujian_praktik?.total_max_score ?? 100}
+                          onChange={(e) => {
+                            const updated = { ...gradingRules };
+                            updated.ujian_praktik = { ...updated.ujian_praktik, total_max_score: Number(e.target.value) };
+                            setGradingRules({ ...updated });
+                          }}
+                          className="w-20 text-center py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
+                        />
+                      </div>
                       <div className="flex items-center gap-2">
                         <label className="text-xs font-bold text-zinc-400">Durasi:</label>
                         <input
@@ -2500,12 +2536,44 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  {['soal_1_5', 'soal_6_flowchart'].map(section => {
-                    const sectionData = gradingRules.ujian_praktik?.[section];
-                    if (!sectionData) return null;
+                  {['soal_1', 'soal_2', 'soal_3', 'soal_4', 'soal_5', 'soal_6'].map(section => {
+                    const sectionData = gradingRules.ujian_praktik?.[section] || {
+                      max_score: section === 'soal_6' ? 25 : 15,
+                      criteria: section === 'soal_6' ? {
+                        kesesuaian_sintaks: 5,
+                        dapat_berjalan_tanpa_error: 8,
+                        sesuai_petunjuk: 7,
+                        tepat_waktu: 5
+                      } : {
+                        kesesuaian_sintaks: 2,
+                        dapat_berjalan_tanpa_error: 5,
+                        sesuai_petunjuk: 5,
+                        tepat_waktu: 3
+                      }
+                    };
                     return (
                       <div key={section} className="border border-zinc-100 rounded-2xl p-4 space-y-3">
-                        <span className="text-xs font-bold text-zinc-600 uppercase">{section === 'soal_1_5' ? 'Soal 1-5 (Coding)' : 'Soal 6 (Flowchart)'}</span>
+                        <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+                          <span className="text-xs font-bold text-zinc-600 uppercase">
+                            {section.replace('_', ' ').toUpperCase()} {section === 'soal_6' ? '(Flowchart to Program)' : '(Coding)'}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Poin Maks Soal:</label>
+                            <input
+                              type="number"
+                              value={sectionData.max_score}
+                              onChange={(e) => {
+                                const updated = { ...gradingRules };
+                                if (!updated.ujian_praktik[section]) {
+                                  updated.ujian_praktik[section] = JSON.parse(JSON.stringify(sectionData));
+                                }
+                                updated.ujian_praktik[section].max_score = Number(e.target.value);
+                                setGradingRules({ ...updated });
+                              }}
+                              className="w-16 py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-xs text-center"
+                            />
+                          </div>
+                        </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           {Object.entries(sectionData.criteria || {}).map(([key, val]: [string, any]) => (
                             <div key={key} className="space-y-1">
@@ -2515,6 +2583,9 @@ export const AdminDashboard: React.FC = () => {
                                 value={val}
                                 onChange={(e) => {
                                   const updated = { ...gradingRules };
+                                  if (!updated.ujian_praktik[section]) {
+                                    updated.ujian_praktik[section] = JSON.parse(JSON.stringify(sectionData));
+                                  }
                                   updated.ujian_praktik[section].criteria[key] = Number(e.target.value);
                                   setGradingRules({ ...updated });
                                 }}

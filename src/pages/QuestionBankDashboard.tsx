@@ -19,15 +19,43 @@ export const QuestionBankDashboard: React.FC = () => {
   // Edit / Create Form State
   const [editingQuestion, setEditingQuestion] = useState<AssessmentQuestion | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [contohOutput, setContohOutput] = useState('');
 
   // Generate Paket Soal State
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
-  const [genMenuType, setGenMenuType] = useState<'pre_test' | 'post_test' | 'ujian_praktik'>('pre_test');
+  const [genMenuType, setGenMenuType] = useState<'pre_test' | 'post_test' | 'program_keterampilan' | 'ujian_praktik'>('pre_test');
   const [genModul, setGenModul] = useState<number>(1);
   const [genKode, setGenKode] = useState<string>('A');
   const [genQuestions, setGenQuestions] = useState<AssessmentQuestion[]>([]);
   const [genLoading, setGenLoading] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
+
+  const [lastGeneratedAt, setLastGeneratedAt] = useState<string | null>(null);
+  const [isSessionActive, setIsSessionActive] = useState<boolean>(false);
+  const [statusLoading, setStatusLoading] = useState(false);
+
+  const fetchQuestionSetStatus = async () => {
+    setStatusLoading(true);
+    try {
+      const status = await assessmentService.getQuestionSetStatus(
+        genMenuType,
+        genMenuType === 'ujian_praktik' ? null : genModul,
+        genMenuType === 'ujian_praktik' ? genKode : null
+      );
+      setLastGeneratedAt(status.lastGeneratedAt);
+      setIsSessionActive(status.isSessionActive);
+    } catch (err) {
+      console.error("Failed to fetch set status:", err);
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isGenerateOpen) {
+      fetchQuestionSetStatus();
+    }
+  }, [isGenerateOpen, genMenuType, genModul, genKode]);
 
   // Import Word / PPT State
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -71,15 +99,22 @@ export const QuestionBankDashboard: React.FC = () => {
       flowchart_url: '',
       created_by: user?.nim
     });
+    setContohOutput('');
     setIsFormOpen(true);
   };
 
   const handleEdit = (q: AssessmentQuestion) => {
+    const parts = (q.instruction || '').split('---CONTOH_OUTPUT---');
+    const instructionClean = parts[0].trim();
+    const outputClean = parts[1] ? parts[1].trim() : '';
+
     setEditingQuestion({
       ...q,
+      instruction: instructionClean,
       test_cases: typeof q.test_cases === 'string' ? q.test_cases : JSON.stringify(q.test_cases || []),
       validation_rules: typeof q.validation_rules === 'string' ? q.validation_rules : JSON.stringify(q.validation_rules || [])
     });
+    setContohOutput(outputClean);
     setIsFormOpen(true);
   };
 
@@ -100,9 +135,19 @@ export const QuestionBankDashboard: React.FC = () => {
 
     setLoading(true);
     try {
-      await assessmentService.saveQuestion(editingQuestion);
+      const finalInstruction = contohOutput.trim() 
+        ? `${editingQuestion.instruction.trim()}\n\n---CONTOH_OUTPUT---\n${contohOutput.trim()}`
+        : editingQuestion.instruction.trim();
+
+      const payload = {
+        ...editingQuestion,
+        instruction: finalInstruction
+      };
+
+      await assessmentService.saveQuestion(payload);
       setIsFormOpen(false);
       setEditingQuestion(null);
+      setContohOutput('');
       fetchQuestions();
     } catch (e: any) {
       alert(`Gagal menyimpan soal: ${e.message}`);
@@ -706,6 +751,23 @@ export const QuestionBankDashboard: React.FC = () => {
               />
             </div>
 
+            {/* CONTOH OUTPUT TERMINAL */}
+            {(editingQuestion.type === 'coding' || editingQuestion.type === 'flowchart_translation' || editingQuestion.menu_type === 'program_keterampilan' || editingQuestion.menu_type === 'ujian_praktik') && (
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Contoh Output Terminal (MacBook Mockup)</label>
+                <textarea
+                  rows={4}
+                  value={contohOutput}
+                  onChange={(e) => setContohOutput(e.target.value)}
+                  className="w-full p-4 border border-zinc-200 bg-zinc-50 rounded-2xl outline-none focus:border-rose-700 text-sm font-mono leading-relaxed"
+                  placeholder={`$ python main.py\nMasukkan angka: 5\nHasil: 120`}
+                />
+                <p className="text-[10px] text-zinc-400 font-semibold mt-1">
+                  Konten ini akan dirender di dalam kotak MacBook Terminal di halaman mahasiswa.
+                </p>
+              </div>
+            )}
+
             {/* RUBRIC POIN HELPER */}
             <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-3xl space-y-4">
               <div className="flex items-center justify-between">
@@ -788,10 +850,10 @@ export const QuestionBankDashboard: React.FC = () => {
               )}
             </div>
 
-            {/* FLOWCHART URL FOR TRANSLATION */}
-            {editingQuestion.type === 'flowchart_translation' && (
+            {/* FLOWCHART/SCREENSHOT/IMAGE UPLOAD */}
+            {true && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Flowchart Image (Upload atau Link URL)</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Gambar Soal / Screenshot Kode / Flowchart (FC to Program)</label>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
@@ -1119,6 +1181,7 @@ export const QuestionBankDashboard: React.FC = () => {
                 >
                   <option value="pre_test">Pre-Test</option>
                   <option value="post_test">Post-Test</option>
+                  <option value="program_keterampilan">Program Keterampilan</option>
                   <option value="ujian_praktik">Ujian Praktik</option>
                 </select>
               </div>
@@ -1152,9 +1215,10 @@ export const QuestionBankDashboard: React.FC = () => {
                       setGenQuestions([]);
                       setGenError(null);
                     }}
-                    placeholder="CONTOH: A"
+                    placeholder="CONTOH: A atau MIX"
                     className="w-full px-4 py-3 border border-zinc-200 rounded-xl outline-none bg-white text-sm font-bold focus:border-rose-700"
                   />
+                  <p className="text-[9px] text-zinc-400 font-semibold mt-1">Gunakan "MIX" untuk Mix Mode (Acak dari Soal Post-Test Coding & Flowchart)</p>
                 </div>
               )}
 
@@ -1171,6 +1235,7 @@ export const QuestionBankDashboard: React.FC = () => {
                         genMenuType === 'ujian_praktik' ? genKode : null
                       );
                       setGenQuestions(data);
+                      await fetchQuestionSetStatus();
                       if (data.length === 0) {
                         setGenError("Belum ada paket soal ter-generate untuk kriteria ini.");
                       }
@@ -1199,6 +1264,7 @@ export const QuestionBankDashboard: React.FC = () => {
                         genMenuType === 'ujian_praktik' ? genKode : null
                       );
                       setGenQuestions(data);
+                      await fetchQuestionSetStatus();
                       alert("Berhasil menghasilkan paket soal acak baru dan menyimpannya sebagai paket ujian aktif!");
                     } catch (e: any) {
                       setGenError(e.message || "Gagal melakukan generate paket soal.");
@@ -1211,6 +1277,25 @@ export const QuestionBankDashboard: React.FC = () => {
                 >
                   {genLoading ? <Loader2 size={12} className="animate-spin" /> : "Acak Paket Baru"}
                 </button>
+              </div>
+            </div>
+
+            {/* Status Sesi & Timestamp Terakhir Diacak */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-50 p-4 rounded-2xl border border-zinc-200/50 text-xs font-semibold">
+              <div className="flex items-center justify-between sm:justify-start gap-4">
+                <span className="text-zinc-500 font-bold uppercase tracking-wider text-[10px]">Terakhir Diacak:</span>
+                <span className="text-zinc-800 font-bold">
+                  {statusLoading ? 'Memuat...' : (lastGeneratedAt ? new Date(lastGeneratedAt).toLocaleString('id-ID') : 'Belum Pernah')}
+                </span>
+              </div>
+              <div className="flex items-center justify-between sm:justify-start gap-4">
+                <span className="text-zinc-500 font-bold uppercase tracking-wider text-[10px]">Status Sesi Ujian:</span>
+                <span className={cn(
+                  "px-2.5 py-0.5 rounded-full font-bold uppercase text-[9px] tracking-wider",
+                  isSessionActive ? "bg-emerald-50 text-emerald-700 border border-emerald-100 animate-pulse" : "bg-zinc-100 text-zinc-500"
+                )}>
+                  {isSessionActive ? "🟢 Aktif" : "⚪ Tidak Aktif"}
+                </span>
               </div>
             </div>
 

@@ -29,7 +29,11 @@ export const AssessmentPage: React.FC = () => {
   const [attempt, setAttempt] = useState<AssessmentAttempt | null>(null);
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
-  const [scoreRecap, setScoreRecap] = useState<any[]>([]);
+  const [studentAttempts, setStudentAttempts] = useState<any[]>([]);
+  const [questionsMetadata, setQuestionsMetadata] = useState<Record<string, { module_association: number | null; title: string }>>({});
+  const [loadingRecap, setLoadingRecap] = useState(false);
+  const [inspectingAttempt, setInspectingAttempt] = useState<{ attempt: any; questions: any[] } | null>(null);
+  const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
   const [showQuestionPopover, setShowQuestionPopover] = useState(false);
   const [durations, setDurations] = useState<Record<string, number>>({
     pre_test: 15,
@@ -140,31 +144,158 @@ export const AssessmentPage: React.FC = () => {
     };
   }, [timeLeft, attempt]);
 
-  // Fetch score recap on mount / when user changes
+  // Fetch attempts and questions metadata for grouped score recap
   useEffect(() => {
     if (!user) return;
-    const fetchScoreRecap = async () => {
-      const types = ['pre_test', 'post_test', 'program_keterampilan', 'ujian_praktik'];
-      const results: any[] = [];
-      for (const t of types) {
-        try {
-          const { data } = await supabase
-            .from('assessment_attempts')
-            .select('menu_type, status, final_score')
-            .eq('nim', user.nim)
-            .eq('menu_type', t)
-            .order('submitted_at', { ascending: false })
-            .limit(1);
-          results.push(data?.[0] || { menu_type: t, status: null, final_score: null });
-        } catch (err) {
-          console.error(`Gagal memuat rekap nilai untuk ${t}:`, err);
-          results.push({ menu_type: t, status: null, final_score: null });
+    const fetchAttemptsAndQuestions = async () => {
+      setLoadingRecap(true);
+      try {
+        const { data: attemptsData, error: attemptsErr } = await supabase
+          .from('assessment_attempts')
+          .select('*')
+          .eq('nim', user.nim)
+          .order('started_at', { ascending: false });
+
+        if (attemptsErr) throw attemptsErr;
+
+        const list = attemptsData || [];
+        setStudentAttempts(list);
+
+        const qIds = Array.from(new Set(list.flatMap(a => a.selected_questions || [])));
+        if (qIds.length > 0) {
+          const { data: qData, error: qErr } = await supabase
+            .from('assessment_questions')
+            .select('id, module_association, title')
+            .in('id', qIds);
+
+          if (!qErr && qData) {
+            const metadataMap: Record<string, any> = {};
+            qData.forEach(q => {
+              metadataMap[q.id] = {
+                module_association: q.module_association,
+                title: q.title
+              };
+            });
+            setQuestionsMetadata(metadataMap);
+          }
         }
+      } catch (err) {
+        console.error("Failed to load student recap details:", err);
+      } finally {
+        setLoadingRecap(false);
       }
-      setScoreRecap(results);
     };
-    fetchScoreRecap();
-  }, [user]);
+
+    fetchAttemptsAndQuestions();
+  }, [user, attempt]);
+
+  const resolveAttemptDetails = (att: any) => {
+    const firstQId = att.selected_questions?.[0];
+    const qMeta = firstQId ? questionsMetadata[firstQId] : null;
+    
+    let moduleAssociation = qMeta?.module_association || null;
+    let kode = null;
+    
+    if (att.menu_type === 'ujian_praktik' && qMeta) {
+      const match = qMeta.title.match(/\[Kode\s*([^\]]+)\]/i);
+      kode = match ? match[1].toUpperCase() : null;
+    }
+
+    return { moduleAssociation, kode };
+  };
+
+  const handleViewRecapDetails = async (att: any) => {
+    setLoading(true);
+    try {
+      const { data: qData, error: qErr } = await supabase
+        .from('assessment_questions')
+        .select('*')
+        .in('id', att.selected_questions);
+
+      if (qErr) throw qErr;
+
+      setInspectingAttempt({
+        attempt: att,
+        questions: att.selected_questions.map((id: string) => qData?.find(q => q.id === id)).filter(Boolean)
+      });
+    } catch (err: any) {
+      alert("Gagal memuat detail jawaban: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const parseInstructionAndOutput = (instructionText: string) => {
+    if (!instructionText) return { instruction: '', contohOutput: '' };
+    const parts = instructionText.split('---CONTOH_OUTPUT---');
+    return {
+      instruction: parts[0].trim(),
+      contohOutput: parts[1] ? parts[1].trim() : ''
+    };
+  };
+
+  const renderInstructionCards = (instructionText: string) => {
+    const { instruction } = parseInstructionAndOutput(instructionText);
+    const parts = instruction
+      .split(/(?=\r?\n\d+\.)|(?=\r?\n-\s)|(?:\r?\n){2,}/)
+      .map(p => p.trim())
+      .filter(Boolean);
+
+    return (
+      <div className="space-y-3">
+        {parts.map((part, idx) => (
+          <div 
+            key={idx} 
+            className="bg-zinc-50/50 border border-zinc-200/80 p-4.5 rounded-2xl shadow-xs flex items-start gap-3.5 hover:border-zinc-300 transition-colors"
+          >
+            <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border border-rose-100">
+              {idx + 1}
+            </div>
+            <p className="text-zinc-700 text-sm leading-relaxed font-medium whitespace-pre-wrap flex-1">
+              {part}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const MacbookTerminal: React.FC<{ title: string; content: string }> = ({ title, content }) => {
+    if (!content) return null;
+    return (
+      <div className="bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-800 shadow-lg mt-4">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900 border-b border-zinc-800">
+          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+          <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+          <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <span className="text-zinc-500 text-[10px] font-mono ml-2">{title} — Terminal</span>
+        </div>
+        <div className="p-4 font-mono text-xs text-emerald-400 leading-relaxed min-h-[100px] whitespace-pre-wrap">
+          {content}
+        </div>
+      </div>
+    );
+  };
+
+  const ImagePreview: React.FC<{ url: string; label?: string }> = ({ url, label = "Gambar Lampiran / Flowchart" }) => {
+    if (!url) return null;
+    return (
+      <div className="space-y-2">
+        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{label}</label>
+        <div className="relative group border border-zinc-200 rounded-2xl p-2 bg-zinc-50 flex justify-center max-h-72 overflow-hidden shadow-xs">
+          <img src={url} alt="Flowchart/SS" className="object-contain max-h-64 rounded-xl" />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+            <button
+              onClick={() => setZoomImageUrl(url)}
+              className="px-4 py-2 bg-white text-zinc-800 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md hover:scale-105 transition-transform"
+            >
+              🔍 Perbesar Gambar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Fetch dynamic duration rules from DB
   useEffect(() => {
@@ -511,42 +642,105 @@ export const AssessmentPage: React.FC = () => {
               />
             </div>
 
-            {/* Rekap Nilai Asesmen */}
+            {/* Rekap Nilai Asesmen per Modul */}
             <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm">
-              <h3 className="font-bold text-lg mb-4 text-zinc-900">Rekap Nilai Asesmen Anda</h3>
-              <div className="overflow-x-auto border border-zinc-100 rounded-2xl">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead>
-                    <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100">
-                      <th className="p-3">Asesmen</th>
-                      <th className="p-3 text-center">Status</th>
-                      <th className="p-3 text-center">Skor</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 font-medium">
-                    {scoreRecap.map(r => (
-                      <tr key={r.menu_type} className="hover:bg-zinc-50/50">
-                        <td className="p-3 font-bold text-zinc-800">{r.menu_type.replace(/_/g, ' ').toUpperCase()}</td>
-                        <td className="p-3 text-center">
-                          <span className={cn(
-                            "text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider",
-                            r.status === 'graded' ? 'bg-blue-50 text-blue-700' :
-                            r.status === 'submitted' ? 'bg-emerald-50 text-emerald-700' :
-                            r.status === 'in_progress' ? 'bg-amber-50 text-amber-700' : 'bg-zinc-100 text-zinc-400'
-                          )}>
-                            {r.status === 'graded' ? 'Dinilai' : 
-                             r.status === 'submitted' ? 'Dikumpulkan' : 
-                             r.status === 'in_progress' ? 'Sedang Dikerjakan' : 'Belum Mulai'}
-                          </span>
-                        </td>
-                        <td className="p-3 text-center font-black text-lg text-zinc-900">
-                          {r.final_score !== null && r.final_score !== undefined ? r.final_score : '—'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <h3 className="font-bold text-lg mb-4 text-zinc-900">Rekap Jawaban & Nilai Asesmen</h3>
+              {loadingRecap && studentAttempts.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="animate-spin text-rose-700" size={20} />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map(m => {
+                      const preAttempt = studentAttempts.find(a => a.menu_type === 'pre_test' && resolveAttemptDetails(a).moduleAssociation === m);
+                      const postAttempt = studentAttempts.find(a => a.menu_type === 'post_test' && resolveAttemptDetails(a).moduleAssociation === m);
+                      const upAttempt = studentAttempts.find(a => a.menu_type === 'ujian_praktik');
+
+                      const upQId = upAttempt?.selected_questions?.find(id => questionsMetadata[id]?.module_association === m);
+                      const upScore = upAttempt?.ai_grades?.[upQId || '']?.total_score;
+                      const upStatus = upAttempt?.status;
+
+                      return (
+                        <div key={m} className="border border-zinc-100 rounded-2xl p-5 bg-zinc-50/50 space-y-4 shadow-2xs hover:border-zinc-200 transition-colors">
+                          <h4 className="font-extrabold text-sm text-zinc-800 uppercase tracking-widest border-b border-zinc-100 pb-2">
+                            Modul {m}
+                          </h4>
+                          <div className="space-y-3 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-zinc-500">Pre-Test</span>
+                              {preAttempt ? (
+                                <button
+                                  onClick={() => handleViewRecapDetails(preAttempt)}
+                                  className="flex items-center gap-2 text-rose-700 hover:underline font-extrabold"
+                                >
+                                  <span>{preAttempt.status === 'graded' ? `${preAttempt.final_score} Poin` : (preAttempt.status === 'submitted' ? 'Dikumpulkan' : preAttempt.status)}</span>
+                                </button>
+                              ) : (
+                                <span className="text-zinc-400">Belum Mulai</span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-zinc-500">Post-Test</span>
+                              {postAttempt ? (
+                                <button
+                                  onClick={() => handleViewRecapDetails(postAttempt)}
+                                  className="flex items-center gap-2 text-rose-700 hover:underline font-extrabold"
+                                >
+                                  <span>{postAttempt.status === 'graded' ? `${postAttempt.final_score} Poin` : (postAttempt.status === 'submitted' ? 'Dikumpulkan' : postAttempt.status)}</span>
+                                </button>
+                              ) : (
+                                <span className="text-zinc-400">Belum Mulai</span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-zinc-500">Ujian Praktik</span>
+                              {upAttempt ? (
+                                <button
+                                  onClick={() => handleViewRecapDetails(upAttempt)}
+                                  className="flex items-center gap-2 text-rose-700 hover:underline font-extrabold"
+                                >
+                                  <span>
+                                    {upStatus === 'graded' ? (upScore !== undefined ? `${upScore} Poin` : 'Dinilai') : (upStatus === 'submitted' ? 'Dikumpulkan' : upStatus)}
+                                  </span>
+                                </button>
+                              ) : (
+                                <span className="text-zinc-400">Belum Mulai</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {(() => {
+                    const pkAttempt = studentAttempts.find(a => a.menu_type === 'program_keterampilan');
+                    return (
+                      <div className="bg-white border border-zinc-100 rounded-2xl p-5 shadow-2xs hover:border-zinc-200 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <h4 className="font-extrabold text-sm text-zinc-800 uppercase tracking-widest">
+                            Program Keterampilan (Studi Kasus)
+                          </h4>
+                          <p className="text-[10px] text-zinc-400 mt-1">Ujian coding mandiri membuat program fungsional sesuai petunjuk khusus.</p>
+                        </div>
+                        <div>
+                          {pkAttempt ? (
+                            <button
+                              onClick={() => handleViewRecapDetails(pkAttempt)}
+                              className="px-4 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold hover:bg-zinc-800 transition-all active:scale-95"
+                            >
+                              Lihat Detail: {pkAttempt.status === 'graded' ? `${pkAttempt.final_score} Poin` : (pkAttempt.status === 'submitted' ? 'Dikumpulkan' : pkAttempt.status)}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-zinc-400 italic">Belum Mulai</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -722,51 +916,16 @@ export const AssessmentPage: React.FC = () => {
                   </span>
                 </div>
                 <h3 className="text-xl font-black text-zinc-900">{questions[0]?.title}</h3>
-                {/* Instruction Content formatted beautifully */}
-                <div className="space-y-4">
-                  {questions[0]?.instruction?.split(/(?=\n\d+\.)|(?=\nContoh Output)/i).map((part, idx) => {
-                    const trimmed = part.trim();
-                    if (!trimmed) return null;
-                    
-                    if (trimmed.toLowerCase().startsWith('contoh output')) {
-                      return (
-                        <div key={idx} className="bg-zinc-900 rounded-xl overflow-hidden shadow-sm mt-6">
-                          <div className="bg-zinc-800 px-4 py-2 text-[10px] font-mono text-zinc-400 font-bold tracking-widest uppercase flex items-center gap-2">
-                            <Terminal size={12} className="text-emerald-400" />
-                            Contoh Output Program
-                          </div>
-                          <pre className="p-4 text-emerald-400 font-mono text-xs whitespace-pre-wrap">
-                            {trimmed.replace(/^Contoh Output.*?:?/i, '').trim()}
-                          </pre>
-                        </div>
-                      );
-                    }
-                    
-                    const isNumbered = /^\d+\./.test(trimmed);
-                    if (isNumbered) {
-                      const match = trimmed.match(/^(\d+)\.\s*(.*)/s);
-                      if (match) {
-                        return (
-                          <div key={idx} className="flex gap-3 items-start bg-zinc-50 border border-zinc-100 p-4 rounded-2xl">
-                            <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                              {match[1]}
-                            </div>
-                            <div className="text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap">
-                              {match[2]}
-                            </div>
-                          </div>
-                        );
-                      }
-                    }
-
-                    // Regular text
-                    return (
-                      <p key={idx} className="text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap">
-                        {trimmed}
-                      </p>
-                    );
-                  })}
-                </div>
+                {renderInstructionCards(questions[0]?.instruction)}
+                {questions[0]?.flowchart_url && (
+                  <div className="pt-2">
+                    <ImagePreview url={questions[0].flowchart_url} label="Gambar Pendukung / SS Kode" />
+                  </div>
+                )}
+                {(() => {
+                  const { contohOutput } = parseInstructionAndOutput(questions[0]?.instruction);
+                  return <MacbookTerminal title="contoh_output.py" content={contohOutput} />;
+                })()}
               </div>
               {/* Retro Terminal Mockup */}
               <div className="mx-6 mb-6 bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-800 shadow-lg">
@@ -880,14 +1039,16 @@ export const AssessmentPage: React.FC = () => {
                       </span>
                     </div>
                     <h3 className="text-xl font-black">{activeQuestion.title}</h3>
-                    <div className="prose prose-zinc max-w-none text-zinc-700 leading-relaxed text-sm">
-                      <p className="whitespace-pre-wrap">{activeQuestion.instruction}</p>
-                    </div>
-                    {activeQuestion.type === 'flowchart_translation' && activeQuestion.flowchart_url && (
-                      <div className="border border-zinc-200 rounded-2xl p-4 bg-zinc-50 flex justify-center max-h-96 overflow-hidden">
-                        <img src={activeQuestion.flowchart_url} alt="Flowchart" className="object-contain max-h-80" />
+                    {renderInstructionCards(activeQuestion.instruction)}
+                    {activeQuestion.flowchart_url && (
+                      <div className="pt-2">
+                        <ImagePreview url={activeQuestion.flowchart_url} label={activeQuestion.type === 'flowchart_translation' ? "Gambar Flowchart" : "Gambar Lampiran Soal"} />
                       </div>
                     )}
+                    {(() => {
+                      const { contohOutput } = parseInstructionAndOutput(activeQuestion.instruction);
+                      return <MacbookTerminal title="contoh_output.py" content={contohOutput} />;
+                    })()}
                   </>
                 )}
               </div>
@@ -1019,28 +1180,20 @@ export const AssessmentPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Instruction per-kartu/box */}
-                  <div className="space-y-3">
-                    {activeQuestion.instruction.split('\n').map((line, lIdx) => {
-                      const trimmed = line.trim();
-                      if (!trimmed) return null;
-                      return (
-                        <div key={lIdx} className="bg-zinc-50/50 border border-zinc-200/80 p-4.5 rounded-2xl shadow-xs flex items-start gap-3.5 hover:border-zinc-300 transition-colors">
-                          <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border border-rose-100">
-                            {lIdx + 1}
-                          </div>
-                          <p className="text-zinc-700 text-sm leading-relaxed font-medium whitespace-pre-wrap flex-1">{trimmed}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {/* Instruction Cards */}
+                  {renderInstructionCards(activeQuestion.instruction)}
 
-                  {/* Flowchart Image if translation */}
-                  {activeQuestion.type === 'flowchart_translation' && activeQuestion.flowchart_url && (
-                    <div className="border border-zinc-200 rounded-2xl p-4 bg-zinc-50 flex justify-center max-h-96 overflow-hidden">
-                      <img src={activeQuestion.flowchart_url} alt="Flowchart Translation" className="object-contain max-h-80" />
+                  {/* Image/Screenshot Preview */}
+                  {activeQuestion.flowchart_url && (
+                    <div className="pt-2">
+                      <ImagePreview url={activeQuestion.flowchart_url} label="Gambar Pendukung / SS Kode" />
                     </div>
                   )}
+
+                  {(() => {
+                    const { contohOutput } = parseInstructionAndOutput(activeQuestion.instruction);
+                    return <MacbookTerminal title="contoh_output.py" content={contohOutput} />;
+                  })()}
 
                   {/* Answers Forms */}
                   {activeQuestion.type === 'short_answer' || activeQuestion.type === 'essay' ? (
@@ -1110,6 +1263,132 @@ export const AssessmentPage: React.FC = () => {
             </div>
           </div>
         )}
+        {/* INSPECTOR MODAL */}
+        <AnimatePresence>
+          {inspectingAttempt && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden border border-zinc-200"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-100 shrink-0">
+                  <div>
+                    <h3 className="text-xl font-black text-zinc-900">Detail Hasil Jawaban Anda</h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Tipe Asesmen: <span className="font-bold text-rose-700 uppercase">{inspectingAttempt.attempt.menu_type.replace(/_/g, ' ')}</span>
+                      {inspectingAttempt.attempt.status === 'graded' && ` • Nilai Akhir: ${inspectingAttempt.attempt.final_score} Poin`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setInspectingAttempt(null)}
+                    className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl text-xs transition-all active:scale-95"
+                  >
+                    Tutup
+                  </button>
+                </div>
+                
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
+                  {inspectingAttempt.questions.map((q: any, idx: number) => {
+                    const ans = inspectingAttempt.attempt.answers?.[q.id] || {};
+                    const grade = inspectingAttempt.attempt.ai_grades?.[q.id] || null;
+                    const { instruction, contohOutput } = parseInstructionAndOutput(q.instruction);
+
+                    return (
+                      <div key={q.id} className="border border-zinc-200 rounded-3xl p-6 bg-zinc-50 space-y-4 shadow-3xs">
+                        <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+                          <h4 className="font-black text-base text-rose-800">Soal {idx + 1}: {q.title}</h4>
+                          <span className="text-[10px] bg-zinc-200 text-zinc-700 px-2 py-0.5 rounded-full font-bold uppercase">
+                            {q.type.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+
+                        {/* Instruction Cards */}
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Instruksi Soal</label>
+                          {renderInstructionCards(q.instruction)}
+                        </div>
+
+                        {/* Flowchart/Screenshot if any */}
+                        {q.flowchart_url && (
+                          <div className="pt-2">
+                            <ImagePreview url={q.flowchart_url} label={q.type === 'flowchart_translation' ? "Gambar Flowchart" : "Gambar Lampiran Soal"} />
+                          </div>
+                        )}
+
+                        {/* Contoh Output Terminal */}
+                        {contohOutput && (
+                          <div className="pt-2">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Contoh Output Terminal</label>
+                            <MacbookTerminal title="main.py" content={contohOutput} />
+                          </div>
+                        )}
+
+                        {/* Student Answer */}
+                        <div className="space-y-2 pt-2">
+                          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Jawaban Anda</label>
+                          {q.type === 'coding' || q.type === 'flowchart_translation' ? (
+                            <pre className="bg-zinc-900 text-zinc-100 p-4 rounded-2xl text-xs overflow-x-auto font-mono max-h-60 shadow-inner">
+                              {ans.codeSubmitted || 'KOSONG'}
+                            </pre>
+                          ) : (
+                            <div className="bg-white border border-zinc-200 p-4 rounded-2xl text-xs text-zinc-700 leading-relaxed whitespace-pre-wrap">
+                              {ans.answerText || 'KOSONG'}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* AI Grading Feedback */}
+                        {grade && (
+                          <div className="bg-blue-50 border border-blue-100 p-5 rounded-2xl space-y-3 text-xs text-blue-900 shadow-2xs">
+                            <div className="flex items-center justify-between font-bold border-b border-blue-100/50 pb-2">
+                              <span>Skor Soal: {grade.total_score} Poin</span>
+                              {grade.scores && (
+                                <div className="flex gap-2 text-[9px]">
+                                  {Object.entries(grade.scores).map(([k, v]: [string, any]) => (
+                                    <span key={k} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold uppercase tracking-wider font-mono">
+                                      {k.replace(/_/g, ' ')}: {v}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <p className="leading-relaxed whitespace-pre-wrap">{grade.feedback || 'Tidak ada catatan.'}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ZOOM IMAGE OVERLAY */}
+        <AnimatePresence>
+          {zoomImageUrl && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative max-w-5xl max-h-[90vh] bg-white p-2 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center"
+              >
+                <button
+                  onClick={() => setZoomImageUrl(null)}
+                  className="absolute top-4 right-4 bg-zinc-900/80 hover:bg-zinc-900 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-all active:scale-95"
+                >
+                  ✕
+                </button>
+                <img src={zoomImageUrl} alt="Zoomed View" className="object-contain max-w-full max-h-[85vh] rounded-2xl" />
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </Layout>
   );

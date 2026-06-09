@@ -83,35 +83,59 @@ export async function extractPptxSlides(file: File): Promise<{ slideNumber: numb
 /**
  * Parses Pre-Test and Post-Test Word file paragraphs.
  */
-export function parsePrePostTest(paragraphs: string[], filename: string): Omit<AssessmentQuestion, 'id'>[] {
+export function parsePrePostTest(
+  paragraphs: string[], 
+  filename: string,
+  forceMenuType?: 'pre_test' | 'post_test'
+): Omit<AssessmentQuestion, 'id'>[] {
   const questions: Omit<AssessmentQuestion, 'id'>[] = [];
+  
+  // Strict word-boundary regex patterns for pre/post test detection
+  const preTestPattern = /\bpre[\s\-_]*test\b/i;
+  const postTestPattern = /\bpost[\s\-_]*test\b/i;
   
   // 1. Determine Module number from filename (e.g. Post Test M1.docx -> Module 1)
   const modMatch = filename.match(/M(?:odul)?\s*(\d+)/i);
   const moduleAssociation = modMatch ? parseInt(modMatch[1], 10) : null;
   
   // 2. Determine Pre-Test or Post-Test
-  const lowerFilename = filename.toLowerCase();
-  const hasPost = lowerFilename.includes("post");
-  const hasPre = lowerFilename.includes("pre");
-  
   let menuType: 'pre_test' | 'post_test';
-  if (hasPost && !hasPre) {
-    menuType = 'post_test';
-  } else if (hasPre && !hasPost) {
-    menuType = 'pre_test';
+  
+  if (forceMenuType) {
+    // Manual override from user
+    menuType = forceMenuType;
   } else {
-    // Ambiguous filename or both - scan document content (first 15 paragraphs)
-    const contentSample = paragraphs.slice(0, 15).join(' ').toLowerCase();
-    const contentHasPost = contentSample.includes('post test') || contentSample.includes('post-test') || (!contentSample.includes('pre test') && !contentSample.includes('pre-test') && contentSample.includes('post'));
-    const contentHasPre = contentSample.includes('pre test') || contentSample.includes('pre-test') || contentSample.includes('pre');
+    const lowerFilename = filename.toLowerCase();
+    const filenameIsPre = preTestPattern.test(lowerFilename);
+    const filenameIsPost = postTestPattern.test(lowerFilename);
     
-    if (contentHasPost && !contentHasPre) {
+    if (filenameIsPost && !filenameIsPre) {
       menuType = 'post_test';
-    } else if (contentHasPre && !contentHasPost) {
+    } else if (filenameIsPre && !filenameIsPost) {
       menuType = 'pre_test';
     } else {
-      menuType = contentHasPre ? 'pre_test' : 'post_test';
+      // Filename is ambiguous - scan ALL non-empty paragraphs for section headers
+      let foundPre = false;
+      let foundPost = false;
+      
+      for (const p of paragraphs) {
+        const trimmed = p.trim();
+        if (!trimmed) continue;
+        if (preTestPattern.test(trimmed)) foundPre = true;
+        if (postTestPattern.test(trimmed)) foundPost = true;
+        if (foundPre && foundPost) break;
+      }
+      
+      if (foundPost && !foundPre) {
+        menuType = 'post_test';
+      } else if (foundPre) {
+        // Pre found (possibly with post too) - start with pre_test
+        // Dynamic section switching during parsing handles mixed documents
+        menuType = 'pre_test';
+      } else {
+        // No indicators found - default to pre_test
+        menuType = 'pre_test';
+      }
     }
   }
   
@@ -140,10 +164,18 @@ export function parsePrePostTest(paragraphs: string[], filename: string): Omit<A
       continue;
     }
     
+    // Dynamically detect Pre-Test / Post-Test section headers and update menuType
+    if (preTestPattern.test(text)) {
+      if (!forceMenuType) menuType = 'pre_test';
+      continue;
+    }
+    if (postTestPattern.test(text)) {
+      if (!forceMenuType) menuType = 'post_test';
+      continue;
+    }
+    
     // Skip general title headers
-    if (text.toLowerCase().startsWith("bank soal") || 
-        text.toLowerCase().startsWith("pre-test") || 
-        text.toLowerCase().startsWith("post-test")) {
+    if (text.toLowerCase().startsWith("bank soal")) {
       continue;
     }
 
