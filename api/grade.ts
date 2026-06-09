@@ -1,6 +1,7 @@
-import { verifyToken } from './auth.js';
+import { verifyToken, detectSupabaseSecret } from './auth.js';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from "@google/genai";
+import { SignJWT } from 'jose';
 
 // Initialize Supabase Client
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
@@ -50,7 +51,40 @@ export default async function handler(req: any, res: any) {
     const graderNim = tokenPayload.nim || tokenPayload.sub;
     const email = tokenPayload.email;
 
-    const db = createClient(supabaseUrl, token);
+    // Normalize app role
+    const rawAppRole = tokenPayload.user_role || tokenPayload.role;
+    let appRole = rawAppRole || 'praktikan';
+    if (appRole === 'koordinator') appRole = 'kordas';
+    if (appRole === 'authenticated' || appRole === 'anon') appRole = 'praktikan';
+
+    // Generate a new JWT token signed with Supabase JWT Secret if configured
+    let dbToken = token;
+    const supabaseSecret = await detectSupabaseSecret();
+    if (supabaseSecret) {
+      dbToken = await new SignJWT({
+        nim: tokenPayload.nim,
+        nama: tokenPayload.nama,
+        kelas: tokenPayload.kelas || '',
+        role: 'authenticated',
+        user_role: appRole,
+        email: tokenPayload.email || null,
+        iss: 'supabase',
+        sub: tokenPayload.nim || tokenPayload.sub,
+        aud: 'authenticated'
+      })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('15m')
+        .sign(supabaseSecret);
+    }
+
+    const db = createClient(supabaseUrl, supabaseServiceKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${dbToken}`
+        }
+      }
+    });
 
     let graderProfile = null;
     let roleError = null;

@@ -666,6 +666,7 @@ export const AssessmentPage: React.FC = () => {
                     {[1, 2, 3, 4, 5, 6].map(m => {
                       const preAttempt = studentAttempts.find(a => a.menu_type === 'pre_test' && resolveAttemptDetails(a).moduleAssociation === m);
                       const postAttempt = studentAttempts.find(a => a.menu_type === 'post_test' && resolveAttemptDetails(a).moduleAssociation === m);
+                      const pkAttempt = studentAttempts.find(a => a.menu_type === 'program_keterampilan' && resolveAttemptDetails(a).moduleAssociation === m);
                       const upAttempt = studentAttempts.find(a => a.menu_type === 'ujian_praktik');
 
                       const upQId = upAttempt?.selected_questions?.find(id => questionsMetadata[id]?.module_association === m);
@@ -705,6 +706,19 @@ export const AssessmentPage: React.FC = () => {
                               )}
                             </div>
                             <div className="flex items-center justify-between">
+                              <span className="font-bold text-zinc-500">Prog. Keterampilan</span>
+                              {pkAttempt ? (
+                                <button
+                                  onClick={() => handleViewRecapDetails(pkAttempt)}
+                                  className="flex items-center gap-2 text-rose-700 hover:underline font-extrabold"
+                                >
+                                  <span>{pkAttempt.status === 'graded' ? `${pkAttempt.final_score} Poin` : (pkAttempt.status === 'submitted' ? 'Dikumpulkan' : pkAttempt.status)}</span>
+                                </button>
+                              ) : (
+                                <span className="text-zinc-400">Belum Mulai</span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between">
                               <span className="font-bold text-zinc-500">Ujian Praktik</span>
                               {upAttempt ? (
                                 <button
@@ -724,40 +738,14 @@ export const AssessmentPage: React.FC = () => {
                       );
                     })}
                   </div>
-
-                  {(() => {
-                    const pkAttempt = studentAttempts.find(a => a.menu_type === 'program_keterampilan');
-                    return (
-                      <div className="bg-white border border-zinc-100 rounded-2xl p-5 shadow-2xs hover:border-zinc-200 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                          <h4 className="font-extrabold text-sm text-zinc-800 uppercase tracking-widest">
-                            Program Keterampilan (Studi Kasus)
-                          </h4>
-                          <p className="text-[10px] text-zinc-400 mt-1">Ujian coding mandiri membuat program fungsional sesuai petunjuk khusus.</p>
-                        </div>
-                        <div>
-                          {pkAttempt ? (
-                            <button
-                              onClick={() => handleViewRecapDetails(pkAttempt)}
-                              className="px-4 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold hover:bg-zinc-800 transition-all active:scale-95"
-                            >
-                              Lihat Detail: {pkAttempt.status === 'graded' ? `${pkAttempt.final_score} Poin` : (pkAttempt.status === 'submitted' ? 'Dikumpulkan' : pkAttempt.status)}
-                            </button>
-                          ) : (
-                            <span className="text-xs text-zinc-400 italic">Belum Mulai</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* MODUL SELECTION SCREEN FOR PRE/POST TEST */}
-        {assessmentType && !attempt && (assessmentType === 'pre_test' || assessmentType === 'post_test') && selectedModule === null && (
+        {/* MODUL SELECTION SCREEN FOR PRE/POST TEST / PROGRAM KETERAMPILAN */}
+        {assessmentType && !attempt && (assessmentType === 'pre_test' || assessmentType === 'post_test' || assessmentType === 'program_keterampilan') && selectedModule === null && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -766,7 +754,7 @@ export const AssessmentPage: React.FC = () => {
             <div className="text-center space-y-2">
               <h3 className="text-2xl font-black text-zinc-900">Pilih Modul Asesmen</h3>
               <p className="text-zinc-500 text-sm">
-                Pilih modul materi yang ingin Anda kerjakan untuk evaluasi **{assessmentType === 'pre_test' ? 'Pre-Test' : 'Post-Test'}**.
+                Pilih modul materi yang ingin Anda kerjakan untuk evaluasi **{assessmentType === 'pre_test' ? 'Pre-Test' : (assessmentType === 'post_test' ? 'Post-Test' : 'Program Keterampilan')}**.
               </p>
             </div>
 
@@ -853,7 +841,7 @@ export const AssessmentPage: React.FC = () => {
         )}
 
         {/* 3. EXAM CONFIRMATION SCREEN (Non-Token assessments or after token success) */}
-        {assessmentType && !attempt && (!questions || questions.length === 0) && (assessmentType !== 'ujian_praktik' || isTokenPassed) && ((assessmentType !== 'pre_test' && assessmentType !== 'post_test') || selectedModule !== null) && (
+        {assessmentType && !attempt && (!questions || questions.length === 0) && (assessmentType !== 'ujian_praktik' || isTokenPassed) && ((assessmentType !== 'pre_test' && assessmentType !== 'post_test' && assessmentType !== 'program_keterampilan') || selectedModule !== null) && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -888,7 +876,7 @@ export const AssessmentPage: React.FC = () => {
             <div className="flex gap-4">
               <button 
                 onClick={() => {
-                  if (assessmentType === 'pre_test' || assessmentType === 'post_test') {
+                  if (assessmentType === 'pre_test' || assessmentType === 'post_test' || assessmentType === 'program_keterampilan') {
                     setSelectedModule(null);
                   } else {
                     setAssessmentType(null);
