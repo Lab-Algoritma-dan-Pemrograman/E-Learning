@@ -375,7 +375,7 @@ export const assessmentService = {
   async getAllAttempts(menuType?: string): Promise<any[]> {
     let query = supabase
       .from('assessment_attempts')
-      .select('*, users(nama, kelas)')
+      .select('*, users(nama, kelas, jurusan)')
       .order('submitted_at', { ascending: false });
 
     if (menuType) {

@@ -394,17 +394,30 @@ export const MonitoringDashboard: React.FC = () => {
     s.kelas.toLowerCase().includes(searchFilter.toLowerCase())
   );
 
-  // Derive unique classes from attempts data
-  const uniqueClasses = [...new Set(attempts.map((a: any) => a.users?.kelas).filter(Boolean))];
+  // Derive unique classes from attempts and active sessions data
+  const uniqueClasses = [...new Set([
+    ...attempts.map((a: any) => a.users?.kelas || a.kelas),
+    ...sessions.map((s: any) => s.users?.kelas || s.kelas)
+  ].filter(Boolean))];
 
-  // Major detection from NIM prefix
+  // Major detection from NIM prefix with DB override support
   const getMajorFromNim = (nim: string) => {
     if (nim.startsWith('202515')) return 'Teknik Informatika';
     if (nim.startsWith('202516')) return 'Sistem Informasi';
     if (nim.startsWith('202517')) return 'Teknik Komputer';
     return 'Lainnya';
   };
-  const uniqueMajors = [...new Set(attempts.map((a: any) => getMajorFromNim(a.nim)).filter(Boolean))];
+  
+  const getMajorOfUser = (item: any) => {
+    const userObj = item.users || {};
+    if (userObj.jurusan) return userObj.jurusan;
+    return getMajorFromNim(item.nim);
+  };
+
+  const uniqueMajors = [...new Set([
+    ...attempts.map((a: any) => a.users?.jurusan || getMajorFromNim(a.nim)),
+    ...sessions.map((s: any) => s.users?.jurusan || getMajorFromNim(s.nim))
+  ].filter(Boolean))];
 
   // Deduplicate attempts: keep only latest per NIM
   const deduplicatedAttempts = (() => {
@@ -420,8 +433,11 @@ export const MonitoringDashboard: React.FC = () => {
 
   // Apply class and major filters
   const filteredAttempts = deduplicatedAttempts.filter(att => {
-    if (classFilter !== 'all' && att.users?.kelas !== classFilter) return false;
-    if (majorFilter !== 'all' && getMajorFromNim(att.nim) !== majorFilter) return false;
+    const userClass = att.users?.kelas || att.kelas;
+    const userMajor = att.users?.jurusan || getMajorFromNim(att.nim);
+
+    if (classFilter !== 'all' && userClass !== classFilter) return false;
+    if (majorFilter !== 'all' && userMajor !== majorFilter) return false;
     return true;
   });
 
@@ -431,8 +447,11 @@ export const MonitoringDashboard: React.FC = () => {
     const isStudent = !s.users || s.users.role === 'praktikan';
     if (!isOnline || !isStudent) return false;
     
-    if (classFilter !== 'all' && s.kelas !== classFilter) return false;
-    if (majorFilter !== 'all' && getMajorFromNim(s.nim) !== majorFilter) return false;
+    const userClass = s.users?.kelas || s.kelas;
+    const userMajor = s.users?.jurusan || getMajorFromNim(s.nim);
+
+    if (classFilter !== 'all' && userClass !== classFilter) return false;
+    if (majorFilter !== 'all' && userMajor !== majorFilter) return false;
     
     return true;
   });

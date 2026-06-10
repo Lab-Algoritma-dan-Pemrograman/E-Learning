@@ -63,7 +63,7 @@ export const monitoringService = {
     const fetchSessions = async () => {
       const { data, error } = await supabase
         .from('active_sessions')
-        .select('*, users(role)')
+        .select('*, users(role, kelas, jurusan)')
         .order('last_heartbeat', { ascending: false });
       if (!error && data) {
         onUpdate(data);

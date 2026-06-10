@@ -14,6 +14,7 @@ import { Level, Module, Lesson } from '../data/curriculum';
 import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings, forceResetGameQuestions } from '../services/gameService';
 import { Achievement, getAchievements } from '../services/achievementService';
+import { monitoringService } from '../services/monitoringService';
 import initialAchievements from '../data/achievements.json';
 
 interface LessonProgress {
@@ -73,6 +74,18 @@ export const AdminDashboard: React.FC = () => {
   const [questionFilters, setQuestionFilters] = useState({ language: 'all' as 'all' | 'c' | 'python' });
 
   const [resetLoading, setResetLoading] = useState(false);
+  const [editUserKelas, setEditUserKelas] = useState('');
+  const [editUserJurusan, setEditUserJurusan] = useState('');
+
+  useEffect(() => {
+    if (selectedUser) {
+      setEditUserKelas(selectedUser.kelas || '');
+      setEditUserJurusan(selectedUser.jurusan || '');
+    } else {
+      setEditUserKelas('');
+      setEditUserJurusan('');
+    }
+  }, [selectedUser]);
 
   const [showModal, setShowModal] = useState<{
     type: 'confirm' | 'alert';
@@ -882,6 +895,48 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleUpdateKelasJurusan = async () => {
+    if (!selectedUser?.nim || !currentUser) return;
+    try {
+      setResetLoading(true);
+      const { error } = await supabase
+        .from('users')
+        .update({
+          kelas: editUserKelas.trim(),
+          jurusan: editUserJurusan || null
+        })
+        .eq('nim', selectedUser.nim);
+
+      if (error) throw error;
+
+      await monitoringService.addAuditLog(
+        currentUser.nim,
+        currentUser.nama,
+        'access_modified',
+        `Mengubah kelas & jurusan peserta ${selectedUser.nama} (${selectedUser.nim}): Kelas=${editUserKelas.trim() || '—'}, Jurusan=${editUserJurusan || '—'}`
+      );
+
+      const updatedUser = {
+        ...selectedUser,
+        kelas: editUserKelas.trim(),
+        jurusan: editUserJurusan || null
+      };
+      setSelectedUser(updatedUser);
+      setUsers(prevUsers => prevUsers.map(u => u.nim === selectedUser.nim ? updatedUser : u));
+
+      setShowModal({
+        type: 'alert',
+        title: 'Berhasil',
+        message: `Kelas dan jurusan untuk ${selectedUser.nama} berhasil diperbarui.`
+      });
+    } catch (err: any) {
+      console.error(err);
+      setShowModal({ type: 'alert', title: 'Error', message: 'Gagal memperbarui kelas dan jurusan' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!canAccess || activeTab !== 'users') return;
 
@@ -901,6 +956,7 @@ export const AdminDashboard: React.FC = () => {
         nim: u.nim,
         nama: u.nama,
         kelas: u.kelas,
+        jurusan: u.jurusan,
         email: u.email,
         xp: u.xp || 0,
         level: u.level || 1,
@@ -1229,6 +1285,44 @@ export const AdminDashboard: React.FC = () => {
                           {selectedUser.streak}
                         </div>
                       </div>
+                    </div>
+
+                    {/* Kelas dan Jurusan */}
+                    <div className="space-y-3 p-4 bg-zinc-50 border border-zinc-100 rounded-2xl">
+                      <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pengaturan Kelas & Jurusan</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Kelas</label>
+                          <input
+                            type="text"
+                            placeholder="Contoh: IF-A"
+                            value={editUserKelas}
+                            onChange={(e) => setEditUserKelas(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-rose-700 focus:border-rose-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Jurusan</label>
+                          <select
+                            value={editUserJurusan}
+                            onChange={(e) => setEditUserJurusan(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-rose-700 focus:border-rose-700"
+                          >
+                            <option value="">Deteksi NIM</option>
+                            <option value="Teknik Informatika">Teknik Informatika</option>
+                            <option value="Sistem Informasi">Sistem Informasi</option>
+                            <option value="Teknik Komputer">Teknik Komputer</option>
+                          </select>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleUpdateKelasJurusan}
+                        disabled={resetLoading || (editUserKelas.trim() === (selectedUser.kelas || '') && editUserJurusan === (selectedUser.jurusan || ''))}
+                        className="w-full py-2 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold text-[10px] rounded-lg transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <Save size={10} />
+                        Simpan Perubahan
+                      </button>
                     </div>
 
                     {/* Admin/Editor Actions */}
