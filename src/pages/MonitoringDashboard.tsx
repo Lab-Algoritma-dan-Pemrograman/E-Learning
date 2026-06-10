@@ -403,31 +403,15 @@ export const MonitoringDashboard: React.FC = () => {
     s.kelas.toLowerCase().includes(searchFilter.toLowerCase())
   );
 
-  // Derive unique classes from attempts and active sessions data
+  // Derive unique classes from attempts and active sessions data of role === 'praktikan' (ignoring 'Staff')
   const uniqueClasses = [...new Set([
-    ...attempts.map((a: any) => a?.users?.kelas || a?.kelas),
-    ...sessions.map((s: any) => s?.users?.kelas || s?.kelas)
+    ...attempts.filter((a: any) => a?.users?.role === 'praktikan' && a?.users?.kelas?.toLowerCase() !== 'staff').map((a: any) => a?.users?.kelas || a?.kelas),
+    ...sessions.filter((s: any) => s?.users?.role === 'praktikan' && s?.users?.kelas?.toLowerCase() !== 'staff').map((s: any) => s?.users?.kelas || s?.kelas)
   ].filter(Boolean))];
 
-  // Major detection from NIM prefix with DB override support
-  const getMajorFromNim = (nim: string) => {
-    if (!nim || typeof nim !== 'string') return 'Lainnya';
-    if (nim.startsWith('202515')) return 'Teknik Informatika';
-    if (nim.startsWith('202516')) return 'Sistem Informasi';
-    if (nim.startsWith('202517')) return 'Teknik Komputer';
-    return 'Lainnya';
-  };
-  
-  const getMajorOfUser = (item: any) => {
-    if (!item) return 'Lainnya';
-    const userObj = item.users || {};
-    if (userObj.jurusan) return userObj.jurusan;
-    return getMajorFromNim(item.nim || '');
-  };
-
   const uniqueMajors = [...new Set([
-    ...attempts.map((a: any) => a?.users?.jurusan || getMajorFromNim(a?.nim || '')),
-    ...sessions.map((s: any) => s?.users?.jurusan || getMajorFromNim(s?.nim || ''))
+    ...attempts.filter((a: any) => a?.users?.role === 'praktikan').map((a: any) => a?.users?.jurusan),
+    ...sessions.filter((s: any) => s?.users?.role === 'praktikan').map((s: any) => s?.users?.jurusan)
   ].filter(Boolean))];
 
   // Deduplicate attempts: keep only latest per NIM
@@ -447,7 +431,7 @@ export const MonitoringDashboard: React.FC = () => {
   const filteredAttempts = deduplicatedAttempts.filter(att => {
     if (!att) return false;
     const userClass = att.users?.kelas || att.kelas;
-    const userMajor = att.users?.jurusan || getMajorFromNim(att.nim || '');
+    const userMajor = att.users?.jurusan;
 
     if (classFilter !== 'all' && userClass !== classFilter) return false;
     if (majorFilter !== 'all' && userMajor !== majorFilter) return false;
@@ -458,11 +442,11 @@ export const MonitoringDashboard: React.FC = () => {
   const onlineStudents = sessions.filter(s => {
     if (!s) return false;
     const isOnline = (Date.now() - new Date(s.last_heartbeat).getTime()) < 60000;
-    const isStudent = !s.users || s.users.role === 'praktikan';
+    const isStudent = s.users?.role === 'praktikan';
     if (!isOnline || !isStudent) return false;
     
     const userClass = s.users?.kelas || s.kelas;
-    const userMajor = s.users?.jurusan || getMajorFromNim(s.nim || '');
+    const userMajor = s.users?.jurusan;
 
     if (classFilter !== 'all' && userClass !== classFilter) return false;
     if (majorFilter !== 'all' && userMajor !== majorFilter) return false;

@@ -586,6 +586,9 @@ export const AssessmentPage: React.FC = () => {
                   const check = window.confirm("Ujian sedang berlangsung! Pindah halaman akan tetap menjalankan timer. Lanjutkan?");
                   if (!check) return;
                   setPage('dashboard');
+                } else if (user?.role === 'praktikan' && assessmentType !== null) {
+                  setSelectedModule(null);
+                  setAssessmentType(null);
                 } else if (selectedModule !== null) {
                   setSelectedModule(null);
                 } else if (assessmentType !== null) {
@@ -645,21 +648,36 @@ export const AssessmentPage: React.FC = () => {
                 desc="Menguji pemahaman awal Anda sebelum pelajaran dimulai. 5 soal: 1 Easy, 2 Medium, 2 Hard."
                 unlocked={user?.assessmentAccess?.pre_test ?? false}
                 duration={durations.pre_test}
-                onClick={() => setAssessmentType('pre_test')}
+                onClick={() => {
+                  setAssessmentType('pre_test');
+                  if (user?.role === 'praktikan') {
+                    setSelectedModule(user.level || 1);
+                  }
+                }}
               />
               <MenuCard 
                 title="Post-Test"
                 desc="Menguji penguasaan materi level. 3 soal: 1 Easy, 1 Medium, 1 Hard (Coding)."
                 unlocked={user?.assessmentAccess?.post_test ?? false}
                 duration={durations.post_test}
-                onClick={() => setAssessmentType('post_test')}
+                onClick={() => {
+                  setAssessmentType('post_test');
+                  if (user?.role === 'praktikan') {
+                    setSelectedModule(user.level || 1);
+                  }
+                }}
               />
               <MenuCard 
                 title="Program Keterampilan"
                 desc="Membuat program fungsional sesuai petunjuk khusus studi kasus."
                 unlocked={user?.assessmentAccess?.program_keterampilan ?? false}
                 duration={durations.program_keterampilan}
-                onClick={() => setAssessmentType('program_keterampilan')}
+                onClick={() => {
+                  setAssessmentType('program_keterampilan');
+                  if (user?.role === 'praktikan') {
+                    setSelectedModule(user.level || 1);
+                  }
+                }}
               />
               <MenuCard 
                 title="Ujian Praktik"
@@ -762,7 +780,7 @@ export const AssessmentPage: React.FC = () => {
         )}
 
         {/* MODUL SELECTION SCREEN FOR PRE/POST TEST / PROGRAM KETERAMPILAN */}
-        {assessmentType && !attempt && (assessmentType === 'pre_test' || assessmentType === 'post_test' || assessmentType === 'program_keterampilan') && selectedModule === null && (
+        {assessmentType && !attempt && (assessmentType === 'pre_test' || assessmentType === 'post_test' || assessmentType === 'program_keterampilan') && selectedModule === null && user?.role !== 'praktikan' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -893,7 +911,10 @@ export const AssessmentPage: React.FC = () => {
             <div className="flex gap-4">
               <button 
                 onClick={() => {
-                  if (assessmentType === 'pre_test' || assessmentType === 'post_test' || assessmentType === 'program_keterampilan') {
+                  if (user?.role === 'praktikan') {
+                    setSelectedModule(null);
+                    setAssessmentType(null);
+                  } else if (assessmentType === 'pre_test' || assessmentType === 'post_test' || assessmentType === 'program_keterampilan') {
                     setSelectedModule(null);
                   } else {
                     setAssessmentType(null);

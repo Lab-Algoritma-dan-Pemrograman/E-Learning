@@ -5,7 +5,8 @@ export const getLeaderboard = async (limitCount: number = 10, kelas?: string, ju
   try {
     let query = supabase
       .from('users')
-      .select('*');
+      .select('*')
+      .eq('role', 'praktikan');
 
     if (kelas) {
       query = query.eq('kelas', kelas);
@@ -47,6 +48,7 @@ export const getUserRank = async (xp: number, kelas?: string, jurusan?: string):
     let query = supabase
       .from('users')
       .select('*', { count: 'exact', head: true })
+      .eq('role', 'praktikan')
       .gt('xp', xp);
 
     if (kelas) {
