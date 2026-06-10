@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { CodeEditor } from '../components/CodeEditor';
+import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { useStore } from '../store/useStore';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { supabase } from '../lib/supabase';
@@ -236,6 +237,22 @@ export const AssessmentPage: React.FC = () => {
 
   const renderInstructionCards = (instructionText: string, qIdx?: number) => {
     const { instruction } = parseInstructionAndOutput(instructionText);
+    
+    // Check if the instruction has rich markdown formatting (headings, tables, code blocks, bold, etc.)
+    const isRichText = instruction.includes('###') || 
+                       instruction.includes('|') || 
+                       instruction.includes('**') || 
+                       instruction.includes('```') || 
+                       instruction.includes('<');
+
+    if (isRichText) {
+      return (
+        <div className="bg-zinc-50/50 border border-zinc-200/80 p-6 rounded-2xl hover:border-zinc-300 transition-colors">
+          <MarkdownRenderer content={instruction} />
+        </div>
+      );
+    }
+
     const parts = instruction
       .split(/(?=\r?\n\d+\.)|(?=\r?\n-\s)|(?:\r?\n){2,}/)
       .map(p => p.trim())
@@ -253,9 +270,9 @@ export const AssessmentPage: React.FC = () => {
               <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border border-rose-100">
                 {displayNum}
               </div>
-              <p className="text-zinc-700 text-sm leading-relaxed font-medium whitespace-pre-wrap flex-1">
-                {part}
-              </p>
+              <div className="text-zinc-700 text-sm leading-relaxed font-medium flex-1">
+                <MarkdownRenderer content={part} />
+              </div>
             </div>
           );
         })}
