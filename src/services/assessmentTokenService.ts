@@ -149,5 +149,17 @@ export const assessmentTokenService = {
       .eq('token', tokenStr);
 
     if (error) throw error;
+  },
+
+  /**
+   * Delete a token permanently (Kordas/Admin action)
+   */
+  async deleteToken(tokenStr: string): Promise<void> {
+    const { error } = await supabase
+      .from('assessment_tokens')
+      .delete()
+      .eq('token', tokenStr);
+
+    if (error) throw error;
   }
 };

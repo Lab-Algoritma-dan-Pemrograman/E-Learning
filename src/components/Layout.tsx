@@ -5,9 +5,30 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { clearToken } from '../services/tokenService';
 import { AchievementPopup } from './AchievementPopup';
+import { monitoringService } from '../services/monitoringService';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isSidebarOpen, toggleSidebar, user, page, setPage, unlockedAchievement, setUnlockedAchievement } = useStore();
+
+  React.useEffect(() => {
+    if (!user || user.role === 'praktikan') return;
+
+    const sendHeartbeat = () => {
+      const activity = `Mengakses Halaman ${page ? page.charAt(0).toUpperCase() + page.slice(1) : 'Dasbor'}`;
+      monitoringService.updateHeartbeat(
+        user.nim,
+        user.nama,
+        user.kelas || 'Staff',
+        activity,
+        null
+      );
+    };
+
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 30000);
+
+    return () => clearInterval(interval);
+  }, [user, page]);
 
   const isAssistantOrAbove = user?.role === 'admin' || user?.role === 'kordas' || user?.role === 'asisten';
   const isKordasOrAdmin = user?.role === 'admin' || user?.role === 'kordas' || user?.role === 'asisten';

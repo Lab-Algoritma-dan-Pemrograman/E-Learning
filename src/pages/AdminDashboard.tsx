@@ -810,21 +810,23 @@ export const AdminDashboard: React.FC = () => {
     const targetIsAdmin = selectedUser.role === 'admin';
     const targetIsKordas = selectedUser.role === 'kordas';
     const targetIsAsisten = selectedUser.role === 'asisten';
-    
-    if ((targetIsAdmin || targetIsKordas || targetIsAsisten) && !isCoordinator) {
+
+    // Only Kordas can delete Kordas and Admin
+    if ((targetIsKordas || targetIsAdmin) && currentUser?.role !== 'kordas') {
       setShowModal({
         type: 'alert',
         title: 'Aksi Ditolak',
-        message: 'Hanya Koordinator yang dapat menghapus akun Admin, Kordas, atau Asisten.',
+        message: 'Hanya Koordinator Asisten (Kordas) yang dapat menghapus akun Kordas atau Admin.',
       });
       return;
     }
 
-    if ((currentUser?.role === 'kordas' || currentUser?.role === 'asisten') && (targetIsAdmin || targetIsKordas || targetIsAsisten)) {
-       setShowModal({
+    // Asisten can only delete Praktikan (User)
+    if (currentUser?.role === 'asisten' && (targetIsKordas || targetIsAdmin || targetIsAsisten)) {
+      setShowModal({
         type: 'alert',
         title: 'Aksi Ditolak',
-        message: 'Kordas atau Asisten hanya dapat menghapus akun dengan role User.',
+        message: 'Asisten hanya dapat menghapus akun dengan role Praktikan.',
       });
       return;
     }
@@ -1237,7 +1239,7 @@ export const AdminDashboard: React.FC = () => {
                         <div className="flex gap-1 bg-zinc-100 p-1 rounded-xl flex-wrap animate-fade-in">
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'praktikan')}
-                            disabled={selectedUser.role === 'praktikan' || (!isCoordinator && selectedUser.role === 'admin')}
+                            disabled={selectedUser.role === 'praktikan' || (!isCoordinator && (selectedUser.role === 'admin' || selectedUser.role === 'kordas'))}
                             className={cn(
                               "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
                               selectedUser.role === 'praktikan' || (!selectedUser.role)
@@ -1249,7 +1251,7 @@ export const AdminDashboard: React.FC = () => {
                           </button>
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'asisten')}
-                            disabled={selectedUser.role === 'asisten' || (!isCoordinator && selectedUser.role === 'admin')}
+                            disabled={selectedUser.role === 'asisten' || (!isCoordinator && (selectedUser.role === 'admin' || selectedUser.role === 'kordas'))}
                             className={cn(
                               "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
                               selectedUser.role === 'asisten'
@@ -1261,12 +1263,13 @@ export const AdminDashboard: React.FC = () => {
                           </button>
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'kordas')}
-                            disabled={selectedUser.role === 'kordas' || (!isCoordinator && selectedUser.role === 'admin')}
+                            disabled={selectedUser.role === 'kordas' || !isCoordinator}
                             className={cn(
                               "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
                               selectedUser.role === 'kordas'
                                 ? "bg-blue-600 text-white shadow-sm" 
-                                : "text-zinc-500 hover:text-zinc-900"
+                                : "text-zinc-500 hover:text-zinc-900",
+                              !isCoordinator && "opacity-50 cursor-not-allowed"
                             )}
                           >
                             Kordas
@@ -1285,8 +1288,8 @@ export const AdminDashboard: React.FC = () => {
                             Admin
                           </button>
                         </div>
-                        {!isCoordinator && (selectedUser.role === 'admin') && (
-                          <p className="text-[10px] text-zinc-400 italic px-2">Hanya Koordinator yang dapat mengelola Admin.</p>
+                        {!isCoordinator && (selectedUser.role === 'admin' || selectedUser.role === 'kordas') && (
+                          <p className="text-[10px] text-zinc-400 italic px-2">Hanya Koordinator yang dapat mengelola Admin dan Kordas.</p>
                         )}
                       </div>
 

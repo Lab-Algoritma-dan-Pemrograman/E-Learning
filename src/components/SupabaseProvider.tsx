@@ -92,6 +92,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             nim: payload.nim,
             nama: payload.nama,
             kelas: payload.kelas,
+            jurusan: (payload as any).jurusan || null,
             email: payload.email || null,
             xp: 0,
             level: 1,
@@ -122,6 +123,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             nim: newProfile.nim,
             nama: newProfile.nama,
             kelas: newProfile.kelas,
+            jurusan: newProfile.jurusan,
             email: newProfile.email,
             xp: newProfile.xp,
             level: newProfile.level,
@@ -141,6 +143,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             nim: userProfile.nim,
             nama: userProfile.nama,
             kelas: userProfile.kelas,
+            jurusan: userProfile.jurusan || (payload as any).jurusan || null,
             email: userProfile.email,
             xp: userProfile.xp,
             level: userProfile.level,
@@ -152,10 +155,13 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             levelAccessOverrides: userProfile.level_access_overrides || {}
           };
 
-          // Update nama/kelas/role if changed in Web Utama
-          if (profileData.nama !== payload.nama || profileData.kelas !== payload.kelas || (payload.role && profileData.role !== payload.role)) {
+          // Update nama/kelas/role/jurusan if changed in Web Utama
+          const hasRoleChange = payload.role && profileData.role !== payload.role;
+          const hasJurusanChange = (payload as any).jurusan && profileData.jurusan !== (payload as any).jurusan;
+          if (profileData.nama !== payload.nama || profileData.kelas !== payload.kelas || hasRoleChange || hasJurusanChange) {
             const updates: any = { nama: payload.nama, kelas: payload.kelas };
             if (payload.role) updates.role = payload.role;
+            if ((payload as any).jurusan) updates.jurusan = (payload as any).jurusan;
 
             await supabase
               .from('users')
@@ -164,6 +170,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             profileData.nama = payload.nama;
             profileData.kelas = payload.kelas;
             if (payload.role) profileData.role = payload.role as any;
+            if ((payload as any).jurusan) profileData.jurusan = (payload as any).jurusan;
           }
         }
 

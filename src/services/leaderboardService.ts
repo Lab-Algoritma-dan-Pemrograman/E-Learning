@@ -1,11 +1,20 @@
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../store/useStore';
 
-export const getLeaderboard = async (limitCount: number = 10): Promise<UserProfile[]> => {
+export const getLeaderboard = async (limitCount: number = 10, kelas?: string, jurusan?: string): Promise<UserProfile[]> => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('users')
-      .select('*')
+      .select('*');
+
+    if (kelas) {
+      query = query.eq('kelas', kelas);
+    }
+    if (jurusan) {
+      query = query.eq('jurusan', jurusan);
+    }
+
+    const { data, error } = await query
       .order('xp', { ascending: false })
       .limit(limitCount);
 
@@ -15,6 +24,7 @@ export const getLeaderboard = async (limitCount: number = 10): Promise<UserProfi
       nim: u.nim,
       nama: u.nama,
       kelas: u.kelas,
+      jurusan: u.jurusan,
       email: u.email,
       xp: u.xp || 0,
       level: u.level || 1,
@@ -30,14 +40,23 @@ export const getLeaderboard = async (limitCount: number = 10): Promise<UserProfi
   }
 };
 
-export const getUserRank = async (xp: number): Promise<number | null> => {
+export const getUserRank = async (xp: number, kelas?: string, jurusan?: string): Promise<number | null> => {
   if (xp === 0) return null;
   
   try {
-    const { count, error } = await supabase
+    let query = supabase
       .from('users')
       .select('*', { count: 'exact', head: true })
       .gt('xp', xp);
+
+    if (kelas) {
+      query = query.eq('kelas', kelas);
+    }
+    if (jurusan) {
+      query = query.eq('jurusan', jurusan);
+    }
+
+    const { count, error } = await query;
 
     if (error) throw error;
     return (count || 0) + 1;

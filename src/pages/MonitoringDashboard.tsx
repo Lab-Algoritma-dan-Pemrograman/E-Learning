@@ -120,8 +120,10 @@ export const MonitoringDashboard: React.FC = () => {
     }
   };
 
-  const [classFilter, setClassFilter] = useState<string>('all');
-  const [majorFilter, setMajorFilter] = useState<string>('all');
+  const [classFilter, setClassFilter] = useState<string>(user?.kelas || 'all');
+  const [majorFilter, setMajorFilter] = useState<string>(user?.jurusan || 'all');
+  const [logSearchQuery, setLogSearchQuery] = useState('');
+  const [logEventFilter, setLogEventFilter] = useState('all');
   const [questionsMetadata, setQuestionsMetadata] = useState<Record<string, { module_association: number | null; title: string; type: string }>>({});
 
   const resolveAttemptDetails = (att: any) => {
@@ -227,6 +229,28 @@ export const MonitoringDashboard: React.FC = () => {
       fetchTokens();
     } catch (e) {
       alert("Gagal menonaktifkan token.");
+    }
+  };
+
+  const handleDeleteToken = async (tokenStr: string) => {
+    if (!user) return;
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus token '${tokenStr}' secara permanen?`)) return;
+    try {
+      await assessmentTokenService.deleteToken(tokenStr);
+      await monitoringService.addAuditLog(user.nim, user.nama, 'access_modified', `Menghapus token ujian '${tokenStr}'`);
+      fetchTokens();
+    } catch (err: any) {
+      alert(`Gagal menghapus token: ${err.message}`);
+    }
+  };
+
+  const handleDeleteAuditLog = async (logId: string) => {
+    if (!user) return;
+    if (!window.confirm("Apakah Anda yakin ingin menghapus log audit ini?")) return;
+    try {
+      await monitoringService.deleteAuditLog(logId);
+    } catch (err: any) {
+      alert(`Gagal menghapus log: ${err.message}`);
     }
   };
 
@@ -401,8 +425,39 @@ export const MonitoringDashboard: React.FC = () => {
     return true;
   });
 
-  // Online sessions (heartbeat < 60s)
-  const onlineSessions = sessions.filter(s => (Date.now() - new Date(s.last_heartbeat).getTime()) < 60000);
+  // Online students (heartbeat < 60s) filtered by role, class and major
+  const onlineStudents = sessions.filter(s => {
+    const isOnline = (Date.now() - new Date(s.last_heartbeat).getTime()) < 60000;
+    const isStudent = !s.users || s.users.role === 'praktikan';
+    if (!isOnline || !isStudent) return false;
+    
+    if (classFilter !== 'all' && s.kelas !== classFilter) return false;
+    if (majorFilter !== 'all' && getMajorFromNim(s.nim) !== majorFilter) return false;
+    
+    return true;
+  });
+
+  // Online staff (heartbeat < 60s)
+  const onlineStaff = sessions.filter(s => {
+    const isOnline = (Date.now() - new Date(s.last_heartbeat).getTime()) < 60000;
+    const isStaff = s.users && ['asisten', 'admin', 'kordas'].includes(s.users.role);
+    return isOnline && isStaff;
+  });
+
+  // Filter audit logs dynamically
+  const filteredAuditLogs = auditLogs.filter(log => {
+    if (logSearchQuery) {
+      const q = logSearchQuery.toLowerCase();
+      const matchName = log.nama?.toLowerCase().includes(q);
+      const matchNim = log.nim?.includes(q);
+      const matchDetails = log.details?.toLowerCase().includes(q);
+      if (!matchName && !matchNim && !matchDetails) return false;
+    }
+    
+    if (logEventFilter !== 'all' && log.event_type !== logEventFilter) return false;
+    
+    return true;
+  });
 
   return (
     <Layout>
@@ -428,7 +483,9 @@ export const MonitoringDashboard: React.FC = () => {
         <div className="flex border-b border-zinc-200">
           <TabButton active={activeTab === 'monitoring'} icon={<Monitor size={16} />} label="Monitoring & Rekap Jawaban" onClick={() => setActiveTab('monitoring')} />
           <TabButton active={activeTab === 'tokens'} icon={<Key size={16} />} label="Token & Perizinan" onClick={() => setActiveTab('tokens')} />
-          <TabButton active={activeTab === 'logs'} icon={<Terminal size={16} />} label="Log Aktivitas Audit" onClick={() => setActiveTab('logs')} />
+          {user?.role !== 'asisten' && (
+            <TabButton active={activeTab === 'logs'} icon={<Terminal size={16} />} label="Log Aktivitas Audit" onClick={() => setActiveTab('logs')} />
+          )}
         </div>
 
         {/* 1. MONITORING TAB */}
@@ -436,7 +493,7 @@ export const MonitoringDashboard: React.FC = () => {
           <div className="space-y-8">
             {/* Live Online Users count */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard title="Online Saat Ini" value={sessions.filter(s => (Date.now() - new Date(s.last_heartbeat).getTime()) < 60000).length} desc="Heartbeat terdeteksi < 1 menit" color="rose" />
+              <StatCard title="Online Saat Ini" value={onlineStudents.length} desc="Heartbeat terdeteksi < 1 menit" color="rose" />
               <StatCard title="Ujian Terkumpul" value={attempts.filter(a => a.status === 'submitted').length} desc="Siap untuk dinilai AI" color="emerald" />
               <StatCard title="Selesai Dinilai" value={attempts.filter(a => a.status === 'graded').length} desc="Skor telah tersimpan" color="blue" />
             </div>
@@ -657,53 +714,116 @@ export const MonitoringDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Tabel Mahasiswa Online Real-time */}
-            <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Mahasiswa Online Saat Ini
-                  </h3>
-                  <p className="text-xs text-zinc-500 mt-1">Menampilkan mahasiswa dengan heartbeat aktif {'<'} 1 menit.</p>
+            {/* Tabel Live Sessions Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Tabel Mahasiswa Online Real-time */}
+              <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-lg flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Mahasiswa Online Saat Ini
+                    </h3>
+                    <p className="text-xs text-zinc-500 mt-1">Mahasiswa dengan heartbeat aktif {'<'} 1 menit (sesuai filter).</p>
+                  </div>
+                  <span className="text-2xl font-black text-emerald-700">{onlineStudents.length}</span>
                 </div>
-                <span className="text-2xl font-black text-emerald-700">{onlineSessions.length}</span>
-              </div>
-              <div className="overflow-x-auto border border-zinc-100 rounded-2xl">
-                <table className="w-full text-left border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100">
-                      <th className="p-3">NIM</th>
-                      <th className="p-3">Nama</th>
-                      <th className="p-3">Kelas</th>
-                      <th className="p-3">Lokasi / Aktivitas</th>
-                      <th className="p-3 text-center">Terakhir Aktif</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 font-medium">
-                    {onlineSessions.length > 0 ? (
-                      onlineSessions.map(s => (
-                        <tr key={s.nim} className="hover:bg-zinc-50/50">
-                          <td className="p-3 font-mono text-xs text-zinc-600">{s.nim}</td>
-                          <td className="p-3 font-bold text-zinc-900">{s.nama}</td>
-                          <td className="p-3 text-zinc-600">{s.kelas}</td>
-                          <td className="p-3">
-                            <span className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-bold">
-                              {s.current_activity?.replace(/_/g, ' ').replace(/taking /i, 'Mengerjakan ').replace(/entering /i, 'Memasuki ').replace('on assessment menu', 'Menu Asesmen') || 'Dashboard'}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center text-xs text-zinc-400">
-                            {new Date(s.last_heartbeat).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'})}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} className="p-6 text-center text-zinc-500 italic">Tidak ada mahasiswa yang online saat ini.</td>
+                <div className="overflow-x-auto border border-zinc-100 rounded-2xl">
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100">
+                        <th className="p-3">NIM</th>
+                        <th className="p-3">Nama</th>
+                        <th className="p-3">Kelas</th>
+                        <th className="p-3">Lokasi / Aktivitas</th>
+                        <th className="p-3 text-center">Terakhir Aktif</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 font-medium">
+                      {onlineStudents.length > 0 ? (
+                        onlineStudents.map(s => (
+                          <tr key={s.nim} className="hover:bg-zinc-50/50">
+                            <td className="p-3 font-mono text-xs text-zinc-600">{s.nim}</td>
+                            <td className="p-3 font-bold text-zinc-900">{s.nama}</td>
+                            <td className="p-3 text-zinc-600">{s.kelas}</td>
+                            <td className="p-3">
+                              <span className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-bold">
+                                {s.current_activity?.replace(/_/g, ' ').replace(/taking /i, 'Mengerjakan ').replace(/entering /i, 'Memasuki ').replace('on assessment menu', 'Menu Asesmen') || 'Dashboard'}
+                              </span>
+                            </td>
+                            <td className="p-3 text-center text-xs text-zinc-400">
+                              {new Date(s.last_heartbeat).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'})}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="p-6 text-center text-zinc-500 italic">Tidak ada mahasiswa yang online saat ini.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Tabel Asisten & Admin Online */}
+              <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-lg flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+                      Asisten & Admin Online
+                    </h3>
+                    <p className="text-xs text-zinc-500 mt-1">Staf laboratorium yang sedang aktif di sistem.</p>
+                  </div>
+                  <span className="text-2xl font-black text-blue-700">{onlineStaff.length}</span>
+                </div>
+                <div className="overflow-x-auto border border-zinc-100 rounded-2xl">
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100">
+                        <th className="p-3">Nama</th>
+                        <th className="p-3">Peran</th>
+                        <th className="p-3">Aktivitas</th>
+                        <th className="p-3 text-center">Terakhir Aktif</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 font-medium">
+                      {onlineStaff.length > 0 ? (
+                        onlineStaff.map(s => (
+                          <tr key={s.nim} className="hover:bg-zinc-50/50">
+                            <td className="p-3">
+                              <div className="font-bold text-zinc-900">{s.nama}</div>
+                              <div className="text-xs text-zinc-400 font-mono">{s.nim}</div>
+                            </td>
+                            <td className="p-3">
+                              <span className={cn(
+                                "text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider",
+                                s.users?.role === 'kordas' ? "bg-rose-50 text-rose-700 border border-rose-100" :
+                                s.users?.role === 'admin' ? "bg-purple-50 text-purple-700 border border-purple-100" :
+                                "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                              )}>
+                                {s.users?.role === 'kordas' ? 'Kordas' : s.users?.role === 'admin' ? 'Admin' : 'Asisten'}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className="text-xs px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-full font-bold">
+                                {s.current_activity || 'Dashboard'}
+                              </span>
+                            </td>
+                            <td className="p-3 text-center text-xs text-zinc-400">
+                              {new Date(s.last_heartbeat).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'})}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="p-6 text-center text-zinc-500 italic">Tidak ada asisten/admin yang online saat ini.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -774,13 +894,21 @@ export const MonitoringDashboard: React.FC = () => {
                                 {t.status}
                               </span>
                             </td>
-                            <td className="p-3 text-center">
+                            <td className="p-3 text-center flex items-center justify-center gap-2.5">
                               {t.status === 'active' && (
                                 <button 
                                   onClick={() => handleDeactivateToken(t.token)}
-                                  className="text-xs text-red-600 hover:underline font-bold"
+                                  className="text-xs text-zinc-600 hover:text-zinc-900 font-bold"
                                 >
                                   Matikan
+                                </button>
+                              )}
+                              {['admin', 'kordas'].includes(user?.role || '') && (
+                                <button 
+                                  onClick={() => handleDeleteToken(t.token)}
+                                  className="text-xs text-red-600 hover:text-red-800 font-bold"
+                                >
+                                  Hapus
                                 </button>
                               )}
                             </td>
@@ -910,34 +1038,78 @@ export const MonitoringDashboard: React.FC = () => {
         )}
 
         {/* 3. AUDIT LOGS TAB */}
-        {activeTab === 'logs' && (
-          <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
-            <h3 className="font-bold text-lg flex items-center gap-2">
-              <Terminal size={18} className="text-rose-700" />
-              Stream Log Audit Aktivitas
-            </h3>
+        {activeTab === 'logs' && user?.role !== 'asisten' && (
+          <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <Terminal size={18} className="text-rose-700" />
+                Stream Log Audit Aktivitas
+              </h3>
+            </div>
+
+            {/* Filter & Search Controls */}
+            <div className="flex flex-col sm:flex-row gap-4 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Cari berdasarkan nama, NIM, atau detail..."
+                  value={logSearchQuery}
+                  onChange={(e) => setLogSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-xl outline-none focus:border-rose-700 text-sm font-medium"
+                />
+              </div>
+              <div className="w-full sm:w-48">
+                <select
+                  value={logEventFilter}
+                  onChange={(e) => setLogEventFilter(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-xl outline-none focus:border-rose-700 text-sm font-bold"
+                >
+                  <option value="all">Semua Event</option>
+                  <option value="login">Login</option>
+                  <option value="logout">Logout</option>
+                  <option value="start_test">Start Test</option>
+                  <option value="submit_test">Submit Test</option>
+                  <option value="token_generated">Token Generated</option>
+                  <option value="token_used">Token Used</option>
+                  <option value="access_modified">Access Modified</option>
+                  <option value="ai_grading">AI Grading</option>
+                </select>
+              </div>
+            </div>
+
             <div className="bg-zinc-900 text-zinc-300 font-mono text-xs rounded-2xl p-6 h-[450px] overflow-y-auto space-y-3 custom-scrollbar">
-              {auditLogs.length > 0 ? (
-                auditLogs.map((log, i) => (
-                  <div key={i} className="flex items-start gap-4">
-                    <span className="text-zinc-500 shrink-0 select-none">
-                      [{new Date(log.timestamp).toLocaleTimeString()}]
-                    </span>
-                    <span className={cn(
-                      "font-bold shrink-0",
-                      log.event_type === 'login' ? "text-blue-400" :
-                      log.event_type === 'start_test' ? "text-amber-400" :
-                      log.event_type === 'submit_test' ? "text-emerald-400" :
-                      log.event_type === 'token_generated' ? "text-purple-400" : "text-zinc-400"
-                    )}>
-                      {log.event_type.toUpperCase().replace('_', ' ')}
-                    </span>
-                    <span className="text-zinc-400 shrink-0 font-bold">{log.nama} ({log.nim}):</span>
-                    <span className="text-zinc-200">{log.details}</span>
+              {filteredAuditLogs.length > 0 ? (
+                filteredAuditLogs.map((log, i) => (
+                  <div key={log.id || i} className="flex items-start gap-4 justify-between group">
+                    <div className="flex items-start gap-4 flex-1">
+                      <span className="text-zinc-500 shrink-0 select-none">
+                        [{new Date(log.timestamp).toLocaleTimeString()}]
+                      </span>
+                      <span className={cn(
+                        "font-bold shrink-0",
+                        log.event_type === 'login' ? "text-blue-400" :
+                        log.event_type === 'start_test' ? "text-amber-400" :
+                        log.event_type === 'submit_test' ? "text-emerald-400" :
+                        log.event_type === 'token_generated' ? "text-purple-400" : "text-zinc-400"
+                      )}>
+                        {log.event_type.toUpperCase().replace('_', ' ')}
+                      </span>
+                      <span className="text-zinc-400 shrink-0 font-bold">{log.nama} ({log.nim}):</span>
+                      <span className="text-zinc-200 flex-1">{log.details}</span>
+                    </div>
+                    {user?.role === 'kordas' && log.id && (
+                      <button
+                        onClick={() => handleDeleteAuditLog(log.id!)}
+                        className="text-red-500 hover:text-red-400 font-bold text-[10px] uppercase shrink-0 transition-colors ml-4"
+                      >
+                        Hapus
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
-                <div className="text-zinc-600 italic">Menunggu log audit sistem...</div>
+                <div className="text-zinc-600 italic">Tidak ada log aktivitas audit yang cocok.</div>
               )}
             </div>
           </div>

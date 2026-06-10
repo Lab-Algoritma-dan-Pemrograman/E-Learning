@@ -13,9 +13,11 @@ export const Leaderboard: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      const isStudent = user?.role === 'praktikan';
+      const limit = isStudent ? 3 : 20;
       const [topLeaders, rank] = await Promise.all([
-        getLeaderboard(20),
-        user ? getUserRank(user.xp) : Promise.resolve(null)
+        getLeaderboard(limit, isStudent ? user.kelas : undefined, isStudent ? user.jurusan : undefined),
+        user ? getUserRank(user.xp, isStudent ? user.kelas : undefined, isStudent ? user.jurusan : undefined) : Promise.resolve(null)
       ]);
       setLeaders(topLeaders);
       setUserRank(rank);
@@ -41,7 +43,11 @@ export const Leaderboard: React.FC = () => {
       <div className="max-w-4xl mx-auto space-y-8 pb-12">
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">Papan Peringkat Global</h1>
-          <p className="text-zinc-500">Lihat peringkat Anda dibandingkan dengan penjelajah Python lainnya di seluruh dunia.</p>
+          <p className="text-zinc-500">
+            {user?.role === 'praktikan' 
+              ? `Top 3 Penjelajah Python di Kelas ${user.kelas} - ${user.jurusan || ''}`
+              : 'Lihat peringkat Anda dibandingkan dengan penjelajah Python lainnya.'}
+          </p>
         </div>
 
         {/* Top 3 Podium */}

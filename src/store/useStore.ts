@@ -6,6 +6,7 @@ export interface UserProfile {
   nim: string;
   nama: string;
   kelas: string;
+  jurusan?: string | null;
   email?: string | null;
   photoURL?: string | null;
   xp: number;

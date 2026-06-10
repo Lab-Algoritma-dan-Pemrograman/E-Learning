@@ -7,6 +7,9 @@ export interface ActiveSession {
   last_heartbeat: string;
   current_activity: string;
   attempt_id?: string | null;
+  users?: {
+    role: 'admin' | 'kordas' | 'asisten' | 'praktikan';
+  } | null;
 }
 
 export interface ActivityLog {
@@ -55,12 +58,12 @@ export const monitoringService = {
   /**
    * Subscribes to changes in active sessions to display live online users
    */
-  subscribeActiveSessions(onUpdate: (sessions: ActiveSession[]) => void) {
+  subscribeActiveSessions(onUpdate: (sessions: any[]) => void) {
     // 1. Initial fetch
     const fetchSessions = async () => {
       const { data, error } = await supabase
         .from('active_sessions')
-        .select('*')
+        .select('*, users(role)')
         .order('last_heartbeat', { ascending: false });
       if (!error && data) {
         onUpdate(data);
@@ -147,7 +150,7 @@ export const monitoringService = {
     const channel = supabase
       .channel('realtime:activity_logs')
       .on('postgres_changes', {
-        event: 'INSERT',
+        event: '*', // Listen to INSERT, DELETE, etc.
         schema: 'public',
         table: 'activity_logs'
       }, () => {
@@ -158,5 +161,17 @@ export const monitoringService = {
     return () => {
       supabase.removeChannel(channel);
     };
+  },
+
+  /**
+   * Deletes a specific audit log by ID
+   */
+  async deleteAuditLog(logId: string): Promise<void> {
+    const { error } = await supabase
+      .from('activity_logs')
+      .delete()
+      .eq('id', logId);
+
+    if (error) throw error;
   }
 };

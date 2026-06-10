@@ -234,7 +234,7 @@ export const AssessmentPage: React.FC = () => {
     };
   };
 
-  const renderInstructionCards = (instructionText: string) => {
+  const renderInstructionCards = (instructionText: string, qIdx?: number) => {
     const { instruction } = parseInstructionAndOutput(instructionText);
     const parts = instruction
       .split(/(?=\r?\n\d+\.)|(?=\r?\n-\s)|(?:\r?\n){2,}/)
@@ -243,19 +243,22 @@ export const AssessmentPage: React.FC = () => {
 
     return (
       <div className="space-y-3">
-        {parts.map((part, idx) => (
-          <div 
-            key={idx} 
-            className="bg-zinc-50/50 border border-zinc-200/80 p-4.5 rounded-2xl shadow-xs flex items-start gap-3.5 hover:border-zinc-300 transition-colors"
-          >
-            <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border border-rose-100">
-              {idx + 1}
+        {parts.map((part, idx) => {
+          const displayNum = qIdx !== undefined ? qIdx + 1 : idx + 1;
+          return (
+            <div 
+              key={idx} 
+              className="bg-zinc-50/50 border border-zinc-200/80 p-4.5 rounded-2xl shadow-xs flex items-start gap-3.5 hover:border-zinc-300 transition-colors"
+            >
+              <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border border-rose-100">
+                {displayNum}
+              </div>
+              <p className="text-zinc-700 text-sm leading-relaxed font-medium whitespace-pre-wrap flex-1">
+                {part}
+              </p>
             </div>
-            <p className="text-zinc-700 text-sm leading-relaxed font-medium whitespace-pre-wrap flex-1">
-              {part}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -322,6 +325,15 @@ export const AssessmentPage: React.FC = () => {
   const isHandlingBlur = useRef(false);
   const tabSwitchCountRef = useRef(0);
   const isReloading = useRef(false);
+  const isSubmitting = useRef(false);
+  const isPageJustMounted = useRef(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      isPageJustMounted.current = false;
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!attempt || attempt.status !== 'in_progress' || !user) return;
@@ -329,7 +341,7 @@ export const AssessmentPage: React.FC = () => {
     tabSwitchCountRef.current = attempt.tab_switch_count || 0;
 
     const handleTabSwitch = async () => {
-      if (isReloading.current) return;
+      if (isReloading.current || isSubmitting.current || isPageJustMounted.current) return;
       if (isHandlingBlur.current) return;
       isHandlingBlur.current = true;
 
@@ -493,6 +505,7 @@ export const AssessmentPage: React.FC = () => {
   };
 
   const handleAutoSubmit = async () => {
+    isSubmitting.current = true;
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     if (!attempt) return;
     
@@ -516,8 +529,12 @@ export const AssessmentPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    isSubmitting.current = true;
     const confirm = window.confirm("Apakah Anda yakin ingin menyelesaikan dan mengirimkan asesmen ini?");
-    if (!confirm || !attempt) return;
+    if (!confirm || !attempt) {
+      isSubmitting.current = false;
+      return;
+    }
 
     setLoading(true);
     try {
@@ -915,7 +932,7 @@ export const AssessmentPage: React.FC = () => {
                   </span>
                 </div>
                 <h3 className="text-xl font-black text-zinc-900">{questions[0]?.title}</h3>
-                {renderInstructionCards(questions[0]?.instruction)}
+                {renderInstructionCards(questions[0]?.instruction, 0)}
                 {questions[0]?.flowchart_url && (
                   <div className="pt-2">
                     <ImagePreview url={questions[0].flowchart_url} label="Gambar Pendukung / SS Kode" />
@@ -1038,7 +1055,7 @@ export const AssessmentPage: React.FC = () => {
                       </span>
                     </div>
                     <h3 className="text-xl font-black">{activeQuestion.title}</h3>
-                    {renderInstructionCards(activeQuestion.instruction)}
+                    {renderInstructionCards(activeQuestion.instruction, activeQuestionIdx)}
                     {activeQuestion.flowchart_url && (
                       <div className="pt-2">
                         <ImagePreview url={activeQuestion.flowchart_url} label={activeQuestion.type === 'flowchart_translation' ? "Gambar Flowchart" : "Gambar Lampiran Soal"} />
@@ -1180,7 +1197,7 @@ export const AssessmentPage: React.FC = () => {
                   </div>
 
                   {/* Instruction Cards */}
-                  {renderInstructionCards(activeQuestion.instruction)}
+                  {renderInstructionCards(activeQuestion.instruction, activeQuestionIdx)}
 
                   {/* Image/Screenshot Preview */}
                   {activeQuestion.flowchart_url && (
@@ -1308,7 +1325,7 @@ export const AssessmentPage: React.FC = () => {
                         {/* Instruction Cards */}
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Instruksi Soal</label>
-                          {renderInstructionCards(q.instruction)}
+                          {renderInstructionCards(q.instruction, idx)}
                         </div>
 
                         {/* Flowchart/Screenshot if any */}
