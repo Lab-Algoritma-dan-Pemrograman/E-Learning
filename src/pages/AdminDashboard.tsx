@@ -14,7 +14,6 @@ import { Level, Module, Lesson } from '../data/curriculum';
 import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings, forceResetGameQuestions } from '../services/gameService';
 import { Achievement, getAchievements } from '../services/achievementService';
-import { monitoringService } from '../services/monitoringService';
 import initialAchievements from '../data/achievements.json';
 
 interface LessonProgress {
@@ -33,17 +32,14 @@ export const AdminDashboard: React.FC = () => {
   const [userProgress, setUserProgress] = useState<LessonProgress[]>([]);
   const [loadingProgress, setLoadingProgress] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'users' | 'curriculum' | 'structure' | 'games' | 'grading'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'curriculum' | 'structure' | 'games'>('users');
   const [aiMaterial, setAiMaterial] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState('');
   const [generatedCurriculum, setGeneratedCurriculum] = useState<Level[] | null>(null);
 
-  // Grading Rules State
-  const [gradingRules, setGradingRules] = useState<Record<string, any>>({});
-  const [loadingGradingRules, setLoadingGradingRules] = useState(false);
-  const [savingGradingRules, setSavingGradingRules] = useState(false);
+  
 
   const [currentCurriculum, setCurrentCurriculum] = useState<Level[]>([]);
   const [draftCurriculum, setDraftCurriculum] = useState<Level[]>([]);
@@ -133,26 +129,6 @@ export const AdminDashboard: React.FC = () => {
     fetchGameData();
   }, [canAccess, activeTab]);
 
-  // Fetch grading rules when grading tab is selected
-  useEffect(() => {
-    if (!canAccess || activeTab !== 'grading') return;
-    const fetchGradingRules = async () => {
-      setLoadingGradingRules(true);
-      try {
-        const { data, error } = await supabase.from('assessment_grading_rules').select('*');
-        if (data) {
-          const rulesMap: Record<string, any> = {};
-          data.forEach((row: any) => { rulesMap[row.id] = row.rules; });
-          setGradingRules(rulesMap);
-        }
-      } catch (e) {
-        console.error('Failed to fetch grading rules:', e);
-      } finally {
-        setLoadingGradingRules(false);
-      }
-    };
-    fetchGradingRules();
-  }, [canAccess, activeTab]);
 
   useEffect(() => {
     // Sinkronisasi pertama kali ke draft saat membuka tab structure
@@ -883,71 +859,6 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleUpdateUserKelas = async (nim: string, newKelas: string) => {
-    const trimmed = newKelas.trim();
-    const targetUser = users.find(u => u.nim === nim);
-    if (!targetUser || trimmed === (targetUser.kelas || '')) return;
-
-    try {
-      setResetLoading(true);
-      const { error } = await supabase
-        .from('users')
-        .update({ kelas: trimmed })
-        .eq('nim', nim);
-
-      if (error) throw error;
-
-      await monitoringService.addAuditLog(
-        currentUser?.nim || 'system',
-        currentUser?.nama || 'System',
-        'access_modified',
-        `Mengubah kelas peserta ${targetUser.nama} (${nim}) menjadi: ${trimmed || '—'}`
-      );
-
-      setUsers(prevUsers => prevUsers.map(u => u.nim === nim ? { ...u, kelas: trimmed } : u));
-      if (selectedUser?.nim === nim) {
-        setSelectedUser(prev => prev ? { ...prev, kelas: trimmed } : null);
-      }
-    } catch (err) {
-      console.error(err);
-      setShowModal({ type: 'alert', title: 'Error', message: 'Gagal memperbarui kelas' });
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const handleUpdateUserJurusan = async (nim: string, newJurusan: string) => {
-    const targetUser = users.find(u => u.nim === nim);
-    if (!targetUser || newJurusan === (targetUser.jurusan || '')) return;
-
-    try {
-      setResetLoading(true);
-      const val = newJurusan || null;
-      const { error } = await supabase
-        .from('users')
-        .update({ jurusan: val })
-        .eq('nim', nim);
-
-      if (error) throw error;
-
-      await monitoringService.addAuditLog(
-        currentUser?.nim || 'system',
-        currentUser?.nama || 'System',
-        'access_modified',
-        `Mengubah jurusan peserta ${targetUser.nama} (${nim}) menjadi: ${newJurusan || '—'}`
-      );
-
-      setUsers(prevUsers => prevUsers.map(u => u.nim === nim ? { ...u, jurusan: val } : u));
-      if (selectedUser?.nim === nim) {
-        setSelectedUser(prev => prev ? { ...prev, jurusan: val } : null);
-      }
-    } catch (err) {
-      console.error(err);
-      setShowModal({ type: 'alert', title: 'Error', message: 'Gagal memperbarui jurusan' });
-    } finally {
-      setResetLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (!canAccess || activeTab !== 'users') return;
@@ -1153,7 +1064,7 @@ export const AdminDashboard: React.FC = () => {
             <p className="text-zinc-500 mt-1">Kelola peserta, kurikulum, dan struktur kursus.</p>
           </div>
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-2xl">
-            {(['users', 'structure', 'games', 'curriculum', 'grading'] as const).map((tab) => (
+            {(['users', 'structure', 'games', 'curriculum'] as const).map((tab) => (
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -1162,7 +1073,7 @@ export const AdminDashboard: React.FC = () => {
                   activeTab === tab ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
                 )}
               >
-                {tab === 'users' ? 'Peserta' : tab === 'structure' ? 'Struktur' : tab === 'games' ? 'Game & Soal' : tab === 'curriculum' ? 'Kurikulum AI' : 'Atur Penilaian'}
+                {tab === 'users' ? 'Peserta' : tab === 'structure' ? 'Struktur' : tab === 'games' ? 'Game & Soal' : 'Kurikulum AI'}
               </button>
             ))}
           </div>
@@ -1232,32 +1143,11 @@ export const AdminDashboard: React.FC = () => {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                              <input
-                                type="text"
-                                defaultValue={u.kelas || ''}
-                                onBlur={(e) => handleUpdateUserKelas(u.nim, e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    handleUpdateUserKelas(u.nim, (e.target as HTMLInputElement).value);
-                                    (e.target as HTMLInputElement).blur();
-                                  }
-                                }}
-                                className="w-20 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-center text-xs focus:bg-white focus:outline-none focus:border-rose-700 font-bold"
-                                placeholder="—"
-                              />
+                            <td className="px-6 py-4 text-center">
+                              <span className="text-xs font-bold text-zinc-600">{u.kelas || '—'}</span>
                             </td>
-                            <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                              <select
-                                value={u.jurusan || ''}
-                                onChange={(e) => handleUpdateUserJurusan(u.nim, e.target.value)}
-                                className="px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-xs focus:bg-white focus:outline-none focus:border-rose-700 font-bold text-center"
-                              >
-                                <option value="">Deteksi NIM</option>
-                                <option value="Teknik Informatika">Teknik Informatika</option>
-                                <option value="Sistem Informasi">Sistem Informasi</option>
-                                <option value="Teknik Komputer">Teknik Komputer</option>
-                              </select>
+                            <td className="px-6 py-4 text-center">
+                              <span className="text-xs font-bold text-zinc-600">{u.jurusan || '—'}</span>
                             </td>
                             <td className="px-6 py-4 text-center">
                               <div className="flex items-center justify-center gap-1 font-bold text-rose-800">
@@ -2430,280 +2320,6 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* ==================== GRADING RULES TAB ==================== */}
-        {activeTab === 'grading' && (
-          <div className="max-w-5xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-black">Atur Penilaian Asesmen</h2>
-                <p className="text-zinc-500 text-sm mt-1">Konfigurasi bobot kriteria penilaian untuk setiap tipe asesmen secara dinamis.</p>
-              </div>
-              <button
-                onClick={async () => {
-                  setSavingGradingRules(true);
-                  try {
-                    for (const [id, rules] of Object.entries(gradingRules)) {
-                      await supabase.from('assessment_grading_rules').upsert({ id, rules }, { onConflict: 'id' });
-                    }
-                    alert('✅ Aturan penilaian berhasil disimpan!');
-                  } catch (e: any) {
-                    alert('Gagal menyimpan: ' + e.message);
-                  } finally {
-                    setSavingGradingRules(false);
-                  }
-                }}
-                disabled={savingGradingRules}
-                className="px-6 py-3 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold rounded-xl shadow-md shadow-rose-700/10 transition-all active:scale-95 flex items-center gap-2 text-sm"
-              >
-                {savingGradingRules ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                Simpan Semua Perubahan
-              </button>
-            </div>
-
-            {loadingGradingRules ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 size={32} className="animate-spin text-rose-700" />
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {/* Program Keterampilan */}
-                <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-lg">Program Keterampilan</h3>
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs font-bold text-zinc-400">Total Maks Poin:</label>
-                      <input
-                        type="number"
-                        value={gradingRules.program_keterampilan?.total_max_score ?? 85}
-                        onChange={(e) => {
-                          const updated = { ...gradingRules };
-                          updated.program_keterampilan = { ...updated.program_keterampilan, total_max_score: Number(e.target.value) };
-                          setGradingRules({ ...updated });
-                        }}
-                        className="w-20 text-center py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div className="overflow-x-auto border border-zinc-100 rounded-2xl">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100">
-                          <th className="p-3 text-left">No</th>
-                          <th className="p-3 text-left">Kriteria</th>
-                          <th className="p-3 text-center w-32">Nilai</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-100">
-                        {(gradingRules.program_keterampilan?.criteria || []).map((c: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-zinc-50/50">
-                            <td className="p-3 font-bold text-zinc-500">{c.no}</td>
-                            <td className="p-3 text-zinc-800 font-medium">{c.label}</td>
-                            <td className="p-3 text-center">
-                              <input
-                                type="number"
-                                value={c.nilai}
-                                onChange={(e) => {
-                                  const updated = { ...gradingRules };
-                                  updated.program_keterampilan.criteria[idx].nilai = Number(e.target.value);
-                                  setGradingRules({ ...updated });
-                                }}
-                                className="w-20 text-center py-1.5 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50"
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Durasi (menit):</label>
-                    <input
-                      type="number"
-                      value={gradingRules.program_keterampilan?.duration_minutes || 90}
-                      onChange={(e) => {
-                        const updated = { ...gradingRules };
-                        updated.program_keterampilan = { ...updated.program_keterampilan, duration_minutes: Number(e.target.value) };
-                        setGradingRules({ ...updated });
-                      }}
-                      className="w-24 py-1.5 px-3 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Pre-Test & Post-Test */}
-                {['pre_test', 'post_test'].map(type => (
-                  <div key={type} className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-lg">{type === 'pre_test' ? 'Pre-Test' : 'Post-Test'}</h3>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <label className="text-xs font-bold text-zinc-400">Total Maks Poin:</label>
-                          <input
-                            type="number"
-                            value={gradingRules[type]?.total_max_score ?? 100}
-                            onChange={(e) => {
-                              const updated = { ...gradingRules };
-                              updated[type] = { ...updated[type], total_max_score: Number(e.target.value) };
-                              setGradingRules({ ...updated });
-                            }}
-                            className="w-20 text-center py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <label className="text-xs font-bold text-zinc-400">Durasi:</label>
-                          <input
-                            type="number"
-                            value={gradingRules[type]?.duration_minutes || 15}
-                            onChange={(e) => {
-                              const updated = { ...gradingRules };
-                              updated[type] = { ...updated[type], duration_minutes: Number(e.target.value) };
-                              setGradingRules({ ...updated });
-                            }}
-                            className="w-20 py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                          />
-                          <span className="text-xs text-zinc-400">mnt</span>
-                        </div>
-                      </div>
-                    </div>
-                    {['easy', 'medium', 'hard'].map(diff => {
-                      const diffData = gradingRules[type]?.difficulties?.[diff];
-                      if (!diffData) return null;
-                      return (
-                        <div key={diff} className="border border-zinc-100 rounded-2xl p-4 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className={cn(
-                              "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
-                              diff === 'easy' ? "bg-emerald-50 text-emerald-700" :
-                              diff === 'medium' ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
-                            )}>{diff}</span>
-                            <div className="flex items-center gap-3 text-xs text-zinc-500">
-                              <span>Jumlah Soal: <strong>{diffData.question_count}</strong></span>
-                              <span>Total Poin: <strong>{diffData.total_points}</strong></span>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            {Object.entries(diffData.criteria || {}).map(([key, val]: [string, any]) => (
-                              <div key={key} className="space-y-1">
-                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">{key.replace(/_/g, ' ')}</label>
-                                <input
-                                  type="number"
-                                  value={val}
-                                  onChange={(e) => {
-                                    const updated = { ...gradingRules };
-                                    updated[type].difficulties[diff].criteria[key] = Number(e.target.value);
-                                    setGradingRules({ ...updated });
-                                  }}
-                                  className="w-full py-1.5 px-3 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-
-                {/* Ujian Praktik */}
-                <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-lg">Ujian Praktik</h3>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-zinc-400">Total Maks Poin:</label>
-                        <input
-                          type="number"
-                          value={gradingRules.ujian_praktik?.total_max_score ?? 100}
-                          onChange={(e) => {
-                            const updated = { ...gradingRules };
-                            updated.ujian_praktik = { ...updated.ujian_praktik, total_max_score: Number(e.target.value) };
-                            setGradingRules({ ...updated });
-                          }}
-                          className="w-20 text-center py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-zinc-400">Durasi:</label>
-                        <input
-                          type="number"
-                          value={gradingRules.ujian_praktik?.duration_minutes || 120}
-                          onChange={(e) => {
-                            const updated = { ...gradingRules };
-                            updated.ujian_praktik = { ...updated.ujian_praktik, duration_minutes: Number(e.target.value) };
-                            setGradingRules({ ...updated });
-                          }}
-                          className="w-20 py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                        />
-                        <span className="text-xs text-zinc-400">mnt</span>
-                      </div>
-                    </div>
-                  </div>
-                  {['soal_1', 'soal_2', 'soal_3', 'soal_4', 'soal_5', 'soal_6'].map(section => {
-                    const sectionData = gradingRules.ujian_praktik?.[section] || {
-                      max_score: section === 'soal_6' ? 25 : 15,
-                      criteria: section === 'soal_6' ? {
-                        kesesuaian_sintaks: 5,
-                        dapat_berjalan_tanpa_error: 8,
-                        sesuai_petunjuk: 7,
-                        tepat_waktu: 5
-                      } : {
-                        kesesuaian_sintaks: 2,
-                        dapat_berjalan_tanpa_error: 5,
-                        sesuai_petunjuk: 5,
-                        tepat_waktu: 3
-                      }
-                    };
-                    return (
-                      <div key={section} className="border border-zinc-100 rounded-2xl p-4 space-y-3">
-                        <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
-                          <span className="text-xs font-bold text-zinc-600 uppercase">
-                            {section.replace('_', ' ').toUpperCase()} {section === 'soal_6' ? '(Flowchart to Program)' : '(Coding)'}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Poin Maks Soal:</label>
-                            <input
-                              type="number"
-                              value={sectionData.max_score}
-                              onChange={(e) => {
-                                const updated = { ...gradingRules };
-                                if (!updated.ujian_praktik[section]) {
-                                  updated.ujian_praktik[section] = JSON.parse(JSON.stringify(sectionData));
-                                }
-                                updated.ujian_praktik[section].max_score = Number(e.target.value);
-                                setGradingRules({ ...updated });
-                              }}
-                              className="w-16 py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-xs text-center"
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          {Object.entries(sectionData.criteria || {}).map(([key, val]: [string, any]) => (
-                            <div key={key} className="space-y-1">
-                              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">{key.replace(/_/g, ' ')}</label>
-                              <input
-                                type="number"
-                                value={val}
-                                onChange={(e) => {
-                                  const updated = { ...gradingRules };
-                                  if (!updated.ujian_praktik[section]) {
-                                    updated.ujian_praktik[section] = JSON.parse(JSON.stringify(sectionData));
-                                  }
-                                  updated.ujian_praktik[section].criteria[key] = Number(e.target.value);
-                                  setGradingRules({ ...updated });
-                                }}
-                                className="w-full py-1.5 px-3 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* ==================== LESSON EDITOR MODAL ==================== */}
         <AnimatePresence>

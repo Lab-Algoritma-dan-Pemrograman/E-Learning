@@ -16,8 +16,7 @@ import { CourseExplorer } from './pages/CourseExplorer';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AssessmentPage } from './pages/AssessmentPage';
-import { MonitoringDashboard } from './pages/MonitoringDashboard';
-import { QuestionBankDashboard } from './pages/QuestionBankDashboard';
+
 
 function AppContent() {
   const { user, page, setPage } = useStore();
@@ -47,8 +46,7 @@ function AppContent() {
         case 'profile': return <Profile />;
         case 'admin': return <AdminDashboard />;
         case 'assessments': return <AssessmentPage />;
-        case 'monitoring': return <MonitoringDashboard />;
-        case 'bank_soal': return <QuestionBankDashboard />;
+
         default: return <Dashboard />;
       }
     } catch (error) {
@@ -70,8 +68,7 @@ function AppContent() {
         if (href === '/profile') { e.preventDefault(); setPage('profile'); }
         if (href === '/admin') { e.preventDefault(); setPage('admin'); }
         if (href === '/assessments') { e.preventDefault(); setPage('assessments'); }
-        if (href === '/monitoring') { e.preventDefault(); setPage('monitoring'); }
-        if (href === '/bank_soal') { e.preventDefault(); setPage('bank_soal'); }
+
       }
     }}>
       {renderPage()}

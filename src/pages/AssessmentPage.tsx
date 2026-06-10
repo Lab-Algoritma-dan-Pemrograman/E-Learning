@@ -236,6 +236,19 @@ export const AssessmentPage: React.FC = () => {
   };
 
   const renderInstructionCards = (instructionText: string, qIdx?: number) => {
+    if (!instructionText) return null;
+
+    // New layout detection: contains terminal or output code blocks
+    const isNewLayout = instructionText.includes('```terminal') || instructionText.includes('```output');
+
+    if (isNewLayout) {
+      return (
+        <div className="bg-zinc-50/50 border border-zinc-200/80 p-6 rounded-2xl hover:border-zinc-300 transition-colors">
+          <MarkdownRenderer content={instructionText} />
+        </div>
+      );
+    }
+
     const { instruction } = parseInstructionAndOutput(instructionText);
     
     // Check if the instruction has rich markdown formatting (headings, tables, code blocks, bold, etc.)

@@ -1,38 +1,18 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, Sparkles, FileText, Monitor, Database } from 'lucide-react';
+import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { clearToken } from '../services/tokenService';
 import { AchievementPopup } from './AchievementPopup';
-import { monitoringService } from '../services/monitoringService';
+
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isSidebarOpen, toggleSidebar, user, page, setPage, unlockedAchievement, setUnlockedAchievement } = useStore();
 
-  React.useEffect(() => {
-    if (!user || user.role === 'praktikan') return;
 
-    const sendHeartbeat = () => {
-      const activity = `Mengakses Halaman ${page ? page.charAt(0).toUpperCase() + page.slice(1) : 'Dasbor'}`;
-      monitoringService.updateHeartbeat(
-        user.nim,
-        user.nama,
-        user.kelas || 'Staff',
-        activity,
-        null
-      );
-    };
 
-    sendHeartbeat();
-    const interval = setInterval(sendHeartbeat, 30000);
-
-    return () => clearInterval(interval);
-  }, [user, page]);
-
-  const isAssistantOrAbove = user?.role === 'admin' || user?.role === 'kordas' || user?.role === 'asisten';
   const isKordasOrAdmin = user?.role === 'admin' || user?.role === 'kordas' || user?.role === 'asisten';
-  const isAdmin = user?.role === 'admin' || user?.role === 'kordas';
 
   const handleLogout = async () => {
     try {
@@ -107,27 +87,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 />
               )}
 
-              {/* Monitoring Dashboard for Assistants and above */}
-              {isAssistantOrAbove && (
-                <SidebarItem 
-                  icon={<Monitor size={20} className="text-zinc-500" />} 
-                  label="Monitoring & Rekap" 
-                  href="/monitoring" 
-                  active={page === 'monitoring'} 
-                  onClick={(e) => { e.preventDefault(); setPage('monitoring'); }}
-                />
-              )}
-
-              {/* Question Bank for Kordas and above */}
-              {isKordasOrAdmin && (
-                <SidebarItem 
-                  icon={<Database size={20} className="text-zinc-500" />} 
-                  label="Bank Soal Asesmen" 
-                  href="/bank_soal" 
-                  active={page === 'bank_soal'} 
-                  onClick={(e) => { e.preventDefault(); setPage('bank_soal'); }}
-                />
-              )}
 
               {/* Admin Panel for Kordas and Admin */}
               {isKordasOrAdmin && (

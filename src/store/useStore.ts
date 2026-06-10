@@ -20,7 +20,7 @@ export interface UserProfile {
   assessmentAccess?: Record<string, boolean>;
 }
 
-type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin' | 'assessments' | 'monitoring' | 'bank_soal';
+type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin' | 'assessments';
 
 interface AppState {
   user: UserProfile | null;

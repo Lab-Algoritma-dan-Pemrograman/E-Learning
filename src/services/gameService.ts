@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { useStore } from '../store/useStore';
 
 export interface GameQuestion {
   id: string;
@@ -93,15 +94,22 @@ export const saveGameHistory = async (
       .single();
 
     if (userProfile) {
+      const newXp = userProfile.xp + history.xpEarned;
       const { error: userErr } = await supabase
         .from('users')
         .update({
-          xp: userProfile.xp + history.xpEarned,
+          xp: newXp,
           last_active: now
         })
         .eq('nim', userId);
 
       if (userErr) throw userErr;
+
+      // Optimistically update the local store so XP displays immediately in the header
+      const currentUser = useStore.getState().user;
+      if (currentUser && currentUser.nim === userId) {
+        useStore.getState().setUser({ ...currentUser, xp: newXp, lastActive: now });
+      }
     }
 
     console.log(`✅ Game result saved: +${history.xpEarned} XP for ${userId}`);

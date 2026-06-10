@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { UserProfile } from '../store/useStore';
+import { UserProfile, useStore } from '../store/useStore';
 import { reportProgressToSupabase, getOverallProgress, resetSupabaseProgress } from './centralApiService';
 import { Level } from '../data/curriculum';
 import { Achievement, checkAndUnlockAchievements } from './achievementService';
@@ -55,6 +55,9 @@ export const completeLesson = async (
       .eq('nim', user.nim);
 
     if (userError) throw userError;
+
+    // Optimistically update the local store so XP displays immediately in the header
+    useStore.getState().setUser({ ...user, xp: newXp, streak: streakUpdate, lastActive: new Date().toISOString() });
 
     // 4. Save progress record to Supabase
     const { error: progressError } = await supabase

@@ -8,6 +8,8 @@ import { supabase } from '../lib/supabase';
 import { Monitor, Key, Terminal, RefreshCw, CheckSquare, Square, Play, ShieldAlert, Clock, Loader2, Database, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { MarkdownRenderer } from '../components/MarkdownRenderer';
+
 
 export const MonitoringDashboard: React.FC = () => {
   const { user } = useStore();
@@ -133,7 +135,7 @@ export const MonitoringDashboard: React.FC = () => {
   }, [user]);
   const [logSearchQuery, setLogSearchQuery] = useState('');
   const [logEventFilter, setLogEventFilter] = useState('all');
-  const [questionsMetadata, setQuestionsMetadata] = useState<Record<string, { module_association: number | null; title: string; type: string }>>({});
+  const [questionsMetadata, setQuestionsMetadata] = useState<Record<string, { module_association: number | null; title: string; type: string; instruction?: string }>>({});
 
   const resolveAttemptDetails = (att: any) => {
     const questionIds = att.selected_questions || [];
@@ -165,14 +167,15 @@ export const MonitoringDashboard: React.FC = () => {
     const fetchQuestionsMetadata = async () => {
       const { data } = await supabase
         .from('assessment_questions')
-        .select('id, module_association, title, type');
+        .select('id, module_association, title, type, instruction');
       if (data) {
         const meta: Record<string, any> = {};
         data.forEach(q => {
           meta[q.id] = {
             module_association: q.module_association,
             title: q.title,
-            type: q.type
+            type: q.type,
+            instruction: q.instruction
           };
         });
         setQuestionsMetadata(meta);
@@ -397,11 +400,14 @@ export const MonitoringDashboard: React.FC = () => {
     return 'KOSONG';
   };
 
-  const filteredStudents = students.filter(s => 
-    s.nama.toLowerCase().includes(searchFilter.toLowerCase()) || 
-    s.nim.includes(searchFilter) ||
-    s.kelas.toLowerCase().includes(searchFilter.toLowerCase())
-  );
+  const filteredStudents = students.filter(s => {
+    const matchesSearch = s.nama.toLowerCase().includes(searchFilter.toLowerCase()) || 
+                          s.nim.includes(searchFilter) ||
+                          s.kelas.toLowerCase().includes(searchFilter.toLowerCase());
+    const matchesClass = classFilter === 'all' || s.kelas === classFilter;
+    const matchesMajor = majorFilter === 'all' || s.jurusan === majorFilter;
+    return matchesSearch && matchesClass && matchesMajor;
+  });
 
   // Derive unique classes from attempts and active sessions data of role === 'praktikan' (ignoring 'Staff')
   const uniqueClasses = [...new Set([
@@ -437,6 +443,23 @@ export const MonitoringDashboard: React.FC = () => {
     if (majorFilter !== 'all' && userMajor !== majorFilter) return false;
     return true;
   });
+
+  // Bulk choice helper variables & logic
+  const allSubmittedIds = filteredAttempts.flatMap(att => {
+    const studentSubmittedAttempts = attempts.filter(
+      a => a.nim === att.nim && (a.status === 'submitted' || a.status === 'graded')
+    );
+    return studentSubmittedAttempts.map(sa => sa.id);
+  });
+  const isAllSelected = allSubmittedIds.length > 0 && allSubmittedIds.every(id => selectedAttempts.includes(id));
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedAttempts(allSubmittedIds);
+    } else {
+      setSelectedAttempts([]);
+    }
+  };
 
   // Online students (heartbeat < 60s) filtered by role, class and major
   const onlineStudents = sessions.filter(s => {
@@ -585,7 +608,20 @@ export const MonitoringDashboard: React.FC = () => {
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
                     <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100">
-                      <th className="p-4 w-12 text-center">Pilih</th>
+                      <th className="p-4 w-16 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[10px] uppercase font-bold text-zinc-400">Pilih</span>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectAll(!isAllSelected)}
+                            className="text-rose-700 hover:scale-105 transition-transform flex items-center gap-1.5 text-[9px] font-bold bg-white border border-zinc-200 px-1.5 py-0.5 rounded shadow-sm"
+                            title={isAllSelected ? "Batal pilih semua" : "Pilih semua untuk dinilai"}
+                          >
+                            {isAllSelected ? <CheckSquare size={10} /> : <Square size={10} />}
+                            <span>SEMUA</span>
+                          </button>
+                        </div>
+                      </th>
                       <th className="p-4 w-64">Nama & Kelas</th>
                       <th className="p-4 w-44">Status Ujian</th>
                       <th className="p-4 text-center">{selectedMenu === 'ujian_praktik' ? 'Soal 1' : 'Modul 1'}</th>
@@ -1167,11 +1203,22 @@ export const MonitoringDashboard: React.FC = () => {
               <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar pr-2">
                 {inspectingAttempt.selected_questions?.map((qId: string, idx: number) => {
                   const ans = inspectingAttempt.answers?.[qId] || {};
+                  const qMeta = questionsMetadata[qId] || {};
                   return (
                     <div key={qId} className="border border-zinc-200 rounded-2xl p-4 bg-zinc-50 space-y-3">
-                      <h4 className="font-bold text-sm text-rose-800">
-                        {inspectingAttempt.menu_type === 'ujian_praktik' ? `Soal ${idx + 1}` : `Soal ${idx + 1} (Modul ${resolveAttemptDetails(inspectingAttempt).moduleAssociation || '?'})`} ({qId})
-                      </h4>
+                      <div>
+                        <h4 className="font-bold text-sm text-rose-800">
+                          {inspectingAttempt.menu_type === 'ujian_praktik' ? `Soal ${idx + 1}` : `Soal ${idx + 1} (Modul ${resolveAttemptDetails(inspectingAttempt).moduleAssociation || '?'})`} ({qId})
+                        </h4>
+                        {qMeta.title && (
+                          <div className="text-[11px] font-bold text-zinc-700 mt-1">{qMeta.title}</div>
+                        )}
+                        {qMeta.instruction && (
+                          <div className="mt-2 bg-white/80 border border-zinc-200/60 p-3 rounded-xl text-xs text-zinc-650 max-h-36 overflow-y-auto custom-scrollbar">
+                            <MarkdownRenderer content={qMeta.instruction} />
+                          </div>
+                        )}
+                      </div>
                       {ans.answerText?.trim() && (
                         <div className="space-y-1">
                           <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Jawaban Teks</div>
