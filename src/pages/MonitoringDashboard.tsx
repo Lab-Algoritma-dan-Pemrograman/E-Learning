@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { useStore } from '../store/useStore';
 import { monitoringService, ActiveSession, ActivityLog } from '../services/monitoringService';
@@ -122,6 +122,15 @@ export const MonitoringDashboard: React.FC = () => {
 
   const [classFilter, setClassFilter] = useState<string>(user?.kelas || 'all');
   const [majorFilter, setMajorFilter] = useState<string>(user?.jurusan || 'all');
+
+  const hasInitializedFilters = useRef(false);
+  useEffect(() => {
+    if (user && !hasInitializedFilters.current) {
+      if (user.kelas) setClassFilter(user.kelas);
+      if (user.jurusan) setMajorFilter(user.jurusan);
+      hasInitializedFilters.current = true;
+    }
+  }, [user]);
   const [logSearchQuery, setLogSearchQuery] = useState('');
   const [logEventFilter, setLogEventFilter] = useState('all');
   const [questionsMetadata, setQuestionsMetadata] = useState<Record<string, { module_association: number | null; title: string; type: string }>>({});

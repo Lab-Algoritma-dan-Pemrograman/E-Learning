@@ -193,6 +193,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               nim: updated.nim,
               nama: updated.nama,
               kelas: updated.kelas,
+              jurusan: updated.jurusan,
               email: updated.email,
               xp: updated.xp,
               level: updated.level,
