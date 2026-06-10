@@ -119,8 +119,8 @@ export default async function handler(req: any, res: any) {
           return { attemptId, success: false, error: `Attempt tidak ditemukan: ${attemptError?.message}` };
         }
 
-        if (attempt.status !== 'submitted') {
-          return { attemptId, success: false, error: `Attempt status bukan 'submitted' (status saat ini: ${attempt.status})` };
+        if (attempt.status !== 'submitted' && attempt.status !== 'graded') {
+          return { attemptId, success: false, error: `Attempt status bukan 'submitted' atau 'graded' (status saat ini: ${attempt.status})` };
         }
 
         // B. Load student profile name

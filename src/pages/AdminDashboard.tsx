@@ -74,18 +74,6 @@ export const AdminDashboard: React.FC = () => {
   const [questionFilters, setQuestionFilters] = useState({ language: 'all' as 'all' | 'c' | 'python' });
 
   const [resetLoading, setResetLoading] = useState(false);
-  const [editUserKelas, setEditUserKelas] = useState('');
-  const [editUserJurusan, setEditUserJurusan] = useState('');
-
-  useEffect(() => {
-    if (selectedUser) {
-      setEditUserKelas(selectedUser.kelas || '');
-      setEditUserJurusan(selectedUser.jurusan || '');
-    } else {
-      setEditUserKelas('');
-      setEditUserJurusan('');
-    }
-  }, [selectedUser]);
 
   const [showModal, setShowModal] = useState<{
     type: 'confirm' | 'alert';
@@ -895,43 +883,67 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleUpdateKelasJurusan = async () => {
-    if (!selectedUser?.nim || !currentUser) return;
+  const handleUpdateUserKelas = async (nim: string, newKelas: string) => {
+    const trimmed = newKelas.trim();
+    const targetUser = users.find(u => u.nim === nim);
+    if (!targetUser || trimmed === (targetUser.kelas || '')) return;
+
     try {
       setResetLoading(true);
       const { error } = await supabase
         .from('users')
-        .update({
-          kelas: editUserKelas.trim(),
-          jurusan: editUserJurusan || null
-        })
-        .eq('nim', selectedUser.nim);
+        .update({ kelas: trimmed })
+        .eq('nim', nim);
 
       if (error) throw error;
 
       await monitoringService.addAuditLog(
-        currentUser.nim,
-        currentUser.nama,
+        currentUser?.nim || 'system',
+        currentUser?.nama || 'System',
         'access_modified',
-        `Mengubah kelas & jurusan peserta ${selectedUser.nama} (${selectedUser.nim}): Kelas=${editUserKelas.trim() || '—'}, Jurusan=${editUserJurusan || '—'}`
+        `Mengubah kelas peserta ${targetUser.nama} (${nim}) menjadi: ${trimmed || '—'}`
       );
 
-      const updatedUser = {
-        ...selectedUser,
-        kelas: editUserKelas.trim(),
-        jurusan: editUserJurusan || null
-      };
-      setSelectedUser(updatedUser);
-      setUsers(prevUsers => prevUsers.map(u => u.nim === selectedUser.nim ? updatedUser : u));
-
-      setShowModal({
-        type: 'alert',
-        title: 'Berhasil',
-        message: `Kelas dan jurusan untuk ${selectedUser.nama} berhasil diperbarui.`
-      });
-    } catch (err: any) {
+      setUsers(prevUsers => prevUsers.map(u => u.nim === nim ? { ...u, kelas: trimmed } : u));
+      if (selectedUser?.nim === nim) {
+        setSelectedUser(prev => prev ? { ...prev, kelas: trimmed } : null);
+      }
+    } catch (err) {
       console.error(err);
-      setShowModal({ type: 'alert', title: 'Error', message: 'Gagal memperbarui kelas dan jurusan' });
+      setShowModal({ type: 'alert', title: 'Error', message: 'Gagal memperbarui kelas' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleUpdateUserJurusan = async (nim: string, newJurusan: string) => {
+    const targetUser = users.find(u => u.nim === nim);
+    if (!targetUser || newJurusan === (targetUser.jurusan || '')) return;
+
+    try {
+      setResetLoading(true);
+      const val = newJurusan || null;
+      const { error } = await supabase
+        .from('users')
+        .update({ jurusan: val })
+        .eq('nim', nim);
+
+      if (error) throw error;
+
+      await monitoringService.addAuditLog(
+        currentUser?.nim || 'system',
+        currentUser?.nama || 'System',
+        'access_modified',
+        `Mengubah jurusan peserta ${targetUser.nama} (${nim}) menjadi: ${newJurusan || '—'}`
+      );
+
+      setUsers(prevUsers => prevUsers.map(u => u.nim === nim ? { ...u, jurusan: val } : u));
+      if (selectedUser?.nim === nim) {
+        setSelectedUser(prev => prev ? { ...prev, jurusan: val } : null);
+      }
+    } catch (err) {
+      console.error(err);
+      setShowModal({ type: 'alert', title: 'Error', message: 'Gagal memperbarui jurusan' });
     } finally {
       setResetLoading(false);
     }
@@ -1178,6 +1190,8 @@ export const AdminDashboard: React.FC = () => {
                     <thead>
                       <tr className="bg-zinc-50 border-b border-zinc-100">
                         <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-widest">Peserta</th>
+                        <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-widest text-center">Kelas</th>
+                        <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-widest text-center">Jurusan</th>
                         <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-widest text-center">XP</th>
                         <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-widest text-center">Role</th>
                         <th className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-widest"></th>
@@ -1186,7 +1200,7 @@ export const AdminDashboard: React.FC = () => {
                     <tbody className="divide-y divide-zinc-100">
                       {loading ? (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center text-zinc-400">Memuat data peserta...</td>
+                          <td colSpan={6} className="px-6 py-12 text-center text-zinc-400">Memuat data peserta...</td>
                         </tr>
                       ) : filteredUsers.length > 0 ? (
                         filteredUsers.map((u) => (
@@ -1218,6 +1232,33 @@ export const AdminDashboard: React.FC = () => {
                                 </div>
                               </div>
                             </td>
+                            <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="text"
+                                defaultValue={u.kelas || ''}
+                                onBlur={(e) => handleUpdateUserKelas(u.nim, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleUpdateUserKelas(u.nim, (e.target as HTMLInputElement).value);
+                                    (e.target as HTMLInputElement).blur();
+                                  }
+                                }}
+                                className="w-20 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-center text-xs focus:bg-white focus:outline-none focus:border-rose-700 font-bold"
+                                placeholder="—"
+                              />
+                            </td>
+                            <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                              <select
+                                value={u.jurusan || ''}
+                                onChange={(e) => handleUpdateUserJurusan(u.nim, e.target.value)}
+                                className="px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-xs focus:bg-white focus:outline-none focus:border-rose-700 font-bold text-center"
+                              >
+                                <option value="">Deteksi NIM</option>
+                                <option value="Teknik Informatika">Teknik Informatika</option>
+                                <option value="Sistem Informasi">Sistem Informasi</option>
+                                <option value="Teknik Komputer">Teknik Komputer</option>
+                              </select>
+                            </td>
                             <td className="px-6 py-4 text-center">
                               <div className="flex items-center justify-center gap-1 font-bold text-rose-800">
                                 <Trophy size={14} />
@@ -1242,7 +1283,7 @@ export const AdminDashboard: React.FC = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center text-zinc-400">Tidak ada peserta yang ditemukan.</td>
+                          <td colSpan={6} className="px-6 py-12 text-center text-zinc-400">Tidak ada peserta yang ditemukan.</td>
                         </tr>
                       )}
                     </tbody>
@@ -1287,43 +1328,7 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Kelas dan Jurusan */}
-                    <div className="space-y-3 p-4 bg-zinc-50 border border-zinc-100 rounded-2xl">
-                      <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pengaturan Kelas & Jurusan</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Kelas</label>
-                          <input
-                            type="text"
-                            placeholder="Contoh: IF-A"
-                            value={editUserKelas}
-                            onChange={(e) => setEditUserKelas(e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-rose-700 focus:border-rose-700"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Jurusan</label>
-                          <select
-                            value={editUserJurusan}
-                            onChange={(e) => setEditUserJurusan(e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-rose-700 focus:border-rose-700"
-                          >
-                            <option value="">Deteksi NIM</option>
-                            <option value="Teknik Informatika">Teknik Informatika</option>
-                            <option value="Sistem Informasi">Sistem Informasi</option>
-                            <option value="Teknik Komputer">Teknik Komputer</option>
-                          </select>
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleUpdateKelasJurusan}
-                        disabled={resetLoading || (editUserKelas.trim() === (selectedUser.kelas || '') && editUserJurusan === (selectedUser.jurusan || ''))}
-                        className="w-full py-2 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold text-[10px] rounded-lg transition-all flex items-center justify-center gap-1.5"
-                      >
-                        <Save size={10} />
-                        Simpan Perubahan
-                      </button>
-                    </div>
+
 
                     {/* Admin/Editor Actions */}
                     <div className="space-y-3">

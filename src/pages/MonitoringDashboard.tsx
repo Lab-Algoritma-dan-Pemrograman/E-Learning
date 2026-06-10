@@ -617,7 +617,7 @@ export const MonitoringDashboard: React.FC = () => {
                     {filteredAttempts.length > 0 ? (
                       filteredAttempts.map((att) => {
                         const studentSubmittedAttempts = attempts.filter(
-                          a => a.nim === att.nim && a.status === 'submitted'
+                          a => a.nim === att.nim && (a.status === 'submitted' || a.status === 'graded')
                         );
                         
                         return (
