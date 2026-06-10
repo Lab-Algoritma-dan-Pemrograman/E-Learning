@@ -10,8 +10,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { isSidebarOpen, toggleSidebar, user, page, setPage, unlockedAchievement, setUnlockedAchievement } = useStore();
 
   const isAssistantOrAbove = user?.role === 'admin' || user?.role === 'kordas' || user?.role === 'asisten';
-  const isKordasOrAdmin = user?.role === 'admin' || user?.role === 'kordas';
-  const isAdmin = user?.role === 'admin';
+  const isKordasOrAdmin = user?.role === 'admin' || user?.role === 'kordas' || user?.role === 'asisten';
+  const isAdmin = user?.role === 'admin' || user?.role === 'kordas';
 
   const handleLogout = async () => {
     try {

@@ -90,9 +90,9 @@ export const AdminDashboard: React.FC = () => {
   const [aiGameGenTopic, setAiGameGenTopic] = useState('');
   const [isAiGameGenerating, setIsAiGameGenerating] = useState(false);
 
-  const isAdmin = currentUser?.role === 'admin';
-  const isEditor = currentUser?.role === 'kordas';
-  const isCoordinator = isAdmin && currentUser?.division === 'koordinator';
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'kordas';
+  const isEditor = currentUser?.role === 'asisten';
+  const isCoordinator = currentUser?.role === 'kordas';
   const canAccess = isAdmin || isEditor;
 
   useEffect(() => {
@@ -963,11 +963,11 @@ export const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!isCoordinator && (newRole === 'admin' || targetUser.role === 'admin')) {
+    if (!isCoordinator && (newRole === 'admin' || targetUser.role === 'admin' || newRole === 'kordas' || targetUser.role === 'kordas')) {
       setShowModal({
         type: 'alert',
         title: 'Aksi Ditolak',
-        message: 'Hanya Koordinator yang dapat mengelola akun Admin.',
+        message: 'Hanya Kordas (Super Admin) yang dapat mengelola akun Admin dan Kordas.',
       });
       return;
     }
