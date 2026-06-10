@@ -4,12 +4,12 @@ import { CodeEditor } from '../components/CodeEditor';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { Quiz } from '../components/Quiz';
 
-import { CheckCircle2, Lightbulb, ChevronRight, BookOpen, Menu, Trophy, ArrowLeft, X, Lock } from 'lucide-react';
+import { CheckCircle2, Lightbulb, ChevronRight, ChevronLeft, BookOpen, Menu, Trophy, ArrowLeft, X, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
-import { completeLesson as completeLessonService } from '../services/progressService';
+import { completeLesson as completeLessonService, grantXp } from '../services/progressService';
 import { cn } from '../lib/utils';
 import { useCodeRunner, detectLanguage, CodeLanguage } from '../hooks/useCodeRunner';
 import { Loader2 } from 'lucide-react';
@@ -71,6 +71,7 @@ export const LessonPage: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showLessonNav, setShowLessonNav] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [quizXpGranted, setQuizXpGranted] = useState(false);
 
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +96,7 @@ export const LessonPage: React.FC = () => {
       setShowHint(false);
       setOutput('');
       setError(null);
+      setQuizXpGranted(false);
     }
   }, [currentLevelIdx, currentModuleIdx, currentLessonIdx, lesson?.initialCode, lesson?.codeExample]);
 
@@ -160,7 +162,7 @@ export const LessonPage: React.FC = () => {
     
     try {
       if (user) {
-        const newlyUnlocked = await completeLessonService(user, lesson.id, 50, curriculum, completedLessons);
+        const newlyUnlocked = await completeLessonService(user, lesson.id, 35, curriculum, completedLessons);
         if (newlyUnlocked && newlyUnlocked.length > 0) {
           setUnlockedAchievement(newlyUnlocked[0]);
         }
@@ -197,6 +199,25 @@ export const LessonPage: React.FC = () => {
       setIsCompleting(false);
     }
   };
+
+  const getAdjacentLessonId = (direction: 'prev' | 'next'): string | null => {
+    const allLessons: string[] = [];
+    for (const level of curriculum) {
+      for (const mod of (level.modules || [])) {
+        for (const l of (mod.lessons || [])) {
+          allLessons.push(l.id);
+        }
+      }
+    }
+    const currentIdx = allLessons.indexOf(currentLessonId || '');
+    if (currentIdx === -1) return null;
+    if (direction === 'prev' && currentIdx > 0) return allLessons[currentIdx - 1];
+    if (direction === 'next' && currentIdx < allLessons.length - 1) return allLessons[currentIdx + 1];
+    return null;
+  };
+
+  const prevLessonId = getAdjacentLessonId('prev');
+  const nextLessonId = getAdjacentLessonId('next');
 
   return (
     <Layout>
@@ -408,7 +429,15 @@ export const LessonPage: React.FC = () => {
                 question={lesson.quiz.question}
                 options={lesson.quiz.options}
                 correctAnswer={lesson.quiz.correctAnswer}
-                onComplete={(correct) => {
+                onComplete={async (correct) => {
+                  if (correct && !quizXpGranted && user) {
+                    setQuizXpGranted(true);
+                    try {
+                      await grantXp(user, 25);
+                    } catch (e) {
+                      console.error('Failed to grant quiz XP:', e);
+                    }
+                  }
                   if (correct) setTimeout(() => setStep('code'), 1500);
                 }}
               />
@@ -507,6 +536,36 @@ export const LessonPage: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Bottom Navigation */}
+        <div className="flex items-center justify-between pt-4 pb-8 border-t border-zinc-100">
+          <button
+            onClick={() => prevLessonId && setCurrentLessonId(prevLessonId)}
+            disabled={!prevLessonId}
+            className={cn(
+              "flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all",
+              prevLessonId
+                ? "text-zinc-700 hover:bg-zinc-100 active:scale-95"
+                : "text-zinc-300 cursor-not-allowed"
+            )}
+          >
+            <ChevronLeft size={18} />
+            Sebelumnya
+          </button>
+          <button
+            onClick={() => nextLessonId && setCurrentLessonId(nextLessonId)}
+            disabled={!nextLessonId}
+            className={cn(
+              "flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all",
+              nextLessonId
+                ? "text-zinc-700 hover:bg-zinc-100 active:scale-95"
+                : "text-zinc-300 cursor-not-allowed"
+            )}
+          >
+            Selanjutnya
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
     </Layout>
   );

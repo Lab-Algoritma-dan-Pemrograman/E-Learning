@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play, Lock, Bug, FileText } from 'lucide-react';
+import { Trophy, Zap, Clock, BookOpen, ChevronRight, Play, Lock, Bug } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
@@ -10,6 +10,12 @@ import { BugHunt } from '../components/games/BugHunt';
 import { getGameSettings, GameSettings, getPlaysThisWeek, canPlayBugHunt, seedInitialQuestions } from '../services/gameService';
 import gameQuestions from '../data/gameQuestions.json';
 import { AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+
+interface RecentActivity {
+  lessonId: string;
+  completedAt: string;
+}
 
 export const Dashboard: React.FC = () => {
   const { user, setPage, currentLessonId, setCurrentLessonId, curriculum } = useStore();
@@ -25,6 +31,7 @@ export const Dashboard: React.FC = () => {
   const [playsThisWeek, setPlaysThisWeek] = useState(0);
   const [isCheckingLimit, setIsCheckingLimit] = useState(false);
   const isAdmin = user?.role === 'admin';
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
   useEffect(() => {
     const seed = async () => {
@@ -49,6 +56,45 @@ export const Dashboard: React.FC = () => {
     fetchSettings();
     fetchHistory();
   }, [user]);
+
+  useEffect(() => {
+    const fetchRecent = async () => {
+      if (!user?.nim) return;
+      const { data } = await supabase
+        .from('student_progress')
+        .select('lesson_id, completed_at')
+        .eq('nim', user.nim)
+        .eq('completed', true)
+        .order('completed_at', { ascending: false })
+        .limit(5);
+      if (data) {
+        setRecentActivity(data.map(p => ({ lessonId: p.lesson_id, completedAt: p.completed_at })));
+      }
+    };
+    fetchRecent();
+  }, [user?.nim]);
+
+  const resolveLessonName = (lessonId: string): string => {
+    for (const level of curriculum) {
+      for (const mod of (level.modules || [])) {
+        const lesson = (mod.lessons || []).find((l: any) => l.id === lessonId);
+        if (lesson) return `${lesson.title} - Latihan`;
+      }
+    }
+    return lessonId;
+  };
+
+  const formatDate = (isoString: string): string => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   // Refresh plays count when game is closed
   useEffect(() => {
@@ -269,62 +315,15 @@ export const Dashboard: React.FC = () => {
 
           {/* Sidebar Stats */}
           <div className="space-y-8">
-            {/* Assessment Status Card for Student */}
-            {user?.role === 'praktikan' && (
-              <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
-                <h3 className="font-bold text-lg flex items-center gap-2">
-                  <FileText size={20} className="text-rose-700" />
-                  Asesmen & Ujian
-                </h3>
-                <p className="text-zinc-500 text-xs leading-relaxed">
-                  Periksa menu ujian yang dibuka oleh asisten laboratorium. Ujian Praktik membutuhkan kode/token khusus.
-                </p>
-                
-                <div className="space-y-2 text-xs font-bold">
-                  <div className="flex justify-between items-center bg-zinc-50 p-2 rounded-xl">
-                    <span className="text-zinc-500">PRE-TEST</span>
-                    <span className={cn(user.assessmentAccess?.pre_test ? "text-emerald-600" : "text-zinc-400")}>
-                      {user.assessmentAccess?.pre_test ? "Terbuka" : "Terkunci"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center bg-zinc-50 p-2 rounded-xl">
-                    <span className="text-zinc-500">POST-TEST</span>
-                    <span className={cn(user.assessmentAccess?.post_test ? "text-emerald-600" : "text-zinc-400")}>
-                      {user.assessmentAccess?.post_test ? "Terbuka" : "Terkunci"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center bg-zinc-50 p-2 rounded-xl">
-                    <span className="text-zinc-500">PROGRAM KETERAMPILAN</span>
-                    <span className={cn(user.assessmentAccess?.program_keterampilan ? "text-emerald-600" : "text-zinc-400")}>
-                      {user.assessmentAccess?.program_keterampilan ? "Terbuka" : "Terkunci"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center bg-zinc-50 p-2 rounded-xl">
-                    <span className="text-zinc-500">UJIAN PRAKTIK</span>
-                    <span className={cn(user.assessmentAccess?.ujian_praktik ? "text-emerald-600" : "text-zinc-400")}>
-                      {user.assessmentAccess?.ujian_praktik ? "Terbuka" : "Terkunci"}
-                    </span>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => setPage('assessments')}
-                  className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl active:scale-95 transition-all text-center"
-                >
-                  Buka Menu Asesmen
-                </button>
-              </div>
-            )}
-
             <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm">
               <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
                 <Clock size={20} className="text-rose-700" />
                 Aktivitas Terbaru
               </h3>
               <div className="space-y-6">
-                {completedLessons.length > 0 ? (
-                  completedLessons.slice(-3).reverse().map((lessonId, i) => (
-                    <ActivityItem key={lessonId} title={`Pelajaran ${lessonId}`} time={i === 0 ? "Baru saja" : `${i + 1} hari yang lalu`} xp={50} />
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((activity) => (
+                    <ActivityItem key={activity.lessonId + activity.completedAt} title={resolveLessonName(activity.lessonId)} time={formatDate(activity.completedAt)} />
                   ))
                 ) : (
                   <p className="text-sm text-zinc-500 italic">Belum ada aktivitas. Mulai pelajaran pertama kamu!</p>
@@ -551,13 +550,12 @@ const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string }
   </div>
 );
 
-const ActivityItem: React.FC<{ title: string; time: string; xp: number }> = ({ title, time, xp }) => (
-  <div className="flex items-center gap-4">
-    <div className="w-2 h-2 rounded-full bg-rose-700" />
-    <div className="flex-1">
-      <div className="text-sm font-bold">{title}</div>
-      <div className="text-xs text-zinc-400">{time}</div>
+const ActivityItem: React.FC<{ title: string; time: string }> = ({ title, time }) => (
+  <div className="flex items-start gap-4">
+    <div className="w-2 h-2 rounded-full bg-rose-700 mt-1.5 shrink-0" />
+    <div className="flex-1 min-w-0">
+      <div className="text-sm font-bold truncate">{title}</div>
+      <div className="text-xs text-zinc-400 mt-0.5">{time}</div>
     </div>
-    <div className="text-xs font-bold text-rose-700">+{xp} XP</div>
   </div>
 );

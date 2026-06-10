@@ -89,6 +89,18 @@ export const completeLesson = async (
   }
 };
 
+export const grantXp = async (user: UserProfile, amount: number): Promise<void> => {
+  const newXp = (user.xp || 0) + amount;
+  const { error } = await supabase
+    .from('users')
+    .update({ xp: newXp, last_active: new Date().toISOString() })
+    .eq('nim', user.nim);
+
+  if (error) throw error;
+
+  useStore.getState().setUser({ ...user, xp: newXp, lastActive: new Date().toISOString() });
+};
+
 export const syncProgress = (userId: string, setCompletedLessons: (lessons: string[]) => void) => {
   const loadProgress = async () => {
     const { data, error } = await supabase
