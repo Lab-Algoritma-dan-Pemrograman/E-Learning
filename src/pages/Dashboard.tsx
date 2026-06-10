@@ -104,28 +104,34 @@ export const Dashboard: React.FC = () => {
   }, [activeGame, user?.nim]);
 
   const isLevelLockedDisplay = (level: any, idx: number) => {
+    // 1. Per-user override takes highest priority
     const userOverride = user?.levelAccessOverrides?.[level.id];
     if (userOverride && userOverride !== 'auto') return userOverride === 'locked';
+
+    // 2. Explicit access mode on the level
     if (level.accessMode === 'locked') return true;
     if (level.accessMode === 'unlocked') return false;
+
+    // 3. Legacy 'locked' boolean field
     if (level.locked === true) return true;
     if (level.locked === false) return false;
-    
+
+    // 4. Auto mode: level 0 is always unlocked
     if (idx === 0) return false;
-    const prevLevel = curriculum[idx - 1];
-    if (!prevLevel) return false;
-    
-    let uncompletedFound = false;
-    for (const mod of (prevLevel.modules || [])) {
-      for (const lesson of (mod.lessons || [])) {
-        if (!completedLessons.includes(lesson.id)) {
-          uncompletedFound = true;
-          break;
+
+    // 5. Auto mode: ALL previous levels must be fully completed
+    for (let i = 0; i < idx; i++) {
+      const prevLevel = curriculum[i];
+      if (!prevLevel) continue;
+      for (const mod of (prevLevel.modules || [])) {
+        for (const lesson of (mod.lessons || [])) {
+          if (!completedLessons.includes(lesson.id)) {
+            return true; // lock — previous level not done
+          }
         }
       }
-      if (uncompletedFound) break;
     }
-    return uncompletedFound;
+    return false;
   };
 
   const handleContinue = () => {

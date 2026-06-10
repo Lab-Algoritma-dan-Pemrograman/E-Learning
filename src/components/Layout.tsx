@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, FileText } from 'lucide-react';
+import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { clearToken } from '../services/tokenService';
@@ -76,16 +76,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 onClick={(e) => { e.preventDefault(); setPage('leaderboard'); }}
               />
               
-              {/* Assessments Menu for Students */}
-              {user?.role === 'praktikan' && (
-                <SidebarItem 
-                  icon={<FileText size={20} className="text-zinc-500" />} 
-                  label="Asesmen & Ujian" 
-                  href="/assessments" 
-                  active={page === 'assessments'} 
-                  onClick={(e) => { e.preventDefault(); setPage('assessments'); }}
-                />
-              )}
+
 
 
               {/* Admin Panel for Kordas and Admin */}

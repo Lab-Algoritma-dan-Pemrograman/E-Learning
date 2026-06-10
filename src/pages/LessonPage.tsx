@@ -46,6 +46,41 @@ export const LessonPage: React.FC = () => {
   const [currentModuleIdx, setCurrentModuleIdx] = useState(0);
   const [currentLessonIdx, setCurrentLessonIdx] = useState(0);
 
+  // Check if a level is locked (auto mode: all previous levels must be fully completed)
+  const isLevelLocked = (levelIdx: number): boolean => {
+    const level = curriculum[levelIdx];
+    if (!level) return true;
+
+    // Per-user override
+    const userOverride = user?.levelAccessOverrides?.[level.id];
+    if (userOverride && userOverride !== 'auto') return userOverride === 'locked';
+
+    // Explicit access mode
+    if (level.accessMode === 'locked') return true;
+    if (level.accessMode === 'unlocked') return false;
+
+    // Legacy locked field
+    if (level.locked === true) return true;
+    if (level.locked === false) return false;
+
+    // Auto: first level is always unlocked
+    if (levelIdx === 0) return false;
+
+    // Auto: ALL previous levels must be fully completed
+    for (let i = 0; i < levelIdx; i++) {
+      const prevLevel = curriculum[i];
+      if (!prevLevel) continue;
+      for (const mod of (prevLevel.modules || [])) {
+        for (const les of (mod.lessons || [])) {
+          if (!completedLessons.includes(les.id)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   useEffect(() => {
     if (currentLessonId && curriculum.length > 0) {
       for (let l = 0; l < curriculum.length; l++) {
@@ -168,7 +203,7 @@ export const LessonPage: React.FC = () => {
         }
       }
       
-      // Find next lesson
+      // Find next lesson (same module or next module in same level)
       let nextId: string | null = null;
       const currentLevel = curriculum[currentLevelIdx];
       const currentModule = currentLevel?.modules?.[currentModuleIdx];
@@ -178,9 +213,9 @@ export const LessonPage: React.FC = () => {
       } else if (currentLevel && currentModuleIdx < (currentLevel.modules?.length || 0) - 1) {
         nextId = currentLevel.modules[currentModuleIdx + 1]?.lessons?.[0]?.id || null;
       } else {
-        // Find next unlocked level
+        // Find next UNLOCKED level (using proper auto-mode evaluation)
         for (let i = currentLevelIdx + 1; i < curriculum.length; i++) {
-          if (!curriculum[i].locked) {
+          if (!isLevelLocked(i)) {
             nextId = curriculum[i].modules?.[0]?.lessons?.[0]?.id || null;
             break;
           }
@@ -201,18 +236,23 @@ export const LessonPage: React.FC = () => {
   };
 
   const getAdjacentLessonId = (direction: 'prev' | 'next'): string | null => {
-    const allLessons: string[] = [];
-    for (const level of curriculum) {
-      for (const mod of (level.modules || [])) {
+    const allLessons: { id: string; levelIdx: number }[] = [];
+    for (let li = 0; li < curriculum.length; li++) {
+      for (const mod of (curriculum[li].modules || [])) {
         for (const l of (mod.lessons || [])) {
-          allLessons.push(l.id);
+          allLessons.push({ id: l.id, levelIdx: li });
         }
       }
     }
-    const currentIdx = allLessons.indexOf(currentLessonId || '');
+    const currentIdx = allLessons.findIndex(x => x.id === currentLessonId);
     if (currentIdx === -1) return null;
-    if (direction === 'prev' && currentIdx > 0) return allLessons[currentIdx - 1];
-    if (direction === 'next' && currentIdx < allLessons.length - 1) return allLessons[currentIdx + 1];
+    if (direction === 'prev' && currentIdx > 0) return allLessons[currentIdx - 1].id;
+    if (direction === 'next' && currentIdx < allLessons.length - 1) {
+      const nextEntry = allLessons[currentIdx + 1];
+      // Block navigation to a lesson in a locked level
+      if (isLevelLocked(nextEntry.levelIdx)) return null;
+      return nextEntry.id;
+    }
     return null;
   };
 
@@ -288,11 +328,11 @@ export const LessonPage: React.FC = () => {
                           "w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black",
                           lIdx === currentLevelIdx ? "bg-rose-700 text-white" : "bg-zinc-100 text-zinc-500"
                         )}>
-                          {level.locked ? <Lock size={10} /> : lIdx + 1}
+                          {isLevelLocked(lIdx) ? <Lock size={10} /> : lIdx + 1}
                         </div>
                         <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest truncate">{level.title}</span>
                       </div>
-                      {!level.locked && (level.modules || []).map((mod) => (
+                      {!isLevelLocked(lIdx) && (level.modules || []).map((mod) => (
                         <div key={mod.id} className="ml-4 mb-3">
                           <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">{mod.title}</div>
                           <div className="space-y-0.5">

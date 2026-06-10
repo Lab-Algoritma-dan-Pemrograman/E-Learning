@@ -45,7 +45,7 @@ function AppContent() {
         case 'courses': return <CourseExplorer />;
         case 'profile': return <Profile />;
         case 'admin': return <AdminDashboard />;
-        case 'assessments': return <AssessmentPage />;
+        case 'assessments': return (user?.role === 'praktikan') ? <Dashboard /> : <AssessmentPage />;
 
         default: return <Dashboard />;
       }

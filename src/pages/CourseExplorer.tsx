@@ -35,28 +35,36 @@ export const CourseExplorer: React.FC = () => {
 
     // accessMode === 'auto' -> Sequential check
 
+    // Very first module of the very first level is always unlocked
     if (levelIdx === 0 && moduleIdx === 0) return false;
-    
-    // Get previous module
-    let prevLevelIdx = levelIdx;
-    let prevModuleIdx = moduleIdx - 1;
-    
-    if (prevModuleIdx < 0) {
-      prevLevelIdx = levelIdx - 1;
-      if (prevLevelIdx < 0) return false;
-      prevModuleIdx = (curriculum[prevLevelIdx]?.modules?.length || 0) - 1;
+
+    // AUTO mode: ALL lessons in ALL previous levels must be completed
+    for (let i = 0; i < levelIdx; i++) {
+      const prevLevel = curriculum[i];
+      if (!prevLevel) continue;
+      const prevAccess = getEffectiveAccessMode(prevLevel.id);
+      // Only check previous levels that are in auto mode (skip explicitly unlocked ones)
+      if (prevAccess === 'unlocked') continue;
+      for (const mod of (prevLevel.modules || [])) {
+        for (const lesson of (mod.lessons || [])) {
+          if (!completedLessons.includes(lesson.id)) {
+            return true; // lock — previous level not fully completed
+          }
+        }
+      }
     }
-    
-    if (prevModuleIdx < 0) return false;
 
-    const prevModule = curriculum[prevLevelIdx]?.modules?.[prevModuleIdx];
-    if (!prevModule) return false;
+    // Within the same level, check sequentially: previous modules must be done
+    if (moduleIdx > 0) {
+      const prevModule = level.modules?.[moduleIdx - 1];
+      if (!prevModule) return false;
+      const allLessonsCompleted = prevModule.lessons?.every(lesson =>
+        completedLessons.includes(lesson.id)
+      ) || false;
+      return !allLessonsCompleted;
+    }
 
-    const allLessonsCompleted = prevModule.lessons?.every(lesson => 
-      completedLessons.includes(lesson.id)
-    ) || false;
-    
-    return !allLessonsCompleted;
+    return false;
   };
 
   const getModuleProgress = (module: any) => {
