@@ -510,9 +510,11 @@ export const LessonPage: React.FC = () => {
                 {/* Sandbox Terminal Output */}
                 <div className="h-44 bg-zinc-950 rounded-2xl border border-zinc-800 p-4 font-mono text-sm flex flex-col shadow-inner shrink-0">
                   <div className="flex items-center justify-between mb-2 text-zinc-500 text-xs uppercase tracking-widest font-bold">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-700 animate-pulse"></span>
-                      <span>Output Sandbox</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#ff5f56]"></span>
+                      <span className="w-2 h-2 rounded-full bg-[#ffbd2e]"></span>
+                      <span className="w-2 h-2 rounded-full bg-[#27c93f]"></span>
+                      <span className="ml-1 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Output Sandbox</span>
                     </div>
                     <button 
                       onClick={() => {
@@ -629,10 +631,13 @@ export const LessonPage: React.FC = () => {
                     language={lessonLanguage}
                   />
                 </div>
-                <div className="h-40 bg-zinc-900 rounded-2xl border border-zinc-800 p-4 font-mono text-sm flex flex-col">
+                <div className="h-40 bg-zinc-950 rounded-2xl border border-zinc-800 p-4 font-mono text-sm flex flex-col shadow-inner">
                   <div className="flex items-center justify-between mb-2 text-zinc-500 text-xs uppercase tracking-widest font-bold">
-                    <div className="flex items-center gap-2">
-                      <span>Output</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#ff5f56]"></span>
+                      <span className="w-2 h-2 rounded-full bg-[#ffbd2e]"></span>
+                      <span className="w-2 h-2 rounded-full bg-[#27c93f]"></span>
+                      <span className="ml-1 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Output Terminal</span>
                     </div>
                     {isCorrect !== null && (
                       <span className={isCorrect ? "text-rose-400" : "text-red-400"}>
