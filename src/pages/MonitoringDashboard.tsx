@@ -468,8 +468,8 @@ export const MonitoringDashboard: React.FC = () => {
     const isStudent = s.users?.role === 'praktikan';
     if (!isOnline || !isStudent) return false;
     
-    const userClass = s.users?.kelas || s.kelas;
-    const userMajor = s.users?.jurusan;
+    const userClass = (s.users as any)?.kelas || s.kelas;
+    const userMajor = (s.users as any)?.jurusan;
 
     if (classFilter !== 'all' && userClass !== classFilter) return false;
     if (majorFilter !== 'all' && userMajor !== majorFilter) return false;
@@ -1203,17 +1203,17 @@ export const MonitoringDashboard: React.FC = () => {
               <div className="flex-1 overflow-y-auto space-y-6 custom-scrollbar pr-2">
                 {inspectingAttempt.selected_questions?.map((qId: string, idx: number) => {
                   const ans = inspectingAttempt.answers?.[qId] || {};
-                  const qMeta = questionsMetadata[qId] || {};
+                  const qMeta = questionsMetadata[qId];
                   return (
                     <div key={qId} className="border border-zinc-200 rounded-2xl p-4 bg-zinc-50 space-y-3">
                       <div>
                         <h4 className="font-bold text-sm text-rose-800">
                           {inspectingAttempt.menu_type === 'ujian_praktik' ? `Soal ${idx + 1}` : `Soal ${idx + 1} (Modul ${resolveAttemptDetails(inspectingAttempt).moduleAssociation || '?'})`} ({qId})
                         </h4>
-                        {qMeta.title && (
+                        {qMeta?.title && (
                           <div className="text-[11px] font-bold text-zinc-700 mt-1">{qMeta.title}</div>
                         )}
-                        {qMeta.instruction && (
+                        {qMeta?.instruction && (
                           <div className="mt-2 bg-white/80 border border-zinc-200/60 p-3 rounded-xl text-xs text-zinc-650 max-h-36 overflow-y-auto custom-scrollbar">
                             <MarkdownRenderer content={qMeta.instruction} />
                           </div>

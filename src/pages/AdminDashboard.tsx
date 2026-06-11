@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Level, Module, Lesson } from '../data/curriculum';
+import { RichTextEditor } from '../components/RichTextEditor';
 import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings, forceResetGameQuestions } from '../services/gameService';
 import { Achievement, getAchievements } from '../services/achievementService';
@@ -2367,14 +2368,12 @@ export const AdminDashboard: React.FC = () => {
                     />
                   </div>
 
-                  {/* Explanation */}
+                   {/* Explanation */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Materi Penjelasan (Markdown)</label>
-                    <textarea
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Materi Penjelasan (Rich Text)</label>
+                    <RichTextEditor
                       value={lessonEditForm.explanation}
-                      onChange={e => setLessonEditForm({ ...lessonEditForm, explanation: e.target.value })}
-                      rows={8}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all resize-y"
+                      onChange={html => setLessonEditForm({ ...lessonEditForm, explanation: html })}
                     />
                   </div>
 
@@ -2433,14 +2432,13 @@ export const AdminDashboard: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pertanyaan</label>
-                      <input
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pertanyaan (Rich Text)</label>
+                      <RichTextEditor
                         value={lessonEditForm.quiz?.question || ''}
-                        onChange={e => setLessonEditForm({
+                        onChange={html => setLessonEditForm({
                           ...lessonEditForm,
-                          quiz: { ...(lessonEditForm.quiz || { question: '', options: ['', '', '', ''], correctAnswer: 0 }), question: e.target.value }
+                          quiz: { ...(lessonEditForm.quiz || { question: '', options: ['', '', '', ''], correctAnswer: 0 }), question: html }
                         })}
-                        className="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                       />
                     </div>
 

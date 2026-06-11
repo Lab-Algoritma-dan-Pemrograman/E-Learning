@@ -1,15 +1,41 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit, ExternalLink } from 'lucide-react';
+import { useStore } from '../store/useStore';
 
 const WEB_UTAMA_URL = import.meta.env.VITE_WEB_UTAMA_URL || '#';
 
 export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
+  const setUser = useStore((state) => state.setUser);
+  const setPage = useStore((state) => state.setPage);
 
   const handleGoToWebUtama = () => {
     if (WEB_UTAMA_URL && WEB_UTAMA_URL !== '#') {
       window.location.href = WEB_UTAMA_URL;
     }
+  };
+
+  const handleDevLogin = (role: 'admin' | 'praktikan') => {
+    const mockUser = {
+      nim: role === 'admin' ? '123456789' : '202211083',
+      nama: role === 'admin' ? 'Developer Admin (Kordas)' : 'Developer Praktikan',
+      kelas: 'DEV-X',
+      role: role,
+      xp: role === 'admin' ? 9999 : 120,
+      level: role === 'admin' ? 10 : 1,
+      streak: 3,
+      lastActive: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      assessmentAccess: {
+        pre_test: true,
+        post_test: true,
+        program_keterampilan: true,
+        ujian_praktik: true
+      },
+      levelAccessOverrides: {}
+    };
+    setUser(mockUser);
+    setPage('dashboard');
   };
 
   return (
@@ -81,6 +107,26 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
+
+          {import.meta.env.DEV && (
+            <div className="pt-6 border-t border-zinc-100 space-y-3">
+              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">🧪 Developer Quick Access (Local Only)</p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => handleDevLogin('admin')}
+                  className="px-4 py-2 bg-zinc-900 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-1.5 cursor-pointer"
+                >
+                  Masuk sebagai Admin
+                </button>
+                <button
+                  onClick={() => handleDevLogin('praktikan')}
+                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 text-xs font-bold rounded-xl transition-all active:scale-95 border border-zinc-200 flex items-center gap-1.5 cursor-pointer"
+                >
+                  Masuk sebagai Praktikan
+                </button>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         <motion.div 

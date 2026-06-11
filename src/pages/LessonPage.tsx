@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { CodeEditor } from '../components/CodeEditor';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
+import { RichTextRenderer } from '../components/RichTextRenderer';
 import { Quiz } from '../components/Quiz';
+import { preprocessCode } from '../lib/codePreprocessor';
 
 import { CheckCircle2, Lightbulb, ChevronRight, ChevronLeft, BookOpen, Menu, Trophy, ArrowLeft, X, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -111,6 +113,27 @@ export const LessonPage: React.FC = () => {
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  // States for the interactive Sandbox in the Learn (Pelajari) step
+  const [sandboxCode, setSandboxCode] = useState('');
+  const [sandboxOutput, setSandboxOutput] = useState('');
+  const [sandboxError, setSandboxError] = useState<string | null>(null);
+  const [isSandboxRunning, setIsSandboxRunning] = useState(false);
+
+  const handleSandboxRun = async () => {
+    setIsSandboxRunning(true);
+    setSandboxError(null);
+    setSandboxOutput('');
+    try {
+      const result = await runCode(sandboxCode);
+      setSandboxOutput(result.output);
+      setSandboxError(result.error);
+    } catch (err: any) {
+      setSandboxError(err.message || 'Error running code');
+    } finally {
+      setIsSandboxRunning(false);
+    }
+  };
+
   const lesson = curriculum.length > 0 
     ? curriculum[currentLevelIdx]?.modules?.[currentModuleIdx]?.lessons?.[currentLessonIdx]
     : null;
@@ -132,6 +155,11 @@ export const LessonPage: React.FC = () => {
       setOutput('');
       setError(null);
       setQuizXpGranted(false);
+      
+      // Initialize sandbox states
+      setSandboxCode(lesson.codeExample || '');
+      setSandboxOutput('');
+      setSandboxError(null);
     }
   }, [currentLevelIdx, currentModuleIdx, currentLessonIdx, lesson?.initialCode, lesson?.codeExample]);
 
@@ -154,8 +182,14 @@ export const LessonPage: React.FC = () => {
     if (lesson.validationRules && lesson.validationRules.length > 0) {
       for (const rule of lesson.validationRules) {
         try {
-          const regex = new RegExp(rule.pattern, 'i');
-          const exists = regex.test(code);
+          // Bersihkan komentar dan string literal (bila dikonfigurasi) dari kode siswa
+          const cleanCode = preprocessCode(code, lessonLanguage, {
+            stripComments: true,
+            stripStrings: rule.stripStrings
+          });
+
+          const regex = new RegExp(rule.pattern, rule.flags || 'i');
+          const exists = regex.test(cleanCode);
           
           if (rule.shouldExist && !exists) {
             setError(rule.message);
@@ -431,28 +465,76 @@ export const LessonPage: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[calc(100vh-240px)] h-auto items-stretch"
             >
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 text-sm font-bold text-rose-700 bg-rose-50 w-fit px-3 py-1 rounded-full">
-                  <BookOpen size={16} />
-                  Level {currentLevelIdx + 1} • Pelajaran {currentLessonIdx + 1}
+              {/* Left Column: Theory & Explanation */}
+              <div className="lg:col-span-5 flex flex-col gap-6 overflow-y-auto pr-4 custom-scrollbar h-full justify-between pb-4 min-h-[300px]">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 text-sm font-bold text-rose-700 bg-rose-50 w-fit px-3 py-1 rounded-full">
+                    <BookOpen size={16} />
+                    Level {currentLevelIdx + 1} • Pelajaran {currentLessonIdx + 1}
+                  </div>
+                  <h1 className="text-4xl font-black tracking-tight text-zinc-900 leading-tight">{lesson.title}</h1>
+                  {/<\/?[a-z][\s\S]*>/i.test(lesson.explanation) ? (
+                    <RichTextRenderer content={lesson.explanation} />
+                  ) : (
+                    <MarkdownRenderer content={lesson.explanation} />
+                  )}
                 </div>
-                <h1 className="text-5xl font-black tracking-tight text-zinc-900">{lesson.title}</h1>
-                <MarkdownRenderer content={lesson.explanation} />
-                <button 
-                  onClick={() => setStep('quiz')}
-                  className="bg-zinc-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-zinc-800 transition-all flex items-center gap-2"
-                >
-                  Ikuti Kuis
-                  <ChevronRight size={20} />
-                </button>
+                
+                <div className="pt-4 shrink-0">
+                  <button 
+                    onClick={() => setStep('quiz')}
+                    className="w-full bg-zinc-900 text-white py-4 rounded-2xl font-bold hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-zinc-900/10 active:scale-95"
+                  >
+                    Ikuti Kuis
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
               </div>
-              <div className="bg-zinc-900 rounded-3xl p-8 shadow-2xl border border-zinc-800">
-                <div className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Contoh Kode</div>
-                <pre className="text-zinc-100 font-mono text-lg leading-relaxed">
-                  {lesson.codeExample}
-                </pre>
+
+              {/* Right Column: Code Sandbox */}
+              <div className="lg:col-span-7 flex flex-col gap-4 h-full min-h-[500px]">
+                <div className="flex-1 min-h-[300px]">
+                  <CodeEditor 
+                    code={sandboxCode} 
+                    onChange={(val) => {
+                      setSandboxCode(val || '');
+                    }} 
+                    onRun={handleSandboxRun}
+                    isLoading={isSandboxRunning || isLoading}
+                    language={lessonLanguage}
+                  />
+                </div>
+                
+                {/* Sandbox Terminal Output */}
+                <div className="h-44 bg-zinc-950 rounded-2xl border border-zinc-800 p-4 font-mono text-sm flex flex-col shadow-inner shrink-0">
+                  <div className="flex items-center justify-between mb-2 text-zinc-500 text-xs uppercase tracking-widest font-bold">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-700 animate-pulse"></span>
+                      <span>Output Sandbox</span>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setSandboxCode(lesson.codeExample);
+                        setSandboxOutput('');
+                        setSandboxError(null);
+                      }}
+                      className="text-[10px] text-zinc-400 hover:text-white transition-colors bg-zinc-850 hover:bg-zinc-800 px-2 py-1 rounded font-sans uppercase tracking-wider font-bold"
+                    >
+                      Reset Kode
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto text-zinc-100 whitespace-pre-wrap">
+                    {sandboxError ? (
+                      <span className="text-red-400">{sandboxError}</span>
+                    ) : sandboxOutput ? (
+                      <span className="text-emerald-400">{sandboxOutput}</span>
+                    ) : (
+                      <span className="text-zinc-600 italic">// Klik 'Jalankan' atau Ctrl+Enter untuk melihat output</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -522,7 +604,11 @@ export const LessonPage: React.FC = () => {
                         className="overflow-hidden space-y-3"
                       >
                         <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800 italic">
-                          {lesson.hint}
+                          {/<\/?[a-z][\s\S]*>/i.test(lesson.hint) ? (
+                            <RichTextRenderer content={lesson.hint} className="prose-p:text-amber-800 prose-p:italic text-sm" />
+                          ) : (
+                            lesson.hint
+                          )}
                         </div>
                       </motion.div>
                     )}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { RichTextRenderer } from './RichTextRenderer';
 
 interface QuizProps {
   question: string;
@@ -24,7 +25,11 @@ export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswer, on
     <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm space-y-8">
       <div className="space-y-2">
         <div className="text-xs font-black text-rose-800 uppercase tracking-widest">Kuis Singkat</div>
-        <h3 className="text-2xl font-bold text-zinc-900">{question}</h3>
+        {/<\/?[a-z][\s\S]*>/i.test(question) ? (
+          <RichTextRenderer content={question} className="text-2xl font-bold text-zinc-900 prose-p:text-zinc-900 prose-p:font-bold prose-p:text-2xl" />
+        ) : (
+          <h3 className="text-2xl font-bold text-zinc-900">{question}</h3>
+        )}
       </div>
 
       <div className="space-y-3">

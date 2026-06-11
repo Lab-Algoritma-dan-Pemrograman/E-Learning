@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { useState } from 'react';
 import { SupabaseProvider } from './components/SupabaseProvider';
 import { PyodideInitializer } from './components/PyodideInitializer';
 import { useStore } from './store/useStore';
@@ -16,6 +17,7 @@ import { CourseExplorer } from './pages/CourseExplorer';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AssessmentPage } from './pages/AssessmentPage';
+import { RichTextDemo } from './pages/RichTextDemo';
 
 
 function AppContent() {
@@ -77,10 +79,22 @@ function AppContent() {
 }
 
 export default function App() {
+  const [showDemo, setShowDemo] = useState(false);
+
   return (
     <SupabaseProvider>
       <PyodideInitializer />
-      <AppContent />
+      <div className="relative min-h-screen">
+        {/* Floating Demo Toggle Button */}
+        <button
+          onClick={() => setShowDemo(!showDemo)}
+          className="fixed top-4 right-4 z-[9999] px-4 py-2.5 bg-rose-700 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg shadow-rose-700/20 active:scale-95 transition-all text-xs flex items-center gap-1.5"
+        >
+          {showDemo ? '🔙 Kembali ke E-Learning' : '🧪 Buka Demo Rich Text (Edra)'}
+        </button>
+        
+        {showDemo ? <RichTextDemo /> : <AppContent />}
+      </div>
     </SupabaseProvider>
   );
 }
