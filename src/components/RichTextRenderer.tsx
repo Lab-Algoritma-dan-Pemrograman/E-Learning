@@ -25,6 +25,13 @@ const cleanContent = (html: string): string => {
   const tagRegex = /&lt;(\/?(div|pre|code|span|p|br|h1|h2|h3|h4|h5|h6|ul|ol|li|strong|em|table|thead|tbody|tr|td|th|a|img|blockquote|svg|path|hr)[^>]*?)&gt;/gi;
   cleaned = cleaned.replace(tagRegex, '<$1>');
 
+  // Clean terminal artifacts
+  cleaned = cleaned
+    .replace(/Output Terminal\s*\(Mac\):/gi, 'Output Terminal:')
+    .replace(/macbook-pro\s*—\s*~user\/workspace/gi, 'Terminal')
+    // Remove command spans starting with $
+    .replace(/<span class="text-zinc-500">\s*\$\s*[^<]*<\/span>/gi, '');
+
   return cleaned;
 };
 

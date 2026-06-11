@@ -68,7 +68,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
         </button>
       </div>
       
-      <div className="flex-1 relative min-h-[400px]">
+      <div className="flex-1 relative min-h-[200px]">
         <div className="absolute inset-0">
           <Editor
             height="100%"
