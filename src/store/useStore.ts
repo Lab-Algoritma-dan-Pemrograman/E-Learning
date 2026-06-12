@@ -20,7 +20,7 @@ export interface UserProfile {
   assessmentAccess?: Record<string, boolean>;
 }
 
-type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin' | 'assessments';
+type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin' | 'assessments' | 'monitoring' | 'auditlog' | 'terminal-demo';
 
 interface AppState {
   user: UserProfile | null;
@@ -39,6 +39,10 @@ interface AppState {
   setPyodideWorker: (worker: Worker | null) => void;
   isPyodideLoading: boolean;
   setIsPyodideLoading: (loading: boolean) => void;
+  cWorker: Worker | null;
+  setCWorker: (worker: Worker | null) => void;
+  isCLoading: boolean;
+  setIsCLoading: (loading: boolean) => void;
   unlockedAchievement: Achievement | null;
   setUnlockedAchievement: (achievement: Achievement | null) => void;
 }
@@ -60,6 +64,10 @@ export const useStore = create<AppState>((set) => ({
   setPyodideWorker: (worker) => set({ pyodideWorker: worker }),
   isPyodideLoading: true,
   setIsPyodideLoading: (loading) => set({ isPyodideLoading: loading }),
+  cWorker: null,
+  setCWorker: (worker) => set({ cWorker: worker }),
+  isCLoading: false,
+  setIsCLoading: (loading) => set({ isCLoading: loading }),
   unlockedAchievement: null,
   setUnlockedAchievement: (achievement) => set({ unlockedAchievement: achievement }),
 }));

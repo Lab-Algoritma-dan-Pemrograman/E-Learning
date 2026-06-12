@@ -17,19 +17,51 @@
   },
   {
     "id": "xp-beginner",
-    "title": "Pelajar Ambisius",
-    "description": "Capai total 500 XP.",
+    "title": "Langkah Pertama",
+    "description": "Capai total 100 XP. Perjalanan seribu mil dimulai dengan satu langkah!",
+    "icon": "Star",
+    "requirementType": "xp",
+    "requirementValue": 100
+  },
+  {
+    "id": "xp-explorer",
+    "title": "Penjelajah Aktif",
+    "description": "Capai total 300 XP. Kamu mulai menemukan ritme belajar!",
     "icon": "Zap",
     "requirementType": "xp",
-    "requirementValue": 500
+    "requirementValue": 300
   },
   {
     "id": "xp-warrior",
+    "title": "Pelajar Ambisius",
+    "description": "Capai total 600 XP. Konsistensi kamu mulai terlihat!",
+    "icon": "Flame",
+    "requirementType": "xp",
+    "requirementValue": 600
+  },
+  {
+    "id": "xp-knight",
     "title": "Ksatria Kode",
-    "description": "Capai total 2000 XP.",
+    "description": "Capai total 1000 XP. Kamu sudah menjadi programmer yang tangguh!",
     "icon": "Trophy",
     "requirementType": "xp",
-    "requirementValue": 2000
+    "requirementValue": 1000
+  },
+  {
+    "id": "xp-master",
+    "title": "Master Kode",
+    "description": "Capai total 1500 XP. Sedikit lagi menuju puncak!",
+    "icon": "Target",
+    "requirementType": "xp",
+    "requirementValue": 1500
+  },
+  {
+    "id": "xp-legend",
+    "title": "Legenda Algoritma",
+    "description": "Capai total 1860 XP. Kamu telah menyelesaikan seluruh kurikulum!",
+    "icon": "Trophy",
+    "requirementType": "xp",
+    "requirementValue": 1860
   },
   {
     "id": "streak-3",

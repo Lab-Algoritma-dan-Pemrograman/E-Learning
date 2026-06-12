@@ -135,6 +135,7 @@ export default defineConfig(({mode}) => {
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       workbox: {
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         navigateFallbackDenylist: [/^\/pyodide\.worker\.js/],
         runtimeCaching: [

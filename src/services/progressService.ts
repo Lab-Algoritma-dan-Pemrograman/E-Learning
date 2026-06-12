@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase';
 import { UserProfile, useStore } from '../store/useStore';
 import { reportProgressToSupabase, getOverallProgress, resetSupabaseProgress } from './centralApiService';
 import { Level } from '../data/curriculum';
-import { Achievement, checkAndUnlockAchievements } from './achievementService';
+import { Achievement, checkAndUnlockAchievements, checkXpAchievements } from './achievementService';
 
 export const completeLesson = async (
   user: UserProfile,
@@ -99,6 +99,12 @@ export const grantXp = async (user: UserProfile, amount: number): Promise<void> 
   if (error) throw error;
 
   useStore.getState().setUser({ ...user, xp: newXp, lastActive: new Date().toISOString() });
+
+  // Check XP-based achievements and show popup if newly unlocked
+  const xpAch = await checkXpAchievements(user.nim, newXp);
+  if (xpAch) {
+    useStore.getState().setUnlockedAchievement(xpAch);
+  }
 };
 
 export const syncProgress = (userId: string, setCompletedLessons: (lessons: string[]) => void) => {

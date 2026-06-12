@@ -86,30 +86,23 @@ export const saveGameHistory = async (
 
     if (historyErr) throw historyErr;
 
-    // 2. Fetch current user XP and increment it
-    const { data: userProfile } = await supabase
+    // 2. Use current store XP (avoids race condition with DB stale reads)
+    const currentUser = useStore.getState().user;
+    const currentXp = (currentUser && currentUser.nim === userId) ? (currentUser.xp || 0) : 0;
+    const newXp = currentXp + history.xpEarned;
+    const { error: userErr } = await supabase
       .from('users')
-      .select('xp')
-      .eq('nim', userId)
-      .single();
+      .update({
+        xp: newXp,
+        last_active: now
+      })
+      .eq('nim', userId);
 
-    if (userProfile) {
-      const newXp = userProfile.xp + history.xpEarned;
-      const { error: userErr } = await supabase
-        .from('users')
-        .update({
-          xp: newXp,
-          last_active: now
-        })
-        .eq('nim', userId);
+    if (userErr) throw userErr;
 
-      if (userErr) throw userErr;
-
-      // Optimistically update the local store so XP displays immediately in the header
-      const currentUser = useStore.getState().user;
-      if (currentUser && currentUser.nim === userId) {
-        useStore.getState().setUser({ ...currentUser, xp: newXp, lastActive: now });
-      }
+    // Optimistically update the local store so XP displays immediately in the header
+    if (currentUser && currentUser.nim === userId) {
+      useStore.getState().setUser({ ...currentUser, xp: newXp, lastActive: now });
     }
 
     console.log(`✅ Game result saved: +${history.xpEarned} XP for ${userId}`);

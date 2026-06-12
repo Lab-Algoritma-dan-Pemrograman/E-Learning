@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout } from '../components/Layout';
-import { Trophy, Zap, Clock, Settings, Edit2, Award, Star } from 'lucide-react';
+import { Trophy, Zap, Clock, Settings, Edit2, Award, Star, Bug, Target, Flame } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
@@ -152,26 +152,25 @@ const Badge: React.FC<{ icon: React.ReactNode; label: string; color: string }> =
 
 const AchievementCard: React.FC<{ title: string; desc: string; icon: string; unlocked?: boolean }> = ({ title, desc, icon, unlocked }) => {
   const IconMap: Record<string, any> = {
-    Bug: Trophy, Target: Star, Zap: Zap, Trophy: Trophy, Flame: Zap, Star: Star
+    Bug, Target, Zap, Trophy, Flame, Star
   };
-  // Fallback to emoji if needed or just use consistent icons
+  const IconComponent = IconMap[icon] || Trophy;
   
   return (
     <div className={cn(
-      "p-4 rounded-[2rem] border text-center space-y-3 transition-all flex flex-col items-center justify-center",
+      "p-5 rounded-[2rem] border text-center space-y-3 transition-all flex flex-col items-center justify-center",
       unlocked 
-        ? "bg-white border-zinc-200 shadow-sm" 
+        ? "bg-white border-zinc-200 shadow-sm hover:shadow-md hover:-translate-y-0.5" 
         : "bg-zinc-50 border-zinc-100 opacity-30 grayscale"
     )}>
       <div className={cn(
-        "w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-1",
-        unlocked ? "bg-rose-100 text-rose-700" : "bg-zinc-200 text-zinc-400"
+        "w-14 h-14 rounded-2xl flex items-center justify-center mb-1",
+        unlocked ? "bg-gradient-to-br from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/20" : "bg-zinc-200 text-zinc-400"
       )}>
-        {/* Simple mapping for now, or just show icon prop if it's an emoji */}
-        {icon.length > 2 ? <Trophy size={20} /> : icon}
+        <IconComponent size={24} />
       </div>
       <div>
-        <div className="font-bold text-[11px] leading-tight mb-1">{title}</div>
+        <div className="font-black text-[11px] leading-tight mb-1">{title}</div>
         <div className="text-[9px] text-zinc-500 font-medium leading-tight line-clamp-2">{desc}</div>
       </div>
     </div>

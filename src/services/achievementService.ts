@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { UserProfile } from '../store/useStore';
+import { UserProfile, useStore } from '../store/useStore';
 
 export interface Achievement {
   id: string;
@@ -100,5 +100,58 @@ export const getAchievements = async (): Promise<Achievement[]> => {
   } catch (error) {
     console.error('Error fetching achievements:', error);
     return [];
+  }
+};
+
+/**
+ * Check XP-based achievements only (lightweight, for use after grantXp or Bug Hunt).
+ * Returns the first newly unlocked XP achievement (for popup display).
+ */
+export const checkXpAchievements = async (nim: string, currentXp: number): Promise<Achievement | null> => {
+  try {
+    // 1. Get all XP-type achievements
+    const { data: xpAchievements, error: achErr } = await supabase
+      .from('achievements')
+      .select('*')
+      .eq('requirement_type', 'xp');
+
+    if (achErr || !xpAchievements) return null;
+
+    const formatted = xpAchievements.map(ach => ({
+      id: ach.id,
+      title: ach.title,
+      description: ach.description,
+      icon: ach.icon,
+      requirementType: 'xp' as const,
+      requirementValue: Number(ach.requirement_value)
+    }));
+
+    // 2. Get already unlocked
+    const { data: unlockedData, error: unlockErr } = await supabase
+      .from('unlocked_achievements')
+      .select('achievement_id')
+      .eq('nim', nim);
+
+    if (unlockErr) return null;
+    const unlockedIds = new Set((unlockedData || []).map(d => d.achievement_id));
+
+    // 3. Find first newly met XP achievement (sorted by threshold ascending)
+    const sorted = formatted.sort((a, b) => (a.requirementValue as number) - (b.requirementValue as number));
+    
+    for (const ach of sorted) {
+      if (unlockedIds.has(ach.id)) continue;
+      if (currentXp >= (ach.requirementValue as number)) {
+        const { error: insertErr } = await supabase
+          .from('unlocked_achievements')
+          .insert([{ nim, achievement_id: ach.id, unlocked_at: new Date().toISOString() }]);
+        
+        if (!insertErr) return ach;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error checking XP achievements:', error);
+    return null;
   }
 };

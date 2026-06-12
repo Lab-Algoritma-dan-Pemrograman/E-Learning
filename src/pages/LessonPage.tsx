@@ -61,9 +61,8 @@ export const LessonPage: React.FC = () => {
     if (level.accessMode === 'locked') return true;
     if (level.accessMode === 'unlocked') return false;
 
-    // Legacy locked field
+    // Legacy locked field (only true locks; false is the DB default, don't use it to force-unlock)
     if (level.locked === true) return true;
-    if (level.locked === false) return false;
 
     // Auto: first level is always unlocked
     if (levelIdx === 0) return false;
@@ -118,13 +117,14 @@ export const LessonPage: React.FC = () => {
   const [sandboxOutput, setSandboxOutput] = useState('');
   const [sandboxError, setSandboxError] = useState<string | null>(null);
   const [isSandboxRunning, setIsSandboxRunning] = useState(false);
+  const [sandboxInput, setSandboxInput] = useState('');
 
   const handleSandboxRun = async () => {
     setIsSandboxRunning(true);
     setSandboxError(null);
     setSandboxOutput('');
     try {
-      const result = await runCode(sandboxCode);
+      const result = await runCode(sandboxCode, sandboxInput || undefined);
       setSandboxOutput(result.output);
       setSandboxError(result.error);
     } catch (err: any) {
@@ -148,8 +148,18 @@ export const LessonPage: React.FC = () => {
 
   useEffect(() => {
     if (lesson) {
-      setStep('learn');
-      setCode(lesson.initialCode || lesson.codeExample);
+      // Resume at last step if lesson is partially done (not fully completed)
+      const isLessonDone = completedLessons.includes(lesson.id);
+      if (isLessonDone) {
+        setStep('learn'); // Review mode — always reset code to template
+        setCode(lesson.initialCode || lesson.codeExample);
+      } else {
+        const savedStep = localStorage.getItem(`lesson-step:${lesson.id}`) as 'learn' | 'quiz' | 'code' | null;
+        setStep(savedStep || 'learn');
+        // Resume saved code from localStorage (auto-save), fallback to template
+        const savedCode = localStorage.getItem(`lesson-code:${lesson.id}`);
+        setCode(savedCode ?? (lesson.initialCode || lesson.codeExample));
+      }
       setIsCorrect(null);
       setShowHint(false);
       setOutput('');
@@ -161,7 +171,7 @@ export const LessonPage: React.FC = () => {
       setSandboxOutput('');
       setSandboxError(null);
     }
-  }, [currentLevelIdx, currentModuleIdx, currentLessonIdx, lesson?.initialCode, lesson?.codeExample]);
+  }, [currentLevelIdx, currentModuleIdx, currentLessonIdx, lesson?.id, lesson?.initialCode, lesson?.codeExample]);
 
   if (!lesson) {
     return (
@@ -174,9 +184,14 @@ export const LessonPage: React.FC = () => {
   }
 
   const handleRun = async () => {
-    const result = await runCode(code);
+    // Collect stdin from the first test case that has an input field
+    const firstInput = lesson.testCases?.find(tc => tc.input)?.input || undefined;
+    const result = await runCode(code, firstInput);
     setOutput(result.output);
     setError(result.error);
+
+    // If there's a compiler/runtime error, stop here
+    if (result.error) return;
 
     // Static code validation (non-AI)
     if (lesson.validationRules && lesson.validationRules.length > 0) {
@@ -208,12 +223,29 @@ export const LessonPage: React.FC = () => {
       }
     }
 
-    const success = lesson.testCases.every(tc => {
-      return normalizeOutput(result.output) === normalizeOutput(tc.expectedOutput);
-    });
+    // Validate test cases — re-run with each test case's stdin if inputs differ
+    const inputsNeeded = lesson.testCases.filter(tc => tc.input);
+    let allPassed = true;
 
-    setIsCorrect(success);
-    if (success) {
+    if (inputsNeeded.length <= 1) {
+      // Single or no stdin — use the first run's output
+      allPassed = lesson.testCases.every(tc => {
+        return normalizeOutput(result.output) === normalizeOutput(tc.expectedOutput);
+      });
+    } else {
+      // Multiple test cases with different stdin — run each separately
+      for (const tc of lesson.testCases) {
+        const tcResult = tc.input ? await runCode(code, tc.input) : result;
+        if (tcResult.error || normalizeOutput(tcResult.output) !== normalizeOutput(tc.expectedOutput)) {
+          allPassed = false;
+          if (tcResult.error) setError(tcResult.error);
+          break;
+        }
+      }
+    }
+
+    setIsCorrect(allPassed);
+    if (allPassed) {
       confetti({
         particleCount: 100,
         spread: 70,
@@ -257,9 +289,21 @@ export const LessonPage: React.FC = () => {
       }
 
       if (nextId) {
+        // Advance global checkpoint to the next lesson so Dashboard resumes there
+        localStorage.setItem('last-lesson-checkpoint', JSON.stringify({
+          lessonId: nextId,
+          step: 'learn',
+          timestamp: Date.now()
+        }));
+        // Clean up per-lesson step and code for the completed lesson
+        localStorage.removeItem(`lesson-step:${lesson.id}`);
+        localStorage.removeItem(`lesson-code:${lesson.id}`);
         setCurrentLessonId(nextId);
       } else {
-        // Course completed!
+        // Course completed! Clear checkpoint
+        localStorage.removeItem('last-lesson-checkpoint');
+        localStorage.removeItem(`lesson-step:${lesson.id}`);
+        localStorage.removeItem(`lesson-code:${lesson.id}`);
         setShowSuccessModal(true);
       }
     } catch (err) {
@@ -292,6 +336,61 @@ export const LessonPage: React.FC = () => {
 
   const prevLessonId = getAdjacentLessonId('prev');
   const nextLessonId = getAdjacentLessonId('next');
+
+  // Step-aware navigation: order is learn → quiz → code
+  const stepOrder: ('learn' | 'quiz' | 'code')[] = ['learn', 'quiz', 'code'];
+
+  // Save step progress to localStorage for resume feature
+  useEffect(() => {
+    if (lesson) {
+      const isLessonDone = completedLessons.includes(lesson.id);
+      if (!isLessonDone) {
+        // Save per-lesson step for within-lesson resume
+        localStorage.setItem(`lesson-step:${lesson.id}`, step);
+        // Save global checkpoint for Dashboard "Continue Learning" resume
+        localStorage.setItem('last-lesson-checkpoint', JSON.stringify({
+          lessonId: lesson.id,
+          step: step,
+          timestamp: Date.now()
+        }));
+      }
+    }
+  }, [step, lesson?.id, completedLessons]);
+
+  // Auto-save code editor content to localStorage (debounced via React's batching)
+  useEffect(() => {
+    if (lesson && !completedLessons.includes(lesson.id)) {
+      localStorage.setItem(`lesson-code:${lesson.id}`, code);
+    }
+  }, [code, lesson?.id, completedLessons]);
+
+  const handlePrev = () => {
+    const currentStepIdx = stepOrder.indexOf(step);
+    if (currentStepIdx > 0) {
+      // Move to previous step within same lesson
+      setStep(stepOrder[currentStepIdx - 1]);
+    } else if (prevLessonId) {
+      // On first step (learn) → go to last step (code) of previous lesson
+      setCurrentLessonId(prevLessonId);
+      setStep('code');
+    }
+  };
+
+  const handleNext = () => {
+    const currentStepIdx = stepOrder.indexOf(step);
+    if (currentStepIdx < stepOrder.length - 1) {
+      // Move to next step within same lesson
+      setStep(stepOrder[currentStepIdx + 1]);
+    } else if (nextLessonId) {
+      // On last step (code) → go to first step (learn) of next lesson
+      setCurrentLessonId(nextLessonId);
+      setStep('learn');
+    }
+  };
+
+  // Determine if prev/next are available
+  const canGoPrev = stepOrder.indexOf(step) > 0 || !!prevLessonId;
+  const canGoNext = stepOrder.indexOf(step) < stepOrder.length - 1 || !!nextLessonId;
 
   return (
     <Layout>
@@ -507,6 +606,19 @@ export const LessonPage: React.FC = () => {
                   />
                 </div>
                 
+                {/* Stdin Input for Sandbox */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">Input (stdin)</label>
+                  <input
+                    type="text"
+                    value={sandboxInput}
+                    onChange={(e) => setSandboxInput(e.target.value)}
+                    placeholder={lessonLanguage === 'c' ? 'Masukkan input untuk scanf...' : 'Masukkan input untuk input()...'}
+                    className="flex-1 text-sm bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 font-mono text-zinc-700 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all"
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSandboxRun(); }}
+                  />
+                </div>
+
                 {/* Sandbox Terminal Output */}
                 <div className="h-44 bg-zinc-950 rounded-2xl border border-zinc-800 p-4 font-mono text-sm flex flex-col shadow-inner shrink-0">
                   <div className="flex items-center justify-between mb-2 text-zinc-500 text-xs uppercase tracking-widest font-bold">
@@ -554,7 +666,7 @@ export const LessonPage: React.FC = () => {
                 options={lesson.quiz.options}
                 correctAnswer={lesson.quiz.correctAnswer}
                 onComplete={async (correct) => {
-                  if (correct && !quizXpGranted && user) {
+                  if (correct && !quizXpGranted && user && !completedLessons.includes(lesson.id)) {
                     setQuizXpGranted(true);
                     try {
                       await grantXp(user, 25);
@@ -618,7 +730,7 @@ export const LessonPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4">
                 <div className="flex-1">
                   <CodeEditor 
                     code={code} 
@@ -631,6 +743,20 @@ export const LessonPage: React.FC = () => {
                     language={lessonLanguage}
                   />
                 </div>
+                {/* Show test case input hint if lesson uses stdin */}
+                {lesson.testCases?.some(tc => tc.input) && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">Input Uji</label>
+                    <div className="flex-1 text-sm bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 font-mono text-zinc-600">
+                      {lesson.testCases.filter(tc => tc.input).map((tc, i) => (
+                        <span key={i} className="inline-block">
+                          {i > 0 && <span className="text-zinc-300 mx-1">•</span>}
+                          <span className="bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded font-mono text-xs">{tc.input}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="h-40 bg-zinc-950 rounded-2xl border border-zinc-800 p-4 font-mono text-sm flex flex-col shadow-inner">
                   <div className="flex items-center justify-between mb-2 text-zinc-500 text-xs uppercase tracking-widest font-bold">
                     <div className="flex items-center gap-1.5">
@@ -671,11 +797,11 @@ export const LessonPage: React.FC = () => {
         {/* Bottom Navigation */}
         <div className="flex items-center justify-between pt-4 pb-8 border-t border-zinc-100">
           <button
-            onClick={() => prevLessonId && setCurrentLessonId(prevLessonId)}
-            disabled={!prevLessonId}
+            onClick={handlePrev}
+            disabled={!canGoPrev}
             className={cn(
               "flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all",
-              prevLessonId
+              canGoPrev
                 ? "text-zinc-700 hover:bg-zinc-100 active:scale-95"
                 : "text-zinc-300 cursor-not-allowed"
             )}
@@ -684,11 +810,11 @@ export const LessonPage: React.FC = () => {
             Sebelumnya
           </button>
           <button
-            onClick={() => nextLessonId && setCurrentLessonId(nextLessonId)}
-            disabled={!nextLessonId}
+            onClick={handleNext}
+            disabled={!canGoNext}
             className={cn(
               "flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all",
-              nextLessonId
+              canGoNext
                 ? "text-zinc-700 hover:bg-zinc-100 active:scale-95"
                 : "text-zinc-300 cursor-not-allowed"
             )}

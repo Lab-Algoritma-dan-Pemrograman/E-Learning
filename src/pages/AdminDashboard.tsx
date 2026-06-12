@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { UserProfile, useStore } from '../store/useStore';
@@ -7,11 +7,12 @@ import {
   Users, Trophy, Zap, Clock, ChevronRight, Search, Shield, 
   User as UserIcon, CheckCircle2, Sparkles, Loader2, BookOpen,
   Lock, Unlock, ChevronUp, ChevronDown, Trash2, Plus, GripVertical,
-  RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff, Terminal
+  RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff, Terminal, Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Level, Module, Lesson } from '../data/curriculum';
 import { RichTextEditor } from '../components/RichTextEditor';
+import { extractDocxText } from '../lib/documentParser';
 import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings, forceResetGameQuestions } from '../services/gameService';
 import { Achievement, getAchievements } from '../services/achievementService';
@@ -49,6 +50,15 @@ export const AdminDashboard: React.FC = () => {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [editingLevel, setEditingLevel] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ title: string; description: string }>({ title: '', description: '' });
+
+  // Module title editing state
+  const [editingModuleKey, setEditingModuleKey] = useState<string | null>(null);
+  const [moduleEditTitle, setModuleEditTitle] = useState('');
+
+  // Document import state
+  const [importDocTarget, setImportDocTarget] = useState<{ levelId: string; modIdx: number } | null>(null);
+  const [isImportingDoc, setIsImportingDoc] = useState(false);
+  const docFileInputRef = useRef<HTMLInputElement>(null);
 
   // Lesson editor state
   const [editingLessonInfo, setEditingLessonInfo] = useState<{ levelId: string; modIdx: number; lessonIdx: number } | null>(null);
@@ -434,6 +444,72 @@ export const AdminDashboard: React.FC = () => {
       description: editForm.description || level.description 
     });
     setEditingLevel(null);
+  };
+
+  // ===== EDIT MODULE TITLE =====
+  const handleSaveModuleEdit = (levelId: string, modIdx: number) => {
+    const level = draftCurriculum.find(l => l.id === levelId);
+    if (!level?.modules?.[modIdx]) return;
+    const newModules = [...level.modules];
+    newModules[modIdx] = { ...newModules[modIdx], title: moduleEditTitle.trim() || newModules[modIdx].title };
+    updateDraftLevel({ ...level, modules: newModules });
+    setEditingModuleKey(null);
+    setModuleEditTitle('');
+  };
+
+  // ===== IMPORT DOCUMENT (TXT/DOCX) AS LESSON =====
+  const handleDocFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !importDocTarget) return;
+
+    const { levelId, modIdx } = importDocTarget;
+    const level = draftCurriculum.find(l => l.id === levelId);
+    if (!level?.modules?.[modIdx]) return;
+
+    setIsImportingDoc(true);
+    try {
+      let content = '';
+      const fileName = file.name.replace(/\.[^.]+$/, ''); // remove extension
+
+      if (file.name.endsWith('.docx')) {
+        const paragraphs = await extractDocxText(file);
+        content = paragraphs.filter(p => p.trim()).join('\n\n');
+      } else {
+        // .txt or other text files
+        content = await file.text();
+      }
+
+      const newLesson: Lesson = {
+        id: `l-${Date.now()}`,
+        title: fileName || 'Materi Import',
+        explanation: content,
+        codeExample: '',
+        initialCode: '',
+        solution: '',
+        hint: '',
+        quiz: { question: 'Soal?', options: ['A', 'B', 'C', 'D'], correctAnswer: 0 },
+        testCases: [{ description: 'Test', expectedOutput: 'Output' }]
+      };
+
+      const newModules = [...level.modules];
+      newModules[modIdx] = {
+        ...newModules[modIdx],
+        lessons: [...(newModules[modIdx].lessons || []), newLesson]
+      };
+      updateDraftLevel({ ...level, modules: newModules });
+
+      // Auto-expand the module to show the new lesson
+      const modKey = `${levelId}:${newModules[modIdx].id}`;
+      setExpandedModules(prev => new Set(prev).add(modKey));
+    } catch (err) {
+      console.error('Import failed:', err);
+      setShowModal({ type: 'alert', title: 'Gagal Import', message: 'Gagal membaca file. Pastikan file .txt atau .docx yang valid.' });
+    } finally {
+      setIsImportingDoc(false);
+      setImportDocTarget(null);
+      // Reset file input so same file can be re-selected
+      if (docFileInputRef.current) docFileInputRef.current.value = '';
+    }
   };
 
   const handleCommitChanges = async () => {
@@ -1416,6 +1492,14 @@ export const AdminDashboard: React.FC = () => {
         {/* ==================== STRUCTURE TAB ==================== */}
         {activeTab === 'structure' && (
           <div className="max-w-4xl mx-auto space-y-6">
+            {/* Hidden file input for document import */}
+            <input
+              ref={docFileInputRef}
+              type="file"
+              accept=".txt,.docx"
+              className="hidden"
+              onChange={handleDocFileSelected}
+            />
             <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -1592,11 +1676,41 @@ export const AdminDashboard: React.FC = () => {
                                           >
                                             {isModExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                                           </button>
-                                          <BookOpen size={14} className="text-zinc-400" />
-                                          <span className="font-bold text-sm truncate">{mod.title}</span>
-                                          <span className="text-[10px] text-zinc-400 shrink-0">({mod.lessons?.length || 0} pelajaran)</span>
+                                          <BookOpen size={14} className="text-zinc-400 shrink-0" />
+                                          {editingModuleKey === modKey ? (
+                                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                                              <input
+                                                value={moduleEditTitle}
+                                                onChange={e => setModuleEditTitle(e.target.value)}
+                                                onKeyDown={e => { if (e.key === 'Enter') handleSaveModuleEdit(level.id, mIdx); if (e.key === 'Escape') setEditingModuleKey(null); }}
+                                                className="flex-1 min-w-0 px-2 py-0.5 bg-white border border-zinc-200 rounded text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20"
+                                                autoFocus
+                                              />
+                                              <button onClick={() => handleSaveModuleEdit(level.id, mIdx)} className="p-1 text-rose-700 hover:bg-rose-50 rounded" title="Simpan">
+                                                <Save size={12} />
+                                              </button>
+                                              <button onClick={() => setEditingModuleKey(null)} className="p-1 text-zinc-400 hover:bg-zinc-100 rounded" title="Batal">
+                                                <X size={12} />
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <>
+                                              <span className="font-bold text-sm truncate">{mod.title}</span>
+                                              <span className="text-[10px] text-zinc-400 shrink-0">({mod.lessons?.length || 0} pelajaran)</span>
+                                            </>
+                                          )}
                                         </div>
                                         <div className="flex items-center gap-0.5">
+                                          <button
+                                            onClick={() => {
+                                              setEditingModuleKey(modKey);
+                                              setModuleEditTitle(mod.title);
+                                            }}
+                                            className="p-1.5 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors"
+                                            title="Edit Nama Modul"
+                                          >
+                                            <Edit2 size={14} />
+                                          </button>
                                           <button
                                             onClick={() => handleMoveModule(level.id, mIdx, 'up')}
                                             disabled={mIdx === 0}
@@ -1634,6 +1748,16 @@ export const AdminDashboard: React.FC = () => {
                                           >
                                             <div className="px-4 pb-3 space-y-1">
                                               <div className="flex items-center justify-end gap-2 mb-2">
+                                                <button
+                                                  onClick={() => {
+                                                    setImportDocTarget({ levelId: level.id, modIdx: mIdx });
+                                                    setTimeout(() => docFileInputRef.current?.click(), 50);
+                                                  }}
+                                                  disabled={isImportingDoc}
+                                                  className="text-[10px] font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-colors flex items-center gap-1 border border-emerald-200/50 disabled:opacity-50"
+                                                >
+                                                  {isImportingDoc ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />} Import Materi
+                                                </button>
                                                 <button onClick={() => setAiGenModal({ type: 'lesson', levelId: level.id, modIdx: mIdx, levelLanguage: level.id.includes('c-') ? 'C' : 'Python' })} className="text-[10px] font-bold px-2 py-1 bg-amber-50 text-amber-600 rounded hover:bg-amber-100 transition-colors flex items-center gap-1 border border-amber-200/50">
                                                   <Zap size={10} /> + Pelajaran (AI)
                                                 </button>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck } from 'lucide-react';
+import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, Users, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { clearToken } from '../services/tokenService';
@@ -26,12 +26,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 flex">
       {/* Sidebar */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {isSidebarOpen && (
           <motion.aside
             initial={{ x: -280 }}
             animate={{ x: 0 }}
             exit={{ x: -280 }}
+            transition={{ type: 'tween', duration: 0.2 }}
             className="fixed inset-y-0 left-0 w-72 bg-white border-r border-zinc-200 z-50 flex flex-col"
           >
             <div className="p-6 border-bottom border-zinc-100 flex items-center justify-between">
@@ -81,13 +82,29 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
               {/* Admin Panel for Kordas and Admin */}
               {isKordasOrAdmin && (
-                <SidebarItem 
-                  icon={<ShieldCheck size={20} />} 
-                  label="Admin Panel" 
-                  href="/admin" 
-                  active={page === 'admin'} 
-                  onClick={(e) => { e.preventDefault(); setPage('admin'); }}
-                />
+                <>
+                  <SidebarItem 
+                    icon={<ShieldCheck size={20} />} 
+                    label="Admin Panel" 
+                    href="/admin" 
+                    active={page === 'admin'} 
+                    onClick={(e) => { e.preventDefault(); setPage('admin'); }}
+                  />
+                  <SidebarItem 
+                    icon={<Users size={20} />} 
+                    label="Monitoring" 
+                    href="/monitoring" 
+                    active={page === 'monitoring'} 
+                    onClick={(e) => { e.preventDefault(); setPage('monitoring'); }}
+                  />
+                  <SidebarItem 
+                    icon={<ClipboardList size={20} />} 
+                    label="Audit Log" 
+                    href="/auditlog" 
+                    active={page === 'auditlog'} 
+                    onClick={(e) => { e.preventDefault(); setPage('auditlog'); }}
+                  />
+                </>
               )}
             </nav>
 

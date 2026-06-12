@@ -11,13 +11,27 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
+import TextAlign from '@tiptap/extension-text-align';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
   List, ListOrdered, Heading1, Heading2, AlignLeft, 
-  AlignCenter, AlignRight, Table as TableIcon, Link as LinkIcon, 
+  AlignCenter, AlignRight, AlignJustify, Table as TableIcon, Link as LinkIcon, 
   Image as ImageIcon, Undo, Redo, Code, Plus, Trash2, 
-  Columns, Rows, Merge, Split
+  Columns, Rows, Merge, Split, Palette
 } from 'lucide-react';
+
+const TEXT_COLORS = [
+  { label: 'Hitam', value: '#000000' },
+  { label: 'Abu', value: '#6b7280' },
+  { label: 'Merah', value: '#dc2626' },
+  { label: 'Rose', value: '#be123c' },
+  { label: 'Oranye', value: '#ea580c' },
+  { label: 'Kuning', value: '#ca8a04' },
+  { label: 'Hijau', value: '#16a34a' },
+  { label: 'Biru', value: '#2563eb' },
+  { label: 'Ungu', value: '#7c3aed' },
+  { label: 'Putih', value: '#ffffff' },
+];
 
 interface RichTextEditorProps {
   value: string;
@@ -26,6 +40,8 @@ interface RichTextEditorProps {
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder = 'Tulis materi atau pertanyaan di sini...' }) => {
+  const [showColorPicker, setShowColorPicker] = React.useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -50,6 +66,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
         HTMLAttributes: {
           class: 'max-w-full h-auto rounded-xl shadow-md my-4 mx-auto block',
         },
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
       }),
     ],
     content: value,
@@ -186,6 +205,83 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
         >
           <ImageIcon size={16} />
         </button>
+
+        <div className="w-px h-6 bg-zinc-200 mx-1" />
+
+        {/* TEXT ALIGNMENT */}
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          className={`p-2 rounded-lg hover:bg-zinc-200 transition-colors ${editor.isActive({ textAlign: 'left' }) ? 'bg-zinc-200 text-rose-700 font-bold' : 'text-zinc-600'}`}
+          title="Rata Kiri"
+        >
+          <AlignLeft size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          className={`p-2 rounded-lg hover:bg-zinc-200 transition-colors ${editor.isActive({ textAlign: 'center' }) ? 'bg-zinc-200 text-rose-700 font-bold' : 'text-zinc-600'}`}
+          title="Rata Tengah"
+        >
+          <AlignCenter size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          className={`p-2 rounded-lg hover:bg-zinc-200 transition-colors ${editor.isActive({ textAlign: 'right' }) ? 'bg-zinc-200 text-rose-700 font-bold' : 'text-zinc-600'}`}
+          title="Rata Kanan"
+        >
+          <AlignRight size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+          className={`p-2 rounded-lg hover:bg-zinc-200 transition-colors ${editor.isActive({ textAlign: 'justify' }) ? 'bg-zinc-200 text-rose-700 font-bold' : 'text-zinc-600'}`}
+          title="Rata Kiri-Kanan"
+        >
+          <AlignJustify size={16} />
+        </button>
+
+        <div className="w-px h-6 bg-zinc-200 mx-1" />
+
+        {/* TEXT COLOR */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            className={`p-2 rounded-lg hover:bg-zinc-200 transition-colors ${showColorPicker ? 'bg-zinc-200 text-rose-700 font-bold' : 'text-zinc-600'}`}
+            title="Warna Teks"
+          >
+            <Palette size={16} />
+          </button>
+          {showColorPicker && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-zinc-200 rounded-xl shadow-xl p-2 z-50 grid grid-cols-5 gap-1 min-w-[140px]">
+              {TEXT_COLORS.map(c => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => {
+                    editor.chain().focus().setColor(c.value).run();
+                    setShowColorPicker(false);
+                  }}
+                  className="w-6 h-6 rounded-lg border border-zinc-200 hover:scale-125 transition-transform"
+                  style={{ backgroundColor: c.value }}
+                  title={c.label}
+                />
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  editor.chain().focus().unsetColor().run();
+                  setShowColorPicker(false);
+                }}
+                className="col-span-5 text-[10px] font-bold text-zinc-500 hover:text-zinc-800 py-1 mt-1 border-t border-zinc-100"
+              >
+                Reset Warna
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="w-px h-6 bg-zinc-200 mx-1" />
 

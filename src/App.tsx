@@ -17,6 +17,9 @@ import { CourseExplorer } from './pages/CourseExplorer';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AssessmentPage } from './pages/AssessmentPage';
+import { StudentMonitoring } from './pages/StudentMonitoring';
+import { AuditLogPage } from './pages/AuditLogPage';
+import { TerminalDemo } from './pages/TerminalDemo';
 
 
 function AppContent() {
@@ -47,6 +50,9 @@ function AppContent() {
         case 'profile': return <Profile />;
         case 'admin': return <AdminDashboard />;
         case 'assessments': return (user?.role === 'praktikan') ? <Dashboard /> : <AssessmentPage />;
+        case 'monitoring': return (user?.role === 'praktikan') ? <Dashboard /> : <StudentMonitoring />;
+        case 'auditlog': return (user?.role === 'praktikan') ? <Dashboard /> : <AuditLogPage />;
+        case 'terminal-demo': return <TerminalDemo />;
 
         default: return <Dashboard />;
       }
@@ -69,6 +75,9 @@ function AppContent() {
         if (href === '/profile') { e.preventDefault(); setPage('profile'); }
         if (href === '/admin') { e.preventDefault(); setPage('admin'); }
         if (href === '/assessments') { e.preventDefault(); setPage('assessments'); }
+        if (href === '/monitoring') { e.preventDefault(); setPage('monitoring'); }
+        if (href === '/auditlog') { e.preventDefault(); setPage('auditlog'); }
+        if (href === '/terminal-demo') { e.preventDefault(); setPage('terminal-demo'); }
 
       }
     }}>

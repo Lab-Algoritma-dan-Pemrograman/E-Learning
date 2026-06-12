@@ -23,10 +23,56 @@ export function detectLanguage(code: string): CodeLanguage {
 }
 
 /**
+ * Runs C code using Judge0 CE API (free, no auth, CORS-enabled).
+ * https://ce.judge0.com
+ */
+async function runCWithJudge0(code: string, input?: string): Promise<{ output: string; error: string | null }> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+
+  try {
+    const response = await fetch('https://ce.judge0.com/submissions?base64_encoded=false&wait=true', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source_code: code,
+        language_id: 50,
+        stdin: input || '',
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (result.status?.id === 6) {
+      return { output: '', error: (result.compile_output || 'Compilation error').trim() };
+    }
+
+    if (result.status?.id >= 7) {
+      return { output: result.stdout || '', error: (result.stderr || `Runtime error: ${result.status?.description}`).trim() };
+    }
+
+    return { output: result.stdout || '', error: null };
+  } catch (err: any) {
+    clearTimeout(timeout);
+    throw err;
+  }
+}
+
+/**
  * Runs C code using Wandbox API (free, no auth, full GCC compiler).
  * https://wandbox.org
  */
 async function runCWithWandbox(code: string, input?: string): Promise<{ output: string; error: string | null }> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+
   try {
     const response = await fetch('https://wandbox.org/api/compile.json', {
       method: 'POST',
@@ -37,25 +83,25 @@ async function runCWithWandbox(code: string, input?: string): Promise<{ output: 
         options: '',
         stdin: input || '',
       }),
+      signal: controller.signal,
     });
 
+    clearTimeout(timeout);
+
     if (!response.ok) {
-      return { output: '', error: `Server error (${response.status}). Coba lagi dalam beberapa detik.` };
+      throw new Error(`HTTP ${response.status}`);
     }
 
     const result = await response.json();
 
-    // Check compile errors
     if (result.compiler_error) {
       return { output: '', error: result.compiler_error };
     }
 
-    // Check runtime errors
     if (result.program_error) {
       return { output: result.program_output || '', error: result.program_error };
     }
 
-    // Check status (non-zero = runtime error)
     if (result.status !== 0 && result.status !== '0') {
       const errorMsg = result.program_error || result.compiler_error || `Program exit dengan kode ${result.status}`;
       return { output: result.program_output || '', error: errorMsg };
@@ -63,21 +109,49 @@ async function runCWithWandbox(code: string, input?: string): Promise<{ output: 
 
     return { output: result.program_output || '', error: null };
   } catch (err: any) {
-    return { output: '', error: `Gagal terhubung ke compiler. Periksa koneksi internet: ${err.message}` };
+    clearTimeout(timeout);
+    throw err;
   }
+}
+
+/**
+ * Runs C code with automatic fallback:
+ * 1. Judge0 CE (Primary) → 2. Wandbox (Fallback, retries up to 2x)
+ */
+async function runCWithFallback(code: string, input?: string): Promise<{ output: string; error: string | null }> {
+  // Try Judge0 CE first
+  try {
+    return await runCWithJudge0(code, input);
+  } catch (err) {
+    console.warn('Judge0 failed:', (err as any)?.message);
+  }
+
+  // Fallback to Wandbox with retries
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await runCWithWandbox(code, input);
+    } catch (err) {
+      console.warn(`Wandbox attempt ${attempt + 1} failed:`, (err as any)?.message);
+      if (attempt === 0) {
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+  }
+
+  return { output: '', error: 'Compiler sedang tidak tersedia. Coba lagi dalam beberapa detik.' };
 }
 
 /**
  * Universal code runner hook.
  * - Python: Pyodide (in-browser, offline via Web Worker)
- * - C: Wandbox API (full GCC compiler, online)
+ * - C: Judge0 CE (primary) → Wandbox (fallback)
  */
 export const useCodeRunner = (language: CodeLanguage = 'python') => {
   const { pyodideWorker, isPyodideLoading } = useStore();
 
   const runCode = useCallback(async (code: string, input?: string): Promise<{ output: string; error: string | null }> => {
     if (language === 'c') {
-      return runCWithWandbox(code, input);
+      return runCWithFallback(code, input);
     }
 
     // Python via Pyodide Worker
@@ -101,7 +175,7 @@ export const useCodeRunner = (language: CodeLanguage = 'python') => {
         }
       };
       pyodideWorker.addEventListener('message', handler);
-      pyodideWorker.postMessage({ type: 'RUN', code, id });
+      pyodideWorker.postMessage({ type: 'RUN', code, id, input: input || '' });
     });
   }, [pyodideWorker, language]);
 

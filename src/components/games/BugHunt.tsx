@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bug, Timer, CheckCircle2, XCircle, Trophy, ArrowRight, X, Terminal, Brain, Loader2 } from 'lucide-react';
 import { GameQuestion, getGameQuestions, saveGameHistory, canPlayBugHunt, getGameSettings } from '../../services/gameService';
-import { checkAndUnlockAchievements } from '../../services/achievementService';
+import { checkAndUnlockAchievements, checkXpAchievements } from '../../services/achievementService';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../lib/utils';
 
@@ -111,16 +111,24 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
           playedAt: new Date().toISOString()
         });
 
-        // Check for achievements
+        // Get current XP from store (updated by saveGameHistory)
+        const currentUser = useStore.getState().user;
+        const currentXp = (currentUser && currentUser.nim === user.nim) ? (currentUser.xp || 0) : user.xp + totalXp;
+
+        // Check for game_score and level_completed achievements
         const newlyUnlocked = await checkAndUnlockAchievements(user, { 
-          xp: user.xp + totalXp,
+          xp: currentXp,
           gamesPlayed: 1,
           perfectGames: score === questions.length ? 1 : 0 
         });
 
+        // Also check XP-based achievements with current XP
+        const xpAch = await checkXpAchievements(user.nim, currentXp);
+
         if (newlyUnlocked.length > 0) {
-          // Show the first one
           setUnlockedAchievement(newlyUnlocked[0]);
+        } else if (xpAch) {
+          setUnlockedAchievement(xpAch);
         }
       }
     } catch (error: any) {
