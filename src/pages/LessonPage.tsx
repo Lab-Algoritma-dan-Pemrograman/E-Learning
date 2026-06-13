@@ -732,6 +732,28 @@ export const LessonPage: React.FC = () => {
                       </motion.div>
                     )}
                   </AnimatePresence>
+
+                  {/* Expected Outputs Section */}
+                  {lesson.testCases && lesson.testCases.length > 0 && (
+                    <div className="mt-4 p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2">
+                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Output yang Diharapkan</div>
+                      <div className="space-y-3">
+                        {lesson.testCases.map((tc, idx) => (
+                          <div key={idx} className="space-y-1">
+                            {tc.description && (
+                              <div className="text-xs font-semibold text-zinc-600">{tc.description}</div>
+                            )}
+                            {tc.input && (
+                              <div className="text-xs text-zinc-500 font-mono">Input: <span className="bg-zinc-150 px-1 py-0.5 rounded text-zinc-700">{tc.input}</span></div>
+                            )}
+                            <pre className="p-3 bg-zinc-900 text-zinc-100 rounded-xl text-xs font-mono whitespace-pre-wrap">
+                              {tc.expectedOutput}
+                            </pre>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
