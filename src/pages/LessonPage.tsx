@@ -733,20 +733,32 @@ export const LessonPage: React.FC = () => {
                     )}
                   </AnimatePresence>
 
-                  {/* Expected Outputs Section */}
+                  {/* Expected Outputs Terminal */}
                   {lesson.testCases && lesson.testCases.length > 0 && (
-                    <div className="mt-4 p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2">
-                      <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Output yang Diharapkan</div>
-                      <div className="space-y-3">
+                    <div className="mt-4 border border-zinc-700 rounded-xl overflow-hidden shadow-lg">
+                      {/* Terminal Header */}
+                      <div className="bg-zinc-800 px-4 py-2 flex items-center justify-between border-b border-zinc-700">
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+                          </div>
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-2">Output</span>
+                        </div>
+                      </div>
+                      
+                      {/* Terminal Content */}
+                      <div className="bg-zinc-950 p-4 font-mono text-xs text-zinc-100 space-y-3 min-h-[60px]">
                         {lesson.testCases.map((tc, idx) => (
                           <div key={idx} className="space-y-1">
-                            {tc.description && (
-                              <div className="text-xs font-semibold text-zinc-600">{tc.description}</div>
+                            {lesson.testCases.length > 1 && (
+                              <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Kasus Uji #{idx + 1}</div>
                             )}
                             {tc.input && (
-                              <div className="text-xs text-zinc-500 font-mono">Input: <span className="bg-zinc-150 px-1 py-0.5 rounded text-zinc-700">{tc.input}</span></div>
+                              <div className="text-zinc-400">Input: <span className="text-emerald-400">{tc.input}</span></div>
                             )}
-                            <pre className="p-3 bg-zinc-900 text-zinc-100 rounded-xl text-xs font-mono whitespace-pre-wrap">
+                            <pre className="text-zinc-100 whitespace-pre-wrap font-mono select-all">
                               {tc.expectedOutput}
                             </pre>
                           </div>
