@@ -84,7 +84,67 @@ export const curriculumService = {
 
   async saveFullCurriculum(levels: Level[]): Promise<void> {
     try {
-      // 1. Insert levels
+      // 1. Gather all incoming IDs to preserve
+      const incomingLevelIds = levels.map(l => l.id);
+      const incomingModuleIds: string[] = [];
+      const incomingLessonIds: string[] = [];
+
+      for (const level of levels) {
+        if (level.modules) {
+          for (const mod of level.modules) {
+            incomingModuleIds.push(mod.id);
+            if (mod.lessons) {
+              for (const lesson of mod.lessons) {
+                incomingLessonIds.push(lesson.id);
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Fetch existing IDs in database to compare
+      const { data: dbLevels, error: levelsErr } = await supabase.from('levels').select('id');
+      if (levelsErr) throw levelsErr;
+      const { data: dbModules, error: modulesErr } = await supabase.from('modules').select('id');
+      if (modulesErr) throw modulesErr;
+      const { data: dbLessons, error: lessonsErr } = await supabase.from('lessons').select('id');
+      if (lessonsErr) throw lessonsErr;
+
+      const dbLevelIds = (dbLevels || []).map(l => l.id);
+      const dbModuleIds = (dbModules || []).map(m => m.id);
+      const dbLessonIds = (dbLessons || []).map(l => l.id);
+
+      // 3. Determine which ones to delete
+      const levelsToDelete = dbLevelIds.filter(id => !incomingLevelIds.includes(id));
+      const modulesToDelete = dbModuleIds.filter(id => !incomingModuleIds.includes(id));
+      const lessonsToDelete = dbLessonIds.filter(id => !incomingLessonIds.includes(id));
+
+      // 4. Perform deletions (lessons first, then modules, then levels)
+      if (lessonsToDelete.length > 0) {
+        const { error: deleteLessonsError } = await supabase
+          .from('lessons')
+          .delete()
+          .in('id', lessonsToDelete);
+        if (deleteLessonsError) throw deleteLessonsError;
+      }
+
+      if (modulesToDelete.length > 0) {
+        const { error: deleteModulesError } = await supabase
+          .from('modules')
+          .delete()
+          .in('id', modulesToDelete);
+        if (deleteModulesError) throw deleteModulesError;
+      }
+
+      if (levelsToDelete.length > 0) {
+        const { error: deleteLevelsError } = await supabase
+          .from('levels')
+          .delete()
+          .in('id', levelsToDelete);
+        if (deleteLevelsError) throw deleteLevelsError;
+      }
+
+      // 5. Insert / Upsert the remaining/new levels, modules, and lessons
       for (const level of levels) {
         await supabase
           .from('levels')
@@ -96,7 +156,6 @@ export const curriculumService = {
             locked: level.locked || false
           });
 
-        // 2. Insert modules
         if (level.modules) {
           for (let mIdx = 0; mIdx < level.modules.length; mIdx++) {
             const mod = level.modules[mIdx];
@@ -109,7 +168,6 @@ export const curriculumService = {
                 sort_order: mIdx
               });
 
-            // 3. Insert lessons
             if (mod.lessons) {
               for (let lIdx = 0; lIdx < mod.lessons.length; lIdx++) {
                 const lesson = mod.lessons[lIdx];

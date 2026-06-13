@@ -39,8 +39,8 @@ interface AppState {
   setPyodideWorker: (worker: Worker | null) => void;
   isPyodideLoading: boolean;
   setIsPyodideLoading: (loading: boolean) => void;
-  cWorker: Worker | null;
-  setCWorker: (worker: Worker | null) => void;
+  cWorker: any;
+  setCWorker: (worker: any) => void;
   isCLoading: boolean;
   setIsCLoading: (loading: boolean) => void;
   unlockedAchievement: Achievement | null;
@@ -66,7 +66,7 @@ export const useStore = create<AppState>((set) => ({
   setIsPyodideLoading: (loading) => set({ isPyodideLoading: loading }),
   cWorker: null,
   setCWorker: (worker) => set({ cWorker: worker }),
-  isCLoading: false,
+  isCLoading: true,
   setIsCLoading: (loading) => set({ isCLoading: loading }),
   unlockedAchievement: null,
   setUnlockedAchievement: (achievement) => set({ unlockedAchievement: achievement }),

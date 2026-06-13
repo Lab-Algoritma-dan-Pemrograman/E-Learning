@@ -41,7 +41,6 @@
     "firebase-admin": "^13.8.0",
     "framer-motion": "^12.38.0",
     "jose": "^6.2.2",
-    "JSCPP": "^2.0.9",
     "jszip": "^3.10.1",
     "katex": "^0.17.0",
     "lowlight": "^3.3.0",

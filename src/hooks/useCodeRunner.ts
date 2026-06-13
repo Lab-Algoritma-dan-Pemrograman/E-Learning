@@ -142,16 +142,76 @@ async function runCWithFallback(code: string, input?: string): Promise<{ output:
 }
 
 /**
+ * Automatically injects setbuf(stdout, NULL) and setbuf(stdin, NULL) at the start of main function.
+ */
+function injectStdoutUnbuffering(code: string): string {
+  const mainRegex = /\bmain\s*\([^)]*\)\s*\{/;
+  if (mainRegex.test(code)) {
+    return code.replace(mainRegex, '$&\n    setbuf(stdout, NULL);\n    setbuf(stdin, NULL);');
+  }
+  return code;
+}
+
+/**
  * Universal code runner hook.
  * - Python: Pyodide (in-browser, offline via Web Worker)
  * - C: Judge0 CE (primary) → Wandbox (fallback)
  */
 export const useCodeRunner = (language: CodeLanguage = 'python') => {
-  const { pyodideWorker, isPyodideLoading } = useStore();
+  const { pyodideWorker, isPyodideLoading, cWorker, isCLoading } = useStore();
 
-  const runCode = useCallback(async (code: string, input?: string): Promise<{ output: string; error: string | null }> => {
+  const runCode = useCallback(async (code: string, input?: string): Promise<{ output: string; error: string | null; waitingForInput?: boolean; inputOffsets?: number[]; stdoutLenAtInputRequest?: number }> => {
     if (language === 'c') {
-      return runCWithFallback(code, input);
+      if (!cWorker) {
+        return {
+          output: '',
+          error: 'Compiler Clang gagal dimuat atau sedang bermasalah. Silakan muat ulang halaman.'
+        };
+      }
+
+      return new Promise((resolve) => {
+        const responseId = Math.floor(Math.random() * 1000000);
+        let outputBuffer = '';
+
+        // Step 1: Compile the C code
+        cWorker.postMessage({ id: 'compile', responseId, data: injectStdoutUnbuffering(code) });
+
+        // Wait for COMPILE done
+        const compileHandler = (e: MessageEvent) => {
+          const { id, data } = e.data;
+          
+          if (id === 'write') {
+            outputBuffer += data;
+          } else if (id === 'runAsync' && e.data.responseId === responseId) {
+            cWorker.removeEventListener('message', compileHandler);
+            
+            if (!data.success) {
+              resolve({ output: '', error: outputBuffer || data.error || 'Gagal melakukan kompilasi.' });
+              return;
+            }
+
+            // Step 2: Clear compile output buffer and start program execution
+            outputBuffer = ''; // Reset buffer to capture only stdout/stderr of the C program
+            
+            const runResponseId = responseId + 1; // Unique ID for run
+            
+            const runHandler = (e2: MessageEvent) => {
+              const { id: id2, data: data2 } = e2.data;
+              if (id2 === 'write') {
+                outputBuffer += data2;
+              } else if (id2 === 'runAsync' && e2.data.responseId === runResponseId) {
+                cWorker.removeEventListener('message', runHandler);
+                resolve({ output: outputBuffer, error: data2.error, waitingForInput: data2.waitingForInput, inputOffsets: data2.inputOffsets, stdoutLenAtInputRequest: data2.stdoutLenAtInputRequest });
+              }
+            };
+
+            cWorker.addEventListener('message', runHandler);
+            cWorker.postMessage({ id: 'run', responseId: runResponseId, data: input || '' });
+          }
+        };
+
+        cWorker.addEventListener('message', compileHandler);
+      });
     }
 
     // Python via Pyodide Worker
@@ -177,9 +237,9 @@ export const useCodeRunner = (language: CodeLanguage = 'python') => {
       pyodideWorker.addEventListener('message', handler);
       pyodideWorker.postMessage({ type: 'RUN', code, id, input: input || '' });
     });
-  }, [pyodideWorker, language]);
+  }, [pyodideWorker, cWorker, language]);
 
-  const isLoading = language === 'python' ? isPyodideLoading : false;
+  const isLoading = language === 'python' ? isPyodideLoading : isCLoading;
 
   return { runCode, isLoading, error: null, language };
 };

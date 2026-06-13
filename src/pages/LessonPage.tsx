@@ -609,13 +609,18 @@ export const LessonPage: React.FC = () => {
                 {/* Stdin Input for Sandbox */}
                 <div className="flex items-center gap-2 shrink-0">
                   <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">Input (stdin)</label>
-                  <input
-                    type="text"
+                  <textarea
+                    rows={1}
                     value={sandboxInput}
                     onChange={(e) => setSandboxInput(e.target.value)}
-                    placeholder={lessonLanguage === 'c' ? 'Masukkan input untuk scanf...' : 'Masukkan input untuk input()...'}
-                    className="flex-1 text-sm bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 font-mono text-zinc-700 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all"
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSandboxRun(); }}
+                    placeholder={lessonLanguage === 'c' ? 'Masukkan input untuk scanf...\n(Gunakan Enter untuk baris baru jika input banyak, Ctrl+Enter untuk menjalankan)' : 'Masukkan input untuk input()...\n(Gunakan Enter untuk baris baru, Ctrl+Enter untuk menjalankan)'}
+                    className="flex-1 text-sm bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-1.5 font-mono text-zinc-700 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all resize-y min-h-[38px] max-h-[120px]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        handleSandboxRun();
+                      }
+                    }}
                   />
                 </div>
 

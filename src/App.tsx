@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { SupabaseProvider } from './components/SupabaseProvider';
 import { PyodideInitializer } from './components/PyodideInitializer';
+import { ClangInitializer } from './components/ClangInitializer';
 import { useStore } from './store/useStore';
 import { secureLog, secureError } from './lib/securityUtils';
 import { LandingPage } from './pages/LandingPage';
@@ -90,6 +91,7 @@ export default function App() {
   return (
     <SupabaseProvider>
       <PyodideInitializer />
+      <ClangInitializer />
       <div className="relative min-h-screen">
         <AppContent />
       </div>

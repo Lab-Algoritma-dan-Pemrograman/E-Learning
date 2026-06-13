@@ -35,6 +35,7 @@ export const Playground: React.FC = () => {
   const cLastOutputLenRef = useRef(0);
   const cStdinInputCountRef = useRef(0);
   const cStdinFullOutputRef = useRef('');
+  const cStdinOffsetsRef = useRef<number[]>([]);
 
   // Init xterm.js terminal
   useEffect(() => {
@@ -100,7 +101,7 @@ export const Playground: React.FC = () => {
           term.write('\r\n');
           cStdinLinesRef.current.push(cStdinBufferRef.current);
           cStdinBufferRef.current = '';
-          const allStdin = cStdinLinesRef.current.join('\n');
+          const allStdin = cStdinLinesRef.current.join('\n') + '\n';
           executeCCodeRef.current(allStdin);
         } else if (keyCode === 8) {
           if (cStdinBufferRef.current.length > 0) {
@@ -192,13 +193,14 @@ export const Playground: React.FC = () => {
     const term = xtermRef.current;
     if (!term) return;
 
+    setIsRunning(true);
     const result = await runCode(code, stdin || undefined);
 
     // Compilation error → show & stop
     if (result.error && !result.output) {
       cStdinModeRef.current = false;
       term.clear();
-      term.writeln('\x1b[1;36m$ gcc run\x1b[0m');
+      term.writeln('\x1b[1;36m$ clang run\x1b[0m');
       term.writeln('');
       term.writeln(`\x1b[1;31m❌ Error:\x1b[0m`);
       term.writeln(`\x1b[31m${result.error}\x1b[0m`);
@@ -209,11 +211,39 @@ export const Playground: React.FC = () => {
 
     // Clear and re-show full output
     term.clear();
-    term.writeln('\x1b[1;36m$ gcc run\x1b[0m');
+    term.writeln('\x1b[1;36m$ clang run\x1b[0m');
     term.writeln('');
 
-    const output = result.output || '';
-    term.write(output);
+    // Accumulate the pause offset for the next input request
+    if (result.waitingForInput && result.stdoutLenAtInputRequest !== undefined) {
+      const newOffset = result.stdoutLenAtInputRequest;
+      if (!cStdinOffsetsRef.current.includes(newOffset)) {
+        cStdinOffsetsRef.current.push(newOffset);
+      }
+    }
+
+    let output = result.output || '';
+    if (result.waitingForInput && result.stdoutLenAtInputRequest !== undefined) {
+      output = output.slice(0, result.stdoutLenAtInputRequest);
+    }
+    
+    // Interleave stdout and typed stdin inputs to display them in the exact order they happened
+    let displayOutput = '';
+    const offsets = cStdinOffsetsRef.current;
+    const inputs = cStdinLinesRef.current;
+    
+    let lastOffset = 0;
+    for (let i = 0; i < offsets.length; i++) {
+      const offset = offsets[i];
+      displayOutput += output.slice(lastOffset, offset);
+      if (i < inputs.length) {
+        displayOutput += inputs[i] + '\n';
+      }
+      lastOffset = offset;
+    }
+    displayOutput += output.slice(lastOffset);
+    
+    term.write(displayOutput);
 
     // Show runtime error if any
     if (result.error) {
@@ -221,97 +251,37 @@ export const Playground: React.FC = () => {
       term.writeln(`\x1b[33m⚠ ${result.error}\x1b[0m`);
     }
 
-    // Check if this output matches the "complete" output (all inputs satisfied)
-    const currentInputCount = cStdinLinesRef.current.length;
-    if (currentInputCount >= cStdinInputCountRef.current) {
-      // All scanf calls satisfied — program is done!
+    if (result.waitingForInput) {
+      // Program needs more input — stay in input mode
+      cStdinModeRef.current = true;
+      cStdinBufferRef.current = '';
+    } else {
+      // Program is done!
       cStdinModeRef.current = false;
       if (!output.endsWith('\n') && output.length > 0) term.writeln('');
       term.writeln('');
       term.writeln('\x1b[1;32m✓ Program selesai!\x1b[0m');
       term.writeln('');
       setIsRunning(false);
-    } else {
-      // More scanf calls expected — stay in input mode
-      cStdinModeRef.current = true;
-      cStdinBufferRef.current = '';
     }
   }, [runCode, code]);
 
-  // Run C — auto-detects scanf count, then steps through each input
+  // Run C
   const runC = useCallback(async (code: string) => {
     const term = xtermRef.current;
     if (!term) return;
 
     setIsRunning(true);
     term.clear();
-    term.writeln('\x1b[1;36m$ gcc run\x1b[0m');
-    term.writeln('\x1b[2mMendeteksi input...\x1b[0m');
+    term.writeln('\x1b[1;36m$ clang run\x1b[0m');
 
     cStdinLinesRef.current = [];
     cStdinBufferRef.current = '';
     cLastOutputLenRef.current = 0;
+    cStdinOffsetsRef.current = [];
 
-    // Phase 1: Detect how many scanf calls exist
-    // Run with 0,1,2,3,4 dummy inputs in parallel
-    const maxTestInputs = 4;
-    const dummyInput = '\u0001'; // non-printable char as dummy
-    const runs = await Promise.all(
-      Array.from({ length: maxTestInputs + 1 }, (_, i) =>
-        runCode(code, i === 0 ? undefined : Array(i).fill(dummyInput).join('\n'))
-      )
-    );
-
-    // Check for compilation error
-    if (runs[0].error && !runs[0].output) {
-      term.clear();
-      term.writeln('\x1b[1;36m$ gcc run\x1b[0m');
-      term.writeln('');
-      term.writeln(`\x1b[1;31m❌ Error:\x1b[0m`);
-      term.writeln(`\x1b[31m${runs[0].error}\x1b[0m`);
-      term.writeln('');
-      setIsRunning(false);
-      return;
-    }
-
-    // Find when output stops changing (all remaining scanf are satisfied)
-    let inputCount = 0;
-    for (let i = 0; i < runs.length - 1; i++) {
-      const a = runs[i].output || '';
-      const b = runs[i + 1].output || '';
-      if (a !== b) {
-        inputCount = i + 1;
-      }
-    }
-
-    // Store detected input count and full output
-    cStdinInputCountRef.current = inputCount;
-    cStdinFullOutputRef.current = runs[inputCount]?.output || '';
-
-    // Phase 2: Show output and enter interactive mode
-    term.clear();
-    term.writeln('\x1b[1;36m$ gcc run\x1b[0m');
-    term.writeln('');
-
-    const output = runs[0].output || '';
-    term.write(output);
-
-    if (inputCount === 0) {
-      // No scanf — program finished
-      if (!output.endsWith('\n') && output.length > 0) term.writeln('');
-      term.writeln('');
-      term.writeln('\x1b[1;32m✓ Program selesai!\x1b[0m');
-      term.writeln('');
-      cStdinModeRef.current = false;
-      setIsRunning(false);
-    } else {
-      // Has scanf — enter step-through input mode
-      cStdinModeRef.current = true;
-      cStdinBufferRef.current = '';
-      term.writeln('');
-      term.writeln(`\x1b[1;34mℹ Program membutuhkan ${inputCount} input.\x1b[0m`);
-    }
-  }, [runCode]);
+    await executeCCode("");
+  }, [executeCCode]);
 
   // Store executeCCode ref so terminal keyboard handler can call it
   const executeCCodeRef = useRef(executeCCode);
@@ -340,6 +310,7 @@ export const Playground: React.FC = () => {
     cStdinModeRef.current = false;
     cStdinLinesRef.current = [];
     cStdinBufferRef.current = '';
+    cStdinOffsetsRef.current = [];
     cStdinInputCountRef.current = 0;
     cStdinFullOutputRef.current = '';
     setIsRunning(false);
@@ -445,7 +416,7 @@ export const Playground: React.FC = () => {
                 <div className="w-3 h-3 rounded-full bg-green-500" />
               </div>
               <span className="text-xs text-zinc-400 font-mono ml-2 flex-1">
-                {language === 'python' ? 'python' : 'gcc'} — playground
+                {language === 'python' ? 'python' : 'clang'} — playground
               </span>
               <button 
                 onClick={clearOutput}
