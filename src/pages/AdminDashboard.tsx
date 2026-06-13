@@ -7,7 +7,7 @@ import {
   Users, Trophy, Zap, Clock, ChevronRight, Search, Shield, 
   User as UserIcon, CheckCircle2, Sparkles, Loader2, BookOpen,
   Lock, Unlock, ChevronUp, ChevronDown, Trash2, Plus, GripVertical,
-  RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff, Terminal, Upload
+  RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff, Terminal, Upload, Move
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Level, Module, Lesson } from '../data/curriculum';
@@ -88,6 +88,10 @@ export const AdminDashboard: React.FC = () => {
     message: string;
     onConfirm?: () => void;
   } | null>(null);
+
+  const [movingLesson, setMovingLesson] = useState<{ levelId: string; modIdx: number; lessonIdx: number; } | null>(null);
+  const [targetMoveLevelId, setTargetMoveLevelId] = useState<string>('');
+  const [targetMoveModId, setTargetMoveModId] = useState<string>('');
 
   const [aiGenModal, setAiGenModal] = useState<{ type: 'module' | 'lesson'; levelId: string; modIdx?: number; levelLanguage: string; } | null>(null);
   const [aiGenContext, setAiGenContext] = useState('');
@@ -430,6 +434,76 @@ export const AdminDashboard: React.FC = () => {
         newModules[modIdx] = { ...mod, lessons: newLessons };
         updateDraftLevel({ ...level, modules: newModules });
       }
+    });
+  };
+
+  // ===== MOVE LESSON TO ANOTHER LEVEL/MODULE =====
+  useEffect(() => {
+    if (movingLesson) {
+      setTargetMoveLevelId(movingLesson.levelId);
+      const level = draftCurriculum.find(l => l.id === movingLesson.levelId);
+      if (level?.modules && level.modules.length > 0) {
+        setTargetMoveModId(level.modules[0].id);
+      } else {
+        setTargetMoveModId('');
+      }
+    }
+  }, [movingLesson, draftCurriculum]);
+
+  const handleMoveLevelChange = (levelId: string) => {
+    setTargetMoveLevelId(levelId);
+    const level = draftCurriculum.find(l => l.id === levelId);
+    if (level?.modules && level.modules.length > 0) {
+      setTargetMoveModId(level.modules[0].id);
+    } else {
+      setTargetMoveModId('');
+    }
+  };
+
+  const handleMoveLessonToTarget = (targetLevelId: string, targetModId: string) => {
+    if (!movingLesson) return;
+    const { levelId: srcLevelId, modIdx: srcModIdx, lessonIdx: srcLessonIdx } = movingLesson;
+    
+    const srcLevel = draftCurriculum.find(l => l.id === srcLevelId);
+    if (!srcLevel || !srcLevel.modules?.[srcModIdx]) return;
+    const srcMod = srcLevel.modules[srcModIdx];
+    if (!srcMod.lessons?.[srcLessonIdx]) return;
+    
+    const lessonToMove = srcMod.lessons[srcLessonIdx];
+    
+    const updatedCurriculum = draftCurriculum.map(level => {
+      let nextModules = level.modules ? [...level.modules] : [];
+      
+      if (level.id === srcLevelId) {
+        nextModules = nextModules.map((m, mIdx) => {
+          if (mIdx === srcModIdx) {
+            const nextLessons = (m.lessons || []).filter((_, idx) => idx !== srcLessonIdx);
+            return { ...m, lessons: nextLessons };
+          }
+          return m;
+        });
+      }
+      
+      if (level.id === targetLevelId) {
+        nextModules = nextModules.map(m => {
+          if (m.id === targetModId) {
+            const nextLessons = [...(m.lessons || []), lessonToMove];
+            return { ...m, lessons: nextLessons };
+          }
+          return m;
+        });
+      }
+      
+      return { ...level, modules: nextModules };
+    });
+    
+    setDraftCurriculum(updatedCurriculum);
+    setHasChanges(true);
+    setMovingLesson(null);
+    setShowModal({
+      type: 'alert',
+      title: 'Pelajaran Dipindahkan',
+      message: `Pelajaran "${lessonToMove.title}" berhasil dipindahkan. Jangan lupa klik "Simpan ke Server" untuk menyimpan perubahan.`
     });
   };
 
@@ -1133,6 +1207,84 @@ export const AdminDashboard: React.FC = () => {
               </motion.div>
             </div>
           )}
+
+          {movingLesson && (() => {
+            const srcLevel = draftCurriculum.find(l => l.id === movingLesson.levelId);
+            const srcMod = srcLevel?.modules?.[movingLesson.modIdx];
+            const lesson = srcMod?.lessons?.[movingLesson.lessonIdx];
+            if (!lesson) return null;
+
+            const selectedLevel = draftCurriculum.find(l => l.id === targetMoveLevelId);
+
+            return (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 text-zinc-900"
+                >
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                      <Move size={20} className="text-rose-700" />
+                      Pindahkan Pelajaran
+                    </h3>
+                    <p className="text-zinc-500 text-sm">
+                      Memindahkan pelajaran <span className="font-semibold text-zinc-800">"{lesson.title}"</span> dari subbab <span className="font-semibold text-zinc-800">"{srcMod?.title}"</span> ke:
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-zinc-400 uppercase">Subbab / Level Tujuan</label>
+                      <select 
+                        value={targetMoveLevelId}
+                        onChange={(e) => handleMoveLevelChange(e.target.value)}
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-rose-700 text-sm"
+                      >
+                        {draftCurriculum.map(l => (
+                          <option key={l.id} value={l.id}>{l.title}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-zinc-400 uppercase">Modul Tujuan</label>
+                      <select 
+                        value={targetMoveModId}
+                        onChange={(e) => setTargetMoveModId(e.target.value)}
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-rose-700 text-sm"
+                      >
+                        {selectedLevel?.modules && selectedLevel.modules.length > 0 ? (
+                          selectedLevel.modules.map(m => (
+                            <option key={m.id} value={m.id}>{m.title}</option>
+                          ))
+                        ) : (
+                          <option value="">(Tidak ada modul di level ini)</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      onClick={() => setMovingLesson(null)}
+                      className="flex-1 py-3 bg-zinc-100 text-zinc-600 font-bold rounded-xl hover:bg-zinc-200 transition-all text-sm"
+                    >
+                      Batal
+                    </button>
+                    <button 
+                      onClick={() => handleMoveLessonToTarget(targetMoveLevelId, targetMoveModId)}
+                      disabled={!targetMoveModId}
+                      className="flex-1 py-3 bg-rose-800 text-white font-bold rounded-xl hover:bg-rose-900 shadow-lg shadow-rose-700/20 transition-all text-sm disabled:opacity-50"
+                    >
+                      Pindahkan
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            );
+          })()}
         </AnimatePresence>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1792,6 +1944,13 @@ export const AdminDashboard: React.FC = () => {
                                                       className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded disabled:opacity-30 transition-colors"
                                                     >
                                                       <ChevronDown size={12} />
+                                                    </button>
+                                                    <button
+                                                      onClick={() => setMovingLesson({ levelId: level.id, modIdx: mIdx, lessonIdx: lesIdx })}
+                                                      className="p-1 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors"
+                                                      title="Pindahkan Pelajaran ke Subbab/Level Lain"
+                                                    >
+                                                      <Move size={12} />
                                                     </button>
                                                     <button
                                                       onClick={() => handleDeleteLesson(level.id, mIdx, lesIdx)}

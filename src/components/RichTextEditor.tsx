@@ -296,28 +296,89 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
         </button>
 
         {editor.isActive('table') && (
-          <div className="flex items-center gap-1 bg-zinc-100 p-0.5 rounded-lg border border-zinc-200">
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().addColumnAfter().run()}
-              className="p-1.5 rounded hover:bg-zinc-200 text-zinc-600"
-              title="Add Column"
-            >
-              <Columns size={14} />
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().addRowAfter().run()}
-              className="p-1.5 rounded hover:bg-zinc-200 text-zinc-600"
-              title="Add Row"
-            >
-              <Rows size={14} />
-            </button>
+          <div className="flex flex-wrap items-center gap-1 bg-zinc-100 p-1 rounded-lg border border-zinc-200">
+            {/* Column Operations */}
+            <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-1 mr-1">
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().addColumnBefore().run()}
+                className="p-1.5 rounded hover:bg-zinc-200 text-zinc-600 flex items-center"
+                title="Tambah Kolom Sebelum"
+              >
+                <Plus size={10} className="mr-0.5" /><Columns size={12} />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().addColumnAfter().run()}
+                className="p-1.5 rounded hover:bg-zinc-200 text-zinc-600 flex items-center"
+                title="Tambah Kolom Sesudah"
+              >
+                <Columns size={12} /><Plus size={10} className="ml-0.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().deleteColumn().run()}
+                className="p-1.5 rounded hover:bg-red-50 text-red-500 hover:text-red-700 flex items-center"
+                title="Hapus Kolom"
+              >
+                <Trash2 size={12} className="mr-0.5" /><Columns size={12} />
+              </button>
+            </div>
+
+            {/* Row Operations */}
+            <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-1 mr-1">
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().addRowBefore().run()}
+                className="p-1.5 rounded hover:bg-zinc-200 text-zinc-600 flex items-center"
+                title="Tambah Baris Sebelum"
+              >
+                <Plus size={10} className="mr-0.5" /><Rows size={12} />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().addRowAfter().run()}
+                className="p-1.5 rounded hover:bg-zinc-200 text-zinc-600 flex items-center"
+                title="Tambah Baris Sesudah"
+              >
+                <Rows size={12} /><Plus size={10} className="ml-0.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().deleteRow().run()}
+                className="p-1.5 rounded hover:bg-red-50 text-red-500 hover:text-red-700 flex items-center"
+                title="Hapus Baris"
+              >
+                <Trash2 size={12} className="mr-0.5" /><Rows size={12} />
+              </button>
+            </div>
+
+            {/* Cell Operations */}
+            <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-1 mr-1">
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().mergeCells().run()}
+                className="p-1.5 rounded hover:bg-zinc-200 text-zinc-600"
+                title="Gabungkan Sel (Merge)"
+              >
+                <Merge size={12} />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor.chain().focus().splitCell().run()}
+                className="p-1.5 rounded hover:bg-zinc-200 text-zinc-600"
+                title="Pisahkan Sel (Split)"
+              >
+                <Split size={12} />
+              </button>
+            </div>
+
+            {/* Table Delete */}
             <button
               type="button"
               onClick={() => editor.chain().focus().deleteTable().run()}
-              className="p-1.5 rounded hover:bg-zinc-200 text-red-500"
-              title="Delete Table"
+              className="p-1.5 rounded hover:bg-red-100 text-red-600 hover:text-red-800"
+              title="Hapus Seluruh Tabel"
             >
               <Trash2 size={14} />
             </button>
