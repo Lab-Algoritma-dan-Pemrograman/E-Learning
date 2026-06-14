@@ -623,10 +623,11 @@ export const LessonPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowLessonNav(true)}
-              className="p-2 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-zinc-700 transition-colors"
-              title="Daftar Pelajaran"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-50 to-pink-50 hover:from-rose-100/70 hover:to-pink-100/70 border border-rose-200/60 rounded-2xl text-xs font-black text-rose-700 hover:shadow-md hover:shadow-rose-500/5 active:scale-95 transition-all cursor-pointer shadow-sm group"
+              title="Buka Daftar Pelajaran"
             >
-              <Menu size={20} />
+              <Menu size={15} className="text-rose-700 group-hover:rotate-90 transition-transform duration-300" />
+              <span>Daftar Menu</span>
             </button>
           </div>
         </div>

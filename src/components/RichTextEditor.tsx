@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
+import { cn } from '../lib/utils';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import { TextStyle } from '@tiptap/extension-text-style';
@@ -17,7 +18,7 @@ import {
   List, ListOrdered, Heading1, Heading2, AlignLeft, 
   AlignCenter, AlignRight, AlignJustify, Table as TableIcon, Link as LinkIcon, 
   Image as ImageIcon, Undo, Redo, Code, Plus, Trash2, 
-  Columns, Rows, Merge, Split, Palette, Indent, Outdent
+  Columns, Rows, Merge, Split, Palette, Indent, Outdent, X
 } from 'lucide-react';
 
 const TEXT_COLORS = [
@@ -41,6 +42,11 @@ interface RichTextEditorProps {
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder = 'Tulis materi atau pertanyaan di sini...' }) => {
   const [showColorPicker, setShowColorPicker] = React.useState(false);
+  const [showImageModal, setShowImageModal] = React.useState(false);
+  const [imageUrl, setImageUrl] = React.useState('');
+  const [imageFile, setImageFile] = React.useState<File | null>(null);
+  const [imageFileName, setImageFileName] = React.useState('');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -95,13 +101,44 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   }, [editor]);
 
-  const addImage = useCallback(() => {
-    if (!editor) return;
-    const url = window.prompt('Masukkan URL Gambar:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // Limit to 2MB to keep database payload reasonable
+        alert('Ukuran file terlalu besar! Batas maksimal adalah 2MB.');
+        return;
+      }
+      setImageFile(file);
+      setImageFileName(file.name);
     }
-  }, [editor]);
+  };
+
+  const handleInsertImage = () => {
+    if (!editor) return;
+
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        if (base64) {
+          editor.chain().focus().setImage({ src: base64 }).run();
+          closeImageModal();
+        }
+      };
+      reader.readAsDataURL(imageFile);
+    } else if (imageUrl.trim()) {
+      editor.chain().focus().setImage({ src: imageUrl.trim() }).run();
+      closeImageModal();
+    }
+  };
+
+  const closeImageModal = () => {
+    setShowImageModal(false);
+    setImageUrl('');
+    setImageFile(null);
+    setImageFileName('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   if (!editor) {
     return (
@@ -217,7 +254,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
         </button>
         <button
           type="button"
-          onClick={addImage}
+          onClick={() => setShowImageModal(true)}
           className="p-2 rounded-lg hover:bg-zinc-200 text-zinc-600 transition-colors"
           title="Insert Image"
         >
@@ -456,6 +493,97 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
       <div className="flex-1 bg-white overflow-y-auto">
         <EditorContent editor={editor} />
       </div>
+
+      {/* IMAGE UPLOAD MODAL */}
+      {showImageModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 border border-zinc-100">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <h3 className="font-black text-zinc-900 text-lg flex items-center gap-2">
+                <ImageIcon className="text-rose-700" size={20} />
+                Masukkan Gambar
+              </h3>
+              <button 
+                onClick={closeImageModal} 
+                className="p-1.5 hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 rounded-xl transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Option A: Local File Upload */}
+              <div className="space-y-2">
+                <label className="text-xs font-black text-zinc-400 uppercase tracking-widest block">Upload File Gambar</label>
+                <div 
+                  onClick={() => fileInputRef.current?.click()} 
+                  className={cn(
+                    "border-2 border-dashed border-zinc-200 rounded-2xl p-6 text-center cursor-pointer hover:border-rose-300 hover:bg-rose-50/10 transition-all space-y-2",
+                    imageFile && "border-emerald-300 bg-emerald-50/10"
+                  )}
+                >
+                  <Plus className={cn("mx-auto text-zinc-400/80", imageFile && "text-emerald-500")} size={24} />
+                  {imageFile ? (
+                    <div className="text-sm font-semibold text-emerald-800 truncate">{imageFileName}</div>
+                  ) : (
+                    <div>
+                      <div className="text-sm font-bold text-zinc-700">Pilih file gambar lokal</div>
+                      <div className="text-[10px] text-zinc-400 mt-1">Format: PNG, JPG, GIF, WebP (Maks. 2MB)</div>
+                    </div>
+                  )}
+                </div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  accept="image/*" 
+                  onChange={handleFileChange} 
+                  className="hidden" 
+                />
+              </div>
+
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-zinc-200"></div>
+                <span className="flex-shrink mx-4 text-zinc-400 text-xs font-bold uppercase tracking-wider">atau</span>
+                <div className="flex-grow border-t border-zinc-200"></div>
+              </div>
+
+              {/* Option B: Image URL */}
+              <div className="space-y-2">
+                <label className="text-xs font-black text-zinc-400 uppercase tracking-widest block">Masukkan Link URL Gambar</label>
+                <input 
+                  type="url" 
+                  value={imageUrl} 
+                  onChange={e => {
+                    setImageUrl(e.target.value);
+                    if (imageFile) {
+                      setImageFile(null);
+                      setImageFileName('');
+                    }
+                  }} 
+                  placeholder="https://example.com/gambar.jpg" 
+                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:bg-white transition-all font-medium" 
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <button 
+                onClick={closeImageModal} 
+                className="flex-grow py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-black rounded-2xl text-sm transition-colors"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={handleInsertImage} 
+                disabled={!imageFile && !imageUrl.trim()}
+                className="flex-grow py-3 bg-rose-700 hover:bg-rose-800 text-white font-black rounded-2xl text-sm transition-all shadow-lg shadow-rose-700/10 active:scale-95 disabled:opacity-50"
+              >
+                Masukkan Gambar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
