@@ -168,30 +168,5 @@ FOR EACH ROW
 EXECUTE FUNCTION public.update_user_last_active_from_session();
 
 
--- 13. TABEL & SECURITY POLICY: elearning_progress
-CREATE TABLE IF NOT EXISTS public.elearning_progress (
-    nim VARCHAR(50) PRIMARY KEY REFERENCES public.users(nim) ON DELETE CASCADE,
-    student_name VARCHAR(255) NOT NULL,
-    lessons_completed INTEGER DEFAULT 0,
-    total_lessons INTEGER DEFAULT 0,
-    completion_percentage NUMERIC(5,2) DEFAULT 0.00,
-    is_completed BOOLEAN DEFAULT false,
-    completed_levels TEXT[] DEFAULT '{}',
-    current_level VARCHAR(100) DEFAULT 'Introduction',
-    last_accessed_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
-);
-
--- RLS untuk elearning_progress
-ALTER TABLE public.elearning_progress ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Mahasiswa bisa melihat progres e-learning sendiri" ON public.elearning_progress;
-CREATE POLICY "Mahasiswa bisa melihat progres e-learning sendiri" ON public.elearning_progress
-    FOR SELECT USING (nim = public.auth_nim());
-
-DROP POLICY IF EXISTS "Staf bisa mengelola progres e-learning" ON public.elearning_progress;
-CREATE POLICY "Staf bisa mengelola progres e-learning" ON public.elearning_progress
-    FOR ALL USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
-
-
 
 

@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { UserProfile, useStore } from '../store/useStore';
-import { reportProgressToSupabase, getOverallProgress, resetSupabaseProgress } from './centralApiService';
+import { getOverallProgress } from './centralApiService';
 import { Level } from '../data/curriculum';
 import { Achievement, checkAndUnlockAchievements, checkXpAchievements } from './achievementService';
 
@@ -116,8 +116,7 @@ export const completeLesson = async (
 
     if (progressError) throw progressError;
 
-    // 5. Report aggregated progress back to elearning_progress table
-    reportProgressToSupabase(user.nim);
+
 
     // 6. Check for Achievements
     const newlyUnlocked = await checkAndUnlockAchievements(user, { 
@@ -203,20 +202,7 @@ export const syncProgress = (userId: string, setCompletedLessons: (lessons: stri
   };
 };
 
-export const syncExistingProgressToSupabase = async (
-  user: UserProfile,
-  _curriculum: Level[],
-  _completedLessons: string[]
-): Promise<void> => {
-  if (!user.nim) return;
 
-  try {
-    await reportProgressToSupabase(user.nim);
-    console.log('🔄 Existing progress synced to Supabase rekap table');
-  } catch (error) {
-    console.error('Error syncing existing progress:', error);
-  }
-};
 
 // =========================================================================
 // ADMIN FUNCTIONS
@@ -254,8 +240,7 @@ export const resetUserProgress = async (nim: string): Promise<void> => {
 
     if (userErr) throw userErr;
 
-    // 4. Reset Supabase aggregated rekap table
-    await resetSupabaseProgress(nim);
+
 
     console.log(`✅ All progress and achievements reset in Supabase for ${nim}`);
   } catch (error) {
@@ -330,8 +315,7 @@ export const resetLevelProgress = async (
       }
     }
 
-    // 3. Re-trigger aggregated sync
-    await reportProgressToSupabase(nim);
+
 
     console.log(`✅ Level "${levelId}" progress reset in Supabase for ${nim}`);
   } catch (error) {
@@ -399,7 +383,6 @@ export const deleteUser = async (nim: string): Promise<void> => {
     if (error) throw error;
 
     // Reset aggregation progress
-    await resetSupabaseProgress(nim);
 
     console.log(`✅ User ${nim} deleted successfully in Supabase.`);
   } catch (error) {
