@@ -4,10 +4,10 @@ import { getOverallProgress } from './centralApiService';
 import { Level } from '../data/curriculum';
 import { Achievement, checkAndUnlockAchievements, checkXpAchievements } from './achievementService';
 
-// Dynamic leveling formula: level = floor(sqrt(xp / 5)) + 1
+// Dynamic leveling formula: level = floor(sqrt(xp / 50)) + 1
 export const calculateLevel = (xp: number): number => {
   if (xp <= 0) return 1;
-  return Math.floor(Math.sqrt(xp / 5)) + 1;
+  return Math.floor(Math.sqrt(xp / 50)) + 1;
 };
 
 export interface LevelProgressInfo {
@@ -20,8 +20,8 @@ export interface LevelProgressInfo {
 
 export const getLevelProgressInfo = (xp: number): LevelProgressInfo => {
   const lvl = calculateLevel(xp);
-  const currentLevelBaseXp = 5 * Math.pow(lvl - 1, 2);
-  const nextLevelBaseXp = 5 * Math.pow(lvl, 2);
+  const currentLevelBaseXp = 50 * Math.pow(lvl - 1, 2);
+  const nextLevelBaseXp = 50 * Math.pow(lvl, 2);
   
   const xpInCurrentLevelNeeded = nextLevelBaseXp - currentLevelBaseXp;
   const currentLevelXp = xp - currentLevelBaseXp;
