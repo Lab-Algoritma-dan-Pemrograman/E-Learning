@@ -4,6 +4,38 @@ import { reportProgressToSupabase, getOverallProgress, resetSupabaseProgress } f
 import { Level } from '../data/curriculum';
 import { Achievement, checkAndUnlockAchievements, checkXpAchievements } from './achievementService';
 
+// Dynamic leveling formula: level = floor(sqrt(xp / 5)) + 1
+export const calculateLevel = (xp: number): number => {
+  if (xp <= 0) return 1;
+  return Math.floor(Math.sqrt(xp / 5)) + 1;
+};
+
+export interface LevelProgressInfo {
+  level: number;
+  currentLevelXp: number;
+  nextLevelXpThreshold: number;
+  xpInCurrentLevelNeeded: number;
+  percentage: number;
+}
+
+export const getLevelProgressInfo = (xp: number): LevelProgressInfo => {
+  const lvl = calculateLevel(xp);
+  const currentLevelBaseXp = 5 * Math.pow(lvl - 1, 2);
+  const nextLevelBaseXp = 5 * Math.pow(lvl, 2);
+  
+  const xpInCurrentLevelNeeded = nextLevelBaseXp - currentLevelBaseXp;
+  const currentLevelXp = xp - currentLevelBaseXp;
+  const percentage = xpInCurrentLevelNeeded > 0 ? Math.min(100, Math.max(0, (currentLevelXp / xpInCurrentLevelNeeded) * 100)) : 100;
+  
+  return {
+    level: lvl,
+    currentLevelXp,
+    nextLevelXpThreshold: nextLevelBaseXp,
+    xpInCurrentLevelNeeded,
+    percentage
+  };
+};
+
 export const completeLesson = async (
   user: UserProfile,
   lessonId: string,
@@ -43,12 +75,15 @@ export const completeLesson = async (
     }
 
     const newXp = (user.xp || 0) + xpReward;
+    const newLevel = calculateLevel(newXp);
+    const oldLevel = user.level || 1;
 
     // 3. Update User profile in Supabase
     const { error: userError } = await supabase
       .from('users')
       .update({
         xp: newXp,
+        level: newLevel,
         streak: streakUpdate,
         last_active: new Date().toISOString()
       })
@@ -56,8 +91,18 @@ export const completeLesson = async (
 
     if (userError) throw userError;
 
-    // Optimistically update the local store so XP displays immediately in the header
-    useStore.getState().setUser({ ...user, xp: newXp, streak: streakUpdate, lastActive: new Date().toISOString() });
+    // Optimistically update the local store
+    useStore.getState().setUser({
+      ...user,
+      xp: newXp,
+      level: newLevel,
+      streak: streakUpdate,
+      lastActive: new Date().toISOString()
+    });
+
+    if (newLevel > oldLevel) {
+      useStore.getState().setLevelUpNotification(newLevel);
+    }
 
     // 4. Save progress record to Supabase
     const { error: progressError } = await supabase
@@ -81,6 +126,12 @@ export const completeLesson = async (
         .filter(l => getOverallProgress(lessonId, curriculum, completedLessons).completedLevels.includes(l.title))
         .map(l => l.id)
     });
+
+    // Push newly unlocked achievements to store queue
+    newlyUnlocked.forEach(ach => {
+      useStore.getState().pushAchievement(ach);
+    });
+
     return newlyUnlocked;
 
   } catch (error) {
@@ -91,19 +142,35 @@ export const completeLesson = async (
 
 export const grantXp = async (user: UserProfile, amount: number): Promise<void> => {
   const newXp = (user.xp || 0) + amount;
+  const newLevel = calculateLevel(newXp);
+  const oldLevel = user.level || 1;
+
   const { error } = await supabase
     .from('users')
-    .update({ xp: newXp, last_active: new Date().toISOString() })
+    .update({
+      xp: newXp,
+      level: newLevel,
+      last_active: new Date().toISOString()
+    })
     .eq('nim', user.nim);
 
   if (error) throw error;
 
-  useStore.getState().setUser({ ...user, xp: newXp, lastActive: new Date().toISOString() });
+  useStore.getState().setUser({
+    ...user,
+    xp: newXp,
+    level: newLevel,
+    lastActive: new Date().toISOString()
+  });
+
+  if (newLevel > oldLevel) {
+    useStore.getState().setLevelUpNotification(newLevel);
+  }
 
   // Check XP-based achievements and show popup if newly unlocked
   const xpAch = await checkXpAchievements(user.nim, newXp);
   if (xpAch) {
-    useStore.getState().setUnlockedAchievement(xpAch);
+    useStore.getState().pushAchievement(xpAch);
   }
 };
 
@@ -224,19 +291,32 @@ export const resetLevelProgress = async (
 
       if (deleteErr) throw deleteErr;
 
-      // 2. Deduct user XP (50 per lesson completed in this level)
+      // 2. Deduct user XP (60 per lesson completed in this level)
       const { data: userProfile } = await supabase
         .from('users')
-        .select('xp')
+        .select('xp, level')
         .eq('nim', nim)
         .single();
 
       if (userProfile) {
-        const deductedXp = Math.max(0, userProfile.xp - (completedCount * 50));
+        const deductedXp = Math.max(0, userProfile.xp - (completedCount * 60));
+        const newLevel = calculateLevel(deductedXp);
         await supabase
           .from('users')
-          .update({ xp: deductedXp })
+          .update({
+            xp: deductedXp,
+            level: newLevel
+          })
           .eq('nim', nim);
+
+        const currentUser = useStore.getState().user;
+        if (currentUser && currentUser.nim === nim) {
+          useStore.getState().setUser({
+            ...currentUser,
+            xp: deductedXp,
+            level: newLevel
+          });
+        }
       }
     }
 
@@ -253,13 +333,46 @@ export const resetLevelProgress = async (
 export const adjustUserXp = async (nim: string, newXp: number): Promise<void> => {
   try {
     const safeXp = Math.max(0, Math.round(newXp));
+    const newLevel = calculateLevel(safeXp);
+
+    // Get current user profile to check if they leveled up
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('level')
+      .eq('nim', nim)
+      .single();
+
+    const oldLevel = userProfile?.level || 1;
+
     const { error } = await supabase
       .from('users')
-      .update({ xp: safeXp })
+      .update({
+        xp: safeXp,
+        level: newLevel
+      })
       .eq('nim', nim);
 
     if (error) throw error;
-    console.log(`✅ XP set to ${safeXp} for ${nim}`);
+    console.log(`✅ XP set to ${safeXp} and level set to ${newLevel} for ${nim}`);
+
+    const currentUser = useStore.getState().user;
+    if (currentUser && currentUser.nim === nim) {
+      useStore.getState().setUser({
+        ...currentUser,
+        xp: safeXp,
+        level: newLevel
+      });
+
+      if (newLevel > oldLevel) {
+        useStore.getState().setLevelUpNotification(newLevel);
+      }
+    }
+
+    // Check XP-based achievements
+    const xpAch = await checkXpAchievements(nim, safeXp);
+    if (xpAch) {
+      useStore.getState().pushAchievement(xpAch);
+    }
   } catch (error) {
     console.error("Failed to adjust XP:", error);
     throw error;
@@ -268,9 +381,6 @@ export const adjustUserXp = async (nim: string, newXp: number): Promise<void> =>
 
 export const deleteUser = async (nim: string): Promise<void> => {
   try {
-    // PostgreSQL Foreign Key ON DELETE CASCADE handles deletion in:
-    // student_progress, unlocked_achievements, active_sessions, assessment_attempts
-    // so we only need to delete the user row!
     const { error } = await supabase
       .from('users')
       .delete()

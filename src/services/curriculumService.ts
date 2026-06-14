@@ -7,7 +7,7 @@ export const curriculumService = {
       const { data: levelsData, error: levelsError } = await supabase
         .from('levels')
         .select('*')
-        .order('id');
+        .order('sort_order');
 
       if (levelsError || !levelsData || levelsData.length === 0) {
         return [];
@@ -145,7 +145,8 @@ export const curriculumService = {
       }
 
       // 5. Insert / Upsert the remaining/new levels, modules, and lessons
-      for (const level of levels) {
+      for (let lIdx = 0; lIdx < levels.length; lIdx++) {
+        const level = levels[lIdx];
         await supabase
           .from('levels')
           .upsert({
@@ -153,7 +154,8 @@ export const curriculumService = {
             title: level.title,
             description: level.description,
             access_mode: level.accessMode || 'auto',
-            locked: level.locked || false
+            locked: level.locked || false,
+            sort_order: lIdx
           });
 
         if (level.modules) {

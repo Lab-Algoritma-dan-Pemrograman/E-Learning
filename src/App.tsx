@@ -49,10 +49,10 @@ function AppContent() {
         case 'leaderboard': return <Leaderboard />;
         case 'courses': return <CourseExplorer />;
         case 'profile': return <Profile />;
-        case 'admin': return <AdminDashboard />;
+        case 'admin': return (user?.role === 'admin' || user?.role === 'kordas') ? <AdminDashboard /> : <Dashboard />;
         case 'assessments': return (user?.role === 'praktikan') ? <Dashboard /> : <AssessmentPage />;
         case 'monitoring': return (user?.role === 'praktikan') ? <Dashboard /> : <StudentMonitoring />;
-        case 'auditlog': return (user?.role === 'praktikan') ? <Dashboard /> : <AuditLogPage />;
+        case 'auditlog': return (user?.role === 'admin' || user?.role === 'kordas') ? <AuditLogPage /> : <Dashboard />;
         case 'terminal-demo': return <TerminalDemo />;
 
         default: return <Dashboard />;

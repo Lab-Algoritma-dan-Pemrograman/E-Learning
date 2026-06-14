@@ -299,6 +299,15 @@ export const Dashboard: React.FC = () => {
                 <div className="text-lg font-black text-rose-900">{(user?.xp || 0).toLocaleString()}</div>
               </div>
             </div>
+            <div className="flex items-center gap-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/60 px-5 py-3 rounded-2xl shadow-sm">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                <Clock size={20} />
+              </div>
+              <div>
+                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Waktu Belajar</div>
+                <div className="text-lg font-black text-blue-900">{formatStudyTime(user?.studyTime || 0)}</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -595,6 +604,12 @@ export const Dashboard: React.FC = () => {
         {activeGame && (
           <BugHunt 
             language={activeGame.language} 
+            onGameFinished={async () => {
+              if (user?.nim) {
+                const count = await getPlaysThisWeek(user.nim);
+                setPlaysThisWeek(count);
+              }
+            }}
             onClose={() => {
               setActiveGame(null);
               // Refresh plays count after playing
@@ -813,3 +828,19 @@ const ActivityItem: React.FC<{ title: string; time: string; isLast?: boolean }> 
     </div>
   </div>
 );
+
+const formatStudyTime = (seconds: number): string => {
+  if (seconds <= 0) return '0d';
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  
+  if (hrs > 0) {
+    return `${hrs}j ${mins}m`;
+  }
+  if (mins > 0) {
+    return `${mins}m ${secs}s`;
+  }
+  return `${secs}s`;
+};
+

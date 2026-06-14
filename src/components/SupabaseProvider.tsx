@@ -97,6 +97,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             xp: 0,
             level: 1,
             streak: 0,
+            study_time: 0,
             last_active: new Date().toISOString(),
             created_at: new Date().toISOString(),
             role: payload.role || 'praktikan',
@@ -132,7 +133,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             createdAt: newProfile.created_at,
             role: newProfile.role as any,
             assessmentAccess: newProfile.assessment_access as any,
-            levelAccessOverrides: newProfile.level_access_overrides as any
+            levelAccessOverrides: newProfile.level_access_overrides as any,
+            studyTime: newProfile.study_time || 0
           };
           console.log("New profile created successfully in Supabase");
         } else {
@@ -152,7 +154,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             createdAt: userProfile.created_at,
             role: userProfile.role as any,
             assessmentAccess: userProfile.assessment_access as any,
-            levelAccessOverrides: userProfile.level_access_overrides || {}
+            levelAccessOverrides: userProfile.level_access_overrides || {},
+            studyTime: userProfile.study_time || 0
           };
 
           // Update nama/kelas/role/jurusan if changed in Web Utama
@@ -189,6 +192,11 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }, (payload) => {
             const updated = payload.new as any;
             console.log("Profile updated in realtime from Supabase:", updated.nama);
+            
+            const currentUser = useStore.getState().user;
+            const oldLevel = currentUser?.level || 1;
+            const newLevel = updated.level || 1;
+            
             setStoreUser({
               nim: updated.nim,
               nama: updated.nama,
@@ -196,14 +204,19 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               jurusan: updated.jurusan,
               email: updated.email,
               xp: updated.xp,
-              level: updated.level,
+              level: newLevel,
               streak: updated.streak,
               lastActive: updated.last_active,
               createdAt: updated.created_at,
               role: updated.role,
               assessmentAccess: updated.assessment_access,
-              levelAccessOverrides: updated.level_access_overrides || {}
+              levelAccessOverrides: updated.level_access_overrides || {},
+              studyTime: updated.study_time || 0
             });
+
+            if (newLevel > oldLevel) {
+              useStore.getState().setLevelUpNotification(newLevel);
+            }
           })
           .subscribe();
 
@@ -265,7 +278,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             program_keterampilan: false,
             ujian_praktik: false
           },
-          levelAccessOverrides: {}
+          levelAccessOverrides: {},
+          studyTime: 0
         };
         setStoreUser(fallbackProfile);
       } finally {
@@ -280,7 +294,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const { data: levelsData, error: levelsError } = await supabase
           .from('levels')
           .select('*')
-          .order('id');
+          .order('sort_order');
 
         if (levelsError || !levelsData || levelsData.length === 0) {
           console.warn("No curriculum in database. Initial setup needed.");

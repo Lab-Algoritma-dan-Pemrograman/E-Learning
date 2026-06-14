@@ -109,6 +109,19 @@ export const LessonPage: React.FC = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [quizXpGranted, setQuizXpGranted] = useState(false);
 
+  // Auto-scroll to current active lesson item when drawer opens
+  useEffect(() => {
+    if (showLessonNav) {
+      const timer = setTimeout(() => {
+        const activeItem = document.querySelector('.active-lesson-item');
+        if (activeItem) {
+          activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showLessonNav]);
+
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -433,84 +446,142 @@ export const LessonPage: React.FC = () => {
         <AnimatePresence>
           {showLessonNav && (
             <>
+              {/* Dark overlay */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60]"
+                className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-[60]"
                 onClick={() => setShowLessonNav(false)}
               />
+              {/* Drawer Container */}
               <motion.div
-                initial={{ x: 320 }}
+                initial={{ x: 340 }}
                 animate={{ x: 0 }}
-                exit={{ x: 320 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="fixed top-0 right-0 bottom-0 w-80 bg-white border-l border-zinc-200 z-[70] flex flex-col shadow-2xl"
+                exit={{ x: 340 }}
+                transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+                onAnimationComplete={() => {
+                  const activeItem = document.querySelector('.active-lesson-item');
+                  if (activeItem) {
+                    activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
+                className="fixed top-0 right-0 bottom-0 w-85 bg-white border-l border-zinc-200 z-[70] flex flex-col shadow-2xl overflow-hidden rounded-l-[2.5rem]"
               >
-                <div className="flex items-center justify-between p-5 border-b border-zinc-100">
-                  <h3 className="font-bold text-lg">Daftar Pelajaran</h3>
-                  <button onClick={() => setShowLessonNav(false)} className="p-2 hover:bg-zinc-100 rounded-lg transition-colors">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/50">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-rose-700/10 text-rose-700 rounded-lg flex items-center justify-center">
+                      <BookOpen size={18} />
+                    </div>
+                    <span className="font-black text-zinc-850 text-base tracking-tight">Kurikulum Belajar</span>
+                  </div>
+                  <button 
+                    onClick={() => setShowLessonNav(false)} 
+                    className="p-2 hover:bg-zinc-200/50 text-zinc-500 hover:text-zinc-800 rounded-xl transition-colors border border-transparent hover:border-zinc-200"
+                  >
                     <X size={18} />
                   </button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
-                  {curriculum.map((level, lIdx) => (
-                    <div key={level.id}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className={cn(
-                          "w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black",
-                          lIdx === currentLevelIdx ? "bg-rose-700 text-white" : "bg-zinc-100 text-zinc-500"
-                        )}>
-                          {isLevelLocked(lIdx) ? <Lock size={10} /> : lIdx + 1}
-                        </div>
-                        <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest truncate">{level.title}</span>
-                      </div>
-                      {!isLevelLocked(lIdx) && (level.modules || []).map((mod) => (
-                        <div key={mod.id} className="ml-4 mb-3">
-                          <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">{mod.title}</div>
-                          <div className="space-y-0.5">
-                            {(mod.lessons || []).map((les) => {
-                              const isActive = les.id === currentLessonId;
-                              const isDone = completedLessons.includes(les.id);
-                              return (
-                                <button
-                                  key={les.id}
-                                  onClick={() => {
-                                    setCurrentLessonId(les.id);
-                                    setShowLessonNav(false);
-                                  }}
-                                  className={cn(
-                                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-all",
-                                    isActive
-                                      ? "bg-rose-50 text-rose-800 font-bold"
-                                      : isDone
-                                        ? "text-zinc-500 hover:bg-zinc-50"
-                                        : "text-zinc-700 hover:bg-zinc-50"
-                                  )}
-                                >
-                                  {isDone ? (
-                                    <CheckCircle2 size={14} className="text-rose-700 shrink-0" />
-                                  ) : isActive ? (
-                                    <div className="w-3.5 h-3.5 rounded-full border-2 border-rose-700 shrink-0" />
-                                  ) : (
-                                    <div className="w-3.5 h-3.5 rounded-full border-2 border-zinc-200 shrink-0" />
-                                  )}
-                                  <span className="truncate">{les.title}</span>
-                                </button>
-                              );
-                            })}
+                
+                {/* List Body */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-white">
+                  {curriculum.map((level, lIdx) => {
+                    const isLvlLocked = isLevelLocked(lIdx);
+                    const isLvlActive = lIdx === currentLevelIdx;
+                    return (
+                      <div 
+                        key={level.id}
+                        className={cn(
+                          "bg-zinc-50/40 border border-zinc-150 rounded-[1.75rem] p-5 transition-all duration-300 relative overflow-hidden",
+                          isLvlActive ? "border-rose-200 bg-rose-50/10 shadow-md shadow-rose-500/5" : "hover:border-zinc-300"
+                        )}
+                      >
+                        {/* 3D Level Badge Header */}
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={cn(
+                            "w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-sm border transition-all",
+                            isLvlActive 
+                              ? "bg-rose-700 text-white border-rose-600 shadow-rose-700/20 active:scale-95" 
+                              : "bg-white text-zinc-500 border-zinc-200"
+                          )}>
+                            {isLvlLocked ? <Lock size={12} /> : lIdx + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Level {lIdx + 1}</div>
+                            <h4 className="text-xs font-bold text-zinc-800 truncate">{level.title}</h4>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  ))}
+
+                        {/* Modules list */}
+                        {!isLvlLocked ? (
+                          <div className="space-y-4 pt-1">
+                            {(level.modules || []).map((mod) => (
+                              <div key={mod.id} className="relative pl-3">
+                                {/* Module Title */}
+                                <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-zinc-300 shrink-0" />
+                                  <span className="truncate">{mod.title}</span>
+                                </div>
+                                
+                                {/* Lessons list with connecting lines */}
+                                <div className="space-y-1.5 border-l border-zinc-200 pl-3 ml-0.5 relative">
+                                  {(mod.lessons || []).map((les) => {
+                                    const isActive = les.id === currentLessonId;
+                                    const isDone = completedLessons.includes(les.id);
+                                    return (
+                                      <button
+                                        key={les.id}
+                                        onClick={() => {
+                                          setCurrentLessonId(les.id);
+                                          setShowLessonNav(false);
+                                        }}
+                                        className={cn(
+                                          "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs transition-all relative group border border-transparent",
+                                          isActive
+                                            ? "bg-gradient-to-r from-rose-700 to-rose-600 text-white font-bold shadow-md shadow-rose-700/25 border-b-2 border-rose-800 scale-[1.02] -translate-y-[1px] active-lesson-item"
+                                            : isDone
+                                              ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100/70 hover:translate-x-0.5"
+                                              : "text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100/70 hover:translate-x-0.5"
+                                        )}
+                                      >
+                                        {/* Status Dot / Check */}
+                                        {isDone ? (
+                                          <CheckCircle2 size={13} className={cn("shrink-0", isActive ? "text-white" : "text-rose-700")} />
+                                        ) : isActive ? (
+                                          <span className="relative flex h-2 w-2 shrink-0 my-0.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-200 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                          </span>
+                                        ) : (
+                                          <div className="w-2 h-2 rounded-full border border-zinc-300 shrink-0 bg-white group-hover:border-zinc-400" />
+                                        )}
+                                        <span className="truncate flex-1">{les.title}</span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-[10px] text-zinc-400 italic flex items-center gap-1.5 pt-1 pl-1">
+                            <Lock size={10} />
+                            Selesaikan level sebelumnya untuk membuka
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="p-4 border-t border-zinc-100">
+                
+                {/* Footer Back button */}
+                <div className="p-5 border-t border-zinc-100 bg-zinc-50/50">
                   <button
                     onClick={() => { setShowLessonNav(false); setPage('courses'); }}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-100 text-zinc-700 font-bold rounded-xl hover:bg-zinc-200 transition-all text-sm"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-zinc-100 text-zinc-700 font-bold rounded-2xl hover:bg-zinc-200/80 transition-all text-xs uppercase tracking-wider"
                   >
-                    <ArrowLeft size={16} />
+                    <ArrowLeft size={14} />
                     Kembali ke Kursus
                   </button>
                 </div>

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
+import { calculateLevel } from './progressService';
 
 export interface GameQuestion {
   id: string;
@@ -89,20 +90,27 @@ export const saveGameHistory = async (
     // 2. Use current store XP (avoids race condition with DB stale reads)
     const currentUser = useStore.getState().user;
     const currentXp = (currentUser && currentUser.nim === userId) ? (currentUser.xp || 0) : 0;
+    const oldLevel = (currentUser && currentUser.nim === userId) ? (currentUser.level || 1) : 1;
     const newXp = currentXp + history.xpEarned;
+    const newLevel = calculateLevel(newXp);
+    
     const { error: userErr } = await supabase
       .from('users')
       .update({
         xp: newXp,
+        level: newLevel,
         last_active: now
       })
       .eq('nim', userId);
 
     if (userErr) throw userErr;
 
-    // Optimistically update the local store so XP displays immediately in the header
+    // Optimistically update the local store so XP/level displays immediately
     if (currentUser && currentUser.nim === userId) {
-      useStore.getState().setUser({ ...currentUser, xp: newXp, lastActive: now });
+      useStore.getState().setUser({ ...currentUser, xp: newXp, level: newLevel, lastActive: now });
+      if (newLevel > oldLevel) {
+        useStore.getState().setLevelUpNotification(newLevel);
+      }
     }
 
     console.log(`✅ Game result saved: +${history.xpEarned} XP for ${userId}`);

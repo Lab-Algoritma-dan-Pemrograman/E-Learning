@@ -4,7 +4,8 @@ import { useStore } from '../store/useStore';
 import { supabase } from '../lib/supabase';
 import { useProgress } from '../store/useProgress';
 import { resetUserProgress, adjustUserXp, deleteUser } from '../services/progressService';
-import { Search, RefreshCw, ChevronDown, ChevronRight, Trash2, Edit3, RotateCcw, CheckCircle2, Lock, X, Save, AlertTriangle, Users } from 'lucide-react';
+import { monitoringService } from '../services/monitoringService';
+import { Search, RefreshCw, ChevronDown, ChevronRight, Trash2, Edit3, RotateCcw, CheckCircle2, Lock, X, Save, AlertTriangle, Users, BookOpen, Clock, Activity, Trophy } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface Student {
@@ -31,12 +32,23 @@ export const StudentMonitoring: React.FC = () => {
   const [editXpValue, setEditXpValue] = useState('');
   const [confirmAction, setConfirmAction] = useState<{ type: string; nim: string; nama: string } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [onlineCount, setOnlineCount] = useState(0);
 
   const totalLessons = curriculum.reduce((acc, l) => acc + (l.modules?.reduce((m, mod) => m + (mod.lessons?.length || 0), 0) || 0), 0);
 
   const fetchStudents = async () => {
     setIsRefreshing(true);
     try {
+      // 1. Cleanup stale sessions
+      await monitoringService.cleanupStaleSessions(2);
+
+      // 2. Fetch active sessions count
+      const { count } = await supabase
+        .from('active_sessions')
+        .select('*', { count: 'exact', head: true });
+      setOnlineCount(count || 0);
+
+      // 3. Fetch students
       const { data, error } = await supabase
         .from('users')
         .select('nim, nama, kelas, jurusan, xp, streak, last_active, role')
@@ -146,6 +158,41 @@ export const StudentMonitoring: React.FC = () => {
           </button>
         </div>
 
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white border border-zinc-200 p-5 rounded-2xl flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 bg-rose-50 text-rose-700 rounded-xl flex items-center justify-center shrink-0">
+              <Users size={22} />
+            </div>
+            <div>
+              <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Total Praktikan</div>
+              <div className="text-xl font-black text-zinc-900">{students.length} Orang</div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-zinc-200 p-5 rounded-2xl flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-700 rounded-xl flex items-center justify-center shrink-0">
+              <Activity size={22} className="animate-pulse" />
+            </div>
+            <div>
+              <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Sedang Online</div>
+              <div className="text-xl font-black text-zinc-900">{onlineCount} Aktif</div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-zinc-200 p-5 rounded-2xl flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-xl flex items-center justify-center shrink-0">
+              <Trophy size={22} />
+            </div>
+            <div>
+              <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Rata-rata XP</div>
+              <div className="text-xl font-black text-zinc-900">
+                {students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.xp, 0) / students.length) : 0} XP
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[200px]">
@@ -209,29 +256,80 @@ export const StudentMonitoring: React.FC = () => {
                       })}
                     </div>
 
+                    {/* Progress Detail Tree */}
+                    <div className="bg-white rounded-2xl border border-zinc-200/85 p-5 space-y-3">
+                      <div className="text-xs font-bold text-zinc-800 flex items-center gap-1.5 mb-2">
+                        <BookOpen size={14} className="text-zinc-500" />
+                        Peta Progres Pembelajaran Detail
+                      </div>
+                      
+                      <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar bg-zinc-50/20 p-2 rounded-xl border border-zinc-100">
+                        {curriculum.map((level, lIdx) => {
+                          const completedList = studentProgress[s.nim] || [];
+                          return (
+                            <div key={level.id} className="space-y-2 border-b border-zinc-100 last:border-0 pb-3 last:pb-0">
+                              <div className="text-xs font-black text-zinc-850 uppercase tracking-wide flex items-center gap-1.5">
+                                <span className="w-5 h-5 bg-zinc-100 text-zinc-500 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">{lIdx + 1}</span>
+                                {level.title}
+                              </div>
+                              
+                              <div className="ml-5 space-y-3">
+                                {level.modules?.map((mod) => (
+                                  <div key={mod.id} className="space-y-1.5 border-l border-zinc-200 pl-3 ml-2">
+                                    <div className="text-[10px] font-bold text-zinc-650 flex items-center gap-1">
+                                      <BookOpen size={10} className="text-zinc-400" />
+                                      {mod.title}
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 ml-2 mt-1">
+                                      {mod.lessons?.map((les) => {
+                                        const isCompleted = completedList.includes(les.id);
+                                        return (
+                                          <div key={les.id} className="flex items-center gap-2 text-[11px] py-0.5">
+                                            {isCompleted ? (
+                                              <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                                            ) : (
+                                              <div className="w-3 h-3 rounded-full border border-zinc-300 shrink-0 bg-white" />
+                                            )}
+                                            <span className={isCompleted ? "text-zinc-700 font-medium truncate" : "text-zinc-450 truncate"}>{les.title}</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     {/* Info & Actions */}
                     <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-zinc-100">
                       <span className="text-xs text-zinc-500">Terakhir aktif: {formatTime(s.last_active)}</span>
                       <div className="flex-1" />
                       
-                      {editXpNim === s.nim ? (
-                        <div className="flex items-center gap-1">
-                          <input value={editXpValue} onChange={e => setEditXpValue(e.target.value)} type="number" placeholder="XP baru" className="w-24 px-2 py-1 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20" autoFocus />
-                          <button onClick={() => handleAdjustXp(s.nim)} disabled={actionLoading} className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100"><Save size={14} /></button>
-                          <button onClick={() => setEditXpNim(null)} className="p-1.5 bg-zinc-100 text-zinc-500 rounded-lg hover:bg-zinc-200"><X size={14} /></button>
-                        </div>
-                      ) : (
-                        <>
-                          <button onClick={() => { setEditXpNim(s.nim); setEditXpValue(String(s.xp)); }} className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-200/50">
-                            <Edit3 size={10} /> Atur XP
-                          </button>
-                          <button onClick={() => setConfirmAction({ type: 'reset', nim: s.nim, nama: s.nama })} className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 border border-amber-200/50">
-                            <RotateCcw size={10} /> Reset Progres
-                          </button>
-                          <button onClick={() => setConfirmAction({ type: 'delete', nim: s.nim, nama: s.nama })} className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold bg-red-50 text-red-500 rounded-lg hover:bg-red-100 border border-red-200/50">
-                            <Trash2 size={10} /> Hapus
-                          </button>
-                        </>
+                      {user?.role !== 'asisten' && (
+                        editXpNim === s.nim ? (
+                          <div className="flex items-center gap-1">
+                            <input value={editXpValue} onChange={e => setEditXpValue(e.target.value)} type="number" placeholder="XP baru" className="w-24 px-2 py-1 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20" autoFocus />
+                            <button onClick={() => handleAdjustXp(s.nim)} disabled={actionLoading} className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100"><Save size={14} /></button>
+                            <button onClick={() => setEditXpNim(null)} className="p-1.5 bg-zinc-100 text-zinc-500 rounded-lg hover:bg-zinc-200"><X size={14} /></button>
+                          </div>
+                        ) : (
+                          <>
+                            <button onClick={() => { setEditXpNim(s.nim); setEditXpValue(String(s.xp)); }} className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-200/50">
+                              <Edit3 size={10} /> Atur XP
+                            </button>
+                            <button onClick={() => setConfirmAction({ type: 'reset', nim: s.nim, nama: s.nama })} className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 border border-amber-200/50">
+                              <RotateCcw size={10} /> Reset Progres
+                            </button>
+                            <button onClick={() => setConfirmAction({ type: 'delete', nim: s.nim, nama: s.nama })} className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold bg-red-50 text-red-500 rounded-lg hover:bg-red-100 border border-red-200/50">
+                              <Trash2 size={10} /> Hapus
+                            </button>
+                          </>
+                        )
                       )}
                     </div>
                   </div>

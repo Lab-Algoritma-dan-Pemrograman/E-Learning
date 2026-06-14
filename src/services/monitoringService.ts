@@ -89,6 +89,25 @@ export const monitoringService = {
     };
   },
 
+  /**
+   * Deletes session heartbeats that are older than the threshold time.
+   */
+  async cleanupStaleSessions(thresholdMinutes: number = 2): Promise<void> {
+    try {
+      const thresholdTime = new Date(Date.now() - thresholdMinutes * 60 * 1000).toISOString();
+      const { error } = await supabase
+        .from('active_sessions')
+        .delete()
+        .lt('last_heartbeat', thresholdTime);
+
+      if (error) {
+        console.warn("Failed to cleanup stale sessions:", error.message);
+      }
+    } catch (e) {
+      console.error("Failed to run cleanupStaleSessions:", e);
+    }
+  },
+
   // =========================================================================
   // AUDIT LOGS
   // =========================================================================

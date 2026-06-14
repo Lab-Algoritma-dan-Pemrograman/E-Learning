@@ -5,7 +5,7 @@ import { UserProfile, useStore } from '../store/useStore';
 import { cn } from '../lib/utils';
 import { 
   Users, Trophy, Zap, Clock, ChevronRight, Search, Shield, 
-  User as UserIcon, CheckCircle2, Sparkles, Loader2, BookOpen,
+  User as UserIcon, CheckCircle2, Sparkles, Loader2, BookOpen, Layers,
   Lock, Unlock, ChevronUp, ChevronDown, Trash2, Plus, GripVertical,
   RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff, Terminal, Upload, Move
 } from 'lucide-react';
@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Level, Module, Lesson } from '../data/curriculum';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { extractDocxText } from '../lib/documentParser';
+import { documentImportService, mergeCurriculum, ParseResult } from '../services/documentImportService';
 import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings, forceResetGameQuestions } from '../services/gameService';
 import { Achievement, getAchievements } from '../services/achievementService';
@@ -56,9 +57,17 @@ export const AdminDashboard: React.FC = () => {
   const [moduleEditTitle, setModuleEditTitle] = useState('');
 
   // Document import state
-  const [importDocTarget, setImportDocTarget] = useState<{ levelId: string; modIdx: number } | null>(null);
+  const [importDocTarget, setImportDocTarget] = useState<{ levelId: string; modIdx: number } | 'global' | null>(null);
   const [isImportingDoc, setIsImportingDoc] = useState(false);
   const docFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Premium Smart Document Import States
+  const [showImportPreviewModal, setShowImportPreviewModal] = useState(false);
+  const [importFileName, setImportFileName] = useState('');
+  const [importFileContent, setImportFileContent] = useState('');
+  const [importParseMode, setImportParseMode] = useState<'regex' | 'ai'>('regex');
+  const [importParsedResult, setImportParsedResult] = useState<ParseResult | null>(null);
+  const [isProcessingImport, setIsProcessingImport] = useState(false);
 
   // Lesson editor state
   const [editingLessonInfo, setEditingLessonInfo] = useState<{ levelId: string; modIdx: number; lessonIdx: number } | null>(null);
@@ -507,6 +516,48 @@ export const AdminDashboard: React.FC = () => {
     });
   };
 
+  // ===== MANAGE LEVEL ORDER/PRESENCE =====
+  const handleAddLevel = () => {
+    const newLevelId = `level-${Date.now()}`;
+    const newLevel = {
+      id: newLevelId,
+      title: `Level Baru ${draftCurriculum.length + 1}`,
+      description: 'Deskripsi level baru...',
+      accessMode: 'auto',
+      locked: false,
+      modules: []
+    } as Level;
+    setDraftCurriculum([...draftCurriculum, newLevel]);
+    setHasChanges(true);
+    setExpandedLevels(prev => new Set(prev).add(newLevelId));
+  };
+
+  const handleMoveLevel = (lIdx: number, direction: -1 | 1) => {
+    const targetIdx = lIdx + direction;
+    if (targetIdx < 0 || targetIdx >= draftCurriculum.length) return;
+    
+    const newDraft = [...draftCurriculum];
+    const temp = newDraft[lIdx];
+    newDraft[lIdx] = newDraft[targetIdx];
+    newDraft[targetIdx] = temp;
+    
+    setDraftCurriculum(newDraft);
+    setHasChanges(true);
+  };
+
+  const handleDeleteLevel = (levelId: string) => {
+    setShowModal({
+      type: 'confirm',
+      title: 'Hapus Level',
+      message: `Apakah Anda yakin ingin menghapus level ini beserta semua subbab dan pelajarannya? Tindakan ini tidak dapat dibatalkan!`,
+      onConfirm: () => {
+        const newDraft = draftCurriculum.filter(l => l.id !== levelId);
+        setDraftCurriculum(newDraft);
+        setHasChanges(true);
+      }
+    });
+  };
+
   // ===== EDIT LEVEL TITLE/DESCRIPTION =====
   const handleSaveLevelEdit = (levelId: string) => {
     const level = draftCurriculum.find(l => l.id === levelId);
@@ -531,58 +582,147 @@ export const AdminDashboard: React.FC = () => {
     setModuleEditTitle('');
   };
 
-  // ===== IMPORT DOCUMENT (TXT/DOCX) AS LESSON =====
+  // ===== SMART IMPORT DOCUMENT (TXT/DOCX) =====
   const handleDocFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !importDocTarget) return;
 
-    const { levelId, modIdx } = importDocTarget;
-    const level = draftCurriculum.find(l => l.id === levelId);
-    if (!level?.modules?.[modIdx]) return;
-
     setIsImportingDoc(true);
     try {
       let content = '';
-      const fileName = file.name.replace(/\.[^.]+$/, ''); // remove extension
-
       if (file.name.endsWith('.docx')) {
         const paragraphs = await extractDocxText(file);
-        content = paragraphs.filter(p => p.trim()).join('\n\n');
+        content = paragraphs.join('\n');
       } else {
-        // .txt or other text files
         content = await file.text();
       }
 
-      const newLesson: Lesson = {
-        id: `l-${Date.now()}`,
-        title: fileName || 'Materi Import',
-        explanation: content,
-        codeExample: '',
-        initialCode: '',
-        solution: '',
-        hint: '',
-        quiz: { question: 'Soal?', options: ['A', 'B', 'C', 'D'], correctAnswer: 0 },
-        testCases: [{ description: 'Test', expectedOutput: 'Output' }]
-      };
-
-      const newModules = [...level.modules];
-      newModules[modIdx] = {
-        ...newModules[modIdx],
-        lessons: [...(newModules[modIdx].lessons || []), newLesson]
-      };
-      updateDraftLevel({ ...level, modules: newModules });
-
-      // Auto-expand the module to show the new lesson
-      const modKey = `${levelId}:${newModules[modIdx].id}`;
-      setExpandedModules(prev => new Set(prev).add(modKey));
+      setImportFileName(file.name);
+      setImportFileContent(content);
+      setImportParseMode('regex'); // default to fast regex
+      setImportParsedResult(null); // clear previous results
+      setShowImportPreviewModal(true);
     } catch (err) {
-      console.error('Import failed:', err);
-      setShowModal({ type: 'alert', title: 'Gagal Import', message: 'Gagal membaca file. Pastikan file .txt atau .docx yang valid.' });
+      console.error('Failed to read document:', err);
+      setShowModal({
+        type: 'alert',
+        title: 'Gagal Membaca File',
+        message: 'Pastikan file .txt atau .docx yang valid.'
+      });
     } finally {
       setIsImportingDoc(false);
-      setImportDocTarget(null);
-      // Reset file input so same file can be re-selected
       if (docFileInputRef.current) docFileInputRef.current.value = '';
+    }
+  };
+
+  const handleProcessImportDocument = async () => {
+    setIsProcessingImport(true);
+    try {
+      const result = await documentImportService.importFromText(
+        importFileContent,
+        importParseMode === 'ai'
+      );
+      setImportParsedResult(result);
+    } catch (err: any) {
+      console.error('Failed to parse document:', err);
+      setShowModal({
+        type: 'alert',
+        title: 'Gagal Memproses Dokumen',
+        message: err.message || 'Gagal mengekstrak konten dari dokumen.'
+      });
+    } finally {
+      setIsProcessingImport(false);
+    }
+  };
+
+  const handleApplyImportDocument = () => {
+    if (!importParsedResult) return;
+
+    try {
+      if (importDocTarget === 'global') {
+        // Global merge
+        const merged = mergeCurriculum(draftCurriculum, importParsedResult.levels);
+        setDraftCurriculum(merged);
+        setHasChanges(true);
+        setShowModal({
+          type: 'alert',
+          title: 'Import Berhasil',
+          message: 'Seluruh level, modul, dan pelajaran yang diekstrak telah berhasil digabungkan ke draf kurikulum.'
+        });
+      } else {
+        // Specific module merge
+        const { levelId, modIdx } = importDocTarget;
+        const level = draftCurriculum.find(l => l.id === levelId);
+        if (level && level.modules?.[modIdx]) {
+          // Merge lessons into the specific module
+          const importedLessons: Lesson[] = [];
+          importParsedResult.levels.forEach(lvl => {
+            lvl.modules.forEach(mod => {
+              if (mod.lessons) {
+                importedLessons.push(...mod.lessons);
+              }
+            });
+          });
+
+          if (importedLessons.length === 0) {
+            throw new Error('Tidak ada materi pelajaran yang terdeteksi di dalam dokumen.');
+          }
+
+          const currentMod = level.modules[modIdx];
+          const newLessons = [...(currentMod.lessons || [])];
+
+          importedLessons.forEach(impLes => {
+            const cleanTitle = impLes.title.trim().toLowerCase();
+            const existingIdx = newLessons.findIndex(l => l.title.trim().toLowerCase() === cleanTitle || l.id === impLes.id);
+
+            if (existingIdx === -1) {
+              const newLesId = impLes.id || `${currentMod.id}-l${newLessons.length + 1}`;
+              newLessons.push({
+                ...impLes,
+                id: newLesId
+              });
+            } else {
+              const target = newLessons[existingIdx];
+              if (impLes.explanation) target.explanation = impLes.explanation;
+              if (impLes.codeExample) target.codeExample = impLes.codeExample;
+              if (impLes.initialCode) target.initialCode = impLes.initialCode;
+              if (impLes.solution) target.solution = impLes.solution;
+              if (impLes.hint) target.hint = impLes.hint;
+              if (impLes.quiz && impLes.quiz.question) target.quiz = impLes.quiz;
+              if (impLes.testCases && impLes.testCases.length > 0) target.testCases = impLes.testCases;
+              if (impLes.validationRules && impLes.validationRules.length > 0) target.validationRules = impLes.validationRules;
+            }
+          });
+
+          const newModules = [...level.modules];
+          newModules[modIdx] = {
+            ...currentMod,
+            lessons: newLessons
+          };
+
+          updateDraftLevel({ ...level, modules: newModules });
+
+          // Auto-expand module
+          const modKey = `${levelId}:${currentMod.id}`;
+          setExpandedModules(prev => new Set(prev).add(modKey));
+
+          setShowModal({
+            type: 'alert',
+            title: 'Import Berhasil',
+            message: `Materi pelajaran dari file telah berhasil digabungkan ke modul "${currentMod.title}".`
+          });
+        }
+      }
+      setShowImportPreviewModal(false);
+      setImportDocTarget(null);
+      setImportParsedResult(null);
+    } catch (err: any) {
+      console.error('Failed to apply import:', err);
+      setShowModal({
+        type: 'alert',
+        title: 'Gagal Menerapkan Import',
+        message: err.message || 'Terjadi kesalahan saat menerapkan data.'
+      });
     }
   };
 
@@ -1665,12 +1805,65 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <button 
+                    onClick={handleAddLevel}
+                    className="px-4 py-2 bg-zinc-900 text-white font-bold rounded-xl hover:bg-zinc-800 transition-all flex items-center gap-2 text-xs"
+                  >
+                    <Plus size={14} />
+                    Tambah Level
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setImportDocTarget('global');
+                      setTimeout(() => docFileInputRef.current?.click(), 50);
+                    }}
+                    disabled={isImportingDoc}
+                    className="px-4 py-2 bg-emerald-50 text-emerald-700 font-bold rounded-xl hover:bg-emerald-100 transition-all flex items-center gap-2 text-xs border border-emerald-100 disabled:opacity-50"
+                  >
+                    <Upload size={14} />
+                    Import Dokumen
+                  </button>
+                  <button 
                     onClick={handleSyncValidationRules}
                     className="px-4 py-2 bg-rose-50 text-rose-700 font-bold rounded-xl hover:bg-rose-100 transition-all flex items-center gap-2 text-xs border border-rose-100"
                   >
                     <Terminal size={14} />
                     Sync Validasi Statis
                   </button>
+                </div>
+              </div>
+
+              {/* Stats Banner */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-zinc-50 border border-zinc-200/60 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
+                  <div className="w-10 h-10 bg-rose-50 text-rose-700 rounded-xl flex items-center justify-center shrink-0">
+                    <Layers size={18} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider">Total Level</div>
+                    <div className="text-lg font-black text-zinc-850">{draftCurriculum.length}</div>
+                  </div>
+                </div>
+                <div className="bg-zinc-50 border border-zinc-200/60 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
+                  <div className="w-10 h-10 bg-amber-50 text-amber-700 rounded-xl flex items-center justify-center shrink-0">
+                    <BookOpen size={18} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider">Total Subbab</div>
+                    <div className="text-lg font-black text-zinc-850">
+                      {draftCurriculum.reduce((sum, lvl) => sum + (lvl.modules?.length || 0), 0)}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-zinc-50 border border-zinc-200/60 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
+                  <div className="w-10 h-10 bg-blue-50 text-blue-700 rounded-xl flex items-center justify-center shrink-0">
+                    <Terminal size={18} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider">Total Pelajaran</div>
+                    <div className="text-lg font-black text-zinc-850">
+                      {draftCurriculum.reduce((sum, lvl) => sum + (lvl.modules?.reduce((mSum, m) => mSum + (m.lessons?.length || 0), 0) || 0), 0)}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1762,6 +1955,25 @@ export const AdminDashboard: React.FC = () => {
                           </div>
 
                           <div className="flex items-center gap-1">
+                            {/* Move Up */}
+                            <button
+                              disabled={lIdx === 0}
+                              onClick={() => handleMoveLevel(lIdx, -1)}
+                              className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                              title="Pindahkan Ke Atas"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            {/* Move Down */}
+                            <button
+                              disabled={lIdx === draftCurriculum.length - 1}
+                              onClick={() => handleMoveLevel(lIdx, 1)}
+                              className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                              title="Pindahkan Ke Bawah"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                            {/* Edit */}
                             <button
                               onClick={() => {
                                 setEditingLevel(level.id);
@@ -1772,6 +1984,7 @@ export const AdminDashboard: React.FC = () => {
                             >
                               <Edit2 size={14} />
                             </button>
+                            {/* Cycle Access Mode */}
                             <button
                               onClick={() => handleCycleAccessMode(level)}
                               className={cn(
@@ -1788,6 +2001,14 @@ export const AdminDashboard: React.FC = () => {
                                 if (mode === 'unlocked') return <><Unlock size={14} /> Terbuka</>;
                                 return <><CheckCircle2 size={14} /> Auto</>;
                               })()}
+                            </button>
+                            {/* Delete */}
+                            <button
+                              onClick={() => handleDeleteLevel(level.id)}
+                              className="p-2 text-zinc-400 hover:text-red-650 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Hapus Level"
+                            >
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </div>
@@ -3041,6 +3262,210 @@ export const AdminDashboard: React.FC = () => {
                     {isAiTargetGenerating ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
                     {isAiTargetGenerating ? 'Memproses...' : 'Generate Sekarang'}
                   </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* PREMIUM SMART DOCUMENT IMPORT MODAL */}
+        <AnimatePresence>
+          {showImportPreviewModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-md animate-fade-in">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl relative border border-zinc-200/50 flex flex-col max-h-[90vh]"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0 animate-pulse">
+                      <Upload size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-zinc-900">Smart Document Import</h3>
+                      <p className="text-zinc-500 text-xs truncate max-w-sm">{importFileName}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => { setShowImportPreviewModal(false); setImportDocTarget(null); setImportParsedResult(null); }}
+                    className="p-2 hover:bg-zinc-100 rounded-xl text-zinc-400 hover:text-zinc-600 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Body Content */}
+                <div className="flex-1 overflow-y-auto py-6 space-y-6">
+                  {/* Step 1: Mode Selection */}
+                  {!importParsedResult && !isProcessingImport && (
+                    <div className="space-y-4">
+                      <div className="bg-zinc-50 border border-zinc-200/60 p-4 rounded-2xl">
+                        <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Cuplikan Isi Dokumen</div>
+                        <div className="bg-zinc-950 text-zinc-300 p-4 rounded-xl font-mono text-[11px] max-h-32 overflow-y-auto whitespace-pre-wrap">
+                          {importFileContent.substring(0, 1000) + (importFileContent.length > 1000 ? '...' : '')}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Standard mode card */}
+                        <div 
+                          onClick={() => setImportParseMode('regex')}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                            importParseMode === 'regex' 
+                              ? 'border-zinc-900 bg-zinc-50 shadow-sm' 
+                              : 'border-zinc-200/80 bg-white hover:border-zinc-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Terminal size={16} className={importParseMode === 'regex' ? 'text-zinc-950' : 'text-zinc-400'} />
+                            <div className="text-xs font-bold text-zinc-800">Standard Regex Parser</div>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 leading-relaxed">
+                            Mengekstrak teks berdasarkan pola kata kunci teratur secara instan di sisi klien. Cocok untuk dokumen yang mengikuti format secara ketat.
+                          </p>
+                        </div>
+
+                        {/* AI mode card */}
+                        <div 
+                          onClick={() => setImportParseMode('ai')}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                            importParseMode === 'ai' 
+                              ? 'border-emerald-500 bg-emerald-50/10 shadow-sm' 
+                              : 'border-zinc-200/80 bg-white hover:border-zinc-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Sparkles size={16} className={importParseMode === 'ai' ? 'text-emerald-500' : 'text-zinc-400'} />
+                            <div className="text-xs font-bold text-zinc-800">Smart AI Parser</div>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 leading-relaxed">
+                            Menggunakan LLM Gemini untuk mengekstrak dan memetakan struktur data secara cerdas. Cocok untuk dokumen yang tidak teratur, menghasilkan penjelasan HTML yang rapi.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 2: Processing state */}
+                  {isProcessingImport && (
+                    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                      <Loader2 size={36} className="animate-spin text-emerald-500" />
+                      <div className="text-sm font-bold text-zinc-800 animate-pulse">Sedang mengekstrak modul & pelajaran...</div>
+                      <p className="text-xs text-zinc-400 text-center max-w-md">
+                        {importParseMode === 'ai' 
+                          ? 'Model AI sedang mengurai struktur kurikulum, merapikan markup HTML materi, serta mengekstrak kuis dan testcase.' 
+                          : 'Standard parser sedang menguraikan tag level, modul, kuis, dan latihan secara lokal.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Step 3: Parsed results preview */}
+                  {!isProcessingImport && importParsedResult && (
+                    <div className="space-y-4">
+                      <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3">
+                        <CheckCircle2 className="text-emerald-500 shrink-0" size={20} />
+                        <div>
+                          <div className="text-xs font-bold text-emerald-800">Ekstraksi Selesai!</div>
+                          <div className="text-[11px] text-emerald-600">
+                            Berhasil mendeteksi {importParsedResult.levels.length} Level,{' '}
+                            {importParsedResult.levels.reduce((sum, l) => sum + l.modules.length, 0)} Modul, dan{' '}
+                            {importParsedResult.levels.reduce((sum, l) => sum + l.modules.reduce((s, m) => s + (m.lessons?.length || 0), 0), 0)} Pelajaran.
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border border-zinc-200/80 rounded-2xl divide-y divide-zinc-100 overflow-hidden bg-zinc-50 max-h-72 overflow-y-auto shadow-inner">
+                        {importParsedResult.levels.map((level, lIdx) => (
+                          <div key={lIdx} className="p-4 bg-white">
+                            <div className="text-xs font-black text-zinc-850 uppercase tracking-wide flex items-center gap-1.5">
+                              <Layers size={12} className="text-zinc-400" />
+                              {level.title || `Level ${lIdx + 1}`}
+                            </div>
+                            
+                            <div className="ml-4 mt-2 space-y-3">
+                              {level.modules.map((mod, mIdx) => (
+                                <div key={mIdx} className="border-l-2 border-zinc-200/60 pl-3">
+                                  <div className="text-[11px] font-bold text-zinc-700 flex items-center gap-1">
+                                    <BookOpen size={10} className="text-zinc-400" />
+                                    {mod.title}
+                                  </div>
+
+                                  <div className="ml-3 mt-1.5 space-y-1">
+                                    {mod.lessons?.map((les, lesIdx) => {
+                                      const isExisting = draftCurriculum.some(l => 
+                                        l.modules.some(m => 
+                                          m.lessons.some(le => le.title.trim().toLowerCase() === les.title.trim().toLowerCase())
+                                        )
+                                      );
+                                      return (
+                                        <div key={lesIdx} className="text-[10px] text-zinc-650 flex items-center justify-between py-0.5 border-b border-zinc-50 last:border-0">
+                                          <div className="flex items-center gap-1.5">
+                                            <span className="w-1 h-1 rounded-full bg-zinc-400 shrink-0"></span>
+                                            <span className="font-semibold">{les.title}</span>
+                                          </div>
+                                          <span className={`px-1.5 py-0.2 rounded font-black uppercase text-[8px] ${
+                                            isExisting 
+                                              ? 'bg-amber-100 text-amber-700' 
+                                              : 'bg-emerald-100 text-emerald-700'
+                                          }`}>
+                                            {isExisting ? 'Update/Merge' : 'Baru'}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer buttons */}
+                <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
+                  <div className="text-xs text-zinc-400 font-bold">
+                    {importDocTarget === 'global' ? 'Target: Seluruh Kurikulum (Global)' : 'Target: Modul Spesifik'}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        if (importParsedResult) {
+                          setImportParsedResult(null);
+                        } else {
+                          setShowImportPreviewModal(false);
+                          setImportDocTarget(null);
+                        }
+                      }}
+                      className="px-5 py-2.5 text-xs font-bold text-zinc-500 hover:text-zinc-700 transition-colors"
+                    >
+                      {importParsedResult ? 'Kembali' : 'Batal'}
+                    </button>
+
+                    {!importParsedResult ? (
+                      <button
+                        onClick={handleProcessImportDocument}
+                        disabled={isProcessingImport}
+                        className="px-5 py-2.5 bg-zinc-950 text-white rounded-xl text-xs font-bold hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-lg shadow-zinc-950/10"
+                      >
+                        {isProcessingImport ? <Loader2 size={12} className="animate-spin" /> : <Terminal size={12} />}
+                        Mulai Ekstraksi
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleApplyImportDocument}
+                        className="px-5 py-2.5 bg-emerald-500 text-white rounded-xl text-xs font-bold hover:bg-emerald-600 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                      >
+                        <CheckCircle2 size={12} />
+                        Terapkan Perubahan
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             </div>
