@@ -168,5 +168,19 @@ FOR EACH ROW
 EXECUTE FUNCTION public.update_user_last_active_from_session();
 
 
+-- 13. KEBIJAKAN UNTUK TABEL: student_progress
+-- Memastikan tabel student_progress RLS dikonfigurasi dengan benar agar staf bisa melakukan reset
+DROP POLICY IF EXISTS "Mahasiswa hanya bisa modifikasi progress-nya sendiri" ON student_progress;
+DROP POLICY IF EXISTS "Asisten ke atas bisa melihat progress semua mahasiswa" ON student_progress;
+DROP POLICY IF EXISTS "Mahasiswa bisa mengelola progres belajarnya sendiri" ON student_progress;
+DROP POLICY IF EXISTS "Staf bisa mengelola progres belajar praktikan" ON student_progress;
+
+CREATE POLICY "Mahasiswa hanya bisa modifikasi progress-nya sendiri" ON student_progress
+    FOR ALL USING (nim = public.auth_nim());
+
+CREATE POLICY "Staf bisa mengelola progres belajar praktikan" ON student_progress
+    FOR ALL USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+
+
 
 
