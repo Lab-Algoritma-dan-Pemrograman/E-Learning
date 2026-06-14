@@ -150,8 +150,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           .from('active_sessions')
           .upsert({
             nim: user.nim,
+            nama: user.nama || 'Anonymous',
+            kelas: user.kelas || 'Unknown',
             last_heartbeat: new Date().toISOString(),
-            current_page: page
+            current_activity: page
           });
       } catch (e) {
         console.error("Failed to send heartbeat:", e);
@@ -163,8 +165,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       .from('active_sessions')
       .upsert({
         nim: user.nim,
+        nama: user.nama || 'Anonymous',
+        kelas: user.kelas || 'Unknown',
         last_heartbeat: new Date().toISOString(),
-        current_page: page
+        current_activity: page
       })
       .then(({ error }) => {
         if (error) console.error("Initial heartbeat failed:", error);
