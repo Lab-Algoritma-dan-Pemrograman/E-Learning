@@ -520,6 +520,31 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
           cleanExplanation = cleanExplanation.substring(0, practiceIdx).trim();
         }
 
+        const stripFences = (codeStr: string) => {
+          return codeStr
+            .split('\n')
+            .filter(line => {
+              const trimmed = line.trim();
+              return !trimmed.startsWith('```') && !trimmed.startsWith("'''");
+            })
+            .join('\n')
+            .trim();
+        };
+
+        // Auto-extract code example from explanation/materi if codeExample is empty
+        if (!les.codeExample && cleanExplanation.includes('```')) {
+          const blocks = cleanExplanation.split('```');
+          for (let i = 1; i < blocks.length; i += 2) {
+            const block = blocks[i];
+            const firstLineEnd = block.indexOf('\n');
+            const code = firstLineEnd !== -1 ? block.substring(firstLineEnd).trim() : block.trim();
+            if (code) {
+              les.codeExample = code;
+              break;
+            }
+          }
+        }
+
         les.explanation = formatExplanationMarkdown(cleanExplanation);
         
         if (practiceDesc) {
@@ -531,9 +556,9 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
             </div>`;
         }
 
-        les.codeExample = les.codeExample.trim();
-        les.initialCode = les.initialCode.trim();
-        les.solution = les.solution.trim();
+        les.codeExample = stripFences(les.codeExample);
+        les.initialCode = stripFences(les.initialCode);
+        les.solution = stripFences(les.solution);
         les.hint = les.hint.trim();
         
         les.testCases.forEach(tc => {
