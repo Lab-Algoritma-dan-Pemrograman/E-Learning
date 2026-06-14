@@ -25,7 +25,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 
 
-  const isKordasOrAdmin = user?.role === 'admin' || user?.role === 'kordas' || user?.role === 'asisten';
+  const isAdminOrKordas = user?.role === 'admin' || user?.role === 'kordas';
+  const isStaff = isAdminOrKordas || user?.role === 'asisten';
 
   const handleLogout = async () => {
     try {
@@ -244,17 +245,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 onClick={(e) => { e.preventDefault(); setPage('leaderboard'); }}
               />
 
-              {/* Admin Panel for Kordas and Admin */}
-              {isKordasOrAdmin && (
+              {/* Staff Panel - role-based visibility */}
+              {isStaff && (
                 <div className="pt-4 border-t border-zinc-150 space-y-3">
                   <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-4 mb-2">Panel Staf</div>
-                  <SidebarItem 
-                    icon={<ShieldCheck size={22} />} 
-                    label="Admin Panel" 
-                    href="/admin" 
-                    active={page === 'admin'} 
-                    onClick={(e) => { e.preventDefault(); setPage('admin'); }}
-                  />
+                  {isAdminOrKordas && (
+                    <SidebarItem 
+                      icon={<ShieldCheck size={22} />} 
+                      label="Admin Panel" 
+                      href="/admin" 
+                      active={page === 'admin'} 
+                      onClick={(e) => { e.preventDefault(); setPage('admin'); }}
+                    />
+                  )}
                   <SidebarItem 
                     icon={<Users size={22} />} 
                     label="Monitoring" 
@@ -262,13 +265,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     active={page === 'monitoring'} 
                     onClick={(e) => { e.preventDefault(); setPage('monitoring'); }}
                   />
-                  <SidebarItem 
-                    icon={<ClipboardList size={22} />} 
-                    label="Audit Log" 
-                    href="/auditlog" 
-                    active={page === 'auditlog'} 
-                    onClick={(e) => { e.preventDefault(); setPage('auditlog'); }}
-                  />
+                  {isAdminOrKordas && (
+                    <SidebarItem 
+                      icon={<ClipboardList size={22} />} 
+                      label="Audit Log" 
+                      href="/auditlog" 
+                      active={page === 'auditlog'} 
+                      onClick={(e) => { e.preventDefault(); setPage('auditlog'); }}
+                    />
+                  )}
                 </div>
               )}
             </nav>

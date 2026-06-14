@@ -41,6 +41,9 @@ export const StudentMonitoring: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [onlineNims, setOnlineNims] = useState<Set<string>>(new Set());
 
+  const isReadOnly = user?.role === 'asisten';
+  const canManage = ['admin', 'kordas'].includes(user?.role || '');
+
   const totalLessons = curriculum.reduce((acc, l) => acc + (l.modules?.reduce((m, mod) => m + (mod.lessons?.length || 0), 0) || 0), 0);
 
   const fetchStudents = async () => {
@@ -211,6 +214,20 @@ export const StudentMonitoring: React.FC = () => {
   };
 
   const totalStudyTimeSeconds = students.reduce((sum, s) => sum + (s.study_time || 0), 0);
+
+  if (!['admin', 'kordas', 'asisten'].includes(user?.role || '')) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
+          <div className="w-20 h-20 bg-rose-50 text-rose-700 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
+            <Lock size={40} />
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-zinc-900 mb-2">Akses Terbatas</h1>
+          <p className="text-zinc-500 max-w-sm">Halaman ini hanya dapat diakses oleh staf pengajar.</p>
+        </div>
+      </Layout>
+    );
+  }
 
   if (loading) {
     return (
@@ -587,7 +604,7 @@ export const StudentMonitoring: React.FC = () => {
                         <span>Terakhir Aktif: {formatLastActive(s.last_active)}</span>
                       </div>
                       
-                      {user?.role !== 'asisten' && (
+                      {canManage && (
                         editXpNim === s.nim ? (
                           <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-rose-100 shadow-sm animate-fade-in">
                             <input 

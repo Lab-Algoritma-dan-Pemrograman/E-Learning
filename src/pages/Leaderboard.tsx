@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/Layout';
-import { Trophy, Medal, ArrowUp, ArrowDown, Minus, Loader2, User } from 'lucide-react';
+import { Trophy, Medal, ArrowUp, ArrowDown, Minus, Loader2, User, RotateCcw } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { getLeaderboard, getUserRank } from '../services/leaderboardService';
+import { getLeaderboard, getUserRank, getLeaderboardFilters } from '../services/leaderboardService';
 import { UserProfile, useStore } from '../store/useStore';
 
 export const Leaderboard: React.FC = () => {
@@ -11,20 +11,59 @@ export const Leaderboard: React.FC = () => {
   const [userRank, setUserRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const isStudent = user?.role === 'praktikan';
+  const isStaff = ['admin', 'kordas', 'asisten'].includes(user?.role || '');
+
+  // Filter state for staff users
+  const [filterKelas, setFilterKelas] = useState<string>('');
+  const [filterJurusan, setFilterJurusan] = useState<string>('');
+  const [filterLimit, setFilterLimit] = useState<number>(20);
+  const [kelasOptions, setKelasOptions] = useState<string[]>([]);
+  const [jurusanOptions, setJurusanOptions] = useState<string[]>([]);
+
+  // Fetch filter options for staff
   useEffect(() => {
-    const fetchData = async () => {
-      const isStudent = user?.role === 'praktikan';
-      const limit = isStudent ? 3 : 20;
+    if (isStaff) {
+      getLeaderboardFilters().then(({ kelas, jurusan }) => {
+        setKelasOptions(kelas);
+        setJurusanOptions(jurusan);
+      });
+    }
+  }, [isStaff]);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    if (isStudent && user) {
       const [topLeaders, rank] = await Promise.all([
-        getLeaderboard(limit, isStudent ? user.kelas : undefined, isStudent ? user.jurusan : undefined),
-        user ? getUserRank(user.xp, isStudent ? user.kelas : undefined, isStudent ? user.jurusan : undefined) : Promise.resolve(null)
+        getLeaderboard(3, user.kelas, user.jurusan),
+        getUserRank(user.xp, user.kelas, user.jurusan)
       ]);
       setLeaders(topLeaders);
       setUserRank(rank);
-      setLoading(false);
-    };
+    } else if (isStaff && user) {
+      const kelas = filterKelas || undefined;
+      const jurusan = filterJurusan || undefined;
+      const [topLeaders, rank] = await Promise.all([
+        getLeaderboard(filterLimit, kelas, jurusan),
+        getUserRank(user.xp, kelas, jurusan)
+      ]);
+      setLeaders(topLeaders);
+      setUserRank(rank);
+    }
+    setLoading(false);
+  }, [user, isStudent, isStaff, filterKelas, filterJurusan, filterLimit]);
+
+  useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [fetchData]);
+
+  const hasActiveFilter = filterKelas !== '' || filterJurusan !== '' || filterLimit !== 20;
+
+  const resetFilters = () => {
+    setFilterKelas('');
+    setFilterJurusan('');
+    setFilterLimit(20);
+  };
 
   const isUserInTop = leaders.some(l => l.nim === user?.nim);
 
@@ -44,11 +83,61 @@ export const Leaderboard: React.FC = () => {
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">Papan Peringkat Global</h1>
           <p className="text-zinc-500">
-            {user?.role === 'praktikan' 
-              ? `Top 3 Penjelajah Python di Kelas ${user.kelas} - ${user.jurusan || ''}`
-              : 'Lihat peringkat Anda dibandingkan dengan penjelajah Python lainnya.'}
+            {isStudent 
+              ? `Top 3 Penjelajah Python di Kelas ${user?.kelas} - ${user?.jurusan || ''}`
+              : 'Lihat peringkat semua praktikan berdasarkan total XP.'}
           </p>
         </div>
+
+        {/* Filter Bar for Staff */}
+        {isStaff && (
+          <div className="bg-white/80 backdrop-blur-sm border border-zinc-200 rounded-2xl p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={filterKelas}
+                onChange={(e) => setFilterKelas(e.target.value)}
+                className="px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-rose-700/20 focus:outline-none"
+              >
+                <option value="">Semua Kelas</option>
+                {kelasOptions.map((k) => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+              </select>
+
+              <select
+                value={filterJurusan}
+                onChange={(e) => setFilterJurusan(e.target.value)}
+                className="px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-rose-700/20 focus:outline-none"
+              >
+                <option value="">Semua Jurusan</option>
+                {jurusanOptions.map((j) => (
+                  <option key={j} value={j}>{j}</option>
+                ))}
+              </select>
+
+              <select
+                value={filterLimit}
+                onChange={(e) => setFilterLimit(Number(e.target.value))}
+                className="px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-rose-700/20 focus:outline-none"
+              >
+                <option value={3}>Top 3</option>
+                <option value={10}>Top 10</option>
+                <option value={20}>Top 20</option>
+                <option value={0}>Semua</option>
+              </select>
+
+              {hasActiveFilter && (
+                <button
+                  onClick={resetFilters}
+                  className="ml-auto flex items-center gap-1.5 px-4 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors"
+                >
+                  <RotateCcw size={14} />
+                  Reset Filter
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Top 3 Podium */}
         {leaders.length > 0 && (

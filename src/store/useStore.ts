@@ -14,7 +14,7 @@ export interface UserProfile {
   streak: number;
   lastActive: string;
   createdAt: string;
-  role?: 'admin' | 'kordas' | 'asisten' | 'praktikan';
+  role?: 'admin' | 'kordas' | 'asisten' | 'praktikan'; // default: 'praktikan' (set by SupabaseProvider)
   division?: string;
   levelAccessOverrides?: Record<string, 'auto' | 'unlocked' | 'locked'>;
   assessmentAccess?: Record<string, boolean>;

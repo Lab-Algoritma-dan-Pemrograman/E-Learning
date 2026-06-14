@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
+import { useStore } from '../store/useStore';
 import { monitoringService, ActivityLog } from '../services/monitoringService';
-import { Trash2, Search, Filter, RefreshCw, Download, Calendar, Clock, Shield, LogIn, LogOut, FileText, Key, Brain, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Trash2, Search, Filter, RefreshCw, Download, Calendar, Clock, Shield, LogIn, LogOut, FileText, Key, Brain, ChevronLeft, ChevronRight, X, Lock } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const EVENT_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -37,6 +38,7 @@ const formatShortGMT7 = (iso: string) => {
 };
 
 export const AuditLogPage: React.FC = () => {
+  const { user } = useStore();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -49,6 +51,21 @@ export const AuditLogPage: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const pageSize = 25;
+  const isAdmin = user?.role === 'admin';
+
+  if (!['admin', 'kordas'].includes(user?.role || '')) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
+          <div className="w-20 h-20 bg-rose-50 text-rose-700 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
+            <Lock size={40} />
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-zinc-900 mb-2">Akses Terbatas</h1>
+          <p className="text-zinc-500 max-w-sm">Halaman ini hanya dapat diakses oleh Admin atau Koordinator.</p>
+        </div>
+      </Layout>
+    );
+  }
 
   const fetchLogs = async () => {
     setIsRefreshing(true);
@@ -189,8 +206,8 @@ export const AuditLogPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Bulk Actions */}
-        {selectedLogs.size > 0 && (
+        {/* Bulk Actions - admin only */}
+        {isAdmin && selectedLogs.size > 0 && (
           <div className="flex items-center gap-3 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
             <span className="text-sm font-bold text-rose-700">{selectedLogs.size} dipilih</span>
             <div className="flex-1" />
@@ -206,9 +223,11 @@ export const AuditLogPage: React.FC = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-zinc-100 bg-zinc-50/50">
-                  <th className="w-10 p-3">
-                    <input type="checkbox" checked={selectedLogs.size === paginated.length && paginated.length > 0} onChange={toggleSelectAll} className="rounded border-zinc-300" />
-                  </th>
+                  {isAdmin && (
+                    <th className="w-10 p-3">
+                      <input type="checkbox" checked={selectedLogs.size === paginated.length && paginated.length > 0} onChange={toggleSelectAll} className="rounded border-zinc-300" />
+                    </th>
+                  )}
                   <th className="text-left text-[10px] font-bold text-zinc-400 uppercase tracking-widest p-3">Waktu (GMT+7)</th>
                   <th className="text-left text-[10px] font-bold text-zinc-400 uppercase tracking-widest p-3">Mahasiswa</th>
                   <th className="text-left text-[10px] font-bold text-zinc-400 uppercase tracking-widest p-3">Event</th>
@@ -220,9 +239,11 @@ export const AuditLogPage: React.FC = () => {
                   const config = EVENT_CONFIG[log.event_type] || { label: log.event_type, color: 'bg-zinc-100 text-zinc-600 border-zinc-200', icon: <Filter size={12} /> };
                   return (
                     <tr key={log.id} className="border-b border-zinc-50 hover:bg-zinc-50/50 transition-colors">
-                      <td className="p-3">
-                        {log.id && <input type="checkbox" checked={selectedLogs.has(log.id)} onChange={() => toggleSelect(log.id)} className="rounded border-zinc-300" />}
-                      </td>
+                      {isAdmin && (
+                        <td className="p-3">
+                          {log.id && <input type="checkbox" checked={selectedLogs.has(log.id)} onChange={() => toggleSelect(log.id)} className="rounded border-zinc-300" />}
+                        </td>
+                      )}
                       <td className="p-3">
                         <div className="text-sm font-mono text-zinc-700">{formatShortGMT7(log.timestamp)}</div>
                         <div className="text-[10px] text-zinc-400">{new Date(log.timestamp).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric' })}</div>
@@ -274,8 +295,8 @@ export const AuditLogPage: React.FC = () => {
           )}
         </div>
 
-        {/* Delete Confirmation */}
-        {deleteConfirm && (
+        {/* Delete Confirmation - admin only */}
+        {isAdmin && deleteConfirm && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
               <h3 className="font-bold text-lg">Hapus Log Audit?</h3>

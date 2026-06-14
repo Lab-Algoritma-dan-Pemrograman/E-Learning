@@ -18,8 +18,9 @@ import {
   List, ListOrdered, Heading1, Heading2, AlignLeft, 
   AlignCenter, AlignRight, AlignJustify, Table as TableIcon, Link as LinkIcon, 
   Image as ImageIcon, Undo, Redo, Code, Plus, Trash2, 
-  Columns, Rows, Merge, Split, Palette, Indent, Outdent, X
+  Columns, Rows, Merge, Split, Palette, Indent, Outdent, X, Loader2
 } from 'lucide-react';
+import { storageService } from '../services/storageService';
 
 const TEXT_COLORS = [
   { label: 'Hitam', value: '#000000' },
@@ -47,6 +48,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
   const [imageFile, setImageFile] = React.useState<File | null>(null);
   const [imageFileName, setImageFileName] = React.useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = React.useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -113,19 +115,20 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
     }
   };
 
-  const handleInsertImage = () => {
+  const handleInsertImage = async () => {
     if (!editor) return;
 
     if (imageFile) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        if (base64) {
-          editor.chain().focus().setImage({ src: base64 }).run();
-          closeImageModal();
-        }
-      };
-      reader.readAsDataURL(imageFile);
+      setUploading(true);
+      try {
+        const publicUrl = await storageService.uploadImage(imageFile);
+        editor.chain().focus().setImage({ src: publicUrl }).run();
+        closeImageModal();
+      } catch (error: any) {
+        alert(error.message || 'Gagal mengupload gambar. Silakan coba lagi.');
+      } finally {
+        setUploading(false);
+      }
     } else if (imageUrl.trim()) {
       editor.chain().focus().setImage({ src: imageUrl.trim() }).run();
       closeImageModal();
@@ -505,7 +508,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
               </h3>
               <button 
                 onClick={closeImageModal} 
-                className="p-1.5 hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 rounded-xl transition-all"
+                disabled={uploading}
+                className="p-1.5 hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 rounded-xl transition-all disabled:opacity-50"
               >
                 <X size={18} />
               </button>
@@ -516,9 +520,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
               <div className="space-y-2">
                 <label className="text-xs font-black text-zinc-400 uppercase tracking-widest block">Upload File Gambar</label>
                 <div 
-                  onClick={() => fileInputRef.current?.click()} 
+                  onClick={() => !uploading && fileInputRef.current?.click()} 
                   className={cn(
                     "border-2 border-dashed border-zinc-200 rounded-2xl p-6 text-center cursor-pointer hover:border-rose-300 hover:bg-rose-50/10 transition-all space-y-2",
+                    uploading && "opacity-50 cursor-not-allowed pointer-events-none",
                     imageFile && "border-emerald-300 bg-emerald-50/10"
                   )}
                 >
@@ -553,6 +558,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
                 <input 
                   type="url" 
                   value={imageUrl} 
+                  disabled={uploading}
                   onChange={e => {
                     setImageUrl(e.target.value);
                     if (imageFile) {
@@ -561,7 +567,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
                     }
                   }} 
                   placeholder="https://example.com/gambar.jpg" 
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:bg-white transition-all font-medium" 
+                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:bg-white transition-all font-medium disabled:opacity-50" 
                 />
               </div>
             </div>
@@ -569,16 +575,24 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
             <div className="flex gap-2.5 pt-2">
               <button 
                 onClick={closeImageModal} 
-                className="flex-grow py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-black rounded-2xl text-sm transition-colors"
+                disabled={uploading}
+                className="flex-grow py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-black rounded-2xl text-sm transition-colors disabled:opacity-50"
               >
                 Batal
               </button>
               <button 
                 onClick={handleInsertImage} 
-                disabled={!imageFile && !imageUrl.trim()}
-                className="flex-grow py-3 bg-rose-700 hover:bg-rose-800 text-white font-black rounded-2xl text-sm transition-all shadow-lg shadow-rose-700/10 active:scale-95 disabled:opacity-50"
+                disabled={uploading || (!imageFile && !imageUrl.trim())}
+                className="flex-grow py-3 bg-rose-700 hover:bg-rose-800 text-white font-black rounded-2xl text-sm transition-all shadow-lg shadow-rose-700/10 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Masukkan Gambar
+                {uploading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Mengupload...
+                  </>
+                ) : (
+                  'Masukkan Gambar'
+                )}
               </button>
             </div>
           </div>

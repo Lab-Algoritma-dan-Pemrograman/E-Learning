@@ -15,9 +15,13 @@ export const getLeaderboard = async (limitCount: number = 10, kelas?: string, ju
       query = query.eq('jurusan', jurusan);
     }
 
-    const { data, error } = await query
-      .order('xp', { ascending: false })
-      .limit(limitCount);
+    query = query.order('xp', { ascending: false });
+
+    if (limitCount > 0) {
+      query = query.limit(limitCount);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
@@ -65,5 +69,23 @@ export const getUserRank = async (xp: number, kelas?: string, jurusan?: string):
   } catch (error) {
     console.error('Error counting user rank:', error);
     return null;
+  }
+};
+
+export const getLeaderboardFilters = async (): Promise<{ kelas: string[]; jurusan: string[] }> => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('kelas, jurusan')
+      .eq('role', 'praktikan');
+
+    if (error) throw error;
+
+    const kelas = [...new Set((data || []).map(u => u.kelas).filter(Boolean))].sort() as string[];
+    const jurusan = [...new Set((data || []).map(u => u.jurusan).filter(Boolean))].sort() as string[];
+    return { kelas, jurusan };
+  } catch (error) {
+    console.error('Error fetching leaderboard filters:', error);
+    return { kelas: [], jurusan: [] };
   }
 };
