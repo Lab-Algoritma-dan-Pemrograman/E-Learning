@@ -69,15 +69,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       const isThisTabActive = activeTab === tabId.current;
 
       if (isThisTabActive) {
-        localStudyTimeAccumulator.current += 1;
+        // Only track study time if currently on the 'courses' or 'lesson' pages
+        if (page === 'courses' || page === 'lesson') {
+          localStudyTimeAccumulator.current += 1;
 
-        // Increment store optimistically
-        const currentUser = useStore.getState().user;
-        if (currentUser && currentUser.nim === user.nim) {
-          useStore.getState().setUser({
-            ...currentUser,
-            studyTime: (currentUser.studyTime || 0) + 1
-          });
+          // Increment store optimistically
+          const currentUser = useStore.getState().user;
+          if (currentUser && currentUser.nim === user.nim) {
+            useStore.getState().setUser({
+              ...currentUser,
+              studyTime: (currentUser.studyTime || 0) + 1
+            });
+          }
         }
 
         // 3. Sync to Supabase every 30 seconds

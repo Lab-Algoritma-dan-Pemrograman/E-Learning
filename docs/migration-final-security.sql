@@ -62,3 +62,37 @@ DROP POLICY IF EXISTS "Hanya Admin yang bisa menghapus log audit" ON activity_lo
 
 CREATE POLICY "Hanya Admin yang bisa menghapus log audit" ON activity_logs
     FOR DELETE USING (public.auth_role() = 'admin');
+
+-- 8. KEBIJAKAN UNTUK SUPABASE STORAGE BUCKET: lesson-images
+-- Catatan: Kebijakan ini berlaku pada tabel storage.objects.
+-- Jalankan ini agar pengunggahan gambar lewat Rich Text Editor tidak terkena error RLS.
+
+-- A. Izinkan akses publik untuk membaca berkas gambar
+DROP POLICY IF EXISTS "Izinkan publik membaca gambar materi" ON storage.objects;
+CREATE POLICY "Izinkan publik membaca gambar materi" ON storage.objects
+    FOR SELECT USING (bucket_id = 'lesson-images');
+
+-- B. Izinkan staf (admin, kordas, asisten) untuk mengunggah berkas gambar
+DROP POLICY IF EXISTS "Izinkan staf mengunggah gambar materi" ON storage.objects;
+CREATE POLICY "Izinkan staf mengunggah gambar materi" ON storage.objects
+    FOR INSERT WITH CHECK (
+        bucket_id = 'lesson-images'
+        AND (public.auth_role() IN ('admin', 'kordas', 'asisten'))
+    );
+
+-- C. Izinkan staf memperbarui berkas gambar
+DROP POLICY IF EXISTS "Izinkan staf memperbarui gambar materi" ON storage.objects;
+CREATE POLICY "Izinkan staf memperbarui gambar materi" ON storage.objects
+    FOR UPDATE USING (
+        bucket_id = 'lesson-images'
+        AND (public.auth_role() IN ('admin', 'kordas', 'asisten'))
+    );
+
+-- D. Izinkan staf menghapus berkas gambar
+DROP POLICY IF EXISTS "Izinkan staf menghapus gambar materi" ON storage.objects;
+CREATE POLICY "Izinkan staf menghapus gambar materi" ON storage.objects
+    FOR DELETE USING (
+        bucket_id = 'lesson-images'
+        AND (public.auth_role() IN ('admin', 'kordas', 'asisten'))
+    );
+
