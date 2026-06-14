@@ -607,7 +607,7 @@ export const AdminDashboard: React.FC = () => {
       setShowModal({
         type: 'alert',
         title: 'Gagal Membaca File',
-        message: 'Pastikan file .txt atau .docx yang valid.'
+        message: 'Pastikan file .txt, .docx, atau .md yang valid.'
       });
     } finally {
       setIsImportingDoc(false);
@@ -1788,7 +1788,7 @@ export const AdminDashboard: React.FC = () => {
             <input
               ref={docFileInputRef}
               type="file"
-              accept=".txt,.docx"
+              accept=".txt,.docx,.md"
               className="hidden"
               onChange={handleDocFileSelected}
             />
