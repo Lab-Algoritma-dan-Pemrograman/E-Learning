@@ -120,4 +120,35 @@ CREATE POLICY "Mahasiswa hanya bisa mencatat riwayat game sendiri" ON game_histo
     FOR INSERT WITH CHECK (nim = public.auth_nim());
 
 
+-- 11. KEBIJAKAN UNTUK TABEL: achievements & unlocked_achievements
+-- Mengaktifkan RLS pada tabel pencapaian agar aman dan berfungsi
+ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE unlocked_achievements ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Semua user terautentikasi bisa melihat pencapaian" ON achievements;
+CREATE POLICY "Semua user terautentikasi bisa melihat pencapaian" ON achievements
+    FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Hanya Admin & Kordas yang bisa mengelola pencapaian" ON achievements;
+CREATE POLICY "Hanya Admin & Kordas yang bisa mengelola pencapaian" ON achievements
+    FOR ALL USING (public.auth_role() IN ('admin', 'kordas'));
+
+DROP POLICY IF EXISTS "Mahasiswa hanya bisa melihat pencapaian miliknya sendiri" ON unlocked_achievements;
+CREATE POLICY "Mahasiswa hanya bisa melihat pencapaian miliknya sendiri" ON unlocked_achievements
+    FOR SELECT USING (nim = public.auth_nim());
+
+DROP POLICY IF EXISTS "Staf bisa melihat pencapaian seluruh praktikan" ON unlocked_achievements;
+CREATE POLICY "Staf bisa melihat pencapaian seluruh praktikan" ON unlocked_achievements
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+
+DROP POLICY IF EXISTS "Mahasiswa hanya bisa mencatat pencapaian miliknya sendiri" ON unlocked_achievements;
+CREATE POLICY "Mahasiswa hanya bisa mencatat pencapaian miliknya sendiri" ON unlocked_achievements
+    FOR INSERT WITH CHECK (nim = public.auth_nim());
+
+DROP POLICY IF EXISTS "Staf bisa menghapus pencapaian praktikan" ON unlocked_achievements;
+CREATE POLICY "Staf bisa menghapus pencapaian praktikan" ON unlocked_achievements
+    FOR DELETE USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+
+
+
 

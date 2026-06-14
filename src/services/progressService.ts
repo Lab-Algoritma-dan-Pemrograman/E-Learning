@@ -232,7 +232,17 @@ export const resetUserProgress = async (nim: string): Promise<void> => {
 
     if (deleteErr) throw deleteErr;
 
-    // 2. Reset user stats
+    // 2. Delete unlocked achievements to allow re-testing
+    const { error: achErr } = await supabase
+      .from('unlocked_achievements')
+      .delete()
+      .eq('nim', nim);
+
+    if (achErr) {
+      console.warn("Failed to delete unlocked achievements (might be normal if RLS/table not exists):", achErr.message);
+    }
+
+    // 3. Reset user stats
     const { error: userErr } = await supabase
       .from('users')
       .update({
@@ -244,10 +254,10 @@ export const resetUserProgress = async (nim: string): Promise<void> => {
 
     if (userErr) throw userErr;
 
-    // 3. Reset Supabase aggregated rekap table
+    // 4. Reset Supabase aggregated rekap table
     await resetSupabaseProgress(nim);
 
-    console.log(`✅ All progress reset in Supabase for ${nim}`);
+    console.log(`✅ All progress and achievements reset in Supabase for ${nim}`);
   } catch (error) {
     console.error("Failed to reset user progress:", error);
     throw error;
