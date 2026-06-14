@@ -285,7 +285,7 @@ export const StudentMonitoring: React.FC = () => {
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full pointer-events-none" />
             <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/15 relative">
               <Activity size={24} className="animate-pulse" />
-              {onlineNims.size > 0 && (
+              {students.some(s => onlineNims.has(s.nim)) && (
                 <span className="absolute top-1 right-1 flex h-3.5 w-3.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500 border-2 border-white"></span>
@@ -294,7 +294,9 @@ export const StudentMonitoring: React.FC = () => {
             </div>
             <div>
               <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest leading-none mb-1.5">Sedang Online</div>
-              <div className="text-2xl font-black text-zinc-900">{onlineNims.size} <span className="text-sm font-bold text-zinc-500">Aktif</span></div>
+              <div className="text-2xl font-black text-zinc-900">
+                {students.filter(s => onlineNims.has(s.nim)).length} <span className="text-sm font-bold text-zinc-500">Aktif</span>
+              </div>
             </div>
           </div>
 

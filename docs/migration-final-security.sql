@@ -96,3 +96,11 @@ CREATE POLICY "Izinkan staf menghapus gambar materi" ON storage.objects
         AND (public.auth_role() IN ('admin', 'kordas', 'asisten'))
     );
 
+
+-- 9. KEBIJAKAN UNTUK TABEL: active_sessions
+-- Mengizinkan staf (admin, kordas, asisten) menghapus sesi aktif yang usang (stale sessions)
+DROP POLICY IF EXISTS "Staf bisa menghapus sesi aktif apa saja" ON active_sessions;
+CREATE POLICY "Staf bisa menghapus sesi aktif apa saja" ON active_sessions
+    FOR DELETE USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+
+
