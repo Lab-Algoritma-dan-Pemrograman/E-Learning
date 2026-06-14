@@ -277,4 +277,4 @@ export const CourseExplorer: React.FC = () => {
       </div>
     </motion.div>
   );
-};};
+};
