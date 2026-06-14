@@ -37,11 +37,20 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose, onGameFinis
 
   useEffect(() => {
     const loadQuestions = async () => {
+      setLoading(true);
+      setCurrentIndex(0);
+      setSelectedLine(null);
+      setLastResult(null);
+      setTotalXp(0);
+      setScore(0);
+      scoreRef.current = 0;
+      totalXpRef.current = 0;
+
       // 1. Get settings first to know how many questions to fetch
       const settings = await getGameSettings();
       const questionCount = settings.bugHuntQuestionCount || 5;
 
-      // 2. Fresh limit check from Firestore before starting the game
+      // 2. Fresh limit check from database before starting the game
       if (user?.nim) {
         const check = await canPlayBugHunt(user.nim);
         if (!check.allowed) {
@@ -57,7 +66,7 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose, onGameFinis
       setGameStatus('playing');
     };
     loadQuestions();
-  }, [language, user]);
+  }, [language, user?.nim]);
 
   useEffect(() => {
     if (gameStatus === 'playing' && !loading && questions.length > 0) {

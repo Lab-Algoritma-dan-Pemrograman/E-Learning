@@ -103,4 +103,21 @@ DROP POLICY IF EXISTS "Staf bisa menghapus sesi aktif apa saja" ON active_sessio
 CREATE POLICY "Staf bisa menghapus sesi aktif apa saja" ON active_sessions
     FOR DELETE USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
 
+-- 10. KEBIJAKAN UNTUK TABEL: game_history
+-- Mengaktifkan RLS pada tabel riwayat game agar aman dan berfungsi
+ALTER TABLE game_history ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Mahasiswa hanya bisa melihat riwayat game sendiri" ON game_history;
+CREATE POLICY "Mahasiswa hanya bisa melihat riwayat game sendiri" ON game_history
+    FOR SELECT USING (nim = public.auth_nim());
+
+DROP POLICY IF EXISTS "Staf bisa melihat riwayat game seluruh praktikan" ON game_history;
+CREATE POLICY "Staf bisa melihat riwayat game seluruh praktikan" ON game_history
+    FOR SELECT USING (public.auth_role() IN ('admin', 'kordas', 'asisten'));
+
+DROP POLICY IF EXISTS "Mahasiswa hanya bisa mencatat riwayat game sendiri" ON game_history;
+CREATE POLICY "Mahasiswa hanya bisa mencatat riwayat game sendiri" ON game_history
+    FOR INSERT WITH CHECK (nim = public.auth_nim());
+
+
 
