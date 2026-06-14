@@ -642,17 +642,18 @@ const LevelCard: React.FC<{
 
   const isBlue = colorClass === 'blue';
   const accent = {
-    gradient: isBlue ? 'from-blue-500 to-blue-600' : 'from-rose-500 to-pink-600',
-    gradientLight: isBlue ? 'from-blue-50 to-sky-50' : 'from-rose-50 to-pink-50',
+    gradient: isBlue ? 'from-blue-600 to-indigo-600' : 'from-rose-600 to-pink-600',
+    gradientLight: isBlue ? 'from-blue-50/70 via-white to-indigo-50/10' : 'from-rose-50/70 via-white to-pink-50/10',
     bg: isBlue ? 'bg-blue-50' : 'bg-rose-50',
     text: isBlue ? 'text-blue-700' : 'text-rose-700',
-    textLight: isBlue ? 'text-blue-400' : 'text-rose-400',
-    bar: isBlue ? 'from-blue-500 to-blue-400' : 'from-rose-500 to-pink-500',
-    ring: isBlue ? '#3b82f6' : '#e11d48',
-    ringBg: isBlue ? '#dbeafe' : '#ffe4e6',
-    blob: isBlue ? 'bg-blue-100/60' : 'bg-rose-100/60',
-    dot: isBlue ? 'bg-blue-400' : 'bg-rose-400',
-    dotEmpty: isBlue ? 'bg-blue-100' : 'bg-rose-100',
+    textLight: isBlue ? 'text-blue-500' : 'text-rose-500',
+    bar: isBlue ? 'from-blue-600 to-indigo-500' : 'from-rose-600 to-pink-500',
+    ring: isBlue ? '#2563eb' : '#e11d48',
+    ringBg: isBlue ? '#eff6ff' : '#fff1f2',
+    blob: isBlue ? 'bg-blue-200/30' : 'bg-rose-200/30',
+    dot: isBlue ? 'bg-blue-500' : 'bg-rose-500',
+    dotEmpty: isBlue ? 'bg-zinc-200/80' : 'bg-zinc-200/80',
+    border: isBlue ? 'border-blue-100/80 shadow-blue-500/[0.01]' : 'border-rose-100/80 shadow-rose-500/[0.01]',
   };
 
   // Circular progress SVG params
@@ -670,18 +671,18 @@ const LevelCard: React.FC<{
         }
       }}
       className={cn(
-        "relative overflow-hidden rounded-[1.5rem] transition-all",
+        "relative overflow-hidden rounded-[1.8rem] transition-all duration-300",
         isLocked 
           ? "cursor-not-allowed" 
-          : "cursor-pointer group hover:shadow-xl hover:-translate-y-0.5"
+          : "cursor-pointer group hover:shadow-xl hover:shadow-zinc-200/80 hover:-translate-y-1"
       )}
     >
       {/* Card body with gradient background */}
       <div className={cn(
-        "relative p-6 border",
+        "relative p-6 border transition-colors duration-300",
         isLocked 
           ? "bg-zinc-50 border-zinc-200 opacity-50 grayscale" 
-          : `bg-gradient-to-br ${accent.gradientLight} border-transparent`
+          : `bg-gradient-to-br ${accent.gradientLight} ${accent.border} shadow-sm`
       )} style={{ borderRadius: 'inherit' }}>
         {/* Decorative blob top-right */}
         <div className={cn(
@@ -725,11 +726,11 @@ const LevelCard: React.FC<{
               <div>
                 <div className={cn(
                   "text-[9px] font-black uppercase tracking-[0.2em]",
-                  isComplete ? accent.text : "text-zinc-400"
+                  isComplete ? accent.text : "text-zinc-450"
                 )}>
                   Level {idx + 1}
                 </div>
-                <div className="text-[10px] text-zinc-500 font-bold mt-0.5">
+                <div className="text-[10px] text-zinc-650 font-black tracking-wide mt-0.5">
                   {level.modules?.length || 0} Modul • {totalInLevel} Pelajaran
                 </div>
               </div>
@@ -773,13 +774,13 @@ const LevelCard: React.FC<{
                   )}>
                     {modComplete ? <CheckCircle2 size={12} /> : <FileText size={10} />}
                   </div>
-                  <span className={cn("truncate font-medium", modComplete ? "text-zinc-400 line-through" : "text-zinc-600")}>{mod.title}</span>
-                  <span className="ml-auto text-[9px] font-bold text-zinc-400 shrink-0">{modDone}/{modTotal}</span>
+                  <span className={cn("truncate font-medium text-xs", modComplete ? "text-zinc-450 line-through font-normal" : "text-zinc-700")}>{mod.title}</span>
+                  <span className="ml-auto text-[10px] font-extrabold text-zinc-500 shrink-0">{modDone}/{modTotal}</span>
                 </div>
               );
             })}
             {(level.modules?.length || 0) > 3 && (
-              <div className="text-[10px] font-bold text-zinc-400 pt-0.5">
+              <div className="text-[10px] font-black text-zinc-500 tracking-wide pt-0.5">
                 +{(level.modules?.length || 0) - 3} modul lagi
               </div>
             )}

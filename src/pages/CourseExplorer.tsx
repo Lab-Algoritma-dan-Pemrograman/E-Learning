@@ -175,28 +175,33 @@ export const CourseExplorer: React.FC = () => {
       </div>
     </Layout>
   );
-};
-
-const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; accentGradient: string; accentBg: string; accentText: string; onClick?: () => void }> = ({ module, locked, progress, accentGradient, accentBg, accentText, onClick }) => {
+};const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; accentGradient: string; accentBg: string; accentText: string; onClick?: () => void }> = ({ module, locked, progress, accentGradient, accentBg, accentText, onClick }) => {
   const isComplete = progress === 100;
-  
+  const isLangC = accentText.includes('blue');
+  const themeCardBorderClass = isLangC 
+    ? "border-blue-100/75 shadow-blue-500/[0.01]" 
+    : "border-rose-100/75 shadow-rose-500/[0.01]";
+  const themeCardHoverClass = isLangC
+    ? "hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200"
+    : "hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-200";
+
   return (
     <motion.div 
       whileHover={locked ? {} : { y: -4, scale: 1.01 }}
       transition={{ type: 'tween', duration: 0.2 }}
       onClick={onClick}
       className={cn(
-        "bg-white border rounded-[1.5rem] p-7 transition-all group relative overflow-hidden",
+        "rounded-[1.8rem] p-7 border transition-all duration-300 group relative overflow-hidden",
         locked 
-          ? "border-zinc-200 opacity-50 grayscale cursor-not-allowed" 
+          ? "bg-zinc-50 border-zinc-200 opacity-50 grayscale cursor-not-allowed" 
           : isComplete
-            ? "border-transparent shadow-lg cursor-pointer"
-            : "border-zinc-200 hover:shadow-xl hover:shadow-zinc-200/60 cursor-pointer"
+            ? cn("bg-gradient-to-br shadow-lg cursor-pointer", isLangC ? "from-white via-white to-blue-50/10" : "from-white via-white to-rose-50/10", themeCardBorderClass)
+            : cn("bg-gradient-to-br from-white via-white to-zinc-50/20 shadow-sm cursor-pointer border-zinc-200/65", themeCardHoverClass)
       )}
     >
       {/* Gradient top bar for unlocked cards */}
       {!locked && (
-        <div className={cn("absolute top-0 left-6 right-6 h-1 rounded-b-full bg-gradient-to-r", accentGradient, isComplete ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 transition-opacity')} />
+        <div className={cn("absolute top-0 left-6 right-6 h-1.5 rounded-b-full bg-gradient-to-r", accentGradient, isComplete ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 transition-opacity')} />
       )}
       {/* Completion glow */}
       {isComplete && !locked && (
@@ -224,24 +229,24 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; ac
         </div>
         
         <div>
-          <h3 className="text-lg font-black mb-2 leading-tight">{module.title}</h3>
-          <div className="flex items-center gap-2 text-xs font-bold text-zinc-400">
+          <h3 className="text-lg font-black mb-2 leading-tight text-zinc-900">{module.title}</h3>
+          <div className="flex items-center gap-2 text-xs font-black text-zinc-500">
             <span>{module.lessons?.length || 0} Pelajaran</span>
-            <span className="w-1 h-1 rounded-full bg-zinc-300" />
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-300" />
             <span>~{(module.lessons?.length || 0) * 5} menit</span>
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {module.lessons?.slice(0, 3).map((lesson: any) => {
             const isCompleted = useProgress.getState().completedLessons.includes(lesson.id);
             return (
-              <div key={lesson.id} className="flex items-center justify-between text-sm text-zinc-500 group-hover:text-zinc-700 transition-colors">
+              <div key={lesson.id} className="flex items-center justify-between text-sm text-zinc-600 group-hover:text-zinc-900 transition-colors">
                 <div className="flex items-center gap-2 truncate">
                   {isCompleted ? (
                     <CheckCircle2 size={14} className={accentText} />
                   ) : (
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-zinc-200" />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-zinc-300 bg-white" />
                   )}
                   <span className="truncate font-medium">{lesson.title}</span>
                 </div>
@@ -250,7 +255,7 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; ac
             );
           })}
           {(module.lessons?.length || 0) > 3 && (
-            <div className="text-[10px] font-black text-zinc-400 pt-1 uppercase tracking-wider">
+            <div className="text-[10px] font-black text-zinc-500 pt-1 uppercase tracking-wider">
               + {(module.lessons?.length || 0) - 3} pelajaran lagi
             </div>
           )}
@@ -258,7 +263,7 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; ac
 
         {!locked && (
           <div className="pt-3">
-            <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-zinc-150/75 rounded-full overflow-hidden">
               <motion.div 
                 className={cn("h-full bg-gradient-to-r rounded-full", accentGradient)} 
                 initial={{ width: 0 }}
@@ -266,10 +271,10 @@ const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; ac
                 transition={{ duration: 0.8, ease: 'easeOut' }}
               />
             </div>
-            <div className="mt-2 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">{progress}% Selesai</div>
+            <div className="mt-2 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">{progress}% Selesai</div>
           </div>
         )}
       </div>
     </motion.div>
   );
-};
+};};
