@@ -648,58 +648,84 @@ export const curriculum: Level[] = [
     id: "py-level-1",
     title: "PENGENALAN DASAR BAHASA PYTHON",
     description: "Beralih ke sintaksis dinamis Python, pengenalan variabel dynamic typing, boolean case-sensitive, casting, dan I/O.",
+    locked: false,
+    accessMode: "auto",
     modules: [
       {
         id: "py4-m1",
-        title: "Pendahuluan & Sintaksis Python",
+        title: "Pendahuluan Python",
         lessons: [
           {
             id: "py4-l1",
-            title: "Pendahuluan & Sintaksis Dasar",
-            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Python adalah bahasa tingkat tinggi yang dirancang untuk keterbacaan kode.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Perbedaan radikal C vs Python:</p>\n<ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li><strong>Typeless/Dinamis</strong>: Tidak perlu mendeklarasikan tipe data di awal variabel.</li>\n  <li><strong>Sederhana</strong>: Tanpa file header (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">#include</code>), tanpa blok <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int main()</code>, dan tanpa akhiran titik koma (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">;</code>).</li>\n  <li>Untuk mencetak teks, cukup panggil <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print(\"teks\")</code>.</li>\n</ul>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>print(\"HALLO SEMUA\")</code></pre>\n      </div>\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python3 program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">HALLO SEMUA</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            codeExample: "print(\"HALLO SEMUA\")",
-            initialCode: "# Tulis print untuk menampilkan kalimat \"HALLO SEMUA\" di Python\n",
-            solution: "print(\"HALLO SEMUA\")",
-            hint: "Ketik print(\"HALLO SEMUA\")",
+            title: "Pengenalan Bahasa Python",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Python adalah bahasa pemrograman <strong>tingkat tinggi (high-level)</strong> yang dikenal karena sintaksnya yang <strong>sederhana dan mudah dibaca</strong>, hampir seperti bahasa Inggris biasa. Python bersifat <strong>interpreted</strong> — kode dijalankan baris per baris oleh interpreter, <strong>bukan dikompilasi</strong> terlebih dahulu menjadi file <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">.exe</code> seperti C. Hal ini membuat Python mudah untuk eksperimen cepat (rapid prototyping), tetapi umumnya lebih lambat dalam eksekusi dibandingkan bahasa terkompilasi seperti C.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Python digunakan secara luas untuk berbagai bidang: pengembangan web, data science, machine learning, otomatisasi, dan scripting. Salah satu ciri khas Python adalah <strong>tidak membutuhkan tanda kurung kurawal <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">{}</code></strong> untuk blok kode — sebagai gantinya, Python menggunakan <strong>indentasi (spasi/tab)</strong> untuk menentukan struktur blok. File Python berekstensi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">.py</code> dan dijalankan menggunakan perintah <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">python nama_file.py</code>.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Program Python pertama\nprint(&quot;Halo, Dunia!&quot;)\nprint(&quot;Selamat belajar Python.&quot;)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Halo, Dunia!\nSelamat belajar Python.</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "# Program Python pertama\nprint(\"Halo, Dunia!\")\nprint(\"Selamat belajar Python.\")",
+            initialCode: "# Tampilkan tiga baris informasi menggunakan print()\n",
+            solution: "print(\"Bahasa: Python\")\nprint(\"Alasan: Mudah dipelajari\")\nprint(\"Target: Membuat program sederhana\")\n",
+            hint: "Gunakan `print()` tiga kali, masing-masing untuk satu baris teks.",
             quiz: {
-              question: "Manakah perbedaan utama penulisan Hello World di Python dibandingkan di C?",
+              question: "Bagaimana Python menentukan struktur blok kode (misalnya isi dari sebuah fungsi atau kondisi)?",
               options: [
-                "Python mewajibkan file header stdio.h",
-                "Python tidak membutuhkan blok main() dan include header, melainkan langsung menggunakan fungsi print()",
-                "Python mewajibkan titik koma di akhir baris",
-                "Python hanya jalan di platform macOS"
+                "Menggunakan tanda kurung kurawal `{}`",
+                "Menggunakan kata kunci `begin` dan `end`",
+                "Menggunakan indentasi (spasi/tab)",
+                "Menggunakan titik koma di setiap baris"
               ],
-              correctAnswer: 1
+              correctAnswer: 2
             },
             testCases: [
               {
-                expectedOutput: "HALLO SEMUA\n",
-                description: "Cetak hello world Python"
+                expectedOutput: "Bahasa: Python\nAlasan: Mudah dipelajari\nTarget: Membuat program sederhana\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "print\\s*\\(\\s*[\"']Bahasa: Python[\"']\\s*\\)",
+                message: "Tampilkan baris pertama dengan: print(\"Bahasa: Python\")",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(\\s*[\"']Target: Membuat program sederhana[\"']\\s*\\)",
+                message: "Tampilkan baris ketiga dengan: print(\"Target: Membuat program sederhana\")",
+                shouldExist: true
               }
             ]
           },
           {
             id: "py4-l2",
-            title: "Variabel & Deklarasi Dynamic",
-            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Mendeklarasikan variabel di Python sangat sederhana:</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Nama_variabel = <nilai></code></p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Ketentuan variabel Python:</p>\n<ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li>Tipe data otomatis dideteksi dari nilainya (<strong>Dynamic Typing</strong>).</li>\n  <li>Nama variabel case-sensitive dan harus diawali huruf/underscore.</li>\n  <li>Tidak boleh dipisah spasi. Gunakan underscore (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">_</code>) jika terdiri dari 2 kata.</li>\n</ul>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>nama = \"Soekarno Hatta\"\nusia = 55\nprint(nama, usia)</code></pre>\n      </div>\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python3 program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Soekarno Hatta 55</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            codeExample: "nama = \"Soekarno Hatta\"\nusia = 55\nprint(nama, usia)",
-            initialCode: "# Buat variabel nama_lengkap berisi \"Soekarno Hatta\"\n# Cetak variabel tersebut\n",
-            solution: "nama_lengkap = \"Soekarno Hatta\"\nprint(nama_lengkap)",
-            hint: "Tulis nama_lengkap = \"Soekarno Hatta\" lalu print(nama_lengkap)",
+            title: "Perbandingan Sintaks Python dan C",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Meskipun konsep dasar pemrograman (variabel, percabangan, perulangan) sama di Python dan C, <strong>sintaksnya sangat berbeda</strong>. Python tidak membutuhkan deklarasi tipe data eksplisit (Python bersifat <strong>dynamically typed</strong>), tidak membutuhkan titik koma di akhir statement, tidak membutuhkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">#include</code>, dan tidak membutuhkan fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">main()</code> sebagai titik masuk wajib — kode di luar fungsi dieksekusi langsung dari atas ke bawah.</p>\n\n  <div class=\"my-4 overflow-x-auto\">\n    <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n      <thead>\n        <tr><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Aspek</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Bahasa C</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Python</th></tr>\n      </thead>\n      <tbody>\n        <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Deklarasi tipe</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int x = 5;</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x = 5</code> (tipe otomatis)</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Akhir statement</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">;</code> (wajib)</td><td class=\"border border-zinc-200 px-3 py-1.5\">Tidak perlu</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Blok kode</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">{ }</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Indentasi</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Cetak ke layar</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">printf(\"%d\", x);</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print(x)</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Komentar</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">// atau /* */</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">#</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Titik masuk</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int main() { ... }</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Tidak wajib, jalan dari atas</td></tr>\n      </tbody>\n    </table>\n  </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Python: tidak perlu tipe data, titik koma, atau main()\nnama = &quot;Andi&quot;\nusia = 20\nprint(&quot;Nama:&quot;, nama)\nprint(&quot;Usia:&quot;, usia)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Nama: Andi\nUsia: 20</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "# Python: tidak perlu tipe data, titik koma, atau main()\nnama = \"Andi\"\nusia = 20\nprint(\"Nama:\", nama)\nprint(\"Usia:\", usia)",
+            initialCode: "# Kode C: \n# int panjang = 10;\n# int lebar = 4;\n# printf(\"Luas: %d\\n\", panjang * lebar);\n\n# Tulis versi Python-nya di sini\n",
+            solution: "panjang = 10\nlebar = 4\nprint(\"Luas:\", panjang * lebar)\n",
+            hint: "Python tidak membutuhkan tipe data atau titik koma. Gunakan `print(\"Luas:\", panjang * lebar)`.",
             quiz: {
-              question: "Apakah yang dimaksud dengan fitur Dynamic Typing pada variabel Python?",
+              question: "Manakah pernyataan yang <strong>benar</strong> mengenai perbedaan Python dan C?",
               options: [
-                "Variabel harus terus diganti nilainya",
-                "Tipe data variabel dideteksi otomatis secara dinamis oleh interpreter sesuai nilai yang diisi",
-                "Variabel hanya bisa menyimpan data String",
-                "Variabel tidak menggunakan alokasi RAM"
+                "Python wajib memiliki fungsi `main()` seperti C",
+                "Python membutuhkan tipe data dideklarasikan secara eksplisit seperti C",
+                "Python tidak membutuhkan titik koma di akhir statement dan menggunakan indentasi untuk blok kode",
+                "C menggunakan indentasi untuk blok kode seperti Python"
               ],
-              correctAnswer: 1
+              correctAnswer: 2
             },
             testCases: [
               {
-                expectedOutput: "Soekarno Hatta\n",
-                description: "Variabel string Python"
+                expectedOutput: "Luas: 40\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "panjang\\s*=\\s*10",
+                message: "Deklarasikan variabel dengan: panjang = 10 (tanpa tipe data dan titik koma)",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(\\s*[\"']Luas:[\"']\\s*,\\s*panjang\\s*\\*\\s*lebar\\s*\\)",
+                message: "Tampilkan hasil dengan: print(\"Luas:\", panjang * lebar)",
+                shouldExist: true
               }
             ]
           }
@@ -707,36 +733,78 @@ export const curriculum: Level[] = [
       },
       {
         id: "py4-m2",
-        title: "Tipe Data & Casting Python",
+        title: "Variabel",
         lessons: [
           {
             id: "py4-l3",
-            title: "Tipe Data & Casting",
-            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Tipe data Python meliputi: <strong>Number</strong> (int, float), <strong>String</strong>, dan <strong>Boolean</strong>.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\"><em>Penting</em>: Nilai boolean di Python bersifat Case-Sensitive dan wajib diawali huruf kapital: <strong>True</strong> dan <strong>False</strong>.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Untuk konversi tipe data, gunakan fungsi casting:</p>\n<ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li><strong>int()</strong>: Mengubah data ke bilangan bulat.</li>\n  <li><strong>float()</strong>: Mengubah data ke bilangan pecahan.</li>\n  <li><strong>str()</strong>: Mengubah data ke string/teks.</li>\n</ul>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>bilangan_pertama = 15\nbilangan_kedua = 4\nhasil = float(bilangan_pertama) / float(bilangan_kedua)\nprint(hasil)</code></pre>\n      </div>\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python3 program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">3.75</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            codeExample: "bilangan_pertama = 15\nbilangan_kedua = 4\nhasil = float(bilangan_pertama) / float(bilangan_kedua)\nprint(hasil)",
-            initialCode: "angka_str = \"15\"\n# Lakukan casting ke float() dan cetak hasil pembagian (angka_str / 2)\n",
-            solution: "angka_str = \"15\"\nprint(float(angka_str) / 2)",
-            hint: "Tulis print(float(angka_str) / 2)",
+            title: "Ketentuan Deklarasi Variabel",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Berbeda dengan C, Python <strong>tidak memerlukan deklarasi tipe data</strong> sama sekali — variabel langsung dibuat saat kamu <strong>memberikan nilai pertama kali</strong> menggunakan tanda <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">=</code>. Python bersifat <strong>dynamically typed</strong>, artinya tipe data sebuah variabel ditentukan secara otomatis berdasarkan nilai yang diberikan, dan <strong>bisa berubah</strong> di tengah program jika diberi nilai bertipe lain.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Aturan penamaan variabel di Python mirip dengan C: hanya boleh mengandung huruf, angka, dan garis bawah (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">_</code>), tidak boleh diawali angka, bersifat <strong>case-sensitive</strong>, dan tidak boleh sama dengan keyword Python (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">if</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">for</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">True</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">def</code>, dll). Konvensi penamaan standar Python adalah <strong>snake_case</strong> (huruf kecil dengan garis bawah), sesuai PEP 8 (panduan gaya resmi Python).</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Tipe data ditentukan otomatis\nnama = &quot;Budi&quot;      # str (string)\nusia = 20          # int (integer)\ntinggi = 170.5     # float\n\nprint(nama, usia, tinggi)\n\n# Variabel bisa berubah tipe\nnilai = 100        # int\nnilai = &quot;Seratus&quot;  # sekarang jadi str\nprint(nilai)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Budi 20 170.5\nSeratus</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "# Tipe data ditentukan otomatis\nnama = \"Budi\"      # str (string)\nusia = 20          # int (integer)\ntinggi = 170.5     # float\n\nprint(nama, usia, tinggi)\n\n# Variabel bisa berubah tipe\nnilai = 100        # int\nnilai = \"Seratus\"  # sekarang jadi str\nprint(nilai)",
+            initialCode: "kota = \"Surabaya\"\n# Tampilkan \"Kota awal: Surabaya\"\n\n# Ubah nilai kota menjadi \"Jakarta\"\n\n# Tampilkan \"Kota sekarang: Jakarta\"\n",
+            solution: "kota = \"Surabaya\"\nprint(\"Kota awal:\", kota)\n\nkota = \"Jakarta\"\nprint(\"Kota sekarang:\", kota)\n",
+            hint: "Buat variabel, cetak nilainya, lalu beri nilai baru menggunakan `=` lagi, lalu cetak kembali.",
             quiz: {
-              question: "Manakah dari nilai boolean berikut yang penulisan sintaksnya valid di Python?",
+              question: "Mengapa Python disebut sebagai bahasa yang <strong>dynamically typed</strong>?",
               options: [
-                "true",
-                "false",
-                "True",
-                "TRUE"
+                "Karena Python hanya bisa menyimpan satu tipe data per program",
+                "Karena tipe data variabel ditentukan otomatis dan bisa berubah selama program berjalan",
+                "Karena Python membutuhkan deklarasi tipe data eksplisit seperti C",
+                "Karena Python tidak mendukung variabel sama sekali"
               ],
-              correctAnswer: 2
+              correctAnswer: 1
             },
             testCases: [
               {
-                expectedOutput: "7.5\n",
-                description: "Casting float division"
+                expectedOutput: "Kota awal: Surabaya\nKota sekarang: Jakarta\n",
+                description: "Hasil eksekusi program"
               }
             ],
             validationRules: [
               {
-                pattern: "float\\s*\\(",
-                message: "Gunakan fungsi float() untuk casting",
+                pattern: "print\\s*\\(\\s*[\"']Kota awal:[\"']\\s*,\\s*kota\\s*\\)",
+                message: "Tampilkan dengan: print(\"Kota awal:\", kota)",
+                shouldExist: true
+              },
+              {
+                pattern: "kota\\s*=\\s*[\"']Jakarta[\"']",
+                message: "Ubah nilai kota dengan: kota = \"Jakarta\"",
+                shouldExist: true
+              }
+            ]
+          },
+          {
+            id: "py4-l4",
+            title: "Format Penulisan Variabel",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Penulisan variabel di Python mengikuti konvensi <strong>PEP 8</strong> sebagai standar resmi gaya kode Python. Beberapa aturan format penting: nama variabel sebaiknya <strong>deskriptif</strong> dan menggunakan <strong>snake_case</strong> (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">jumlah_siswa</code>, bukan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">JumlahSiswa</code> atau <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">js</code>); konstanta (nilai yang tidak diubah) ditulis dengan <strong>HURUF KAPITAL SEMUA</strong> dan garis bawah (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">PI = 3.14159</code>), meskipun Python tidak memiliki keyword <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">const</code> sungguhan — ini hanya konvensi.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Python juga mendukung <strong>multiple assignment</strong> — memberi nilai ke beberapa variabel dalam satu baris: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">a, b, c = 1, 2, 3</code>. Selain itu, Python mendukung <strong>chained assignment</strong>: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x = y = z = 0</code> memberikan nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0</code> ke ketiga variabel sekaligus. Kedua fitur ini tidak ada di C dan membuat kode Python lebih ringkas.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Multiple assignment\na, b, c = 1, 2, 3\nprint(a, b, c)\n\n# Chained assignment\nx = y = z = 0\nprint(x, y, z)\n\n# Konstanta (konvensi huruf kapital)\nPI = 3.14159\nprint(&quot;Nilai PI:&quot;, PI)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">1 2 3\n0 0 0\nNilai PI: 3.14159</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "# Multiple assignment\na, b, c = 1, 2, 3\nprint(a, b, c)\n\n# Chained assignment\nx = y = z = 0\nprint(x, y, z)\n\n# Konstanta (konvensi huruf kapital)\nPI = 3.14159\nprint(\"Nilai PI:\", PI)",
+            initialCode: "# Deklarasikan panjang, lebar, tinggi dengan multiple assignment\n\n# Hitung dan tampilkan volume\n",
+            solution: "panjang, lebar, tinggi = 5, 3, 2\nprint(\"Volume:\", panjang * lebar * tinggi)\n",
+            hint: "Gunakan `panjang, lebar, tinggi = 5, 3, 2` lalu `print(\"Volume:\", panjang * lebar * tinggi)`.",
+            quiz: {
+              question: "Apa hasil dari kode Python <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x = y = z = 5</code> lalu <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print(x, y, z)</code>?",
+              options: [
+                "`5 0 0`",
+                "`5 5 5`",
+                "Error karena tidak valid",
+                "`x y z`"
+              ],
+              correctAnswer: 1
+            },
+            testCases: [
+              {
+                expectedOutput: "Volume: 30\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "panjang\\s*,\\s*lebar\\s*,\\s*tinggi\\s*=\\s*5\\s*,\\s*3\\s*,\\s*2",
+                message: "Gunakan multiple assignment: panjang, lebar, tinggi = 5, 3, 2",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(\\s*[\"']Volume:[\"']\\s*,\\s*panjang\\s*\\*\\s*lebar\\s*\\*\\s*tinggi\\s*\\)",
+                message: "Tampilkan dengan: print(\"Volume:\", panjang * lebar * tinggi)",
                 shouldExist: true
               }
             ]
@@ -745,62 +813,466 @@ export const curriculum: Level[] = [
       },
       {
         id: "py4-m3",
-        title: "Operator & Input/Output",
+        title: "Tipe Data",
         lessons: [
           {
-            id: "py4-l4",
-            title: "Operator Aritmatika, Perbandingan & Logika",
-            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Operator di Python:</p>\n<ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li><strong>Aritmatika</strong>: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">-</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">*</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">/</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">%</code> (modulo), dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\"><strong></code> (Pemangkatan khusus, contoh: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">10 </strong> 2</code> hasil 100).</li>\n  <li><strong>Perbandingan</strong>: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">==</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">!=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">></code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\"><</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">>=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\"><=</code>.</li>\n  <li><strong>Logika</strong>: Menggunakan kata bahasa Inggris murni: <strong>and</strong>, <strong>or</strong>, dan <strong>not</strong>.</li>\n</ul>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>print(10 ** 2)\nprint((5 &lt;= 10) and (5 == 5))</code></pre>\n      </div>\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python3 program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">100\nTrue</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            codeExample: "print(10 ** 2)\nprint((5 <= 10) and (5 == 5))",
-            initialCode: "# Cetak hasil pemangkatan dari 2 pangkat 4 menggunakan operator **\n",
-            solution: "print(2 ** 4)",
-            hint: "Ketik print(2 ** 4)",
+            id: "py4-l5",
+            title: "Tipe Data Number (int, float)",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Python memiliki dua tipe data numerik utama yang sering dipakai: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int</code> (integer/bilangan bulat, <strong>tanpa batas ukuran</strong> secara teori — berbeda dengan C yang punya batas 32-bit) dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">float</code> (bilangan pecahan/desimal, presisi ganda mirip <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">double</code> di C). Python juga mendukung tipe <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">complex</code> untuk bilangan kompleks, tapi jarang dipakai pemula.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Operasi aritmatika di Python mirip C, dengan satu perbedaan penting: operator <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">/</code> di Python <strong>selalu menghasilkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">float</code></strong>, bahkan jika kedua operand <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int</code> (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">7 / 2</code> = <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">3.5</code>, bukan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">3</code> seperti di C). Untuk pembagian integer (hasil dibuang desimalnya), Python punya operator khusus <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">//</code> (floor division). Fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">type()</code> digunakan untuk memeriksa tipe data sebuah nilai.</p>\n\n  <div class=\"my-4 overflow-x-auto\">\n    <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n      <thead>\n        <tr><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Operator</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Fungsi</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Contoh</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Hasil</th></tr>\n      </thead>\n      <tbody>\n        <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">/</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Pembagian (selalu float)</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">7 / 2</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">3.5</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">//</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Floor division (integer)</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">7 // 2</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">3</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">%</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Modulus</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">7 % 2</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">1</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">**</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Pangkat</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">2 ** 3</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">8</code></td></tr>\n      </tbody>\n    </table>\n  </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>a = 17\nb = 5\n\nprint(a / b)    # Pembagian biasa -&gt; float\nprint(a // b)   # Floor division -&gt; int\nprint(a % b)    # Modulus\nprint(a ** 2)   # Pangkat\nprint(type(a))  # Tipe data a</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">3.4\n3\n2\n289\n&lt;class &#039;int&#039;&gt;</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "a = 17\nb = 5\n\nprint(a / b)    # Pembagian biasa -> float\nprint(a // b)   # Floor division -> int\nprint(a % b)    # Modulus\nprint(a ** 2)   # Pangkat\nprint(type(a))  # Tipe data a",
+            initialCode: "a = 29\nb = 4\n# Tampilkan a / b dengan label \"Pembagian:\"\n\n# Tampilkan a // b dengan label \"Floor division:\"\n\n# Tampilkan a % b dengan label \"Modulus:\"\n",
+            solution: "a = 29\nb = 4\nprint(\"Pembagian:\", a / b)\nprint(\"Floor division:\", a // b)\nprint(\"Modulus:\", a % b)\n",
+            hint: "Gunakan operator `/`, `//`, dan `%` masing-masing dalam `print()`.",
             quiz: {
-              question: "Berapakah hasil keluaran dari operasi pemangkatan 10 ** 2 di Python?",
+              question: "Apa hasil dari <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">7 / 2</code> di Python (operator pembagian biasa, bukan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">//</code>)?",
               options: [
-                "20",
-                "100",
-                "1000",
-                "10"
+                "`3`",
+                "`3.5`",
+                "`1`",
+                "Error"
               ],
               correctAnswer: 1
             },
             testCases: [
               {
-                expectedOutput: "16\n",
-                description: "Hasil 2 pangkat 4"
+                expectedOutput: "Pembagian: 7.25\nFloor division: 7\nModulus: 1\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "print\\s*\\(\\s*[\"']Pembagian:[\"']\\s*,\\s*a\\s*/\\s*b\\s*\\)",
+                message: "Tampilkan dengan: print(\"Pembagian:\", a / b)",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(\\s*[\"']Floor division:[\"']\\s*,\\s*a\\s*//\\s*b\\s*\\)",
+                message: "Tampilkan dengan: print(\"Floor division:\", a // b)",
+                shouldExist: true
               }
             ]
           },
           {
-            id: "py4-l5",
-            title: "Interaksi I/O (input, print, f-string)",
-            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Operasi I/O di Python:</p>\n<ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li><strong>input()</strong>: Membaca input keyboard. <em>Penting</em>: Secara default selalu menghasilkan tipe data <strong>String</strong>.</li>\n  <li><strong>print()</strong>: Menampilkan output. Variabel dipanggil menggunakan koma (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">,</code>) atau operator penggabungan string (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code>).</li>\n  <li><strong>f-string</strong>: String dinamis menggunakan huruf awalan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">f</code> di depan petik, lalu memanggil variabel dalam kurung kurawal (contoh: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">f\"Usia: {usia}\"</code>).</li>\n</ul>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>nama = input(\"Siapa Namamu : \")\nprint(\"Terdaftar Bos: \" + nama)</code></pre>\n      </div>\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python3 program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Siapa Namamu : Budi\nTerdaftar Bos: Budi</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            codeExample: "nama = \"Budi\"\nprint(\"Terdaftar Bos: \" + nama)",
-            initialCode: "# Minta input teks dari user dengan prompt \"Masukkan nama: \" ke variabel 'nama'\n# Cetak variabel tersebut\n",
-            solution: "nama = input(\"Masukkan nama: \")\nprint(nama)",
-            hint: "Tulis nama = input(\"Masukkan nama: \") dilanjutkan print(nama)",
+            id: "py4-l6",
+            title: "Tipe Data String",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">String di Python adalah <strong>tipe data bawaan</strong> untuk teks (berbeda dengan C yang menggunakan array <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">char</code>). String bisa ditulis menggunakan tanda petik <strong>tunggal <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">'...'</code></strong> atau <strong>ganda <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"...\"</code></strong> — keduanya setara dan bisa dipilih sesuai kebutuhan (misalnya gunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"...\"</code> jika teks mengandung petik tunggal <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">'</code>). String juga bisa ditulis multi-baris menggunakan <strong>triple quotes</strong> (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">'''...'''</code> atau <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"\"\"...\"\"\"</code>).</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">String di Python bersifat <strong>immutable</strong> (tidak bisa diubah elemennya secara langsung setelah dibuat) tetapi mendukung banyak operasi: <strong>slicing</strong> (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">s[0:3]</code> mengambil sebagian string), <strong>concatenation</strong> dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code>, <strong>repetisi</strong> dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">*</code> (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"ab\" * 3</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"ababab\"</code>), serta fungsi panjang <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">len(s)</code>. Indeks string juga dimulai dari <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0</code>, dan mendukung <strong>indeks negatif</strong> (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">s[-1]</code> mengambil karakter terakhir).</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>nama = &quot;Python&quot;\nprint(nama[0])       # Karakter pertama\nprint(nama[-1])      # Karakter terakhir\nprint(nama[0:3])     # Slicing: 3 karakter pertama\nprint(len(nama))     # Panjang string\nprint(nama * 2)      # Repetisi string\nprint(nama + &quot; Programming&quot;)  # Concatenation</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">P\nn\nPyt\n6\nPythonPython\nPython Programming</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "nama = \"Python\"\nprint(nama[0])       # Karakter pertama\nprint(nama[-1])      # Karakter terakhir\nprint(nama[0:3])     # Slicing: 3 karakter pertama\nprint(len(nama))     # Panjang string\nprint(nama * 2)      # Repetisi string\nprint(nama + \" Programming\")  # Concatenation",
+            initialCode: "kata = \"Algoritma\"\n# Tampilkan panjang kata\n\n# Tampilkan 4 karakter pertama\n\n# Tampilkan karakter terakhir\n",
+            solution: "kata = \"Algoritma\"\nprint(\"Panjang:\", len(kata))\nprint(\"4 huruf pertama:\", kata[0:4])\nprint(\"Huruf terakhir:\", kata[-1])\n",
+            hint: "Gunakan `len(kata)`, `kata[0:4]`, dan `kata[-1]`.",
             quiz: {
-              question: "Apakah tipe data default yang dikembalikan dari hasil pembacaan fungsi input() di Python?",
+              question: "Apa hasil dari <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"abc\"[-1]</code> di Python?",
               options: [
-                "Integer",
-                "Boolean",
-                "String",
-                "Float"
+                "`'a'`",
+                "`'c'`",
+                "Error, indeks negatif tidak valid",
+                "`'abc'`"
+              ],
+              correctAnswer: 1
+            },
+            testCases: [
+              {
+                expectedOutput: "Panjang: 9\n4 huruf pertama: Algo\nHuruf terakhir: a\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "print\\s*\\(\\s*[\"']Panjang:[\"']\\s*,\\s*len\\s*\\(\\s*kata\\s*\\)\\s*\\)",
+                message: "Tampilkan dengan: print(\"Panjang:\", len(kata))",
+                shouldExist: true
+              },
+              {
+                pattern: "kata\\s*\\[\\s*0\\s*:\\s*4\\s*\\]",
+                message: "Ambil 4 karakter pertama dengan slicing: kata[0:4]",
+                shouldExist: true
+              }
+            ]
+          },
+          {
+            id: "py4-l7",
+            title: "Tipe Data Boolean",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Tipe <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">bool</code> di Python hanya memiliki dua nilai: <strong><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">True</code></strong> dan <strong><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">False</code></strong> (perhatikan huruf besar di awal — berbeda dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">true</code>/<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">false</code> di C). <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">bool</code> sebenarnya adalah <strong>subclass dari <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int</code></strong>: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">True</code> setara dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">1</code> dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">False</code> setara dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0</code>, sehingga keduanya bisa digunakan dalam operasi aritmatika.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Operator perbandingan (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">==</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">!=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\"><</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">></code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\"><=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">>=</code>) dan operator logika (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">and</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">or</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">not</code>) di Python mengembalikan nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">bool</code>. Perlu diperhatikan: Python menggunakan kata <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">and</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">or</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">not</code> (kata dalam bahasa Inggris), <strong>bukan</strong> simbol <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&&</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">||</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">!</code> seperti di C. Selain <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">False</code>, nilai-nilai seperti <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0.0</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"\"</code> (string kosong), <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[]</code> (list kosong), dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">None</code> juga dianggap \"falsy\" (setara <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">False</code>) dalam konteks boolean.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>status_aktif = True\nsaldo = 50000\n\nprint(status_aktif)\nprint(type(status_aktif))\nprint(saldo &gt; 0 and status_aktif)  # and -&gt; butuh keduanya True\nprint(saldo &gt; 100000 or status_aktif)  # or -&gt; salah satu True cukup\nprint(not status_aktif)  # not -&gt; membalik nilai</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">True\n&lt;class &#039;bool&#039;&gt;\nTrue\nTrue\nFalse</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "status_aktif = True\nsaldo = 50000\n\nprint(status_aktif)\nprint(type(status_aktif))\nprint(saldo > 0 and status_aktif)  # and -> butuh keduanya True\nprint(saldo > 100000 or status_aktif)  # or -> salah satu True cukup\nprint(not status_aktif)  # not -> membalik nilai",
+            initialCode: "usia = 17\npunya_izin = True\n# Tampilkan \"Boleh masuk:\" dengan kondisi usia >= 17 and punya_izin\n\n# Tampilkan \"Boleh tanpa pendamping:\" dengan kondisi usia >= 18 or punya_izin\n",
+            solution: "usia = 17\npunya_izin = True\nprint(\"Boleh masuk:\", usia >= 17 and punya_izin)\nprint(\"Boleh tanpa pendamping:\", usia >= 18 or punya_izin)\n",
+            hint: "Gunakan operator `and` dan `or` sesuai konvensi Python.",
+            quiz: {
+              question: "Operator logika apa yang digunakan di Python sebagai pengganti <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&&</code> pada bahasa C?",
+              options: [
+                "`&`",
+                "`and`",
+                "`AND`",
+                "`&&`"
+              ],
+              correctAnswer: 1
+            },
+            testCases: [
+              {
+                expectedOutput: "Boleh masuk: True\nBoleh tanpa pendamping: True\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "usia\\s*>=\\s*17\\s+and\\s+punya_izin",
+                message: "Gunakan operator and: usia >= 17 and punya_izin",
+                shouldExist: true
+              },
+              {
+                pattern: "usia\\s*>=\\s*18\\s+or\\s+punya_izin",
+                message: "Gunakan operator or: usia >= 18 or punya_izin",
+                shouldExist: true
+              }
+            ]
+          },
+          {
+            id: "py4-l8",
+            title: "Konversi Tipe Data",
+            explanation: "<div class=\"space-y-4\">\n      <ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li>*Konversi tipe data (type casting)** adalah proses mengubah nilai dari satu tipe ke tipe lainnya. Python menyediakan fungsi bawaan untuk ini: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int(x)</code> mengonversi ke integer (membuang desimal jika dari float, atau mengonversi string angka), <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">float(x)</code> mengonversi ke desimal, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">str(x)</code> mengonversi ke string, dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">bool(x)</code> mengonversi ke boolean.</li>\n</ul>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Konversi sangat penting saat menggabungkan tipe data berbeda — misalnya, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print(\"Umur: \" + 20)</code> akan <strong>error</strong> karena Python tidak bisa menggabungkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">str</code> dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int</code> secara langsung dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code>. Solusinya: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print(\"Umur: \" + str(20))</code>. Begitu pula, input dari <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">input()</code> selalu berupa <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">str</code>, sehingga jika ingin melakukan operasi matematika, harus dikonversi dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int()</code> atau <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">float()</code> terlebih dahulu.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>angka_str = &quot;100&quot;\nangka_int = int(angka_str)   # str -&gt; int\nangka_float = float(angka_int)  # int -&gt; float\nhasil_str = str(angka_int)   # int -&gt; str\n\nprint(angka_int + 50)        # Operasi matematika setelah konversi\nprint(angka_float)\nprint(&quot;Nilai: &quot; + hasil_str) # Concatenation setelah konversi\nprint(bool(0), bool(1), bool(&quot;&quot;))</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">150\n100.0\nNilai: 100\nFalse True False</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "angka_str = \"100\"\nangka_int = int(angka_str)   # str -> int\nangka_float = float(angka_int)  # int -> float\nhasil_str = str(angka_int)   # int -> str\n\nprint(angka_int + 50)        # Operasi matematika setelah konversi\nprint(angka_float)\nprint(\"Nilai: \" + hasil_str) # Concatenation setelah konversi\nprint(bool(0), bool(1), bool(\"\"))",
+            initialCode: "umur_str = \"25\"\numur = int(umur_str)\n# Tampilkan \"Umur sekarang: \" digabung dengan str(umur)\n\n# Hitung umur + 5 dan tampilkan \"Umur 5 tahun lagi: \" digabung dengan hasilnya\n",
+            solution: "umur_str = \"25\"\numur = int(umur_str)\nprint(\"Umur sekarang: \" + str(umur))\nprint(\"Umur 5 tahun lagi: \" + str(umur + 5))\n",
+            hint: "Gunakan `int(umur_str)` untuk konversi, dan `str(...)` saat menggabungkan dengan `+`.",
+            quiz: {
+              question: "Mengapa <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print(\"Umur: \" + 20)</code> menghasilkan error di Python?",
+              options: [
+                "Karena angka 20 terlalu besar",
+                "Karena Python tidak bisa menggabungkan tipe `str` dan `int` secara langsung dengan operator `+`",
+                "Karena `print()` hanya menerima satu argumen",
+                "Karena tanda `+` hanya untuk operasi matematika di Python"
+              ],
+              correctAnswer: 1
+            },
+            testCases: [
+              {
+                expectedOutput: "Umur sekarang: 25\nUmur 5 tahun lagi: 30\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "umur\\s*=\\s*int\\s*\\(\\s*umur_str\\s*\\)",
+                message: "Konversi string ke int dengan: umur = int(umur_str)",
+                shouldExist: true
+              },
+              {
+                pattern: "str\\s*\\(\\s*umur\\s*\\+\\s*5\\s*\\)",
+                message: "Konversi hasil penjumlahan dengan: str(umur + 5)",
+                shouldExist: true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "py4-m4",
+        title: "Operator",
+        lessons: [
+          {
+            id: "py4-l9",
+            title: "Operator Aritmatika",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Operator aritmatika di Python sebagian besar sama dengan C (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">-</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">*</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">/</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">%</code>), dengan tambahan operator <strong><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\"></strong></code><strong> untuk </strong>pangkat<strong> dan </strong><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">//</code><strong> untuk </strong>floor division<strong> yang tidak ada di C. Python juga mendukung </strong>operator assignment gabungan<strong> (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">-=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">*=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">/=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">//=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\"></strong>=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">%=</code>) yang berfungsi sama seperti di C — menyingkat <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x = x + 5</code> menjadi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x += 5</code>.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Urutan operasi (precedence) di Python mengikuti aturan matematika standar: pangkat (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">**</code>) memiliki prioritas tertinggi, diikuti perkalian/pembagian/modulus/floor division (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">*</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">/</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">%</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">//</code>), dan terakhir penjumlahan/pengurangan (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">-</code>). Tanda kurung <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">()</code> selalu bisa digunakan untuk mengubah urutan evaluasi.</p>\n\n  <div class=\"my-4 overflow-x-auto\">\n    <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n      <thead>\n        <tr><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Operator</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Nama</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Contoh</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Hasil</th></tr>\n      </thead>\n      <tbody>\n        <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code> <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">-</code> <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">*</code> <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">/</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Dasar</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">2 + 3 * 2</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">8</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">**</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Pangkat</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">2 ** 3</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">8</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">//</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Floor division</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">17 // 5</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">3</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">%</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Modulus</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">17 % 5</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">2</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+=</code> <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">-=</code> dst</td><td class=\"border border-zinc-200 px-3 py-1.5\">Assignment gabungan</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x += 5</code></td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x = x + 5</code></td></tr>\n      </tbody>\n    </table>\n  </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>nilai = 10\nnilai += 5   # nilai = 15\nnilai *= 2   # nilai = 30\nprint(&quot;Nilai:&quot;, nilai)\n\nprint(&quot;2 pangkat 5:&quot;, 2 ** 5)\nprint(&quot;17 // 5:&quot;, 17 // 5)\nprint(&quot;Urutan operasi:&quot;, 2 + 3 * 2)  # * dulu, lalu +</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Nilai: 30\n2 pangkat 5: 32\n17 // 5: 3\nUrutan operasi: 8</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "nilai = 10\nnilai += 5   # nilai = 15\nnilai *= 2   # nilai = 30\nprint(\"Nilai:\", nilai)\n\nprint(\"2 pangkat 5:\", 2 ** 5)\nprint(\"17 // 5:\", 17 // 5)\nprint(\"Urutan operasi:\", 2 + 3 * 2)  # * dulu, lalu +",
+            initialCode: "skor = 50\n# Tambahkan 20 menggunakan +=\n\n# Kalikan 2 menggunakan *=\n\nprint(\"Skor akhir:\", skor)\nprint(\"5 pangkat 3:\", 5 ** 3)\n",
+            solution: "skor = 50\nskor += 20\nskor *= 2\nprint(\"Skor akhir:\", skor)\nprint(\"5 pangkat 3:\", 5 ** 3)\n",
+            hint: "Gunakan `skor += 20` lalu `skor *= 2`.",
+            quiz: {
+              question: "Operator apa di Python yang digunakan untuk operasi <strong>pangkat</strong> (eksponen)?",
+              options: [
+                "`^`",
+                "`**`",
+                "`pow`",
+                "`exp`"
+              ],
+              correctAnswer: 1
+            },
+            testCases: [
+              {
+                expectedOutput: "Skor akhir: 140\n5 pangkat 3: 125\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "skor\\s*\\+=\\s*20",
+                message: "Gunakan operator assignment gabungan: skor += 20",
+                shouldExist: true
+              },
+              {
+                pattern: "skor\\s*\\*=\\s*2",
+                message: "Gunakan operator assignment gabungan: skor *= 2",
+                shouldExist: true
+              }
+            ]
+          },
+          {
+            id: "py4-l10",
+            title: "Operator Perbandingan",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Operator perbandingan di Python (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">==</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">!=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">></code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\"><</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">>=</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\"><=</code>) memiliki <strong>simbol yang identik</strong> dengan C dan menghasilkan nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">bool</code> (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">True</code>/<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">False</code>), bukan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">1</code>/<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0</code> seperti tampilan di C (meskipun secara internal <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">bool</code> adalah subclass <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int</code>). Sama seperti C, kesalahan umum pemula adalah tertukar antara <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">=</code> (assignment) dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">==</code> (perbandingan).</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Fitur unik Python yang tidak ada di C adalah <strong>chained comparison</strong> — kamu bisa menulis <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0 < x < 10</code> yang secara otomatis berarti <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(0 < x) and (x < 10)</code>, tanpa perlu operator <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">and</code> secara eksplisit. Ini membuat pengecekan rentang nilai jauh lebih ringkas dibanding C yang harus menulis <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(x > 0) && (x < 10)</code>.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>x = 5\n\nprint(x == 5)         # True\nprint(x != 10)        # True\nprint(0 &lt; x &lt; 10)     # Chained comparison -&gt; True\nprint(10 &lt; x &lt; 20)    # False, karena x = 5 tidak &gt; 10</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">True\nTrue\nTrue\nFalse</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "x = 5\n\nprint(x == 5)         # True\nprint(x != 10)        # True\nprint(0 < x < 10)     # Chained comparison -> True\nprint(10 < x < 20)    # False, karena x = 5 tidak > 10",
+            initialCode: "nilai = 75\n# Tampilkan \"Dalam rentang lulus:\" dengan chained comparison 60 <= nilai <= 100\n",
+            solution: "nilai = 75\nprint(\"Dalam rentang lulus:\", 60 <= nilai <= 100)\n",
+            hint: "Gunakan `60 <= nilai <= 100`.",
+            quiz: {
+              question: "Apa yang dimaksud dengan <strong>chained comparison</strong> seperti <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0 < x < 10</code> di Python?",
+              options: [
+                "Python akan error karena tidak bisa membandingkan tiga nilai sekaligus",
+                "Setara dengan `(0 < x) and (x < 10)`",
+                "Setara dengan `(0 < x) or (x < 10)`",
+                "Hanya membandingkan `x < 10`, nilai `0` diabaikan"
+              ],
+              correctAnswer: 1
+            },
+            testCases: [
+              {
+                expectedOutput: "Dalam rentang lulus: True\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "60\\s*<=\\s*nilai\\s*<=\\s*100",
+                message: "Gunakan chained comparison: 60 <= nilai <= 100",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(\\s*[\"']Dalam rentang lulus:[\"']",
+                message: "Tampilkan dengan label \"Dalam rentang lulus:\"",
+                shouldExist: true
+              }
+            ]
+          },
+          {
+            id: "py4-l11",
+            title: "Operator Logika",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Python menggunakan kata kunci <strong><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">and</code></strong>, <strong><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">or</code></strong>, dan <strong><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">not</code></strong> sebagai operator logika, <strong>bukan</strong> simbol <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&&</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">||</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">!</code> seperti C. Cara kerjanya identik secara konseptual: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">and</code> true jika kedua operand true, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">or</code> true jika salah satu true, dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">not</code> membalik nilai boolean.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Python juga menerapkan <strong>short-circuit evaluation</strong> sama seperti C: pada <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">a and b</code>, jika <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">a</code> adalah <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">False</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">b</code> tidak akan dievaluasi (hasilnya pasti <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">False</code>). Selain konteks boolean murni, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">and</code>/<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">or</code> di Python sebenarnya mengembalikan salah satu <strong>operand itu sendiri</strong> (bukan selalu <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">True</code>/<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">False</code>), sebuah perilaku yang sering dimanfaatkan untuk memberi nilai default: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">nama = input_user or \"Tamu\"</code>.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>usia = 25\npunya_ktp = True\nsudah_daftar = False\n\nprint(usia &gt;= 17 and punya_ktp)          # and\nprint(sudah_daftar or usia &gt;= 18)        # or\nprint(not sudah_daftar)                  # not\n\n# Penggunaan unik: memberi nilai default\ninput_user = &quot;&quot;\nnama = input_user or &quot;Tamu&quot;\nprint(&quot;Nama:&quot;, nama)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">True\nTrue\nTrue\nNama: Tamu</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "usia = 25\npunya_ktp = True\nsudah_daftar = False\n\nprint(usia >= 17 and punya_ktp)          # and\nprint(sudah_daftar or usia >= 18)        # or\nprint(not sudah_daftar)                  # not\n\n# Penggunaan unik: memberi nilai default\ninput_user = \"\"\nnama = input_user or \"Tamu\"\nprint(\"Nama:\", nama)",
+            initialCode: "hujan = True\nbawa_payung = False\n# Tampilkan \"Kena hujan:\" dengan kondisi hujan and not bawa_payung\n",
+            solution: "hujan = True\nbawa_payung = False\nprint(\"Kena hujan:\", hujan and not bawa_payung)\n",
+            hint: "Gunakan `hujan and not bawa_payung`.",
+            quiz: {
+              question: "Apakah <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&&</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">||</code>, dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">!</code> bisa digunakan sebagai operator logika di Python?",
+              options: [
+                "Ya, identik dengan C",
+                "Tidak, Python menggunakan `and`, `or`, dan `not`",
+                "Hanya `!` yang bisa digunakan",
+                "Hanya `&&` yang bisa digunakan"
+              ],
+              correctAnswer: 1
+            },
+            testCases: [
+              {
+                expectedOutput: "Kena hujan: True\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "hujan\\s+and\\s+not\\s+bawa_payung",
+                message: "Gunakan: hujan and not bawa_payung",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(\\s*[\"']Kena hujan:[\"']",
+                message: "Tampilkan dengan label \"Kena hujan:\"",
+                shouldExist: true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "py4-m5",
+        title: "Menginput / Memasukkan Data",
+        lessons: [
+          {
+            id: "py4-l12",
+            title: "Fungsi `input()`",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">input()</code> adalah fungsi bawaan Python untuk <strong>membaca input dari pengguna</strong> melalui keyboard. Berbeda dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">scanf()</code> di C yang membutuhkan format specifier dan operator <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">input()</code> sangat sederhana: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">variabel = input(\"Pesan prompt: \")</code> — teks di dalam tanda kurung akan ditampilkan sebagai prompt sebelum pengguna mengetik.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Hal terpenting yang harus diingat: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">input()</code> <strong>selalu mengembalikan tipe <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">str</code> (string)</strong>, <strong>apapun</strong> yang diketik pengguna — bahkan jika pengguna mengetik angka. Jika kamu langsung menggunakan hasil <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">input()</code> dalam operasi matematika tanpa konversi, akan terjadi error atau hasil yang tidak diharapkan (concatenation string, bukan penjumlahan angka).</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>nama = input(&quot;Masukkan nama Anda: &quot;)\nprint(&quot;Halo, &quot; + nama + &quot;!&quot;)\n\nangka_str = input(&quot;Masukkan sebuah angka: &quot;)\nprint(&quot;Tipe data input:&quot;, type(angka_str))  # Selalu &lt;class &#039;str&#039;&gt;</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Masukkan nama Anda: Sinta\nHalo, Sinta!\nMasukkan sebuah angka: 25\nTipe data input: &lt;class &#039;str&#039;&gt;</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "nama = input(\"Masukkan nama Anda: \")\nprint(\"Halo, \" + nama + \"!\")\n\nangka_str = input(\"Masukkan sebuah angka: \")\nprint(\"Tipe data input:\", type(angka_str))  # Selalu <class 'str'>",
+            initialCode: "# Baca nama hewan peliharaan dengan input()\n\n# Tampilkan sapaan menggunakan nama tersebut\n",
+            solution: "nama_hewan = input(\"Masukkan nama hewan peliharaanmu: \")\nprint(\"Halo \" + nama_hewan + \", semoga harimu menyenangkan!\")\n",
+            hint: "Gunakan `input(\"Masukkan nama hewan peliharaanmu: \")` dan gabungkan dengan `print()`.",
+            quiz: {
+              question: "Apa tipe data yang <strong>selalu</strong> dikembalikan oleh fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">input()</code>, terlepas dari apa yang diketik pengguna?",
+              options: [
+                "`int`",
+                "`float`",
+                "`str`",
+                "`bool`"
               ],
               correctAnswer: 2
             },
             testCases: [
               {
-                input: "Budi",
-                expectedOutput: "Masukkan nama: Budi\n",
-                description: "Input output basic"
+                expectedOutput: "Masukkan nama hewan peliharaanmu: Milo\nHalo Milo, semoga harimu menyenangkan!\n",
+                description: "Hasil eksekusi program"
               }
             ],
             validationRules: [
               {
-                pattern: "input\\s*\\(",
-                message: "Gunakan fungsi input()",
+                pattern: "input\\s*\\(\\s*[\"']Masukkan nama hewan peliharaanmu: [\"']\\s*\\)",
+                message: "Gunakan: input(\"Masukkan nama hewan peliharaanmu: \")",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(\\s*[\"']Halo\\s*[\"']\\s*\\+\\s*nama_hewan",
+                message: "Gabungkan teks sapaan dengan variabel nama hewan menggunakan +",
+                shouldExist: true
+              }
+            ]
+          },
+          {
+            id: "py4-l13",
+            title: "Mengubah Input Menjadi Integer",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Karena <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">input()</code> selalu mengembalikan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">str</code>, untuk melakukan <strong>operasi matematika</strong> terhadap input pengguna, hasilnya harus dikonversi menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int()</code> (untuk bilangan bulat) atau <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">float()</code> (untuk bilangan desimal). Pola yang sangat umum digunakan adalah <strong>konversi langsung</strong> dalam satu baris: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">angka = int(input(\"Masukkan angka: \"))</code> — <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">input()</code> dijalankan dulu, hasilnya (str) langsung dibungkus oleh <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int()</code>.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Jika pengguna memasukkan teks yang <strong>tidak bisa dikonversi</strong> ke angka (misalnya huruf), <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int()</code> akan menghasilkan <strong>error <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">ValueError</code></strong>. Pada level pemula, hal ini diterima sebagai keterbatasan; penanganan error menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">try-except</code> akan dibahas pada level lebih lanjut.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Konversi langsung dalam satu baris\numur = int(input(&quot;Masukkan umur Anda: &quot;))\ntahun_depan = umur + 1\nprint(&quot;Tahun depan usia Anda:&quot;, tahun_depan)\n\nberat = float(input(&quot;Masukkan berat badan (kg): &quot;))\nprint(&quot;Berat dalam gram:&quot;, berat * 1000)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Masukkan umur Anda: 20\nTahun depan usia Anda: 21\nMasukkan berat badan (kg): 65.5\nBerat dalam gram: 65500.0</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "# Konversi langsung dalam satu baris\numur = int(input(\"Masukkan umur Anda: \"))\ntahun_depan = umur + 1\nprint(\"Tahun depan usia Anda:\", tahun_depan)\n\nberat = float(input(\"Masukkan berat badan (kg): \"))\nprint(\"Berat dalam gram:\", berat * 1000)",
+            initialCode: "# Baca angka pertama dan kedua sebagai int\n\n# Tampilkan hasil penjumlahan\n",
+            solution: "angka1 = int(input(\"Masukkan angka pertama: \"))\nangka2 = int(input(\"Masukkan angka kedua: \"))\nprint(\"Hasil penjumlahan:\", angka1 + angka2)\n",
+            hint: "Gunakan `int(input(\"...\"))` untuk masing-masing variabel, lalu jumlahkan dengan `+`.",
+            quiz: {
+              question: "Apa yang terjadi jika <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int(input(\"Masukkan angka: \"))</code> dijalankan tetapi pengguna mengetik <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"abc\"</code>?",
+              options: [
+                "Hasilnya otomatis menjadi `0`",
+                "Python akan menghasilkan error `ValueError`",
+                "Python akan mengabaikan input dan meminta input lagi secara otomatis",
+                "Hasilnya menjadi string `\"abc\"`"
+              ],
+              correctAnswer: 1
+            },
+            testCases: [
+              {
+                expectedOutput: "Masukkan angka pertama: 12\nMasukkan angka kedua: 8\nHasil penjumlahan: 20\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "int\\s*\\(\\s*input\\s*\\(\\s*[\"']Masukkan angka pertama: [\"']\\s*\\)\\s*\\)",
+                message: "Gunakan: int(input(\"Masukkan angka pertama: \"))",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(\\s*[\"']Hasil penjumlahan:[\"']\\s*,\\s*angka1\\s*\\+\\s*angka2\\s*\\)",
+                message: "Tampilkan dengan: print(\"Hasil penjumlahan:\", angka1 + angka2)",
+                shouldExist: true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "py4-m6",
+        title: "Menampilkan Data",
+        lessons: [
+          {
+            id: "py4-l14",
+            title: "Fungsi `print()`",
+            explanation: "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print()</code> adalah fungsi paling dasar untuk <strong>menampilkan output</strong> ke layar di Python. Berbeda dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">printf()</code> di C yang membutuhkan format specifier, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print()</code> bisa langsung menerima <strong>banyak argumen</strong> dipisahkan koma, dan secara otomatis menambahkan <strong>spasi</strong> di antara argumen serta <strong>newline</strong> di akhir.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print()</code> memiliki beberapa parameter opsional yang berguna: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">sep</code> (separator/pemisah antar argumen, default spasi) dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">end</code> (karakter di akhir, default <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\\n</code>). Contoh: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print(\"A\", \"B\", \"C\", sep=\"-\")</code> menghasilkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">A-B-C</code>, dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print(\"Tanpa newline\", end=\"\")</code> mencegah pindah baris setelahnya.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>print(&quot;Halo&quot;, &quot;Dunia&quot;)              # Pemisah default: spasi\nprint(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, sep=&quot;-&quot;)       # Pemisah custom: -\nprint(&quot;Tidak ada newline&quot;, end=&quot; &quot;) # Tidak pindah baris\nprint(&quot;lanjut di baris yang sama&quot;)\nprint(1, 2, 3, sep=&quot;, &quot;, end=&quot;!\\n&quot;) # Kombinasi sep dan end</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Halo Dunia\nA-B-C\nTidak ada newline lanjut di baris yang sama\n1, 2, 3!</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "print(\"Halo\", \"Dunia\")              # Pemisah default: spasi\nprint(\"A\", \"B\", \"C\", sep=\"-\")       # Pemisah custom: -\nprint(\"Tidak ada newline\", end=\" \") # Tidak pindah baris\nprint(\"lanjut di baris yang sama\")\nprint(1, 2, 3, sep=\", \", end=\"!\\n\") # Kombinasi sep dan end",
+            initialCode: "hari = 17\nbulan = 8\ntahun = 1945\n# Tampilkan tanggal dengan format DD/MM/YYYY menggunakan sep\n",
+            solution: "hari = 17\nbulan = 8\ntahun = 1945\nprint(f\"{hari:02d}\", f\"{bulan:02d}\", tahun, sep=\"/\")\n",
+            hint: "Gunakan `print(hari, bulan, tahun, sep=\"/\")`. Perhatikan agar `bulan` tampil sebagai \"08\" — gunakan format string atau f-string jika diperlukan.",
+            quiz: {
+              question: "Apa nilai default dari parameter <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">sep</code> pada fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">print()</code> jika tidak dituliskan?",
+              options: [
+                "Tanpa karakter apapun (kosong)",
+                "Koma `,`",
+                "Spasi `\" \"`",
+                "Newline `\\n`"
+              ],
+              correctAnswer: 2
+            },
+            testCases: [
+              {
+                expectedOutput: "17/08/1945\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "sep\\s*=\\s*[\"']/[\"']",
+                message: "Gunakan parameter sep=\"/\" pada print() untuk format DD/MM/YYYY",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(.*hari.*bulan.*tahun",
+                message: "Tampilkan ketiga variabel hari, bulan, dan tahun dalam satu print()",
+                shouldExist: true
+              }
+            ]
+          },
+          {
+            id: "py4-l15",
+            title: "Menampilkan String dan Variabel (f-string)",
+            explanation: "<div class=\"space-y-4\">\n      <ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li>*f-string<strong> (formatted string literal), diperkenalkan di Python 3.6, adalah cara modern dan paling direkomendasikan untuk </strong>menyisipkan nilai variabel ke dalam string**. Caranya: tambahkan huruf <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">f</code> sebelum tanda petik, lalu tulis nama variabel di dalam kurung kurawal <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">{}</code>: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">f\"Nama saya {nama}\"</code>.</li>\n</ul>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">f-string juga mendukung <strong>ekspresi</strong> di dalam <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">{}</code> (tidak hanya variabel tunggal, tapi juga operasi matematika atau pemanggilan fungsi), dan mendukung <strong>format specifier</strong> mirip C menggunakan tanda titik dua, contoh: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">f\"{nilai:.2f}\"</code> untuk 2 angka desimal, atau <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">f\"{angka:05d}\"</code> untuk padding angka dengan nol di depan hingga 5 digit. f-string jauh lebih ringkas dan mudah dibaca dibandingkan concatenation <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code> atau metode <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">.format()</code> yang lebih lama.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>nama = &quot;Maya&quot;\nusia = 21\nipk = 3.78912\n\nprint(f&quot;Nama saya {nama}, usia {usia} tahun.&quot;)\nprint(f&quot;IPK: {ipk:.2f}&quot;)          # 2 angka desimal\nprint(f&quot;Tahun depan: {usia + 1}&quot;)  # ekspresi di dalam {}\nprint(f&quot;Kode: {7:03d}&quot;)            # padding nol, lebar 3</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Nama saya Maya, usia 21 tahun.\nIPK: 3.79\nTahun depan: 22\nKode: 007</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "nama = \"Maya\"\nusia = 21\nipk = 3.78912\n\nprint(f\"Nama saya {nama}, usia {usia} tahun.\")\nprint(f\"IPK: {ipk:.2f}\")          # 2 angka desimal\nprint(f\"Tahun depan: {usia + 1}\")  # ekspresi di dalam {}\nprint(f\"Kode: {7:03d}\")            # padding nol, lebar 3",
+            initialCode: "nama_produk = \"Laptop\"\nharga = 7500000.5\n# Tampilkan menggunakan f-string dengan format 2 desimal untuk harga\n",
+            solution: "nama_produk = \"Laptop\"\nharga = 7500000.5\nprint(f\"Produk: {nama_produk}, Harga: Rp{harga:.2f}\")\n",
+            hint: "Gunakan `f\"Produk: {nama_produk}, Harga: Rp{harga:.2f}\"`.",
+            quiz: {
+              question: "Bagaimana cara menyisipkan nilai variabel <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">harga</code> ke dalam string menggunakan f-string?",
+              options: [
+                "`print(\"Harga: \" % harga)`",
+                "`print(f\"Harga: {harga}\")`",
+                "`print(\"Harga: \" . harga)`",
+                "`print(\"Harga: ${harga}\")`"
+              ],
+              correctAnswer: 1
+            },
+            testCases: [
+              {
+                expectedOutput: "Produk: Laptop, Harga: Rp7500000.50\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "f[\"'].*\\{nama_produk\\}.*\\{harga:\\.2f\\}",
+                message: "Gunakan f-string dengan format: f\"Produk: {nama_produk}, Harga: Rp{harga:.2f}\"",
+                shouldExist: true
+              },
+              {
+                pattern: "print\\s*\\(\\s*f[\"']",
+                message: "Gunakan print() dengan f-string (diawali huruf f sebelum tanda petik)",
+                shouldExist: true
+              }
+            ]
+          },
+          {
+            id: "py4-l16",
+            title: "Menggabungkan (Concatenate) String",
+            explanation: "<div class=\"space-y-4\">\n      <ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li>*Concatenation<strong> (penggabungan string) di Python bisa dilakukan dengan beberapa cara: operator </strong><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code><strong> (menggabungkan string secara langsung, kedua operand harus <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">str</code>), operator </strong><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">*</code><strong> (mengulang string sejumlah angka, misal <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"ab\" * 3</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"ababab\"</code>), dan </strong>f-string** (cara paling fleksibel, sudah dibahas sebelumnya). Untuk menggabungkan banyak string dengan separator yang konsisten, Python menyediakan metode <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">.join()</code>: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"-\".join([\"2024\", \"01\", \"15\"])</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"2024-01-15\"</code>.</li>\n</ul>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Perlu diingat kembali: operator <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">+</code> untuk concatenation <strong>hanya bekerja antar <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">str</code></strong> — menggabungkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">str</code> dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int</code>/<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">float</code> langsung akan menghasilkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">TypeError</code>, sehingga perlu <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">str()</code> untuk konversi (sudah dibahas di pelajaran konversi tipe data). f-string umumnya lebih disukai karena menghindari masalah konversi tipe ini sepenuhnya.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>depan = &quot;Selamat&quot;\nbelakang = &quot;Pagi&quot;\n\n# Penggabungan dengan +\nprint(depan + &quot; &quot; + belakang)\n\n# Repetisi dengan *\nprint(&quot;=&quot; * 10)\n\n# Penggabungan dengan join\ntanggal = &quot;-&quot;.join([&quot;2024&quot;, &quot;01&quot;, &quot;15&quot;])\nprint(tanggal)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal (Mac):</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">macbook-pro — ~user/workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Selamat Pagi\n==========\n2024-01-15</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            codeExample: "depan = \"Selamat\"\nbelakang = \"Pagi\"\n\n# Penggabungan dengan +\nprint(depan + \" \" + belakang)\n\n# Repetisi dengan *\nprint(\"=\" * 10)\n\n# Penggabungan dengan join\ntanggal = \"-\".join([\"2024\", \"01\", \"15\"])\nprint(tanggal)",
+            initialCode: "judul = \"BAB 1\"\nsubjudul = \"Pengenalan\"\n# Tampilkan gabungan judul dan subjudul dengan pemisah \" - \"\n\n# Tampilkan garis \"=\" sepanjang 15 karakter\n",
+            solution: "judul = \"BAB 1\"\nsubjudul = \"Pengenalan\"\nprint(judul + \" - \" + subjudul)\nprint(\"=\" * 15)\n",
+            hint: "Gunakan `judul + \" - \" + subjudul` dan `\"=\" * 15`.",
+            quiz: {
+              question: "Apa hasil dari ekspresi Python <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"-\" * 5</code>?",
+              options: [
+                "`\"-5\"`",
+                "Error, operator `*` tidak bisa digunakan untuk string",
+                "`\"-----\"`",
+                "`5`"
+              ],
+              correctAnswer: 2
+            },
+            testCases: [
+              {
+                expectedOutput: "BAB 1 - Pengenalan\n===============\n",
+                description: "Hasil eksekusi program"
+              }
+            ],
+            validationRules: [
+              {
+                pattern: "judul\\s*\\+\\s*[\"']\\s*-\\s*[\"']\\s*\\+\\s*subjudul",
+                message: "Gabungkan dengan: judul + \" - \" + subjudul",
+                shouldExist: true
+              },
+              {
+                pattern: "[\"']=[\"']\\s*\\*\\s*15",
+                message: "Tampilkan garis dengan: \"=\" * 15",
                 shouldExist: true
               }
             ]
