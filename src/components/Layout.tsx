@@ -30,6 +30,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const handleLogout = async () => {
     try {
+      if (user?.nim) {
+        await supabase
+          .from('active_sessions')
+          .delete()
+          .eq('nim', user.nim);
+      }
       clearToken();
       window.location.reload();
     } catch (error) {
@@ -150,32 +156,47 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     // 5. Send heartbeat every 30 seconds
     const heartbeatInterval = setInterval(async () => {
       try {
+        const now = new Date().toISOString();
         await supabase
           .from('active_sessions')
           .upsert({
             nim: user.nim,
             nama: user.nama || 'Anonymous',
             kelas: user.kelas || 'Unknown',
-            last_heartbeat: new Date().toISOString(),
+            last_heartbeat: now,
             current_activity: page
           });
+        
+        await supabase
+          .from('users')
+          .update({ last_active: now })
+          .eq('nim', user.nim);
       } catch (e) {
         console.error("Failed to send heartbeat:", e);
       }
     }, 30000);
 
     // Initial heartbeat
+    const initialNow = new Date().toISOString();
     supabase
       .from('active_sessions')
       .upsert({
         nim: user.nim,
         nama: user.nama || 'Anonymous',
         kelas: user.kelas || 'Unknown',
-        last_heartbeat: new Date().toISOString(),
+        last_heartbeat: initialNow,
         current_activity: page
       })
       .then(({ error }) => {
         if (error) console.error("Initial heartbeat failed:", error);
+      });
+
+    supabase
+      .from('users')
+      .update({ last_active: initialNow })
+      .eq('nim', user.nim)
+      .then(({ error }) => {
+        if (error) console.error("Initial user active sync failed:", error);
       });
 
     window.addEventListener('beforeunload', handleUnload);

@@ -158,23 +158,26 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             studyTime: userProfile.study_time || 0
           };
 
-          // Update nama/kelas/role/jurusan if changed in Web Utama
+          // Always update last_active on login/load, and update nama/kelas/role/jurusan if changed in Web Utama
+          const updates: any = { last_active: new Date().toISOString() };
           const hasRoleChange = payload.role && profileData.role !== payload.role;
           const hasJurusanChange = (payload as any).jurusan && profileData.jurusan !== (payload as any).jurusan;
-          if (profileData.nama !== payload.nama || profileData.kelas !== payload.kelas || hasRoleChange || hasJurusanChange) {
-            const updates: any = { nama: payload.nama, kelas: payload.kelas };
-            if (payload.role) updates.role = payload.role;
-            if ((payload as any).jurusan) updates.jurusan = (payload as any).jurusan;
+          
+          if (profileData.nama !== payload.nama) updates.nama = payload.nama;
+          if (profileData.kelas !== payload.kelas) updates.kelas = payload.kelas;
+          if (hasRoleChange) updates.role = payload.role;
+          if (hasJurusanChange) updates.jurusan = (payload as any).jurusan;
 
-            await supabase
-              .from('users')
-              .update(updates)
-              .eq('nim', nim);
-            profileData.nama = payload.nama;
-            profileData.kelas = payload.kelas;
-            if (payload.role) profileData.role = payload.role as any;
-            if ((payload as any).jurusan) profileData.jurusan = (payload as any).jurusan;
-          }
+          await supabase
+            .from('users')
+            .update(updates)
+            .eq('nim', nim);
+
+          profileData.lastActive = updates.last_active;
+          profileData.nama = payload.nama;
+          profileData.kelas = payload.kelas;
+          if (payload.role) profileData.role = payload.role as any;
+          if ((payload as any).jurusan) profileData.jurusan = (payload as any).jurusan;
         }
 
         console.log("Setting store user:", profileData.nama);

@@ -40,6 +40,7 @@ export const StudentMonitoring: React.FC = () => {
   const [confirmAction, setConfirmAction] = useState<{ type: string; nim: string; nama: string } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [onlineNims, setOnlineNims] = useState<Set<string>>(new Set());
+  const [sessionHeartbeats, setSessionHeartbeats] = useState<Record<string, string>>({});
 
   const isReadOnly = user?.role === 'asisten';
   const canManage = ['admin', 'kordas'].includes(user?.role || '');
@@ -52,11 +53,23 @@ export const StudentMonitoring: React.FC = () => {
       // 1. Cleanup stale sessions (active within last 2 minutes)
       await monitoringService.cleanupStaleSessions(2);
 
-      // 2. Fetch active sessions list
+      // 2. Fetch active sessions list with heartbeat timestamp and user role
       const { data: sessionData } = await supabase
         .from('active_sessions')
-        .select('nim');
-      const nims = new Set((sessionData || []).map(s => s.nim));
+        .select('nim, last_heartbeat, users(role)');
+      
+      const heartbeats: Record<string, string> = {};
+      const nims = new Set<string>();
+      
+      (sessionData || []).forEach(s => {
+        const u = s.users as any;
+        if (s.nim && s.last_heartbeat && u?.role === 'praktikan') {
+          heartbeats[s.nim] = s.last_heartbeat;
+          nims.add(s.nim);
+        }
+      });
+      
+      setSessionHeartbeats(heartbeats);
       setOnlineNims(nims);
 
       // 3. Fetch students (using select('*') for schema resilience)
@@ -90,6 +103,49 @@ export const StudentMonitoring: React.FC = () => {
 
   useEffect(() => { 
     fetchStudents(); 
+
+    // Set up periodic cleanup of stale sessions every 45 seconds
+    const cleanupInterval = setInterval(async () => {
+      try {
+        await monitoringService.cleanupStaleSessions(2);
+      } catch (e) {
+        console.error("Failed to run periodic cleanup:", e);
+      }
+    }, 45000);
+
+    // Set up realtime subscription to active_sessions
+    const channel = supabase
+      .channel('realtime:monitoring_active_sessions')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'active_sessions'
+      }, async () => {
+        // Fetch updated active sessions and user roles
+        const { data: sessionData } = await supabase
+          .from('active_sessions')
+          .select('nim, last_heartbeat, users(role)');
+        
+        const heartbeats: Record<string, string> = {};
+        const nims = new Set<string>();
+        
+        (sessionData || []).forEach(s => {
+          const u = s.users as any;
+          if (s.nim && s.last_heartbeat && u?.role === 'praktikan') {
+            heartbeats[s.nim] = s.last_heartbeat;
+            nims.add(s.nim);
+          }
+        });
+        
+        setSessionHeartbeats(heartbeats);
+        setOnlineNims(nims);
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(cleanupInterval);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -126,7 +182,11 @@ export const StudentMonitoring: React.FC = () => {
       return pctB - pctA;
     }
     if (sortBy === 'last_active') {
-      return new Date(b.last_active || 0).getTime() - new Date(a.last_active || 0).getTime();
+      const getActiveTime = (stud: Student) => {
+        const timeStr = sessionHeartbeats[stud.nim] || stud.last_active || 0;
+        return new Date(timeStr).getTime();
+      };
+      return getActiveTime(b) - getActiveTime(a);
     }
     return 0;
   });
@@ -603,7 +663,7 @@ export const StudentMonitoring: React.FC = () => {
                     <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-zinc-150">
                       <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
                         <Clock size={14} className="text-zinc-400" />
-                        <span>Terakhir Aktif: {formatLastActive(s.last_active)}</span>
+                        <span>Terakhir Aktif: {formatLastActive(sessionHeartbeats[s.nim] || s.last_active)}</span>
                       </div>
                       
                       {canManage && (
