@@ -2641,77 +2641,56 @@ export const AdminDashboard: React.FC = () => {
 
                 {/* Modal Body */}
                 <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-                  {/* Title */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Judul Pelajaran</label>
-                    <input
-                      value={lessonEditForm.title}
-                      onChange={e => setLessonEditForm({ ...lessonEditForm, title: e.target.value })}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all"
-                    />
-                  </div>
+                  {/* ========================================================================= */}
+                  {/* BAGIAN ATAS: MATERI & PENJELASAN */}
+                  {/* ========================================================================= */}
+                  <div className="space-y-6">
+                    <div className="border-b border-zinc-100 pb-2">
+                      <h4 className="font-bold text-zinc-800 text-base">📖 Materi & Penjelasan</h4>
+                    </div>
+                    
+                    {/* Title */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Judul Pelajaran</label>
+                      <input
+                        value={lessonEditForm.title}
+                        onChange={e => setLessonEditForm({ ...lessonEditForm, title: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all"
+                      />
+                    </div>
 
-                   {/* Explanation */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Materi Penjelasan (Rich Text)</label>
-                    <RichTextEditor
-                      value={lessonEditForm.explanation}
-                      onChange={html => setLessonEditForm({ ...lessonEditForm, explanation: html })}
-                    />
-                  </div>
+                    {/* Explanation */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Materi Penjelasan (Rich Text)</label>
+                      <RichTextEditor
+                        value={lessonEditForm.explanation}
+                        onChange={html => setLessonEditForm({ ...lessonEditForm, explanation: html })}
+                      />
+                    </div>
 
-                  {/* Code Example & Initial Code */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Code Example */}
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Contoh Kode</label>
                       <textarea
                         value={lessonEditForm.codeExample}
                         onChange={e => setLessonEditForm({ ...lessonEditForm, codeExample: e.target.value })}
                         onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.codeExample || '', (val) => setLessonEditForm({ ...lessonEditForm, codeExample: val }))}
-                        rows={5}
+                        rows={6}
                         className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Kode Awal (Initial)</label>
-                      <textarea
-                        value={lessonEditForm.initialCode}
-                        onChange={e => setLessonEditForm({ ...lessonEditForm, initialCode: e.target.value })}
-                        onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.initialCode || '', (val) => setLessonEditForm({ ...lessonEditForm, initialCode: val }))}
-                        rows={5}
-                        className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
+                        placeholder="Tulis contoh kode di sini..."
                       />
                     </div>
                   </div>
 
-                  {/* Solution & Hint */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Solusi (Referensi)</label>
-                      <textarea
-                        value={lessonEditForm.solution}
-                        onChange={e => setLessonEditForm({ ...lessonEditForm, solution: e.target.value })}
-                        onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.solution || '', (val) => setLessonEditForm({ ...lessonEditForm, solution: val }))}
-                        rows={4}
-                        className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Petunjuk (Hint)</label>
-                      <textarea
-                        value={lessonEditForm.hint}
-                        onChange={e => setLessonEditForm({ ...lessonEditForm, hint: e.target.value })}
-                        rows={4}
-                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all resize-y"
-                      />
-                    </div>
-                  </div>
+                  <hr className="border-zinc-200" />
 
-                  {/* Quiz Section */}
-                  <div className="bg-amber-50/50 border border-amber-200/50 rounded-2xl p-6 space-y-5">
-                    <div className="flex items-center gap-2">
+                  {/* ========================================================================= */}
+                  {/* BAGIAN TENGAH: KUIS */}
+                  {/* ========================================================================= */}
+                  <div className="bg-amber-50/30 border border-amber-200/50 rounded-2xl p-6 space-y-5">
+                    <div className="flex items-center gap-2 border-b border-amber-200/30 pb-2">
                       <Sparkles size={18} className="text-amber-600" />
-                      <h4 className="font-bold text-amber-900">Soal Kuis</h4>
+                      <h4 className="font-bold text-amber-900 text-base">✏️ Soal Kuis</h4>
                     </div>
 
                     <div className="space-y-2">
@@ -2763,157 +2742,204 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Validation Rules (Static Checks) */}
-                  <div className="bg-rose-50/50 border border-rose-200/50 rounded-2xl p-6 space-y-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Terminal size={18} className="text-rose-700" />
-                        <h4 className="font-bold text-rose-900">Validasi Kode Statis (Non-AI)</h4>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          const rules = [...(lessonEditForm.validationRules || [])];
-                          rules.push({ pattern: '', message: '', shouldExist: true });
-                          setLessonEditForm({ ...lessonEditForm, validationRules: rules });
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-rose-200 text-rose-700 text-[10px] font-bold rounded-lg hover:bg-rose-100 transition-all"
-                      >
-                        <Plus size={12} /> Tambah Aturan
-                      </button>
+                  <hr className="border-zinc-200" />
+
+                  {/* ========================================================================= */}
+                  {/* BAGIAN BAWAH: LATIHAN (KODE AWAL, SOLUSI, PETUNJUK, TEST CASE) */}
+                  {/* ========================================================================= */}
+                  <div className="space-y-6">
+                    <div className="border-b border-zinc-100 pb-2">
+                      <h4 className="font-bold text-zinc-800 text-base">💻 Latihan Praktik</h4>
                     </div>
 
-                    <div className="space-y-4">
-                      {(!lessonEditForm.validationRules || lessonEditForm.validationRules.length === 0) ? (
-                        <div className="text-center py-4 text-rose-300 text-xs italic">Belum ada aturan validasi statis.</div>
-                      ) : (
-                        lessonEditForm.validationRules.map((rule, rIdx) => (
-                          <div key={rIdx} className="bg-white/60 p-4 rounded-xl border border-rose-100 space-y-3 relative group/rule">
-                            <button 
-                              onClick={() => {
-                                const rules = lessonEditForm.validationRules?.filter((_, i) => i !== rIdx);
-                                setLessonEditForm({ ...lessonEditForm, validationRules: rules });
-                              }}
-                              className="absolute top-2 right-2 p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover/rule:opacity-100 transition-all"
-                            >
-                              <X size={14} />
-                            </button>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Regex Pattern</label>
-                                <input
-                                  value={rule.pattern}
-                                  onChange={e => {
-                                    const rules = [...(lessonEditForm.validationRules || [])];
-                                    rules[rIdx].pattern = e.target.value;
-                                    setLessonEditForm({ ...lessonEditForm, validationRules: rules });
-                                  }}
-                                  placeholder="Contoh: for.*range"
-                                  className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-mono focus:ring-1 focus:ring-rose-700"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Pesan Error</label>
-                                <input
-                                  value={rule.message}
-                                  onChange={e => {
-                                    const rules = [...(lessonEditForm.validationRules || [])];
-                                    rules[rIdx].message = e.target.value;
-                                    setLessonEditForm({ ...lessonEditForm, validationRules: rules });
-                                  }}
-                                  placeholder="Contoh: Gunakan for loop!"
-                                  className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-700"
-                                />
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
+                    {/* Initial Code & Solution */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Kode Awal (Initial)</label>
+                        <textarea
+                          value={lessonEditForm.initialCode}
+                          onChange={e => setLessonEditForm({ ...lessonEditForm, initialCode: e.target.value })}
+                          onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.initialCode || '', (val) => setLessonEditForm({ ...lessonEditForm, initialCode: val }))}
+                          rows={6}
+                          className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
+                          placeholder="Kode awal yang akan dikerjakan siswa..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Solusi (Referensi)</label>
+                        <textarea
+                          value={lessonEditForm.solution}
+                          onChange={e => setLessonEditForm({ ...lessonEditForm, solution: e.target.value })}
+                          onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.solution || '', (val) => setLessonEditForm({ ...lessonEditForm, solution: val }))}
+                          rows={6}
+                          className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
+                          placeholder="Kode solusi yang benar..."
+                        />
+                      </div>
+                    </div>
+
+                    {/* Hint (Petunjuk) - Menggunakan RichTextEditor */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Petunjuk Penyelesaian (Hint - Rich Text)</label>
+                      <RichTextEditor
+                        value={lessonEditForm.hint || ''}
+                        onChange={html => setLessonEditForm({ ...lessonEditForm, hint: html })}
+                      />
+                    </div>
+
+                    {/* Validation Rules (Static Checks) */}
+                    <div className="bg-rose-50/30 border border-rose-200/50 rounded-2xl p-6 space-y-5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Terminal size={18} className="text-rose-700" />
+                          <h4 className="font-bold text-rose-900">Validasi Kode Statis (Non-AI)</h4>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            const rules = [...(lessonEditForm.validationRules || [])];
+                            rules.push({ pattern: '', message: '', shouldExist: true });
+                            setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-rose-200 text-rose-700 text-[10px] font-bold rounded-lg hover:bg-rose-100 transition-all"
+                        >
+                          <Plus size={12} /> Tambah Aturan
+                        </button>
+                      </div>
+
+                      <div className="space-y-4">
+                        {(!lessonEditForm.validationRules || lessonEditForm.validationRules.length === 0) ? (
+                          <div className="text-center py-4 text-rose-300 text-xs italic">Belum ada aturan validasi statis.</div>
+                        ) : (
+                          lessonEditForm.validationRules.map((rule, rIdx) => (
+                            <div key={rIdx} className="bg-white p-4 rounded-xl border border-rose-100 space-y-3 relative group/rule">
                               <button 
                                 onClick={() => {
-                                  const rules = [...(lessonEditForm.validationRules || [])];
-                                  rules[rIdx].shouldExist = !rules[rIdx].shouldExist;
+                                  const rules = lessonEditForm.validationRules?.filter((_, i) => i !== rIdx);
                                   setLessonEditForm({ ...lessonEditForm, validationRules: rules });
                                 }}
-                                className={cn(
-                                  "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5",
-                                  rule.shouldExist 
-                                    ? "bg-green-100 text-green-700" 
-                                    : "bg-red-100 text-red-700"
-                                )}
+                                className="absolute top-2 right-2 p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover/rule:opacity-100 transition-all"
                               >
-                                {rule.shouldExist ? <CheckCircle2 size={12} /> : <X size={12} />}
-                                {rule.shouldExist ? 'Wajib Ada (Include)' : 'Dilarang Ada (Exclude)'}
+                                <X size={14} />
                               </button>
-                              <span className="text-[10px] text-zinc-400 italic">Klik untuk mengubah mode validasi.</span>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Regex Pattern</label>
+                                  <input
+                                    value={rule.pattern}
+                                    onChange={e => {
+                                      const rules = [...(lessonEditForm.validationRules || [])];
+                                      rules[rIdx].pattern = e.target.value;
+                                      setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                                    }}
+                                    placeholder="Contoh: for.*range"
+                                    className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-mono focus:ring-1 focus:ring-rose-700"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Pesan Error</label>
+                                  <input
+                                    value={rule.message}
+                                    onChange={e => {
+                                      const rules = [...(lessonEditForm.validationRules || [])];
+                                      rules[rIdx].message = e.target.value;
+                                      setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                                    }}
+                                    placeholder="Contoh: Gunakan for loop!"
+                                    className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-700"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <button 
+                                  onClick={() => {
+                                    const rules = [...(lessonEditForm.validationRules || [])];
+                                    rules[rIdx].shouldExist = !rules[rIdx].shouldExist;
+                                    setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                                  }}
+                                  className={cn(
+                                    "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5",
+                                    rule.shouldExist 
+                                      ? "bg-green-100 text-green-700" 
+                                      : "bg-red-100 text-red-700"
+                                  )}
+                                >
+                                  {rule.shouldExist ? <CheckCircle2 size={12} /> : <X size={12} />}
+                                  {rule.shouldExist ? 'Wajib Ada (Include)' : 'Dilarang Ada (Exclude)'}
+                                </button>
+                                <span className="text-[10px] text-zinc-400 italic">Klik untuk mengubah mode validasi.</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Test Cases - Menggunakan RichTextEditor untuk Deskripsi */}
+                    <div className="bg-blue-50/30 border border-blue-200/50 rounded-2xl p-6 space-y-5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={18} className="text-blue-600" />
+                          <h4 className="font-bold text-blue-900">Test Cases (Validasi Output)</h4>
+                        </div>
+                        <button
+                          onClick={handleAddTestCase}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <Plus size={12} /> Tambah Test Case
+                        </button>
+                      </div>
+
+                      {lessonEditForm.testCases.map((tc, tcIdx) => (
+                        <div key={tcIdx} className="bg-white border border-blue-200/50 rounded-xl p-4 space-y-4">
+                          <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+                            <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Test Case #{tcIdx + 1}</span>
+                            {lessonEditForm.testCases.length > 1 && (
+                              <button
+                                onClick={() => handleRemoveTestCase(tcIdx)}
+                                className="p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                              >
+                                <Minus size={14} />
+                              </button>
+                            )}
+                          </div>
+                          
+                          {/* Deskripsi Uji (RichTextEditor) */}
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deskripsi Tugas / Petunjuk Uji (Rich Text)</label>
+                            <RichTextEditor
+                              value={tc.description || ''}
+                              onChange={html => handleUpdateTestCase(tcIdx, 'description', html)}
+                              placeholder="Tulis deskripsi tugas atau petunjuk uji spesifik..."
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expected Output</label>
+                              <textarea
+                                value={tc.expectedOutput}
+                                onChange={e => handleUpdateTestCase(tcIdx, 'expectedOutput', e.target.value)}
+                                rows={3}
+                                className="w-full px-3 py-2 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-y"
+                                placeholder="Output yang diharapkan..."
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Input (Opsional)</label>
+                              <textarea
+                                value={tc.input || ''}
+                                onChange={e => handleUpdateTestCase(tcIdx, 'input', e.target.value)}
+                                rows={3}
+                                className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-y"
+                                placeholder="Input opsional..."
+                              />
                             </div>
                           </div>
-                        ))
-                      )}
+                        </div>
+                      ))}
                     </div>
-                  </div>
-
-                  {/* Test Cases */}
-                  <div className="bg-blue-50/50 border border-blue-200/50 rounded-2xl p-6 space-y-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={18} className="text-blue-600" />
-                        <h4 className="font-bold text-blue-900">Test Cases (Validasi Output)</h4>
-                      </div>
-                      <button
-                        onClick={handleAddTestCase}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        <Plus size={12} />
-                        Tambah
-                      </button>
-                    </div>
-
-                    {lessonEditForm.testCases.map((tc, tcIdx) => (
-                      <div key={tcIdx} className="bg-white border border-blue-200/50 rounded-xl p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Test Case #{tcIdx + 1}</span>
-                          {lessonEditForm.testCases.length > 1 && (
-                            <button
-                              onClick={() => handleRemoveTestCase(tcIdx)}
-                              className="p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                            >
-                              <Minus size={14} />
-                            </button>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deskripsi Tugas</label>
-                          <input
-                            value={tc.description}
-                            onChange={e => handleUpdateTestCase(tcIdx, 'description', e.target.value)}
-                            className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                            placeholder="Deskripsi tugas..."
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expected Output</label>
-                            <textarea
-                              value={tc.expectedOutput}
-                              onChange={e => handleUpdateTestCase(tcIdx, 'expectedOutput', e.target.value)}
-                              rows={2}
-                              className="w-full px-3 py-2 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-y"
-                              placeholder="Output yang diharapkan..."
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Input (Opsional)</label>
-                            <textarea
-                              value={tc.input || ''}
-                              onChange={e => handleUpdateTestCase(tcIdx, 'input', e.target.value)}
-                              rows={2}
-                              className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-y"
-                              placeholder="Input opsional..."
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </motion.div>

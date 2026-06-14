@@ -17,7 +17,7 @@ import {
   List, ListOrdered, Heading1, Heading2, AlignLeft, 
   AlignCenter, AlignRight, AlignJustify, Table as TableIcon, Link as LinkIcon, 
   Image as ImageIcon, Undo, Redo, Code, Plus, Trash2, 
-  Columns, Rows, Merge, Split, Palette
+  Columns, Rows, Merge, Split, Palette, Indent, Outdent
 } from 'lucide-react';
 
 const TEXT_COLORS = [
@@ -185,6 +185,24 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange,
           title="Ordered List"
         >
           <ListOrdered size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().sinkListItem('listItem').run()}
+          disabled={!editor.can().sinkListItem('listItem')}
+          className="p-2 rounded-lg hover:bg-zinc-200 text-zinc-600 disabled:opacity-30 transition-colors"
+          title="Menjorok Masuk (Indent List)"
+        >
+          <Indent size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().liftListItem('listItem').run()}
+          disabled={!editor.can().liftListItem('listItem')}
+          className="p-2 rounded-lg hover:bg-zinc-200 text-zinc-600 disabled:opacity-30 transition-colors"
+          title="Menjorok Keluar (Outdent List)"
+        >
+          <Outdent size={16} />
         </button>
 
         <div className="w-px h-6 bg-zinc-200 mx-1" />

@@ -700,8 +700,17 @@ export const LessonPage: React.FC = () => {
                   <div className="space-y-4 mb-4">
                     {lesson.testCases.map((tc, idx) => (
                       <div key={idx} className="flex items-start gap-3 text-zinc-600">
-                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-rose-700 shrink-0" />
-                        <p>{tc.description}</p>
+                        <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-rose-700 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          {/<\/?[a-z][\s\S]*>/i.test(tc.description || '') ? (
+                            <RichTextRenderer 
+                              content={tc.description} 
+                              className="prose-sm max-w-none text-zinc-600 prose-p:text-zinc-600 prose-p:my-0 prose-ul:my-0 prose-ol:my-0" 
+                            />
+                          ) : (
+                            <p className="text-sm text-zinc-600 my-0">{tc.description}</p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
