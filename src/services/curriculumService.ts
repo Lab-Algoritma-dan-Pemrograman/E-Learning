@@ -4,10 +4,29 @@ import { Level } from '../data/curriculum';
 export const curriculumService = {
   async getCurriculum(): Promise<Level[]> {
     try {
-      const { data: levelsData, error: levelsError } = await supabase
+      let levelsData: any[] | null = null;
+      let levelsError: any = null;
+
+      // Try fetching ordered by sort_order
+      const res = await supabase
         .from('levels')
         .select('*')
         .order('sort_order');
+      levelsData = res.data;
+      levelsError = res.error;
+
+      // Fallback if sort_order column does not exist yet
+      if (levelsError && levelsError.code === '42703') {
+        console.warn("levels.sort_order column not found, falling back to in-memory sort by ID");
+        const fallbackRes = await supabase
+          .from('levels')
+          .select('*');
+        levelsData = fallbackRes.data;
+        levelsError = fallbackRes.error;
+        if (levelsData) {
+          levelsData.sort((a, b) => a.id.localeCompare(b.id));
+        }
+      }
 
       if (levelsError || !levelsData || levelsData.length === 0) {
         return [];

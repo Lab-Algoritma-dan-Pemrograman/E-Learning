@@ -254,8 +254,8 @@ export const Dashboard: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Setup Banner for Admin if DB is empty */}
-        {curriculum.length === 0 && user?.role === 'admin' && (
+        {/* Setup Banner for Admin/Kordas if DB is empty */}
+        {curriculum.length === 0 && (user?.role === 'admin' || user?.role === 'kordas') && (
           <div className="bg-rose-50 border-2 border-dashed border-rose-200 rounded-3xl p-8 text-center space-y-4">
             <div className="w-16 h-16 bg-rose-100 text-rose-700 rounded-2xl flex items-center justify-center mx-auto">
               <Zap size={32} />
@@ -263,7 +263,7 @@ export const Dashboard: React.FC = () => {
             <div className="max-w-md mx-auto">
               <h2 className="text-xl font-bold text-rose-900">Database kamu Masih Kosong</h2>
               <p className="text-rose-700 text-sm mt-2">
-                Klik tombol di bawah untuk mengisi database Firestore kamu dengan kurikulum E-Learning standar secara otomatis.
+                Klik tombol di bawah untuk mengisi database Supabase kamu dengan kurikulum E-Learning standar secara otomatis.
               </p>
             </div>
             <button 

@@ -291,10 +291,27 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const loadCurriculum = async () => {
       try {
         console.log("Loading curriculum levels from Supabase database...");
-        const { data: levelsData, error: levelsError } = await supabase
+        let levelsData: any[] | null = null;
+        let levelsError: any = null;
+
+        const res = await supabase
           .from('levels')
           .select('*')
           .order('sort_order');
+        levelsData = res.data;
+        levelsError = res.error;
+
+        if (levelsError && levelsError.code === '42703') {
+          console.warn("levels.sort_order column not found in SupabaseProvider, falling back to in-memory sort by ID");
+          const fallbackRes = await supabase
+            .from('levels')
+            .select('*');
+          levelsData = fallbackRes.data;
+          levelsError = fallbackRes.error;
+          if (levelsData) {
+            levelsData.sort((a, b) => a.id.localeCompare(b.id));
+          }
+        }
 
         if (levelsError || !levelsData || levelsData.length === 0) {
           console.warn("No curriculum in database. Initial setup needed.");

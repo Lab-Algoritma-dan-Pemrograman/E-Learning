@@ -109,16 +109,33 @@ export const LessonPage: React.FC = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [quizXpGranted, setQuizXpGranted] = useState(false);
 
+  const scrollToActiveLesson = () => {
+    setTimeout(() => {
+      const container = document.getElementById('lesson-drawer-scroll-container');
+      const activeItem = container?.querySelector('.active-lesson-item') as HTMLElement;
+      if (container && activeItem) {
+        const containerRect = container.getBoundingClientRect();
+        const activeRect = activeItem.getBoundingClientRect();
+        const relativeTop = activeRect.top - containerRect.top + container.scrollTop;
+        const targetScrollTop = relativeTop - (containerRect.height / 2) + (activeRect.height / 2);
+        
+        container.scrollTo({
+          top: targetScrollTop,
+          behavior: 'smooth'
+        });
+      } else {
+        const activeItemFallback = document.querySelector('.active-lesson-item');
+        if (activeItemFallback) {
+          activeItemFallback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 150);
+  };
+
   // Auto-scroll to current active lesson item when drawer opens
   useEffect(() => {
     if (showLessonNav) {
-      const timer = setTimeout(() => {
-        const activeItem = document.querySelector('.active-lesson-item');
-        if (activeItem) {
-          activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 300);
-      return () => clearTimeout(timer);
+      scrollToActiveLesson();
     }
   }, [showLessonNav]);
 
@@ -460,12 +477,7 @@ export const LessonPage: React.FC = () => {
                 animate={{ x: 0 }}
                 exit={{ x: 340 }}
                 transition={{ type: 'spring', damping: 24, stiffness: 280 }}
-                onAnimationComplete={() => {
-                  const activeItem = document.querySelector('.active-lesson-item');
-                  if (activeItem) {
-                    activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }}
+                onAnimationComplete={scrollToActiveLesson}
                 className="fixed top-0 right-0 bottom-0 w-85 bg-white border-l border-zinc-200 z-[70] flex flex-col shadow-2xl overflow-hidden rounded-l-[2.5rem]"
               >
                 {/* Header */}
@@ -485,7 +497,7 @@ export const LessonPage: React.FC = () => {
                 </div>
                 
                 {/* List Body */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-white">
+                <div id="lesson-drawer-scroll-container" className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-white">
                   {curriculum.map((level, lIdx) => {
                     const isLvlLocked = isLevelLocked(lIdx);
                     const isLvlActive = lIdx === currentLevelIdx;

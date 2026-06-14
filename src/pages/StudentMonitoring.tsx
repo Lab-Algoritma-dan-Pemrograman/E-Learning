@@ -5,7 +5,11 @@ import { supabase } from '../lib/supabase';
 import { useProgress } from '../store/useProgress';
 import { resetUserProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { monitoringService } from '../services/monitoringService';
-import { Search, RefreshCw, ChevronDown, ChevronRight, Trash2, Edit3, RotateCcw, CheckCircle2, Lock, X, Save, AlertTriangle, Users, BookOpen, Clock, Activity, Trophy } from 'lucide-react';
+import { 
+  Search, RefreshCw, ChevronDown, ChevronRight, Trash2, Edit3, RotateCcw, 
+  CheckCircle2, Lock, X, Save, AlertTriangle, Users, BookOpen, Clock, 
+  Activity, Trophy, Sparkles, Filter, Check, Clock3
+} from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface Student {
@@ -17,6 +21,7 @@ interface Student {
   streak: number;
   last_active: string;
   role: string;
+  study_time?: number;
 }
 
 export const StudentMonitoring: React.FC = () => {
@@ -25,6 +30,8 @@ export const StudentMonitoring: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [kelasFilter, setKelasFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline'>('all');
+  const [sortBy, setSortBy] = useState<'nama' | 'xp' | 'progress' | 'last_active'>('nama');
   const [expandedNim, setExpandedNim] = useState<string | null>(null);
   const [studentProgress, setStudentProgress] = useState<Record<string, string[]>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -32,31 +39,38 @@ export const StudentMonitoring: React.FC = () => {
   const [editXpValue, setEditXpValue] = useState('');
   const [confirmAction, setConfirmAction] = useState<{ type: string; nim: string; nama: string } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [onlineCount, setOnlineCount] = useState(0);
+  const [onlineNims, setOnlineNims] = useState<Set<string>>(new Set());
 
   const totalLessons = curriculum.reduce((acc, l) => acc + (l.modules?.reduce((m, mod) => m + (mod.lessons?.length || 0), 0) || 0), 0);
 
   const fetchStudents = async () => {
     setIsRefreshing(true);
     try {
-      // 1. Cleanup stale sessions
+      // 1. Cleanup stale sessions (active within last 2 minutes)
       await monitoringService.cleanupStaleSessions(2);
 
-      // 2. Fetch active sessions count
-      const { count } = await supabase
+      // 2. Fetch active sessions list
+      const { data: sessionData } = await supabase
         .from('active_sessions')
-        .select('*', { count: 'exact', head: true });
-      setOnlineCount(count || 0);
+        .select('nim');
+      const nims = new Set((sessionData || []).map(s => s.nim));
+      setOnlineNims(nims);
 
-      // 3. Fetch students
+      // 3. Fetch students (using select('*') for schema resilience)
       const { data, error } = await supabase
         .from('users')
-        .select('nim, nama, kelas, jurusan, xp, streak, last_active, role')
-        .eq('role', 'praktikan')
-        .order('nama');
-      if (!error && data) setStudents(data);
-    } catch (e) { console.error(e); }
-    finally { setIsRefreshing(false); setLoading(false); }
+        .select('*')
+        .eq('role', 'praktikan');
+      
+      if (!error && data) {
+        setStudents(data);
+      }
+    } catch (e) { 
+      console.error(e); 
+    } finally { 
+      setIsRefreshing(false); 
+      setLoading(false); 
+    }
   };
 
   const fetchStudentProgress = async (nim: string) => {
@@ -71,16 +85,47 @@ export const StudentMonitoring: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchStudents(); }, []);
+  useEffect(() => { 
+    fetchStudents(); 
+  }, []);
 
   useEffect(() => {
     if (expandedNim) fetchStudentProgress(expandedNim);
   }, [expandedNim]);
 
+  const getProgressPercent = (nim: string) => {
+    const completed = studentProgress[nim]?.length || 0;
+    return totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
+  };
+
   const filtered = students.filter(s => {
     const matchSearch = s.nama.toLowerCase().includes(search.toLowerCase()) || s.nim.includes(search);
     const matchKelas = kelasFilter === 'all' || s.kelas === kelasFilter;
-    return matchSearch && matchKelas;
+    
+    const isOnline = onlineNims.has(s.nim);
+    const matchStatus = statusFilter === 'all' || 
+                        (statusFilter === 'online' && isOnline) || 
+                        (statusFilter === 'offline' && !isOnline);
+                        
+    return matchSearch && matchKelas && matchStatus;
+  });
+
+  const sortedStudents = [...filtered].sort((a, b) => {
+    if (sortBy === 'nama') {
+      return a.nama.localeCompare(b.nama);
+    }
+    if (sortBy === 'xp') {
+      return b.xp - a.xp;
+    }
+    if (sortBy === 'progress') {
+      const pctA = getProgressPercent(a.nim);
+      const pctB = getProgressPercent(b.nim);
+      return pctB - pctA;
+    }
+    if (sortBy === 'last_active') {
+      return new Date(b.last_active || 0).getTime() - new Date(a.last_active || 0).getTime();
+    }
+    return 0;
   });
 
   const kelasList = [...new Set(students.map(s => s.kelas))].sort();
@@ -91,8 +136,12 @@ export const StudentMonitoring: React.FC = () => {
       await resetUserProgress(nim);
       setStudentProgress(prev => { const n = { ...prev }; delete n[nim]; return n; });
       await fetchStudents();
-    } catch (e) { console.error(e); }
-    finally { setActionLoading(false); setConfirmAction(null); }
+    } catch (e) { 
+      console.error(e); 
+    } finally { 
+      setActionLoading(false); 
+      setConfirmAction(null); 
+    }
   };
 
   const handleAdjustXp = async (nim: string) => {
@@ -102,8 +151,13 @@ export const StudentMonitoring: React.FC = () => {
     try {
       await adjustUserXp(nim, val);
       await fetchStudents();
-    } catch (e) { console.error(e); }
-    finally { setActionLoading(false); setEditXpNim(null); setEditXpValue(''); }
+    } catch (e) { 
+      console.error(e); 
+    } finally { 
+      setActionLoading(false); 
+      setEditXpNim(null); 
+      setEditXpValue(''); 
+    }
   };
 
   const handleDeleteUser = async (nim: string) => {
@@ -111,13 +165,12 @@ export const StudentMonitoring: React.FC = () => {
     try {
       await deleteUser(nim);
       await fetchStudents();
-    } catch (e) { console.error(e); }
-    finally { setActionLoading(false); setConfirmAction(null); }
-  };
-
-  const getProgressPercent = (nim: string) => {
-    const completed = studentProgress[nim]?.length || 0;
-    return totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
+    } catch (e) { 
+      console.error(e); 
+    } finally { 
+      setActionLoading(false); 
+      setConfirmAction(null); 
+    }
   };
 
   const getLevelProgress = (nim: string, levelIdx: number) => {
@@ -134,164 +187,386 @@ export const StudentMonitoring: React.FC = () => {
     return { completed: done, total };
   };
 
-  const formatTime = (iso: string) => {
+  const formatLastActive = (iso: string) => {
     if (!iso) return '-';
     const d = new Date(iso);
-    return new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+    return new Intl.DateTimeFormat('id-ID', { 
+      timeZone: 'Asia/Jakarta', 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }).format(d);
   };
 
+  const formatStudyTimeText = (seconds?: number) => {
+    if (!seconds || seconds <= 0) return '0 menit';
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (hrs > 0) {
+      return `${hrs} jam ${mins} menit`;
+    }
+    return `${mins} menit`;
+  };
+
+  const totalStudyTimeSeconds = students.reduce((sum, s) => sum + (s.study_time || 0), 0);
+
   if (loading) {
-    return <Layout><div className="flex items-center justify-center h-64"><RefreshCw className="w-8 h-8 animate-spin text-rose-700" /></div></Layout>;
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center h-96 space-y-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-full border-4 border-rose-200 border-t-rose-700 animate-spin" />
+            <Activity className="w-5 h-5 text-rose-700 absolute inset-0 m-auto animate-pulse" />
+          </div>
+          <span className="text-sm font-semibold text-zinc-500 animate-pulse">Memuat data monitoring...</span>
+        </div>
+      </Layout>
+    );
   }
 
   return (
     <Layout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <div className="space-y-8 pb-12">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-zinc-200/80 shadow-sm">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Monitoring Mahasiswa</h1>
-            <p className="text-sm text-zinc-500 mt-1">{filtered.length} dari {students.length} mahasiswa</p>
+            <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-zinc-900 via-zinc-800 to-rose-950 bg-clip-text text-transparent">
+              Monitoring Mahasiswa
+            </h1>
+            <p className="text-sm text-zinc-500 font-medium mt-1">
+              Pantau keaktifan, progres belajar, dan nilai XP praktikan secara realtime.
+            </p>
           </div>
-          <button onClick={fetchStudents} disabled={isRefreshing} className="flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50">
-            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} /> Refresh
+          <button 
+            onClick={fetchStudents} 
+            disabled={isRefreshing} 
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl text-sm font-black shadow-lg shadow-zinc-900/10 active:scale-95 transition-all disabled:opacity-50 shrink-0"
+          >
+            <RefreshCw size={15} className={cn("transition-transform", isRefreshing && "animate-spin")} />
+            Refresh Data
           </button>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white border border-zinc-200 p-5 rounded-2xl flex items-center gap-4 shadow-sm">
-            <div className="w-12 h-12 bg-rose-50 text-rose-700 rounded-xl flex items-center justify-center shrink-0">
-              <Users size={22} />
+        {/* KPI Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Card 1: Total Student */}
+          <div className="bg-white border border-zinc-200/80 p-6 rounded-3xl flex items-center gap-5 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-bl-full pointer-events-none" />
+            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/15">
+              <Users size={24} />
             </div>
             <div>
-              <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Total Praktikan</div>
-              <div className="text-xl font-black text-zinc-900">{students.length} Orang</div>
+              <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest leading-none mb-1.5">Total Praktikan</div>
+              <div className="text-2xl font-black text-zinc-900">{students.length} <span className="text-sm font-bold text-zinc-500">Orang</span></div>
             </div>
           </div>
 
-          <div className="bg-white border border-zinc-200 p-5 rounded-2xl flex items-center gap-4 shadow-sm">
-            <div className="w-12 h-12 bg-emerald-50 text-emerald-700 rounded-xl flex items-center justify-center shrink-0">
-              <Activity size={22} className="animate-pulse" />
+          {/* Card 2: Online Status */}
+          <div className="bg-white border border-zinc-200/80 p-6 rounded-3xl flex items-center gap-5 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full pointer-events-none" />
+            <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/15 relative">
+              <Activity size={24} className="animate-pulse" />
+              {onlineNims.size > 0 && (
+                <span className="absolute top-1 right-1 flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500 border-2 border-white"></span>
+                </span>
+              )}
             </div>
             <div>
-              <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Sedang Online</div>
-              <div className="text-xl font-black text-zinc-900">{onlineCount} Aktif</div>
+              <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest leading-none mb-1.5">Sedang Online</div>
+              <div className="text-2xl font-black text-zinc-900">{onlineNims.size} <span className="text-sm font-bold text-zinc-500">Aktif</span></div>
             </div>
           </div>
 
-          <div className="bg-white border border-zinc-200 p-5 rounded-2xl flex items-center gap-4 shadow-sm">
-            <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-xl flex items-center justify-center shrink-0">
-              <Trophy size={22} />
+          {/* Card 3: Average XP */}
+          <div className="bg-white border border-zinc-200/80 p-6 rounded-3xl flex items-center gap-5 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-full pointer-events-none" />
+            <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-amber-400/15">
+              <Trophy size={24} />
             </div>
             <div>
-              <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Rata-rata XP</div>
-              <div className="text-xl font-black text-zinc-900">
-                {students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.xp, 0) / students.length) : 0} XP
+              <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest leading-none mb-1.5">Rata-rata XP</div>
+              <div className="text-2xl font-black text-zinc-900">
+                {students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.xp, 0) / students.length).toLocaleString() : 0} <span className="text-sm font-bold text-zinc-500">XP</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Total Study Time */}
+          <div className="bg-white border border-zinc-200/80 p-6 rounded-3xl flex items-center gap-5 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-bl-full pointer-events-none" />
+            <div className="w-14 h-14 bg-gradient-to-br from-rose-500 to-pink-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-rose-500/15">
+              <Clock size={24} />
+            </div>
+            <div>
+              <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest leading-none mb-1.5">Total Waktu Belajar</div>
+              <div className="text-lg font-black text-zinc-900 leading-tight">
+                {formatStudyTimeText(totalStudyTimeSeconds)}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari nama atau NIM..." className="w-full pl-9 pr-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20" />
+        {/* Filter & Sorting Controls */}
+        <div className="bg-white border border-zinc-200/80 p-5 rounded-3xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full md:max-w-xs">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <input 
+              value={search} 
+              onChange={e => setSearch(e.target.value)} 
+              placeholder="Cari nama atau NIM..." 
+              className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:bg-white transition-all font-medium" 
+            />
           </div>
-          <select value={kelasFilter} onChange={e => setKelasFilter(e.target.value)} className="px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-rose-700/20">
-            <option value="all">Semua Kelas</option>
-            {kelasList.map(k => <option key={k} value={k}>{k}</option>)}
-          </select>
+
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 bg-zinc-50 p-1 rounded-2xl border border-zinc-200">
+              <button 
+                onClick={() => setStatusFilter('all')} 
+                className={cn("px-3 py-1.5 rounded-xl text-xs font-bold transition-all", statusFilter === 'all' ? "bg-white text-zinc-900 shadow-sm border border-zinc-250/20" : "text-zinc-500 hover:text-zinc-800")}
+              >
+                Semua
+              </button>
+              <button 
+                onClick={() => setStatusFilter('online')} 
+                className={cn("px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1", statusFilter === 'online' ? "bg-white text-emerald-600 shadow-sm border border-zinc-250/20" : "text-zinc-500 hover:text-emerald-500")}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Online
+              </button>
+              <button 
+                onClick={() => setStatusFilter('offline')} 
+                className={cn("px-3 py-1.5 rounded-xl text-xs font-bold transition-all", statusFilter === 'offline' ? "bg-white text-zinc-800 shadow-sm border border-zinc-250/20" : "text-zinc-500 hover:text-zinc-850")}
+              >
+                Offline
+              </button>
+            </div>
+
+            {/* Class Filter */}
+            <select 
+              value={kelasFilter} 
+              onChange={e => setKelasFilter(e.target.value)} 
+              className="px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-rose-700/20"
+            >
+              <option value="all">Semua Kelas</option>
+              {kelasList.map(k => <option key={k} value={k}>{k}</option>)}
+            </select>
+
+            {/* Sorting */}
+            <div className="flex items-center gap-2">
+              <Filter size={14} className="text-zinc-400" />
+              <select 
+                value={sortBy} 
+                onChange={e => setSortBy(e.target.value as any)} 
+                className="px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-rose-700/20"
+              >
+                <option value="nama">Urut: Nama (A-Z)</option>
+                <option value="xp">Urut: XP Terbanyak</option>
+                <option value="progress">Urut: Progres Tertinggi</option>
+                <option value="last_active">Urut: Terakhir Aktif</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        {/* Student List */}
-        <div className="space-y-2">
-          {filtered.map(s => {
+        {/* Student Cards List */}
+        <div className="space-y-3">
+          {sortedStudents.map(s => {
             const pct = getProgressPercent(s.nim);
             const isExpanded = expandedNim === s.nim;
+            const isOnline = onlineNims.has(s.nim);
+            
             return (
-              <div key={s.nim} className="bg-white border border-zinc-200 rounded-2xl overflow-hidden transition-all">
-                {/* Student Row */}
-                <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-zinc-50/50" onClick={() => setExpandedNim(isExpanded ? null : s.nim)}>
-                  <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center text-sm font-black text-zinc-500 shrink-0">
-                    {s.nama.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm truncate">{s.nama}</span>
-                      <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded shrink-0">{s.kelas}</span>
+              <div 
+                key={s.nim} 
+                className={cn(
+                  "bg-white border rounded-[2rem] overflow-hidden transition-all duration-300",
+                  isExpanded 
+                    ? "border-rose-200 shadow-lg shadow-rose-700/5 ring-1 ring-rose-700/5" 
+                    : "border-zinc-200 hover:border-zinc-350 hover:shadow-md hover:translate-y-[-1px]"
+                )}
+              >
+                {/* Header Row (Click to toggle expansion) */}
+                <div 
+                  className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 cursor-pointer select-none" 
+                  onClick={() => setExpandedNim(isExpanded ? null : s.nim)}
+                >
+                  {/* Left Side: Avatar + Name info */}
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="relative shrink-0">
+                      <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all",
+                        isOnline 
+                          ? "bg-emerald-50 text-emerald-700 ring-2 ring-emerald-500/20" 
+                          : "bg-zinc-100 text-zinc-500"
+                      )}>
+                        {s.nama.charAt(0).toUpperCase()}
+                      </div>
+                      {isOnline ? (
+                        <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+                        </span>
+                      ) : (
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-zinc-350 border-2 border-white rounded-full" />
+                      )}
                     </div>
-                    <div className="text-xs text-zinc-500">{s.nim} • {s.xp} XP • Streak {s.streak}</div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="w-24 h-2 bg-zinc-100 rounded-full overflow-hidden hidden sm:block">
-                      <div className="h-full bg-rose-700 rounded-full transition-all" style={{ width: `${pct}%` }} />
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-extrabold text-zinc-950 text-base truncate">{s.nama}</span>
+                        <span className="text-[9px] font-black text-zinc-500 bg-zinc-100 border border-zinc-200/50 px-2 py-0.5 rounded-lg shrink-0">
+                          {s.kelas}
+                        </span>
+                        {isOnline && (
+                          <span className="text-[8px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200/50 px-2 py-0.5 rounded-lg uppercase tracking-wider shrink-0">
+                            Aktif
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-zinc-500 font-semibold mt-0.5 flex items-center gap-1.5 flex-wrap">
+                        <span>NIM: {s.nim}</span>
+                        <span className="w-1 h-1 rounded-full bg-zinc-300" />
+                        <span className="text-rose-700 font-bold">{s.xp.toLocaleString()} XP</span>
+                        <span className="w-1 h-1 rounded-full bg-zinc-300" />
+                        <span className="text-amber-600 font-bold">Streak {s.streak} Hari</span>
+                        {s.study_time !== undefined && (
+                          <>
+                            <span className="w-1 h-1 rounded-full bg-zinc-300" />
+                            <span className="text-zinc-400 flex items-center gap-1">
+                              <Clock3 size={11} /> {formatStudyTimeText(s.study_time)}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-xs font-bold text-zinc-500 w-10 text-right">{pct}%</span>
-                    {isExpanded ? <ChevronDown size={16} className="text-zinc-400" /> : <ChevronRight size={16} className="text-zinc-400" />}
+                  </div>
+
+                  {/* Right Side: Progress Bar + Arrow */}
+                  <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 border-t border-zinc-100 sm:border-0 pt-3 sm:pt-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-28 h-2.5 bg-zinc-100 rounded-full overflow-hidden hidden sm:block border border-zinc-200/50">
+                        <div 
+                          className={cn("h-full rounded-full transition-all duration-500", pct === 100 ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-gradient-to-r from-rose-600 to-rose-700")} 
+                          style={{ width: `${pct}%` }} 
+                        />
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs font-black text-zinc-900">{pct}%</div>
+                        <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Selesai</div>
+                      </div>
+                    </div>
+                    <div className={cn(
+                      "w-8 h-8 rounded-xl flex items-center justify-center bg-zinc-50 border border-zinc-200/50 text-zinc-400 transition-all",
+                      isExpanded && "bg-rose-50 border-rose-100 text-rose-700"
+                    )}>
+                      {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </div>
                   </div>
                 </div>
 
-                {/* Expanded Detail */}
+                {/* Expanded Details Panel */}
                 {isExpanded && (
-                  <div className="border-t border-zinc-100 p-4 space-y-4 bg-zinc-50/30">
-                    {/* Level Progress */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {curriculum.map((level, idx) => {
-                        const lp = getLevelProgress(s.nim, idx);
-                        const lvlPct = lp.total > 0 ? Math.round((lp.completed / lp.total) * 100) : 0;
-                        return (
-                          <div key={level.id} className="bg-white p-3 rounded-xl border border-zinc-100">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[10px] font-bold text-zinc-400 uppercase">Level {idx + 1}</span>
-                              <span className="text-[10px] font-bold text-zinc-500">{lp.completed}/{lp.total}</span>
+                  <div className="border-t border-zinc-150 p-6 space-y-6 bg-zinc-50/20">
+                    {/* Progress Per Level Summary */}
+                    <div className="space-y-2.5">
+                      <div className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1">
+                        <Sparkles size={12} className="text-amber-500" /> Ringkasan Per Level
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {curriculum.map((level, idx) => {
+                          const lp = getLevelProgress(s.nim, idx);
+                          const lvlPct = lp.total > 0 ? Math.round((lp.completed / lp.total) * 100) : 0;
+                          const isLevelC = level.id.startsWith('c-');
+                          return (
+                            <div key={level.id} className="bg-white p-4 rounded-2xl border border-zinc-200/60 shadow-sm flex flex-col justify-between">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className={cn(
+                                  "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border",
+                                  isLevelC ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-rose-50 text-rose-700 border-rose-100"
+                                )}>
+                                  {isLevelC ? "Bahasa C" : "Python"}
+                                </span>
+                                <span className="text-[10px] font-black text-zinc-500 bg-zinc-50 px-2 py-0.5 rounded-md border border-zinc-100">
+                                  {lp.completed} / {lp.total} Lesson
+                                </span>
+                              </div>
+                              <h4 className="text-xs font-extrabold text-zinc-850 truncate mb-3" title={level.title}>
+                                {level.title}
+                              </h4>
+                              <div className="space-y-1.5">
+                                <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                                  <div 
+                                    className={cn("h-full rounded-full transition-all duration-500", lvlPct === 100 ? 'bg-emerald-500' : isLevelC ? 'bg-blue-600' : 'bg-rose-700')} 
+                                    style={{ width: `${lvlPct}%` }} 
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between text-[8px] font-black text-zinc-400 uppercase tracking-widest">
+                                  <span>Progres</span>
+                                  <span>{lvlPct}%</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-xs font-bold truncate mb-2">{level.title}</div>
-                            <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                              <div className={cn("h-full rounded-full transition-all", lvlPct === 100 ? 'bg-emerald-500' : 'bg-rose-700')} style={{ width: `${lvlPct}%` }} />
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    {/* Progress Detail Tree */}
-                    <div className="bg-white rounded-2xl border border-zinc-200/85 p-5 space-y-3">
-                      <div className="text-xs font-bold text-zinc-800 flex items-center gap-1.5 mb-2">
-                        <BookOpen size={14} className="text-zinc-500" />
-                        Peta Progres Pembelajaran Detail
+                    {/* Detailed Interactive Progress Tree Map */}
+                    <div className="bg-white rounded-3xl border border-zinc-200/80 p-6 shadow-sm space-y-4">
+                      <div className="text-xs font-black text-zinc-800 flex items-center justify-between border-b border-zinc-100 pb-3">
+                        <span className="flex items-center gap-2">
+                          <BookOpen size={16} className="text-rose-700" />
+                          Peta Pembelajaran & Detail Pencapaian Pelajaran
+                        </span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-50 px-3 py-1 rounded-full border border-zinc-150">
+                          {studentProgress[s.nim]?.length || 0} / {totalLessons} Selesai
+                        </span>
                       </div>
                       
-                      <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar bg-zinc-50/20 p-2 rounded-xl border border-zinc-100">
+                      <div className="space-y-5 max-h-72 overflow-y-auto pr-3 custom-scrollbar bg-zinc-50/50 p-4 rounded-2xl border border-zinc-150/70">
                         {curriculum.map((level, lIdx) => {
                           const completedList = studentProgress[s.nim] || [];
                           return (
-                            <div key={level.id} className="space-y-2 border-b border-zinc-100 last:border-0 pb-3 last:pb-0">
-                              <div className="text-xs font-black text-zinc-850 uppercase tracking-wide flex items-center gap-1.5">
-                                <span className="w-5 h-5 bg-zinc-100 text-zinc-500 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">{lIdx + 1}</span>
-                                {level.title}
+                            <div key={level.id} className="space-y-3 border-b border-zinc-200/60 last:border-0 pb-4 last:pb-0">
+                              <div className="text-xs font-black text-zinc-850 uppercase tracking-wider flex items-center gap-2">
+                                <span className="w-6 h-6 bg-zinc-900 text-white rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm">
+                                  {lIdx + 1}
+                                </span>
+                                <span className="truncate">{level.title}</span>
                               </div>
                               
-                              <div className="ml-5 space-y-3">
+                              <div className="ml-6 space-y-4">
                                 {level.modules?.map((mod) => (
-                                  <div key={mod.id} className="space-y-1.5 border-l border-zinc-200 pl-3 ml-2">
-                                    <div className="text-[10px] font-bold text-zinc-650 flex items-center gap-1">
-                                      <BookOpen size={10} className="text-zinc-400" />
+                                  <div key={mod.id} className="space-y-2 border-l-2 border-zinc-200 pl-4 ml-3 relative">
+                                    <div className="absolute w-2 h-2 rounded-full bg-zinc-300 -left-[5px] top-1.5" />
+                                    <div className="text-[10px] font-black text-zinc-700 uppercase tracking-wide flex items-center gap-1.5">
                                       {mod.title}
                                     </div>
                                     
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 ml-2 mt-1">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 ml-1 mt-1.5">
                                       {mod.lessons?.map((les) => {
                                         const isCompleted = completedList.includes(les.id);
                                         return (
-                                          <div key={les.id} className="flex items-center gap-2 text-[11px] py-0.5">
-                                            {isCompleted ? (
-                                              <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                                            ) : (
-                                              <div className="w-3 h-3 rounded-full border border-zinc-300 shrink-0 bg-white" />
+                                          <div 
+                                            key={les.id} 
+                                            className={cn(
+                                              "flex items-center gap-2.5 text-[11px] p-2 rounded-xl border transition-colors",
+                                              isCompleted 
+                                                ? "bg-emerald-50/40 border-emerald-100 text-emerald-800 font-semibold" 
+                                                : "bg-white border-zinc-200/60 text-zinc-500"
                                             )}
-                                            <span className={isCompleted ? "text-zinc-700 font-medium truncate" : "text-zinc-450 truncate"}>{les.title}</span>
+                                          >
+                                            {isCompleted ? (
+                                              <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                                            ) : (
+                                              <div className="w-3.5 h-3.5 rounded-full border border-zinc-300 shrink-0 bg-white" />
+                                            )}
+                                            <span className="truncate flex-1" title={les.title}>{les.title}</span>
                                           </div>
                                         );
                                       })}
@@ -305,30 +580,61 @@ export const StudentMonitoring: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Info & Actions */}
-                    <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-zinc-100">
-                      <span className="text-xs text-zinc-500">Terakhir aktif: {formatTime(s.last_active)}</span>
-                      <div className="flex-1" />
+                    {/* Bottom Action Footer */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-zinc-150">
+                      <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
+                        <Clock size={14} className="text-zinc-400" />
+                        <span>Terakhir Aktif: {formatLastActive(s.last_active)}</span>
+                      </div>
                       
                       {user?.role !== 'asisten' && (
                         editXpNim === s.nim ? (
-                          <div className="flex items-center gap-1">
-                            <input value={editXpValue} onChange={e => setEditXpValue(e.target.value)} type="number" placeholder="XP baru" className="w-24 px-2 py-1 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20" autoFocus />
-                            <button onClick={() => handleAdjustXp(s.nim)} disabled={actionLoading} className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100"><Save size={14} /></button>
-                            <button onClick={() => setEditXpNim(null)} className="p-1.5 bg-zinc-100 text-zinc-500 rounded-lg hover:bg-zinc-200"><X size={14} /></button>
+                          <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-rose-100 shadow-sm animate-fade-in">
+                            <input 
+                              value={editXpValue} 
+                              onChange={e => setEditXpValue(e.target.value)} 
+                              type="number" 
+                              placeholder="Input XP baru" 
+                              className="w-24 px-3 py-1.5 border border-zinc-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20" 
+                              autoFocus 
+                            />
+                            <button 
+                              onClick={() => handleAdjustXp(s.nim)} 
+                              disabled={actionLoading} 
+                              className="p-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors shadow-sm disabled:opacity-50"
+                              title="Simpan XP"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button 
+                              onClick={() => setEditXpNim(null)} 
+                              className="p-2 bg-zinc-150 text-zinc-650 rounded-xl hover:bg-zinc-200 transition-colors"
+                              title="Batal"
+                            >
+                              <X size={14} />
+                            </button>
                           </div>
                         ) : (
-                          <>
-                            <button onClick={() => { setEditXpNim(s.nim); setEditXpValue(String(s.xp)); }} className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-200/50">
-                              <Edit3 size={10} /> Atur XP
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => { setEditXpNim(s.nim); setEditXpValue(String(s.xp)); }} 
+                              className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-black bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl border border-blue-200/40 transition-colors uppercase tracking-wider"
+                            >
+                              <Edit3 size={11} /> Atur XP
                             </button>
-                            <button onClick={() => setConfirmAction({ type: 'reset', nim: s.nim, nama: s.nama })} className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 border border-amber-200/50">
-                              <RotateCcw size={10} /> Reset Progres
+                            <button 
+                              onClick={() => setConfirmAction({ type: 'reset', nim: s.nim, nama: s.nama })} 
+                              className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-black bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-xl border border-amber-200/40 transition-colors uppercase tracking-wider"
+                            >
+                              <RotateCcw size={11} /> Reset Progres
                             </button>
-                            <button onClick={() => setConfirmAction({ type: 'delete', nim: s.nim, nama: s.nama })} className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold bg-red-50 text-red-500 rounded-lg hover:bg-red-100 border border-red-200/50">
-                              <Trash2 size={10} /> Hapus
+                            <button 
+                              onClick={() => setConfirmAction({ type: 'delete', nim: s.nim, nama: s.nama })} 
+                              className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-black bg-red-50 text-red-650 hover:bg-red-100 rounded-xl border border-red-200/40 transition-colors uppercase tracking-wider"
+                            >
+                              <Trash2 size={11} /> Hapus
                             </button>
-                          </>
+                          </div>
                         )
                       )}
                     </div>
@@ -337,35 +643,53 @@ export const StudentMonitoring: React.FC = () => {
               </div>
             );
           })}
-          {filtered.length === 0 && (
-            <div className="text-center py-12 text-zinc-400">
-              <Users size={32} className="mx-auto mb-3 opacity-50" />
-              <p className="font-bold">Tidak ada mahasiswa ditemukan</p>
+          
+          {sortedStudents.length === 0 && (
+            <div className="text-center py-16 bg-white border border-zinc-200/80 rounded-[2rem] shadow-sm">
+              <Users size={40} className="mx-auto mb-4 text-zinc-300 animate-pulse" />
+              <p className="font-extrabold text-zinc-800 text-lg">Tidak ada mahasiswa ditemukan</p>
+              <p className="text-xs text-zinc-400 mt-1 max-w-xs mx-auto">
+                Silakan ubah kata kunci pencarian atau bersihkan filter yang aktif.
+              </p>
             </div>
           )}
         </div>
 
-        {/* Confirm Modal */}
+        {/* Action Confirmation Modal */}
         {confirmAction && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 border border-zinc-100 transform scale-100 transition-transform">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center">
-                  <AlertTriangle size={20} />
+                <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-650 flex items-center justify-center shrink-0">
+                  <AlertTriangle size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold">{confirmAction.type === 'reset' ? 'Reset Progres' : 'Hapus Mahasiswa'}</h3>
-                  <p className="text-sm text-zinc-500">{confirmAction.nama} ({confirmAction.nim})</p>
+                  <h3 className="font-black text-zinc-950 text-base leading-tight">
+                    {confirmAction.type === 'reset' ? 'Konfirmasi Reset Progres' : 'Hapus Akun Mahasiswa'}
+                  </h3>
+                  <p className="text-xs text-zinc-400 font-bold mt-0.5">{confirmAction.nama} ({confirmAction.nim})</p>
                 </div>
               </div>
-              <p className="text-sm text-zinc-600">
+              
+              <p className="text-sm text-zinc-600 font-medium leading-relaxed">
                 {confirmAction.type === 'reset'
-                  ? 'Semua progres pelajaran, XP, dan streak akan direset ke 0. Tindakan ini tidak bisa dibatalkan.'
-                  : 'Akun mahasiswa beserta semua data progres dan pencapaian akan dihapus permanen.'}
+                  ? 'Apakah Anda yakin ingin mereset progres belajar? Seluruh riwayat penyelesaian pelajaran, XP, dan streak harian akan dikembalikan ke 0. Tindakan ini permanen.'
+                  : 'Apakah Anda yakin ingin menghapus akun mahasiswa ini? Seluruh data profil, progress belajar, XP, dan pencapaian akan dihapus selamanya dari database.'}
               </p>
-              <div className="flex gap-2 pt-2">
-                <button onClick={() => setConfirmAction(null)} disabled={actionLoading} className="flex-1 py-2.5 bg-zinc-100 text-zinc-700 font-bold rounded-xl hover:bg-zinc-200 text-sm">Batal</button>
-                <button onClick={() => confirmAction.type === 'reset' ? handleResetProgress(confirmAction.nim) : handleDeleteUser(confirmAction.nim)} disabled={actionLoading} className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 text-sm disabled:opacity-50">
+
+              <div className="flex gap-2.5 pt-2">
+                <button 
+                  onClick={() => setConfirmAction(null)} 
+                  disabled={actionLoading} 
+                  className="flex-1 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-black rounded-2xl text-sm transition-colors"
+                >
+                  Batal
+                </button>
+                <button 
+                  onClick={() => confirmAction.type === 'reset' ? handleResetProgress(confirmAction.nim) : handleDeleteUser(confirmAction.nim)} 
+                  disabled={actionLoading} 
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl text-sm transition-all shadow-lg shadow-red-600/10 active:scale-95 disabled:opacity-50"
+                >
                   {actionLoading ? 'Memproses...' : confirmAction.type === 'reset' ? 'Reset Sekarang' : 'Hapus Sekarang'}
                 </button>
               </div>
