@@ -232,7 +232,7 @@ export const Dashboard: React.FC = () => {
   const progressPercentage = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
   const cLevels = curriculum.filter(l => l.id.startsWith('c-'));
-  const pyLevels = curriculum.filter(l => l.id.startsWith('py-'));
+  const pyLevels = curriculum.filter(l => l.id.startsWith('p-'));
 
   const calculateLangProgress = (levels: any[]) => {
     const total = levels.reduce((acc, level, i) => {
@@ -275,37 +275,45 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
         {/* Welcome Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-black tracking-tight">Selamat datang kembali, {user?.nama?.split(' ')[0] || 'Penjelajah'}! <span className="inline-block animate-bounce">👋</span></h1>
-            <p className="text-zinc-500 mt-1">Kamu membuat kemajuan besar. Pertahankan!</p>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-dark select-none leading-tight">
+              Selamat datang kembali, {user?.nama?.split(' ')[0] || 'Penjelajah'}! 
+              <span className="inline-block animate-bounce ml-2">👋</span>
+            </h1>
+            <p className="text-zinc-500 font-bold mt-1">Kamu membuat kemajuan besar. Pertahankan!</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-3 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/60 px-5 py-3 rounded-2xl shadow-sm">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-400/20">
-                <Zap size={20} />
+          <div className="flex flex-wrap md:flex-nowrap items-center justify-start md:justify-end gap-3 md:ml-auto w-full md:w-auto">
+            {/* Streak */}
+            <div className="flex items-center gap-3 bg-white border-2 border-amber-200 px-5 py-3 rounded-2xl shadow-sm hover:shadow-md transition-shadow select-none">
+              <div className="w-10 h-10 bg-fun-yellow rounded-xl flex items-center justify-center text-maroon font-black text-lg shadow-sm">
+                <i className="fa-solid fa-fire text-lg"></i>
               </div>
               <div>
-                <div className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Beruntun</div>
-                <div className="text-lg font-black text-amber-900">{user?.streak || 0} <span className="text-xs font-bold text-amber-600">hari</span></div>
+                <div className="text-[10px] font-black text-amber-600 uppercase tracking-widest leading-none">Beruntun</div>
+                <div className="text-lg font-black text-amber-950 mt-1">{user?.streak || 0} <span className="text-xs font-bold text-amber-600">hari</span></div>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200/60 px-5 py-3 rounded-2xl shadow-sm">
-              <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-rose-500/20">
-                <Trophy size={20} />
+
+            {/* Total XP */}
+            <div className="flex items-center gap-3 bg-white border-2 border-rose-200 px-5 py-3 rounded-2xl shadow-sm hover:shadow-md transition-shadow select-none">
+              <div className="w-10 h-10 bg-maroon rounded-xl flex items-center justify-center text-white shadow-sm text-sm">
+                <i className="fa-solid fa-trophy"></i>
               </div>
               <div>
-                <div className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Total XP</div>
-                <div className="text-lg font-black text-rose-900">{(user?.xp || 0).toLocaleString()}</div>
+                <div className="text-[10px] font-black text-rose-600 uppercase tracking-widest leading-none">Total XP</div>
+                <div className="text-lg font-black text-rose-955 mt-1">{(user?.xp || 0).toLocaleString()}</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/60 px-5 py-3 rounded-2xl shadow-sm">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                <Clock size={20} />
+
+            {/* Study Time */}
+            <div className="flex items-center gap-3 bg-white border-2 border-blue-200 px-5 py-3 rounded-2xl shadow-sm hover:shadow-md transition-shadow select-none">
+              <div className="w-10 h-10 bg-fun-blue rounded-xl flex items-center justify-center text-white shadow-sm text-sm">
+                <i className="fa-solid fa-clock"></i>
               </div>
               <div>
-                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Waktu Belajar</div>
-                <div className="text-lg font-black text-blue-900">{formatStudyTime(user?.studyTime || 0)}</div>
+                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none">Waktu Belajar</div>
+                <div className="text-lg font-black text-blue-955 mt-1">{formatStudyTime(user?.studyTime || 0)}</div>
               </div>
             </div>
           </div>
@@ -319,56 +327,62 @@ export const Dashboard: React.FC = () => {
               whileHover={{ y: -4, scale: 1.005 }}
               transition={{ type: 'tween', duration: 0.2 }}
               onClick={handleContinue}
-              className="relative rounded-[2rem] p-[1.5px] bg-gradient-to-br from-rose-300 via-zinc-200 to-blue-200 cursor-pointer group overflow-hidden"
+              className="bg-white rounded-[2rem] p-8 md:p-10 border-2 border-gray-100 shadow-soft card-hover relative overflow-hidden group select-none transition-colors duration-300 hover:border-maroon/20 cursor-pointer flex flex-col"
             >
-              <div className="bg-white rounded-[calc(2rem-1.5px)] p-8 md:p-10 relative overflow-hidden h-full">
-                {/* Soft gradient orbs */}
-                <div className="absolute top-0 right-0 w-80 h-80 bg-rose-200/40 rounded-full -mr-32 -mt-32 blur-[100px] transition-all duration-700 group-hover:bg-rose-300/50 group-hover:scale-110" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-200/30 rounded-full -ml-20 -mb-20 blur-[80px] transition-all duration-700 group-hover:bg-blue-300/40" />
-                {/* Dot pattern overlay */}
-                <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+              {/* Soft gradient orbs */}
+              <div className="absolute top-0 right-0 w-80 h-80 bg-rose-100/30 rounded-full -mr-32 -mt-32 blur-[100px] transition-all duration-700 group-hover:bg-rose-200/40 group-hover:scale-110" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-100/20 rounded-full -ml-20 -mb-20 blur-[80px] transition-all duration-700 group-hover:bg-blue-200/30" />
+              
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-2 bg-rose-50 border border-rose-200/60 text-rose-700 text-xs font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full mb-4">
+                  <i className="fa-solid fa-play text-[9px] mr-1"></i>
+                  Lanjutkan Belajar
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black mb-3 leading-tight text-dark">{curriculum[0]?.title || 'Belajar kamu'}</h2>
+                <p className="text-zinc-500 font-bold mb-8 max-w-lg leading-relaxed">Kuasai materi yang telah disusun. Kamu telah menyelesaikan <span className="text-maroon font-black">{completedLessons.length}</span> dari <span className="text-dark font-black">{totalLessons}</span> pelajaran.</p>
                 
-                <div className="relative z-10">
-                  <div className="inline-flex items-center gap-2 bg-rose-50 border border-rose-200/60 text-rose-600 text-xs font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full mb-4">
-                    <Play size={12} fill="currentColor" />
-                    Lanjutkan Belajar
-                  </div>
-                  <h2 className="text-3xl md:text-4xl font-black mb-3 leading-tight text-zinc-900">{curriculum[0]?.title || 'Kursus kamu'}</h2>
-                  <p className="text-zinc-500 mb-8 max-w-lg leading-relaxed">Kuasai materi yang telah disusun. Kamu telah menyelesaikan <span className="text-zinc-900 font-black">{completedLessons.length}</span> dari <span className="text-zinc-900 font-black">{totalLessons}</span> pelajaran.</p>
-                  
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                    <button className="bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 transition-all active:scale-95 shadow-xl shadow-rose-600/25">
-                      <Play size={20} fill="currentColor" />
-                      Mulai Belajar
-                    </button>
-                    <div className="flex flex-col gap-4">
-                      {cLevels.length > 0 && (
-                        <div className="flex flex-col gap-1.5">
-                          <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-blue-500" /> Bahasa C
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-36 h-2 bg-zinc-100 rounded-full overflow-hidden">
-                              <motion.div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" initial={{ width: 0 }} animate={{ width: `${cProgress}%` }} transition={{ duration: 1, ease: 'easeOut' }} />
-                            </div>
-                            <span className="text-xs font-black font-mono text-blue-600">{cProgress}%</span>
-                          </div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                  <button className="bg-maroon hover:bg-maroon-light text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 transition-all shadow-bubbly-maroon active:translate-y-[6px] active:shadow-none btn-bubbly cursor-pointer">
+                    <i className="fa-solid fa-play text-sm"></i>
+                    Mulai Belajar
+                  </button>
+                  <div className="flex flex-col gap-4">
+                    {cLevels.length > 0 && (
+                      <div className="flex flex-col gap-1.5">
+                        <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full bg-fun-blue shadow-[0_1.5px_0_#023E8A]" /> Bahasa C
                         </div>
-                      )}
-                      {pyLevels.length > 0 && (
-                        <div className="flex flex-col gap-1.5">
-                          <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-rose-500" /> Python
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-36 h-2 bg-zinc-100 rounded-full overflow-hidden">
-                              <motion.div className="h-full bg-gradient-to-r from-rose-500 to-rose-400 rounded-full" initial={{ width: 0 }} animate={{ width: `${pyProgress}%` }} transition={{ duration: 1, ease: 'easeOut' }} />
+                        <div className="flex items-center gap-3">
+                          <div className="w-36 h-3 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200 shadow-inner">
+                            <div 
+                              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full relative" 
+                              style={{ width: `${cProgress}%` }}
+                            >
+                              <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/30 rounded-t-full"></div>
                             </div>
-                            <span className="text-xs font-black font-mono text-rose-600">{pyProgress}%</span>
                           </div>
+                          <span className="text-xs font-black font-mono text-blue-650">{cProgress}%</span>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                    {pyLevels.length > 0 && (
+                      <div className="flex flex-col gap-1.5">
+                        <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_1.5px_0_#9F1239]" /> Python
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-36 h-3 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200 shadow-inner">
+                            <div 
+                              className="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full relative" 
+                              style={{ width: `${pyProgress}%` }}
+                            >
+                              <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/30 rounded-t-full"></div>
+                            </div>
+                          </div>
+                          <span className="text-xs font-black font-mono text-rose-650">{pyProgress}%</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -377,14 +391,14 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-12">
               {cLevels.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-xl font-black flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-black shadow-lg shadow-blue-500/20">C</div>
+                  <h3 className="text-xl font-black flex items-center gap-3 select-none group/lang cursor-pointer">
+                    <div className="w-10 h-10 rounded-xl bg-fun-blue text-white flex items-center justify-center font-black shadow-[0_4px_0_#023E8A] transform rotate-[-6deg] group-hover/lang:rotate-0 transition-transform">C</div>
                     <div>
-                      <span>Kurikulum Bahasa C</span>
-                      <div className="text-xs font-bold text-zinc-400">{cLevels.length} Level</div>
+                      <span className="text-dark">Kurikulum Bahasa C</span>
+                      <div className="text-xs font-bold text-zinc-400 mt-0.5">{cLevels.length} Level</div>
                     </div>
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {cLevels.map((level) => {
                       const idx = curriculum.findIndex(l => l.id === level.id);
                       return <LevelCard key={level.id} level={level} idx={idx} isLocked={isLevelLockedDisplay(level, idx)} completedLessons={completedLessons} setCurrentLessonId={setCurrentLessonId} setPage={setPage} colorClass="blue" />;
@@ -395,14 +409,14 @@ export const Dashboard: React.FC = () => {
 
               {pyLevels.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-xl font-black flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-white flex items-center justify-center font-black shadow-lg shadow-rose-500/20">Py</div>
+                  <h3 className="text-xl font-black flex items-center gap-3 select-none group/lang cursor-pointer">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center font-black shadow-[0_4px_0_#9F1239] transform rotate-[6deg] group-hover/lang:rotate-0 transition-transform">Py</div>
                     <div>
-                      <span>Kurikulum Python</span>
-                      <div className="text-xs font-bold text-zinc-400">{pyLevels.length} Level</div>
+                      <span className="text-dark">Kurikulum Python</span>
+                      <div className="text-xs font-bold text-zinc-450 mt-0.5">{pyLevels.length} Level</div>
                     </div>
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {pyLevels.map((level) => {
                       const idx = curriculum.findIndex(l => l.id === level.id);
                       return <LevelCard key={level.id} level={level} idx={idx} isLocked={isLevelLockedDisplay(level, idx)} completedLessons={completedLessons} setCurrentLessonId={setCurrentLessonId} setPage={setPage} colorClass="rose" />;
@@ -412,14 +426,13 @@ export const Dashboard: React.FC = () => {
               )}
             </div>
           </div>
-
           {/* Sidebar Stats */}
           <div className="space-y-8">
             {/* Overall Progress Card */}
-            <div className="bg-gradient-to-br from-white to-zinc-50 border border-zinc-200 rounded-3xl p-6 shadow-sm">
-              <h3 className="font-black text-lg mb-5 flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center">
-                  <Trophy size={16} className="text-white" />
+            <div className="bg-white border-2 border-gray-100 rounded-[2rem] p-6 shadow-soft card-hover hover:border-maroon/20 transition-all group/progress">
+              <h3 className="font-black text-lg mb-5 flex items-center gap-3 select-none">
+                <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center text-white shadow-[0_3px_0_#5C0E25] transform rotate-[-4deg] group-hover/progress:rotate-0 transition-transform">
+                  <i className="fa-solid fa-trophy text-sm"></i>
                 </div>
                 Progres Keseluruhan
               </h3>
@@ -430,25 +443,28 @@ export const Dashboard: React.FC = () => {
                     <div className="text-xs text-zinc-500 font-bold mt-1">{completedLessons.length} / {totalLessons} pelajaran</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-zinc-400 font-bold">Total XP</div>
+                    <div className="text-xs text-zinc-405 font-bold">Total XP</div>
                     <div className="text-xl font-black text-rose-700">{(user?.xp || 0).toLocaleString()}</div>
                   </div>
                 </div>
-                <div className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden">
+                <div className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200 shadow-inner">
                   <motion.div 
-                    className="h-full bg-gradient-to-r from-rose-600 to-pink-500 rounded-full" 
+                    className="h-full bg-gradient-to-r from-rose-600 to-pink-500 rounded-full relative" 
                     initial={{ width: 0 }} 
                     animate={{ width: `${progressPercentage}%` }} 
                     transition={{ duration: 1.2, ease: 'easeOut' }}
-                  />
+                  >
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-white/30 rounded-t-full"></div>
+                  </motion.div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm">
-              <h3 className="font-black text-lg mb-6 flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
-                  <Clock size={16} className="text-white" />
+            {/* Recent Activity Card */}
+            <div className="bg-white border-2 border-gray-100 rounded-[2rem] p-6 shadow-soft card-hover hover:border-maroon/20 transition-all group/activity">
+              <h3 className="font-black text-lg mb-6 flex items-center gap-3 select-none">
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white shadow-[0_3px_0_#D97706] transform rotate-[4deg] group-hover/activity:rotate-0 transition-transform">
+                  <i className="fa-solid fa-clock text-sm"></i>
                 </div>
                 Aktivitas Terbaru
               </h3>
@@ -459,68 +475,68 @@ export const Dashboard: React.FC = () => {
                   ))
                 ) : (
                   <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-zinc-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                      <BookOpen size={24} className="text-zinc-400" />
+                    <div className="w-16 h-16 bg-zinc-50 border border-zinc-100 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                      <i className="fa-solid fa-book-open-reader text-zinc-400 text-xl"></i>
                     </div>
-                    <p className="text-sm text-zinc-500 font-medium">Belum ada aktivitas</p>
-                    <p className="text-xs text-zinc-400">Mulai pelajaran pertama kamu!</p>
+                    <p className="text-sm text-zinc-550 font-bold">Belum ada aktivitas</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">Mulai pelajaran pertama kamu!</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="relative bg-gradient-to-br from-rose-700 via-rose-800 to-pink-900 rounded-3xl p-6 text-white overflow-hidden shadow-xl shadow-rose-900/20">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20 blur-2xl" />
+            {/* Pro Tips Card */}
+            <div className="relative bg-gradient-to-br from-rose-700 via-rose-800 to-pink-900 border-2 border-rose-850 rounded-[2rem] p-6 text-white overflow-hidden shadow-[0_6px_0_#5C0E25] group/tips">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20 blur-2xl transition-transform duration-700 group-hover/tips:scale-110" />
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/10 rounded-full -ml-16 -mb-16 blur-2xl" />
               <div className="relative z-10">
-                <div className="text-3xl mb-3">💡</div>
+                <div className="text-3xl mb-3 transform rotate-[-8deg] group-hover/tips:rotate-0 transition-transform duration-300">💡</div>
                 <h3 className="font-black text-lg mb-2">Tips Pro!</h3>
-                <p className="text-rose-100 text-sm leading-relaxed">
+                <p className="text-rose-100 text-sm leading-relaxed font-bold">
                   Konsistensi adalah kunci. Cobalah untuk memprogram setidaknya 15 menit setiap hari untuk membangun memori otot.
                 </p>
               </div>
             </div>
 
             {/* Bug Hunt Card */}
-            <div className="relative rounded-[2rem] p-[1.5px] bg-gradient-to-br from-rose-200 via-zinc-200 to-amber-200 overflow-hidden group shadow-lg shadow-zinc-200/50">
-              <div className="bg-white rounded-[calc(2rem-1.5px)] p-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-rose-100/60 rounded-full -mr-20 -mt-20 blur-[60px] transition-all duration-700 group-hover:bg-rose-200/60" />
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-rose-600 to-pink-700 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-rose-600/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                        <Bug size={28} />
-                      </div>
-                      <div>
-                        <h3 className="font-black text-zinc-900 text-xl tracking-tight">Bug Hunt! <span className="inline-block">🎯</span></h3>
-                        <p className="text-zinc-500 text-xs font-bold">Cari bug, dapatkan XP!</p>
+            <div className="bg-white border-2 border-gray-100 rounded-[2rem] p-6 shadow-soft card-hover hover:border-maroon/20 relative overflow-hidden transition-all duration-350 group/bughunt">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-rose-100/40 rounded-full -mr-20 -mt-20 blur-[60px] pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-rose-600 to-pink-700 rounded-2xl flex items-center justify-center text-white shadow-[0_4px_0_#5C0E25] transform rotate-[-5deg] group-hover/bughunt:rotate-0 transition-transform">
+                      <i className="fa-solid fa-bug text-xl"></i>
+                    </div>
+                    <div>
+                      <h3 className="font-black text-zinc-900 text-xl tracking-tight">Bug Hunt! <span className="inline-block">🎯</span></h3>
+                      <p className="text-zinc-500 text-xs font-bold">Cari bug, dapatkan XP!</p>
+                    </div>
+                  </div>
+                  {gameSettings.bugHuntWeeklyLimit > 0 && (
+                    <div className="text-center bg-zinc-50 px-3 py-1.5 rounded-xl border border-zinc-200 shadow-inner transform rotate-[3deg]">
+                      <div className="text-[8px] font-black text-zinc-400 uppercase tracking-widest leading-none">Sisa</div>
+                      <div className={cn(
+                        "text-lg font-black mt-0.5",
+                        (gameSettings.bugHuntWeeklyLimit - playsThisWeek) <= 0 ? "text-rose-500" : "text-zinc-900"
+                      )}>
+                        {Math.max(0, gameSettings.bugHuntWeeklyLimit - playsThisWeek)}
                       </div>
                     </div>
-                    {gameSettings.bugHuntWeeklyLimit > 0 && (
-                      <div className="text-right bg-zinc-50 px-4 py-2 rounded-xl border border-zinc-200">
-                        <div className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Sisa</div>
-                        <div className={cn(
-                          "text-2xl font-black",
-                          (gameSettings.bugHuntWeeklyLimit - playsThisWeek) <= 0 ? "text-rose-500" : "text-zinc-900"
-                        )}>
-                          {Math.max(0, gameSettings.bugHuntWeeklyLimit - playsThisWeek)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  )}
+                </div>
 
-                  <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
-                    Uji ketelitian mata kamu dengan menemukan bug dalam potongan kode secepat mungkin.
-                  </p>
+                <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
+                  Uji ketelitian mata kamu dengan menemukan bug dalam potongan kode secepat mungkin.
+                </p>
 
                 {(!gameSettings.bugHuntActive && !isAdmin) ? (
-                  <div className="col-span-2 px-4 py-4 bg-zinc-50 text-zinc-400 rounded-2xl font-bold text-xs text-center border border-zinc-200 italic">
+                  <div className="px-4 py-4 bg-zinc-50 text-zinc-400 rounded-2xl font-bold text-xs text-center border border-zinc-200 italic shadow-inner">
                     Game sedang dinonaktifkan oleh Admin 🛠️
                   </div>
                 ) : playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin ? (
-                  <div className="col-span-2 px-4 py-4 bg-rose-50 text-rose-500 rounded-2xl font-bold text-xs text-center border border-rose-200 flex flex-col gap-1 items-center">
-                    <AlertCircle size={16} />
-                    Limit Mingguan Tercapai
+                  <div className="px-4 py-4 bg-rose-50 text-rose-500 rounded-2xl font-bold text-xs text-center border border-rose-200 flex flex-col gap-1.5 items-center">
+                    <i className="fa-solid fa-circle-exclamation text-base"></i>
+                    <span className="font-black">Limit Mingguan Tercapai</span>
                     <span className="text-[9px] opacity-60">Kembali lagi minggu depan!</span>
                   </div>
                 ) : (
@@ -542,15 +558,14 @@ export const Dashboard: React.FC = () => {
                         }}
                         disabled={isCheckingLimit || (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin)}
                         className={cn(
-                          "group/btn relative px-4 py-4 bg-zinc-900 text-white rounded-2xl font-bold text-sm hover:bg-zinc-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-zinc-900/20 disabled:opacity-50",
-                          (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) && "grayscale cursor-not-allowed"
+                          "group/btn relative px-4 py-3 bg-zinc-950 text-white rounded-2xl font-black text-sm transition-all shadow-[0_4px_0_#023E8A] border border-zinc-900 active:translate-y-[4px] active:shadow-none btn-bubbly cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                          (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) && "grayscale"
                         )}
                       >
                         <div className="relative z-10 flex items-center justify-center gap-2">
-                          <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">C</span>
+                          <span className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center text-[10px] font-black">C</span>
                           {(playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) ? "Limit Habis" : "Challenge"}
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/10 to-blue-600/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
                       </button>
                     ) : isAdmin && (
                       <div className="px-4 py-4 bg-zinc-50 text-zinc-400 rounded-2xl font-bold text-xs flex items-center justify-center border border-dashed border-zinc-200">
@@ -575,15 +590,14 @@ export const Dashboard: React.FC = () => {
                         }}
                         disabled={isCheckingLimit || (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin)}
                         className={cn(
-                          "group/btn relative px-4 py-4 bg-rose-700 text-white rounded-2xl font-bold text-sm hover:bg-rose-800 transition-all active:scale-95 overflow-hidden shadow-lg shadow-rose-700/20 disabled:opacity-50",
-                          (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) && "grayscale cursor-not-allowed"
+                          "group/btn relative px-4 py-3 bg-rose-700 text-white rounded-2xl font-black text-sm transition-all shadow-[0_4px_0_#9F1239] border border-rose-800 active:translate-y-[4px] active:shadow-none btn-bubbly cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                          (playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) && "grayscale"
                         )}
                       >
                         <div className="relative z-10 flex items-center justify-center gap-2">
-                          <span className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center text-[10px]">Py</span>
+                          <span className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center text-[10px] font-black">Py</span>
                           {(playsThisWeek >= gameSettings.bugHuntWeeklyLimit && gameSettings.bugHuntWeeklyLimit > 0 && !isAdmin) ? "Limit Habis" : "Challenge"}
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
                       </button>
                     ) : isAdmin && (
                       <div className="px-4 py-4 bg-zinc-50 text-zinc-400 rounded-2xl font-bold text-xs flex items-center justify-center border border-dashed border-zinc-200">
@@ -592,7 +606,6 @@ export const Dashboard: React.FC = () => {
                     )}
                   </div>
                 )}
-                </div>
               </div>
             </div>
           </div>
@@ -640,6 +653,13 @@ const LevelCard: React.FC<{
   const levelProgress = totalInLevel > 0 ? Math.round((completedInLevel / totalInLevel) * 100) : 0;
   const isComplete = levelProgress === 100 && totalInLevel > 0;
 
+  const levelLessons: any[] = [];
+  (level.modules || []).forEach((mod: any) => {
+    (mod.lessons || []).forEach((les: any) => {
+      levelLessons.push(les);
+    });
+  });
+
   const isBlue = colorClass === 'blue';
   const accent = {
     gradient: isBlue ? 'from-blue-600 to-indigo-600' : 'from-rose-600 to-pink-600',
@@ -671,66 +691,72 @@ const LevelCard: React.FC<{
         }
       }}
       className={cn(
-        "relative overflow-hidden rounded-[1.8rem] transition-all duration-300",
+        "relative overflow-hidden rounded-[2rem] border-2 transition-all duration-300 p-6 flex flex-col justify-between",
         isLocked 
-          ? "cursor-not-allowed" 
-          : "cursor-pointer group hover:shadow-xl hover:shadow-zinc-200/80 hover:-translate-y-1"
+          ? "cursor-not-allowed opacity-50 grayscale bg-zinc-50 border-zinc-200 shadow-sm" 
+          : `cursor-pointer group card-hover hover:border-maroon/20 bg-gradient-to-br ${accent.gradientLight} ${accent.border} shadow-soft`
       )}
     >
-      {/* Card body with gradient background */}
-      <div className={cn(
-        "relative p-6 border transition-colors duration-300",
-        isLocked 
-          ? "bg-zinc-50 border-zinc-200 opacity-50 grayscale" 
-          : `bg-gradient-to-br ${accent.gradientLight} ${accent.border} shadow-sm`
-      )} style={{ borderRadius: 'inherit' }}>
-        {/* Decorative blob top-right */}
+      {/* Decorative blob top-right */}
+      {!isLocked && (
         <div className={cn(
           "absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl transition-all duration-500",
-          isLocked ? 'bg-zinc-200/40' : `${accent.blob} group-hover:scale-125`
+          accent.blob, "group-hover:scale-125"
         )} />
-        {/* Decorative blob bottom-left */}
+      )}
+      {/* Decorative blob bottom-left */}
+      {!isLocked && (
         <div className={cn(
-          "absolute -bottom-6 -left-6 w-24 h-24 rounded-full blur-2xl",
-          isLocked ? 'bg-zinc-100/40' : accent.blob
-        )} style={{ opacity: 0.4 }} />
-        {/* Subtle dot pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+          "absolute -bottom-6 -left-6 w-24 h-24 rounded-full blur-2xl opacity-40",
+          accent.blob
+        )} />
+      )}
+      {/* Subtle dot pattern */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
 
-        {/* Lock overlay */}
-        {isLocked && (
-          <div className="absolute inset-0 bg-zinc-100/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-[1.5rem]">
-            <div className="flex flex-col items-center gap-2 text-zinc-400">
-              <div className="w-12 h-12 bg-zinc-200 rounded-2xl flex items-center justify-center">
-                <Lock size={24} />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Terkunci</span>
+      {/* Lock overlay */}
+      {isLocked && (
+        <div className="absolute inset-0 bg-zinc-100/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-[1.8rem]">
+          <div className="flex flex-col items-center gap-2 text-zinc-400">
+            <div className="w-12 h-12 bg-zinc-200 rounded-2xl flex items-center justify-center shadow-inner">
+              <i className="fa-solid fa-lock text-sm"></i>
             </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Terkunci</span>
           </div>
-        )}
+        </div>
+      )}
 
-        <div className="relative z-[1]">
+      <div className="relative z-[1] flex-1 flex flex-col justify-between">
+        <div>
           {/* Top row: Number badge + Level label + Circular progress */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className={cn(
-                "w-11 h-11 rounded-xl flex items-center justify-center font-black text-sm transition-all shadow-sm",
+                "w-11 h-11 rounded-xl flex items-center justify-center font-black text-sm transition-all select-none",
                 isLocked 
-                  ? "bg-zinc-200 text-zinc-400" 
+                  ? "bg-zinc-200 text-zinc-450 shadow-sm" 
                   : isComplete
-                    ? `bg-gradient-to-br ${accent.gradient} text-white shadow-md`
-                    : `bg-white ${accent.text} shadow-sm group-hover:bg-gradient-to-br group-hover:${accent.gradient} group-hover:text-white group-hover:shadow-md`
+                    ? `bg-fun-green text-white shadow-[0_3px_0_#047857] transform rotate-[-5deg] group-hover:rotate-0`
+                    : isBlue
+                      ? `bg-fun-blue text-white shadow-[0_3px_0_#023E8A] transform rotate-[-5deg] group-hover:rotate-0`
+                      : `bg-rose-500 text-white shadow-[0_3px_0_#9F1239] transform rotate-[-5deg] group-hover:rotate-0`
               )}>
-                {isLocked ? <Lock size={18} /> : isComplete ? <CheckCircle2 size={20} /> : idx + 1}
+                {isLocked ? (
+                  <i className="fa-solid fa-lock text-xs"></i>
+                ) : isComplete ? (
+                  <i className="fa-solid fa-check text-sm"></i>
+                ) : (
+                  idx + 1
+                )}
               </div>
               <div>
                 <div className={cn(
                   "text-[9px] font-black uppercase tracking-[0.2em]",
-                  isComplete ? accent.text : "text-zinc-450"
+                  isComplete ? "text-fun-green" : isBlue ? "text-fun-blue" : "text-rose-600"
                 )}>
                   Level {idx + 1}
                 </div>
-                <div className="text-[10px] text-zinc-650 font-black tracking-wide mt-0.5">
+                <div className="text-[10px] text-zinc-550 font-black tracking-wide mt-0.5">
                   {level.modules?.length || 0} Modul • {totalInLevel} Pelajaran
                 </div>
               </div>
@@ -749,58 +775,83 @@ const LevelCard: React.FC<{
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={cn("text-xs font-black", isComplete ? accent.text : "text-zinc-700")}>{levelProgress}%</span>
+                  <span className={cn("text-xs font-black", isComplete ? "text-fun-green" : "text-zinc-700")}>{levelProgress}%</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Title */}
-          <h4 className="font-black text-base mb-2 leading-tight text-zinc-900 line-clamp-2">{level.title}</h4>
+          <h4 className="font-black text-base mb-3 leading-tight text-zinc-900 line-clamp-2">{level.title}</h4>
 
           {/* Module preview list */}
-          <div className="space-y-1.5 mb-4">
+          <div className="space-y-2 mb-4">
             {(level.modules || []).slice(0, 3).map((mod: any, mIdx: number) => {
               const modTotal = mod.lessons?.length || 0;
               const modDone = (mod.lessons || []).filter((l: any) => completedLessons.includes(l.id)).length;
               const modComplete = modDone === modTotal && modTotal > 0;
               return (
-                <div key={mod.id || mIdx} className="flex items-center gap-2 text-xs">
+                <div key={mod.id || mIdx} className="flex items-center gap-2.5 text-xs group/item">
                   <div className={cn(
-                    "w-5 h-5 rounded-md flex items-center justify-center shrink-0",
+                    "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all bg-white shadow-sm",
                     modComplete 
-                      ? `bg-gradient-to-br ${accent.gradient} text-white`
-                      : isLocked ? "bg-zinc-200 text-zinc-400" : `bg-white ${accent.textLight} border border-zinc-200`
+                      ? "bg-fun-green border-fun-green text-white" 
+                      : "border-gray-300 group-hover/item:border-maroon/50"
                   )}>
-                    {modComplete ? <CheckCircle2 size={12} /> : <FileText size={10} />}
+                    <svg 
+                      className={cn(
+                        "w-3 h-3 text-white transition-all duration-200", 
+                        modComplete ? "opacity-100 scale-100" : "opacity-0 scale-50"
+                      )} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24" 
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                    </svg>
                   </div>
-                  <span className={cn("truncate font-medium text-xs", modComplete ? "text-zinc-450 line-through font-normal" : "text-zinc-700")}>{mod.title}</span>
-                  <span className="ml-auto text-[10px] font-extrabold text-zinc-500 shrink-0">{modDone}/{modTotal}</span>
+                  <span className={cn("truncate font-bold text-xs flex-1", modComplete ? "text-zinc-400 line-through font-normal" : "text-zinc-700")}>
+                    {mod.title}
+                  </span>
+                  <span className="text-[10px] font-black text-zinc-450 shrink-0">{modDone}/{modTotal}</span>
                 </div>
               );
             })}
             {(level.modules?.length || 0) > 3 && (
-              <div className="text-[10px] font-black text-zinc-500 tracking-wide pt-0.5">
+              <div className="text-[10px] font-black text-zinc-500 tracking-wide pt-0.5 ml-7">
                 +{(level.modules?.length || 0) - 3} modul lagi
               </div>
             )}
           </div>
+        </div>
 
-          {/* Lesson dot indicators */}
-          <div className="flex items-center gap-1 flex-wrap">
-            {Array.from({ length: totalInLevel }).map((_, i) => {
-              const lessonDone = i < completedInLevel;
-              return (
-                <div 
-                  key={i}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all",
-                    lessonDone ? accent.dot : accent.dotEmpty
-                  )}
-                />
-              );
-            })}
-          </div>
+        {/* Lesson dot indicators */}
+        <div className="flex items-center gap-1.5 flex-wrap pt-3 border-t-2 border-dashed border-gray-100/60 mt-3">
+          {levelLessons.map((les, lIdx) => {
+            const isLessonDone = completedLessons.includes(les.id);
+            return (
+              <button 
+                key={les.id || lIdx}
+                disabled={isLocked}
+                onClick={(e) => {
+                  e.stopPropagation(); // prevent triggering parent card click
+                  if (isLocked) return;
+                  setCurrentLessonId(les.id);
+                  setPage('lesson');
+                }}
+                title={les.title}
+                className={cn(
+                  "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all border border-transparent shadow-sm hover:scale-125 cursor-pointer focus:outline-none disabled:cursor-not-allowed",
+                  isLessonDone 
+                    ? "bg-fun-green text-white shadow-[0_1.5px_0_#047857]" 
+                    : "bg-zinc-200/85 hover:bg-zinc-300"
+                )}
+              >
+                {isLessonDone && <i className="fa-solid fa-check text-[7px] font-black"></i>}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

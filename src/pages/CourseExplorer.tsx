@@ -1,10 +1,66 @@
 import React from 'react';
 import { Layout } from '../components/Layout';
-import { BookOpen, ChevronRight, Lock, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      damping: 15
+    }
+  }
+};
+
+const getModuleTheme = (idx: number) => {
+  const themes = [
+    {
+      bg: 'bg-blue-50 text-fun-blue shadow-[0_4px_0_#DBEAFE] group-hover:bg-fun-blue group-hover:text-white group-hover:shadow-[0_4px_0_#0284C7]',
+      icon: 'fa-book-open-reader',
+      textColor: 'group-hover:text-fun-blue',
+      accentBg: 'bg-blue-50',
+      accentText: 'text-fun-blue'
+    },
+    {
+      bg: 'bg-teal-50 text-fun-green shadow-[0_4px_0_#CCFBF1] group-hover:bg-fun-green group-hover:text-white group-hover:shadow-[0_4px_0_#047857]',
+      icon: 'fa-laptop-code',
+      textColor: 'group-hover:text-fun-green',
+      accentBg: 'bg-teal-50',
+      accentText: 'text-fun-green'
+    },
+    {
+      bg: 'bg-purple-50 text-fun-purple shadow-[0_4px_0_#F3E8FF] group-hover:bg-fun-purple group-hover:text-white group-hover:shadow-[0_4px_0_#7E22CE]',
+      icon: 'fa-box-archive',
+      textColor: 'group-hover:text-fun-purple',
+      accentBg: 'bg-purple-50',
+      accentText: 'text-fun-purple'
+    },
+    {
+      bg: 'bg-amber-50 text-fun-yellow shadow-[0_4px_0_#FEF3C7] group-hover:bg-fun-yellow group-hover:text-white group-hover:shadow-[0_4px_0_#D97706]',
+      icon: 'fa-shapes',
+      textColor: 'group-hover:text-fun-yellow',
+      accentBg: 'bg-amber-50',
+      accentText: 'text-fun-yellow'
+    }
+  ];
+  return themes[idx % themes.length];
+};
 
 export const CourseExplorer: React.FC = () => {
   const { user, setPage, setCurrentLessonId, curriculum } = useStore();
@@ -74,6 +130,20 @@ export const CourseExplorer: React.FC = () => {
     return Math.round((completedInModule / module.lessons.length) * 100);
   };
 
+  const getLevelProgress = (level: any) => {
+    if (!level?.modules) return 0;
+    let totalLessons = 0;
+    let completedInLevel = 0;
+    for (const mod of level.modules) {
+      if (Array.isArray(mod.lessons)) {
+        totalLessons += mod.lessons.length;
+        completedInLevel += mod.lessons.filter((l: any) => completedLessons.includes(l.id)).length;
+      }
+    }
+    if (totalLessons === 0) return 0;
+    return Math.round((completedInLevel / totalLessons) * 100);
+  };
+
   // Find the first uncompleted lesson in a module (resume feature)
   const getResumeLessonId = (module: any): string | null => {
     if (!module?.lessons?.length) return null;
@@ -87,62 +157,105 @@ export const CourseExplorer: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-12">
-        {/* Back Button */}
-        <button
-          onClick={() => setPage('dashboard')}
-          className="flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-zinc-900 transition-colors group"
-        >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Kembali ke Dashboard
-        </button>
-
-        <div className="max-w-3xl">
-          <h1 className="text-4xl font-black tracking-tight mb-4">Eksplorasi Kurikulum</h1>
-          <p className="text-xl text-zinc-500">
-            Yuk mulai petualangan ngoding kamu! Pilih <span className="text-rose-700 font-bold">Python</span> untuk kemudahan dan dunia data, atau <span className="text-blue-700 font-bold">Bahasa C</span> untuk ngulik jeroan sistem lebih dalam.
+        {/* Page Title */}
+        <div className="mb-10 animate-fade-in-up">
+          <h1 className="text-4xl md:text-5xl font-black text-maroon mb-4 tracking-tight flex items-center select-none">
+            Eksplorasi Kurikulum 
+            <i className="fa-solid fa-wand-magic-sparkles text-fun-yellow ml-4 text-3xl animate-pulse"></i>
+          </h1>
+          <p className="text-lg text-gray-600 max-w-3xl leading-relaxed font-bold">
+            Yuk mulai petualangan ngoding kamu! Pilih <span className="font-black text-python bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">Python</span> untuk kemudahan dan dunia data, atau <span className="font-black text-c bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">Bahasa C</span> untuk ngulik jeroan sistem lebih dalam.
           </p>
         </div>
 
         <div className="space-y-16">
           {curriculum.map((level, lIdx) => {
             const isLangC = level.id.startsWith('c-');
-            const accentGradient = isLangC ? 'from-blue-500 to-blue-600' : 'from-rose-500 to-pink-600';
-            const accentBg = isLangC ? 'bg-blue-50' : 'bg-rose-50';
-            const accentText = isLangC ? 'text-blue-700' : 'text-rose-700';
+            const isLocked = isModuleLocked(lIdx, 0);
+            
+            const levelProgress = getLevelProgress(level);
+
+            // Custom colors based on language
+            const levelColorClass = isLocked ? 'bg-zinc-300' : (isLangC ? 'bg-fun-blue' : 'bg-rose-500');
+            const levelShadowClass = isLocked ? 'shadow-[0_8px_0_#71717a]' : (isLangC ? 'shadow-[0_8px_0_#023E8A]' : 'shadow-[0_8px_0_#9F1239]');
+            const tagBgClass = isLangC ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-rose-100 text-rose-700 border-rose-200';
+            const bgBlobClass = isLangC ? 'bg-fun-blue/5' : 'bg-rose-500/5';
             
             return (
               <div key={level.id} className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-xl transition-all",
-                    isModuleLocked(lIdx, 0)
-                      ? "bg-zinc-300 text-white shadow-zinc-300/10" 
-                      : `bg-gradient-to-br ${accentGradient} text-white shadow-lg ${isLangC ? 'shadow-blue-500/20' : 'shadow-rose-500/20'}`
-                  )}>
-                    {isModuleLocked(lIdx, 0) ? <Lock size={22} /> : lIdx + 1}
+                {/* Level Section Header */}
+                <div className="bg-white rounded-[2rem] p-6 shadow-soft mb-8 flex flex-col md:flex-row items-start md:items-center gap-6 border-2 border-gray-100 relative overflow-hidden group hover:border-maroon/30 transition-colors">
+                  
+                  {/* Decorative background patterns */}
+                  <div className={cn("absolute right-0 top-0 w-32 h-32 rounded-bl-full pointer-events-none transition-all", bgBlobClass)}></div>
+                  
+                  <div className="flex-shrink-0 relative">
+                    {/* Playful Number Badge */}
+                    <div className={cn(
+                      "w-20 h-20 rounded-3xl flex items-center justify-center text-white font-black text-4xl transform rotate-[-5deg] group-hover:rotate-0 transition-all cursor-pointer z-10 relative select-none",
+                      levelColorClass,
+                      levelShadowClass
+                    )}>
+                      {isLocked ? (
+                        <i className="fa-solid fa-lock text-3xl"></i>
+                      ) : (
+                        lIdx + 1
+                      )}
+                    </div>
+                    {/* Little sparkle */}
+                    {!isLocked && (
+                      <i className="fa-solid fa-star absolute -top-2 -right-2 text-fun-yellow text-xl z-20 animate-pulse"></i>
+                    )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                  
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <h2 className="text-2xl font-black text-dark tracking-tight uppercase leading-snug">
                         {level.title}
                       </h2>
-                      {isModuleLocked(lIdx, 0) && (
-                        <span className="text-[9px] font-black text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded-lg uppercase tracking-[0.2em]">
+                      {isLocked && (
+                        <span className="bg-zinc-100 text-zinc-500 text-[10px] font-black px-2.5 py-1 rounded-xl border border-zinc-200 uppercase tracking-widest">
                           Terkunci
                         </span>
                       )}
-                      <span className={cn(
-                        "text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-[0.2em]",
-                        isLangC ? "bg-blue-50 text-blue-700" : "bg-rose-50 text-rose-700"
-                      )}>
+                      <span className={cn("text-xs font-black px-3 py-1.5 rounded-xl border-2 uppercase tracking-wide", tagBgClass)}>
                         {isLangC ? 'Bahasa C' : 'Python'}
                       </span>
                     </div>
-                    <p className="text-zinc-500 text-sm">{level.description}</p>
+                    <p className="text-gray-500 font-bold bg-gray-50 inline-block px-3 py-1 rounded-lg text-sm border border-gray-100">
+                      {level.description}
+                    </p>
                   </div>
+                  
+                  {/* Overall Level Progress Card */}
+                  {!isLocked && (
+                    <div className="md:w-56 w-full bg-maroon-bg p-4 rounded-2xl border-2 border-maroon/10 flex flex-col items-center justify-center relative overflow-hidden select-none">
+                      <div className="text-xs font-black text-maroon/70 uppercase mb-1 tracking-widest z-10">Progres Level</div>
+                      <div className="flex items-baseline space-x-1 z-10">
+                        <span className="text-3xl font-black text-maroon">{levelProgress}%</span>
+                        <span className="text-sm font-bold text-maroon/70">Selesai</span>
+                      </div>
+                      {/* Progress Bar Container */}
+                      <div className="w-full h-3 bg-white rounded-full mt-3 overflow-hidden border border-maroon/20 z-10 shadow-inner">
+                        <div 
+                          className="h-full bg-maroon rounded-full relative transition-all duration-500"
+                          style={{ width: `${levelProgress}%` }}
+                        >
+                          {/* Shine effect on progress bar */}
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-white/30 rounded-t-full"></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {/* Cards Grid */}
+                <motion.div 
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
                   {(level.modules || []).map((module, mIdx) => {
                     const locked = isModuleLocked(lIdx, mIdx);
                     const progress = getModuleProgress(module);
@@ -152,9 +265,8 @@ export const CourseExplorer: React.FC = () => {
                         module={module} 
                         locked={locked}
                         progress={progress}
-                        accentGradient={accentGradient}
-                        accentBg={accentBg}
-                        accentText={accentText}
+                        isLangC={isLangC}
+                        cardIndex={mIdx}
                         onClick={() => {
                           if (!locked) {
                             const resumeId = getResumeLessonId(module);
@@ -167,7 +279,7 @@ export const CourseExplorer: React.FC = () => {
                       />
                     );
                   })}
-                </div>
+                </motion.div>
               </div>
             );
           })}
@@ -175,105 +287,166 @@ export const CourseExplorer: React.FC = () => {
       </div>
     </Layout>
   );
-};const ModuleCard: React.FC<{ module: any; locked?: boolean; progress: number; accentGradient: string; accentBg: string; accentText: string; onClick?: () => void }> = ({ module, locked, progress, accentGradient, accentBg, accentText, onClick }) => {
+};
+
+const ModuleCard: React.FC<{ 
+  module: any; 
+  locked?: boolean; 
+  progress: number; 
+  isLangC: boolean;
+  cardIndex: number;
+  onClick?: () => void 
+}> = ({ module, locked, progress, isLangC, cardIndex, onClick }) => {
   const isComplete = progress === 100;
-  const isLangC = accentText.includes('blue');
-  const themeCardBorderClass = isLangC 
-    ? "border-blue-100/75 shadow-blue-500/[0.01]" 
-    : "border-rose-100/75 shadow-rose-500/[0.01]";
-  const themeCardHoverClass = isLangC
-    ? "hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200"
-    : "hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-200";
+  const { completedLessons } = useProgress();
+  const { setCurrentLessonId, setPage } = useStore();
+  
+  // Get themed styles for this module index
+  const theme = getModuleTheme(cardIndex);
 
   return (
     <motion.div 
-      whileHover={locked ? {} : { y: -4, scale: 1.01 }}
-      transition={{ type: 'tween', duration: 0.2 }}
+      variants={cardVariants}
+      whileHover={locked ? {} : { y: -6 }}
       onClick={onClick}
       className={cn(
-        "rounded-[1.8rem] p-7 border transition-all duration-300 group relative overflow-hidden",
+        "bg-white rounded-[2rem] p-7 shadow-soft border-2 border-gray-100 flex flex-col h-full relative overflow-hidden group select-none transition-colors duration-300",
         locked 
-          ? "bg-zinc-50 border-zinc-200 opacity-50 grayscale cursor-not-allowed" 
-          : isComplete
-            ? cn("bg-gradient-to-br shadow-lg cursor-pointer", isLangC ? "from-white via-white to-blue-50/10" : "from-white via-white to-rose-50/10", themeCardBorderClass)
-            : cn("bg-gradient-to-br from-white via-white to-zinc-50/20 shadow-sm cursor-pointer border-zinc-200/65", themeCardHoverClass)
+          ? "opacity-50 grayscale cursor-not-allowed bg-zinc-50 border-zinc-200" 
+          : "card-hover cursor-pointer hover:border-maroon/20"
       )}
     >
-      {/* Gradient top bar for unlocked cards */}
-      {!locked && (
-        <div className={cn("absolute top-0 left-6 right-6 h-1.5 rounded-b-full bg-gradient-to-r", accentGradient, isComplete ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 transition-opacity')} />
-      )}
-      {/* Completion glow */}
-      {isComplete && !locked && (
-        <div className={cn("absolute inset-0 bg-gradient-to-br opacity-[0.03]", accentGradient)} />
-      )}
-      
+      {/* Locked overlay lock icon */}
       {locked && (
-        <div className="absolute top-5 right-5 text-zinc-300">
-          <div className="w-9 h-9 bg-zinc-100 rounded-xl flex items-center justify-center">
+        <div className="absolute top-5 right-5 text-zinc-400 z-20">
+          <div className="w-9 h-9 bg-zinc-100 rounded-xl flex items-center justify-center border border-zinc-200 shadow-sm">
             <Lock size={16} />
           </div>
         </div>
       )}
       
-      <div className="space-y-5">
+      <div className="mb-5 flex justify-between items-start mt-2">
+        {/* Bubbly Icon */}
         <div className={cn(
-          "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
+          "w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all duration-300 transform group-hover:scale-110",
           locked 
             ? "bg-zinc-100 text-zinc-400" 
-            : isComplete
-              ? `bg-gradient-to-br ${accentGradient} text-white shadow-lg`
-              : `${accentBg} ${accentText} group-hover:bg-gradient-to-br group-hover:${accentGradient} group-hover:text-white group-hover:shadow-lg`
+            : theme.bg,
+          cardIndex % 2 === 0 ? "group-hover:-rotate-6" : "group-hover:rotate-6"
         )}>
-          {isComplete ? <CheckCircle2 size={24} /> : <BookOpen size={24} />}
+          <i className={cn("fa-solid", locked ? "fa-lock-open" : theme.icon)}></i>
         </div>
-        
-        <div>
-          <h3 className="text-lg font-black mb-2 leading-tight text-zinc-900">{module.title}</h3>
-          <div className="flex items-center gap-2 text-xs font-black text-zinc-500">
-            <span>{module.lessons?.length || 0} Pelajaran</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-zinc-300" />
-            <span>~{(module.lessons?.length || 0) * 5} menit</span>
-          </div>
-        </div>
-
-        <div className="space-y-2.5">
-          {module.lessons?.slice(0, 3).map((lesson: any) => {
-            const isCompleted = useProgress.getState().completedLessons.includes(lesson.id);
-            return (
-              <div key={lesson.id} className="flex items-center justify-between text-sm text-zinc-600 group-hover:text-zinc-900 transition-colors">
-                <div className="flex items-center gap-2 truncate">
-                  {isCompleted ? (
-                    <CheckCircle2 size={14} className={accentText} />
-                  ) : (
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-zinc-300 bg-white" />
-                  )}
-                  <span className="truncate font-medium">{lesson.title}</span>
+      </div>
+      
+      <h3 className={cn(
+        "text-xl font-black text-dark mb-3 leading-tight transition-colors",
+        locked ? "" : theme.textColor
+      )}>
+        {module.title}
+      </h3>
+      
+      {/* Badges */}
+      <div className="flex items-center text-xs font-bold text-gray-500 mb-6 space-x-2">
+        <span className="bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 flex items-center text-gray-600">
+          <i className="fa-solid fa-list-ul mr-1.5 text-fun-yellow"></i> 
+          {module.lessons?.length || 0} Pelajaran
+        </span>
+        <span className="bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 flex items-center text-gray-600">
+          <i className="fa-solid fa-clock mr-1.5 text-fun-blue"></i> 
+          ~{(module.lessons?.length || 0) * 5} mnt
+        </span>
+      </div>
+      
+      {/* Custom Checkbox Indicators */}
+      <div className="space-y-4 flex-1 mb-6">
+        {module.lessons?.slice(0, 3).map((lesson: any) => {
+          const isCompleted = completedLessons.includes(lesson.id);
+          return (
+            <div 
+              key={lesson.id} 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (locked) return;
+                setCurrentLessonId(lesson.id);
+                setPage('lesson');
+              }}
+              className={cn(
+                "flex items-start space-x-3 group/item",
+                locked ? "cursor-not-allowed" : "cursor-pointer"
+              )}
+            >
+              <div className="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                <div className={cn(
+                  "w-6 h-6 border-2 rounded-full flex items-center justify-center transition-all bg-white shadow-sm group-hover/item:scale-110",
+                  isCompleted 
+                    ? "bg-fun-green border-fun-green text-white" 
+                    : "border-gray-300 group-hover/item:border-maroon/50"
+                )}>
+                  <svg 
+                    className={cn(
+                      "w-3.5 h-3.5 text-white transition-all duration-200", 
+                      isCompleted ? "opacity-100 scale-100" : "opacity-0 scale-50"
+                    )} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                  </svg>
                 </div>
-                <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-            );
-          })}
-          {(module.lessons?.length || 0) > 3 && (
-            <div className="text-[10px] font-black text-zinc-500 pt-1 uppercase tracking-wider">
-              + {(module.lessons?.length || 0) - 3} pelajaran lagi
+              <span className={cn(
+                "text-sm font-bold transition-colors pt-0.5 truncate",
+                locked 
+                  ? "text-zinc-400" 
+                  : "text-gray-600 group-hover/item:text-maroon group-hover/item:underline"
+              )}>
+                {lesson.title}
+              </span>
             </div>
-          )}
-        </div>
-
-        {!locked && (
-          <div className="pt-3">
-            <div className="w-full h-2 bg-zinc-150/75 rounded-full overflow-hidden">
-              <motion.div 
-                className={cn("h-full bg-gradient-to-r rounded-full", accentGradient)} 
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-              />
-            </div>
-            <div className="mt-2 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">{progress}% Selesai</div>
-          </div>
+          );
+        })}
+      </div>
+      
+      <div className="mt-auto">
+        {(module.lessons?.length || 0) > 3 ? (
+          <button className={cn(
+            "text-xs font-black uppercase tracking-widest mb-5 transition-colors px-3 py-1.5 rounded-lg w-full text-left",
+            locked
+              ? "text-zinc-400 bg-zinc-100"
+              : isLangC 
+                ? "text-fun-blue bg-blue-50 hover:bg-blue-100" 
+                : "text-rose-700 bg-rose-50 hover:bg-rose-100"
+          )}>
+            + {(module.lessons?.length || 0) - 3} PELAJARAN LAGI
+          </button>
+        ) : (
+          <div className="h-[34px] mb-5"></div>
         )}
+        
+        <div className="pt-5 border-t-2 border-dashed border-gray-100 flex items-center justify-between">
+          <span className="text-xs font-black text-gray-400 tracking-widest uppercase bg-gray-50 px-3 py-1 rounded-full">
+            {progress}% Selesai
+          </span>
+          <button 
+            onClick={locked ? undefined : onClick}
+            className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm cursor-pointer",
+              locked 
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : isComplete
+                  ? "bg-fun-green hover:bg-emerald-600 text-white shadow-bubbly hover:-translate-y-1"
+                  : "bg-gray-100 hover:bg-maroon text-gray-500 hover:text-white hover:shadow-bubbly-maroon transform hover:-translate-y-1"
+            )}
+          >
+            {isComplete ? (
+              <i className="fa-solid fa-check text-lg"></i>
+            ) : (
+              <i className="fa-solid fa-play ml-0.5 text-sm"></i>
+            )}
+          </button>
+        </div>
       </div>
     </motion.div>
   );
