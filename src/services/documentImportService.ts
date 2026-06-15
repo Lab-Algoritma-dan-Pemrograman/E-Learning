@@ -565,11 +565,28 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
         les.solution = stripFences(les.solution);
         les.hint = les.hint.trim();
         
+        // Strip fences from expectedOutput and set description to task description if available
         les.testCases.forEach(tc => {
+          if (tc.expectedOutput) {
+            tc.expectedOutput = stripFences(tc.expectedOutput);
+          }
           if (tc.expectedOutput && !tc.expectedOutput.endsWith('\n')) {
             tc.expectedOutput += '\n';
           }
+          if (practiceDesc) {
+            tc.description = practiceDesc.trim();
+          }
         });
+
+        // Strip fences from quiz question and options
+        if (les.quiz) {
+          if (les.quiz.question) {
+            les.quiz.question = stripFences(les.quiz.question);
+          }
+          if (les.quiz.options && Array.isArray(les.quiz.options)) {
+            les.quiz.options = les.quiz.options.map((opt: string) => stripFences(opt));
+          }
+        }
       });
     });
   });
