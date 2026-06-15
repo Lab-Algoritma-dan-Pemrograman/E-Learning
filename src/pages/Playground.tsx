@@ -342,27 +342,29 @@ export const Playground: React.FC = () => {
     term.clear();
     term.writeln('\x1b[2mJalankan kode Anda untuk melihat hasil...\x1b[0m');
   };
-  
   const copyCode = () => {
     navigator.clipboard.writeText(code);
   };
 
   return (
     <Layout>
-      <div className="flex flex-col gap-6 h-[calc(100vh-160px)]">
-        <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-6 h-[calc(100vh-160px)] pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Playground Kode</h1>
-            <p className="text-zinc-500">Bereksperimen dengan kode di lingkungan sandbox.</p>
+            <h1 className="text-3xl font-black text-maroon mb-1 tracking-tight flex items-center">
+              Playground Kode
+              <i className="fa-solid fa-terminal text-fun-yellow ml-3 animate-pulse"></i>
+            </h1>
+            <p className="text-zinc-550 font-bold text-sm">Bereksperimen dengan kode di lingkungan sandbox.</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {/* Language Switcher */}
-            <div className="flex items-center bg-zinc-100 rounded-xl p-1">
+            <div className="flex items-center bg-zinc-100 rounded-2xl p-1.5 border border-zinc-200/60 shadow-inner">
               <button
                 onClick={() => handleLanguageChange('python')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                className={`px-5 py-2 rounded-xl text-sm font-black transition-all cursor-pointer ${
                   language === 'python' 
-                    ? 'bg-rose-700 text-white shadow-lg shadow-rose-700/20' 
+                    ? 'bg-rose-700 text-white shadow-[0_3px_0_#5C0E25] btn-bubbly active:translate-y-[3px] active:shadow-none' 
                     : 'text-zinc-500 hover:text-zinc-900'
                 }`}
               >
@@ -370,9 +372,9 @@ export const Playground: React.FC = () => {
               </button>
               <button
                 onClick={() => handleLanguageChange('c')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                className={`px-5 py-2 rounded-xl text-sm font-black transition-all cursor-pointer ${
                   language === 'c' 
-                    ? 'bg-rose-700 text-white shadow-lg shadow-rose-700/20' 
+                    ? 'bg-rose-700 text-white shadow-[0_3px_0_#5C0E25] btn-bubbly active:translate-y-[3px] active:shadow-none' 
                     : 'text-zinc-500 hover:text-zinc-900'
                 }`}
               >
@@ -382,22 +384,22 @@ export const Playground: React.FC = () => {
             <div className="w-px h-8 bg-zinc-200" />
             <button 
               onClick={copyCode}
-              className="p-2 hover:bg-zinc-100 rounded-lg text-zinc-500 transition-colors"
+              className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-700 rounded-xl hover:bg-rose-100 shadow-[0_3px_0_#8A1538] active:translate-y-[3px] active:shadow-none btn-bubbly cursor-pointer transition-all"
               title="Salin Kode"
             >
-              <Copy size={20} />
+              <i className="fa-solid fa-copy"></i>
             </button>
             <button 
-              className="p-2 hover:bg-zinc-100 rounded-lg text-zinc-500 transition-colors"
+              className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-700 rounded-xl hover:bg-rose-100 shadow-[0_3px_0_#8A1538] active:translate-y-[3px] active:shadow-none btn-bubbly cursor-pointer transition-all"
               title="Bagikan Cuplikan"
             >
-              <Share2 size={20} />
+              <i className="fa-solid fa-share-nodes"></i>
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-          <div className="lg:col-span-2 h-full">
+          <div className="lg:col-span-2 h-full bg-white border-2 border-gray-100 rounded-[2rem] shadow-soft p-4 flex flex-col justify-between">
             <CodeEditor 
               code={code} 
               onChange={(val) => setCode(val || '')} 
@@ -407,41 +409,41 @@ export const Playground: React.FC = () => {
             />
           </div>
 
-          <div className="rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900 shadow-2xl flex flex-col">
+          <div className="rounded-[2rem] overflow-hidden border-2 border-zinc-950 bg-zinc-900 shadow-[0_8px_0_#000] flex flex-col">
             {/* macOS-style terminal title bar */}
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800/80 border-b border-zinc-700/50">
+            <div className="flex items-center gap-2 px-4 py-3 bg-zinc-800/80 border-b-2 border-zinc-950/40">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500" />
                 <div className="w-3 h-3 rounded-full bg-green-500" />
               </div>
-              <span className="text-xs text-zinc-400 font-mono ml-2 flex-1">
+              <span className="text-xs text-zinc-400 font-mono ml-2 flex-1 font-bold">
                 {language === 'python' ? 'python' : 'clang'} — playground
               </span>
               <button 
                 onClick={clearOutput}
-                className="p-1 hover:bg-zinc-700 rounded text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="p-1.5 bg-zinc-700/50 hover:bg-zinc-700 border border-zinc-650 rounded text-zinc-350 hover:text-white transition-colors cursor-pointer"
                 title="Bersihkan Output"
               >
-                <Trash2 size={13} />
+                <i className="fa-solid fa-trash text-[11px]"></i>
               </button>
             </div>
 
             {/* Stdin input field — removed, C now uses terminal-based stdin */}
             
             {/* xterm.js terminal container */}
-            <div ref={termContainerRef} className="flex-1 p-1 min-h-0" />
+            <div ref={termContainerRef} className="flex-1 p-2.5 min-h-0 font-mono" />
           </div>
         </div>
 
         {/* Hint for interactive input */}
-          <div className="text-xs text-zinc-400 flex items-center gap-2 -mt-2">
-            {language === 'python' ? (
-              <span>💡 Ketik langsung di terminal saat program meminta <code className="bg-zinc-100 px-1 rounded text-zinc-600">input()</code></span>
-            ) : (
-              <span>💡 Program akan otomatis berhenti setelah semua input diberikan — seperti Python!</span>
-            )}
-          </div>
+        <div className="text-xs text-zinc-450 font-bold flex items-center gap-2 select-none">
+          {language === 'python' ? (
+            <span>💡 Ketik langsung di terminal saat program meminta <code className="bg-zinc-100 border border-zinc-200 px-1.5 py-0.5 rounded text-zinc-650">input()</code></span>
+          ) : (
+            <span>💡 Program akan otomatis berhenti setelah semua input diberikan — seperti Python!</span>
+          )}
+        </div>
       </div>
     </Layout>
   );

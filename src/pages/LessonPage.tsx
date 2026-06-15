@@ -594,7 +594,7 @@ export const LessonPage: React.FC = () => {
                     className="w-full flex items-center justify-center gap-2 py-3.5 bg-zinc-100 text-zinc-700 font-bold rounded-2xl hover:bg-zinc-200/80 transition-all text-xs uppercase tracking-wider"
                   >
                     <ArrowLeft size={14} />
-                    Kembali ke Kursus
+                    Kembali ke Belajar
                   </button>
                 </div>
               </motion.div>
@@ -608,7 +608,7 @@ export const LessonPage: React.FC = () => {
             <button
               onClick={() => setPage('courses')}
               className="w-10 h-10 bg-rose-50 text-rose-700 rounded-xl flex items-center justify-center hover:bg-rose-100 transition-colors"
-              title="Kembali ke Kursus"
+              title="Kembali ke Belajar"
             >
               <ArrowLeft size={20} />
             </button>
