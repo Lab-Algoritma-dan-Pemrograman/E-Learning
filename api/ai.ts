@@ -1,6 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 import { verifyToken } from './auth.js';
+import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(req: Request) {
   if (req.method !== 'POST') {
@@ -39,24 +43,21 @@ export default async function handler(req: Request) {
 
     const nim = tokenPayload.nim;
 
-    // 2. Fetch role from Firestore via REST API
-    const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
-    if (!projectId) {
-      return new Response(JSON.stringify({ error: 'Server configuration error (projectId missing)' }), { status: 500 });
-    }
-
-    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${nim}`;
-    const firestoreRes = await fetch(firestoreUrl);
+    // 2. Fetch role from Supabase
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('nim', nim)
+      .single();
     
-    if (!firestoreRes.ok) {
+    if (userError || !userData) {
        return new Response(JSON.stringify({ error: 'Unauthorized: User not found in database' }), { status: 403 });
     }
 
-    const userData = await firestoreRes.json();
-    const role = userData.fields?.role?.stringValue || 'praktikan';
+    const role = userData.role || 'praktikan';
 
     // 3. SECURE RBAC
-    if (role !== 'admin' && role !== 'editor') {
+    if (role !== 'admin' && role !== 'editor' && role !== 'kordas') {
        return new Response(JSON.stringify({ error: 'Akses Ditolak: Fitur AI ini hanya tersedia untuk Admin atau Editor.' }), { status: 403 });
     }
 
