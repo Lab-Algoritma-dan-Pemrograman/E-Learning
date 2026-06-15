@@ -293,38 +293,38 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
     // 0. Detect Section switches (if current lesson is active)
     let sectionSwitched = false;
     if (currentLesson) {
-      if (line.match(/^(?:##\s*)?(?:Materi|Teori|Penjelasan|Explanation)\s*:/i)) {
+      if (line.match(/^(?:#+\s*)?(?:Materi|Teori|Penjelasan|Explanation)\s*:/i)) {
         currentSection = 'explanation';
         sectionSwitched = true;
-      } else if (line.match(/^(?:##\s*)?(?:Contoh Kode|Code Example)\s*:/i)) {
+      } else if (line.match(/^(?:#+\s*)?(?:Contoh Kode|Code Example)\s*:/i)) {
         currentSection = 'codeExample';
         sectionSwitched = true;
-      } else if (line.match(/^(?:##\s*)?(?:Kuis|Quiz|Pertanyaan Kuis|Soal Kuis)\s*:/i)) {
+      } else if (line.match(/^(?:#+\s*)?(?:Kuis|Quiz|Pertanyaan Kuis|Soal Kuis)\s*:/i)) {
         currentSection = 'quiz';
-        const questionText = line.replace(/^(?:##\s*)?(?:Kuis|Quiz|Pertanyaan Kuis|Soal Kuis)\s*:/i, '').trim();
+        const questionText = line.replace(/^(?:#+\s*)?(?:Kuis|Quiz|Pertanyaan Kuis|Soal Kuis)\s*:/i, '').trim();
         if (questionText) {
           currentLesson.quiz.question = questionText;
         }
         sectionSwitched = true;
-      } else if (line.match(/^(?:##\s*)?(?:Latihan|Practice|Tugas|Task|Deskripsi Tugas|Deskripsi|Task Description)\s*:/i)) {
+      } else if (line.match(/^(?:#+\s*)?(?:Latihan|Practice|Tugas|Task|Deskripsi Tugas|Deskripsi|Task Description)\s*:/i)) {
         currentSection = 'latihan_deskripsi';
         sectionSwitched = true;
-      } else if (line.match(/^(?:##\s*)?(?:Petunjuk|Hint|Tips)\s*:/i)) {
+      } else if (line.match(/^(?:#+\s*)?(?:Petunjuk|Hint|Tips)\s*:/i)) {
         currentSection = 'latihan_petunjuk';
         sectionSwitched = true;
-      } else if (line.match(/^(?:##\s*)?(?:Kode Awal|Initial Code)\s*:/i)) {
+      } else if (line.match(/^(?:#+\s*)?(?:Kode Awal|Initial Code)\s*:/i)) {
         currentSection = 'latihan_initial';
         sectionSwitched = true;
-      } else if (line.match(/^(?:##\s*)?(?:Solusi|Solution|Kunci Solusi)\s*:/i)) {
+      } else if (line.match(/^(?:#+\s*)?(?:Solusi|Solution|Kunci Solusi)\s*:/i)) {
         currentSection = 'latihan_solusi';
         sectionSwitched = true;
-      } else if (line.match(/^(?:##\s*)?(?:Expected Output|Output Diharapkan|Output)\s*:/i)) {
+      } else if (line.match(/^(?:#+\s*)?(?:Expected Output|Output Diharapkan|Output)\s*:/i)) {
         currentSection = 'latihan_expected';
         sectionSwitched = true;
-      } else if (line.match(/^(?:##\s*)?(?:Validasi Kode Statis|Validasi Kode|Validation Rules|ValidationRule)\s*:/i)) {
+      } else if (line.match(/^(?:#+\s*)?(?:Validasi Kode Statis|Validasi Kode|Validation Rules|ValidationRule)\s*:/i)) {
         currentSection = 'validation_rules';
         sectionSwitched = true;
-      } else if (line.match(/^(?:##\s*)?(?:Input \(opsional\)|Input)\s*:/i)) {
+      } else if (line.match(/^(?:#+\s*)?(?:Input \(opsional\)|Input)\s*:/i)) {
         currentSection = 'latihan_input';
         sectionSwitched = true;
       }
@@ -341,10 +341,13 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
     // 1. Detect Level
     const levelMatch = line.match(/^(?:#\s*)?(?:Level|Tingkat)\s*(\d+)\s*[:\-—]?\s*(.*)/i);
     if (levelMatch && (!isIndented || startsWithHash)) {
-      const levelId = `py-level-${levelMatch[1]}`;
+      const levelTitle = levelMatch[2].trim();
+      const isC = /bahasa\s+c\b|programming\s+c\b|\bc\s+programming\b|\bc\s+mode\b/i.test(levelTitle) || 
+                  /\b(?:stdio\.h|include|printf|scanf)\b/i.test(paragraphs.join('\n'));
+      const levelId = `${isC ? 'c' : 'py'}-level-${levelMatch[1]}`;
       currentLevel = {
         id: levelId,
-        title: levelMatch[2].trim() || `Level ${levelMatch[1]}`,
+        title: levelTitle || `Level ${levelMatch[1]}`,
         description: `Materi Level ${levelMatch[1]}`,
         modules: []
       };
@@ -558,7 +561,7 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
         les.codeExample = stripFences(les.codeExample);
         les.initialCode = stripFences(les.initialCode);
         les.solution = stripFences(les.solution);
-        les.hint = les.hint.trim();
+        les.hint = stripFences(les.hint);
         
         // Strip fences from expectedOutput and set description to task description if available
         les.testCases.forEach(tc => {
@@ -665,13 +668,13 @@ export function mergeCurriculum(original: Level[], imported: Level[]): Level[] {
           };
           currentMod.lessons.push(newLes);
         } else {
-          // Merge lesson properties (only overwrite if the imported lesson has non-empty values)
+          // Merge lesson properties (overwrite fields fully to support empty/updated values)
           const targetLes = currentMod.lessons[lesIndex];
           if (impLes.explanation) targetLes.explanation = impLes.explanation;
-          if (impLes.codeExample) targetLes.codeExample = impLes.codeExample;
-          if (impLes.initialCode) targetLes.initialCode = impLes.initialCode;
-          if (impLes.solution) targetLes.solution = impLes.solution;
-          if (impLes.hint) targetLes.hint = impLes.hint;
+          targetLes.codeExample = impLes.codeExample;
+          targetLes.initialCode = impLes.initialCode;
+          targetLes.solution = impLes.solution;
+          targetLes.hint = impLes.hint;
           
           if (impLes.quiz && impLes.quiz.question) {
             targetLes.quiz = impLes.quiz;

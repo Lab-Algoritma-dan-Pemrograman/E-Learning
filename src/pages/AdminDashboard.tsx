@@ -684,10 +684,10 @@ export const AdminDashboard: React.FC = () => {
             } else {
               const target = newLessons[existingIdx];
               if (impLes.explanation) target.explanation = impLes.explanation;
-              if (impLes.codeExample) target.codeExample = impLes.codeExample;
-              if (impLes.initialCode) target.initialCode = impLes.initialCode;
-              if (impLes.solution) target.solution = impLes.solution;
-              if (impLes.hint) target.hint = impLes.hint;
+              target.codeExample = impLes.codeExample;
+              target.initialCode = impLes.initialCode;
+              target.solution = impLes.solution;
+              target.hint = impLes.hint;
               if (impLes.quiz && impLes.quiz.question) target.quiz = impLes.quiz;
               if (impLes.testCases && impLes.testCases.length > 0) target.testCases = impLes.testCases;
               if (impLes.validationRules && impLes.validationRules.length > 0) target.validationRules = impLes.validationRules;

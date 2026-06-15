@@ -871,6 +871,16 @@ export const LessonPage: React.FC = () => {
                       setIsCorrect(null);
                     }} 
                     onRun={handleRun}
+                    onReset={() => {
+                      if (window.confirm('Apakah Anda yakin ingin mereset kode ke pengaturan awal? Semua perubahan Anda pada pelajaran ini akan hilang.')) {
+                        const defaultCode = lesson.initialCode || lesson.codeExample || '';
+                        setCode(defaultCode);
+                        localStorage.removeItem(`lesson-code:${lesson.id}`);
+                        setOutput('');
+                        setError(null);
+                        setIsCorrect(null);
+                      }
+                    }}
                     isLoading={isLoading}
                     language={lessonLanguage}
                   />
