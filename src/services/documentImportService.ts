@@ -139,6 +139,10 @@ function escapeHtml(unsafe: string): string {
 }
 
 function formatInlineMarkdown(text: string): string {
+  // First escape HTML angle brackets to prevent C syntax (like <stdio.h>) from being treated as HTML tags
+  text = text
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
   text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   text = text.replace(/`(.*?)`/g, '<code class="bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs">$1</code>');
   return text;
@@ -550,15 +554,6 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
         }
 
         les.explanation = formatExplanationMarkdown(cleanExplanation);
-        
-        if (practiceDesc) {
-          const formattedDesc = formatInlineMarkdown(practiceDesc).replace(/\n/g, '<br/>');
-          les.explanation += `
-            <div id="practice-assignment" class="mt-6 border-t border-zinc-200 pt-6">
-              <h4 class="text-sm font-bold text-zinc-900 mb-2">Latihan Praktik</h4>
-              <p class="text-zinc-700 leading-relaxed">${formattedDesc}</p>
-            </div>`;
-        }
 
         les.codeExample = stripFences(les.codeExample);
         les.initialCode = stripFences(les.initialCode);
@@ -574,7 +569,8 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
             tc.expectedOutput += '\n';
           }
           if (practiceDesc) {
-            tc.description = practiceDesc.trim();
+            // Convert markdown text to HTML format and wrap in span to force RichTextRenderer in UI
+            tc.description = `<span>${formatInlineMarkdown(practiceDesc.trim())}</span>`;
           }
         });
 
