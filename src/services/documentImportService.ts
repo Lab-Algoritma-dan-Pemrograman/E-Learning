@@ -330,9 +330,13 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
       continue;
     }
 
+    // 0.5. Check indentation and heading status
+    const isIndented = /^\s+/.test(rawLine);
+    const startsWithHash = rawLine.trimStart().startsWith('#');
+
     // 1. Detect Level
     const levelMatch = line.match(/^(?:#\s*)?(?:Level|Tingkat)\s*(\d+)\s*[:\-—]?\s*(.*)/i);
-    if (levelMatch) {
+    if (levelMatch && (!isIndented || startsWithHash)) {
       const levelId = `py-level-${levelMatch[1]}`;
       currentLevel = {
         id: levelId,
@@ -349,7 +353,7 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
 
     // 2. Detect Module / Subbab
     const moduleMatch = line.match(/^(?:Subbab|Modul)\b\s*(\d*)[:\-]?\s*(.*)/i) || line.match(/^##(?![#])\s*(?:SUBBAB:\s*)?(.*)/i);
-    if (moduleMatch) {
+    if (moduleMatch && (!isIndented || startsWithHash)) {
       if (!currentLevel) {
         currentLevel = {
           id: 'temp-level',
@@ -379,7 +383,7 @@ export function parseWithRegex(paragraphs: string[]): ParseResult {
 
     // 3. Detect Lesson / Pelajaran
     const lessonMatch = line.match(/^(?:Pelajaran|Judul Pelajaran|Materi Pelajaran)\b\s*[:\-]?\s*(.*)/i) || line.match(/^###(?![#])\s*(?:Pelajaran:\s*)?(.*)/i);
-    if (lessonMatch) {
+    if (lessonMatch && (!isIndented || startsWithHash)) {
       if (!currentLevel) {
         currentLevel = {
           id: 'temp-level',
