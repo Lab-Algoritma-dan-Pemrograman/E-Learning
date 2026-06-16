@@ -5,6 +5,7 @@ import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { RichTextRenderer } from '../components/RichTextRenderer';
 import { Quiz } from '../components/Quiz';
 import { preprocessCode } from '../lib/codePreprocessor';
+import { playCodeCorrectSound, playCodeWrongSound, playLessonCompleteSound } from '../lib/soundEffects';
 
 import { CheckCircle2, Lightbulb, ChevronRight, ChevronLeft, BookOpen, Menu, Trophy, ArrowLeft, X, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -277,12 +278,15 @@ export const LessonPage: React.FC = () => {
 
     setIsCorrect(allPassed);
     if (allPassed) {
+      playCodeCorrectSound();
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
         colors: ['#9f1239', '#e11d48', '#fb7185']
       });
+    } else {
+      playCodeWrongSound();
     }
   };
 
@@ -294,6 +298,7 @@ export const LessonPage: React.FC = () => {
     
     try {
       if (user) {
+        playLessonCompleteSound();
         const newlyUnlocked = await completeLessonService(user, lesson.id, 35, curriculum, completedLessons);
         if (newlyUnlocked && newlyUnlocked.length > 0) {
           setUnlockedAchievement(newlyUnlocked[0]);
@@ -969,7 +974,8 @@ export const LessonPage: React.FC = () => {
                     {error ? <span className="text-red-400">{error}</span> : output}
                   </div>
                 </div>
-                <button 
+                {/* Selesaikan Pelajaran — posisi asli di kolom kanan */}
+                <button
                   disabled={!isCorrect || isCompleting}
                   onClick={nextLesson}
                   className="w-full py-4 bg-rose-700 text-white font-bold rounded-2xl hover:bg-rose-600 disabled:opacity-50 transition-all shadow-lg shadow-rose-700/20 active:scale-95 flex items-center justify-center gap-2"
@@ -989,27 +995,28 @@ export const LessonPage: React.FC = () => {
         </AnimatePresence>
 
         {/* Bottom Navigation */}
-        <div className="flex items-center justify-between pt-4 pb-8 border-t border-zinc-100">
+        <div className="flex items-center justify-between pt-4 pb-8 border-t border-zinc-100 mt-2">
           <button
             onClick={handlePrev}
             disabled={!canGoPrev}
             className={cn(
               "flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all",
               canGoPrev
-                ? "text-zinc-700 hover:bg-zinc-100 active:scale-95"
+                ? "text-zinc-600 bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 hover:border-zinc-300 active:scale-95 shadow-sm"
                 : "text-zinc-300 cursor-not-allowed"
             )}
           >
             <ChevronLeft size={18} />
             Sebelumnya
           </button>
+
           <button
             onClick={handleNext}
             disabled={!canGoNext}
             className={cn(
               "flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all",
               canGoNext
-                ? "text-zinc-700 hover:bg-zinc-100 active:scale-95"
+                ? "text-zinc-600 bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 hover:border-zinc-300 active:scale-95 shadow-sm"
                 : "text-zinc-300 cursor-not-allowed"
             )}
           >

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { RichTextRenderer } from './RichTextRenderer';
+import { playQuizCorrectSound, playQuizWrongSound } from '../lib/soundEffects';
 
 interface QuizProps {
   question: string;
@@ -17,8 +18,14 @@ export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswer, on
 
   const handleSubmit = () => {
     if (selected === null) return;
+    const isCorrect = selected === correctAnswer;
     setIsSubmitted(true);
-    onComplete(selected === correctAnswer);
+    if (isCorrect) {
+      playQuizCorrectSound();
+    } else {
+      playQuizWrongSound();
+    }
+    onComplete(isCorrect);
   };
 
   return (

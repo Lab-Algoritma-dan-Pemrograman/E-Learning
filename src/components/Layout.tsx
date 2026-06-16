@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, Users, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,9 +18,25 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     setPage, 
     unlockedAchievement, 
     shiftAchievement, 
+    achievementQueue,
     levelUpNotification, 
     setLevelUpNotification 
   } = useStore();
+
+  // Defer level-up popup until the achievement queue is empty.
+  // This ensures the level-up celebration plays AFTER any achievement popups finish.
+  const [pendingLevelUp, setPendingLevelUp] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (levelUpNotification !== null) {
+      // Stash it for later; clear it from global state immediately so it doesn't re-trigger
+      setPendingLevelUp(levelUpNotification);
+      setLevelUpNotification(null);
+    }
+  }, [levelUpNotification]);
+
+  // Only show level-up popup when the achievement queue is fully drained
+  const showLevelUp = pendingLevelUp !== null && !unlockedAchievement && achievementQueue.length === 0;
 
 
 
@@ -416,6 +432,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </div>
       </main>
 
+      {/* Achievement popup — shown first if there are any in the queue */}
       <AnimatePresence>
         {unlockedAchievement && (
           <AchievementPopup 
@@ -425,11 +442,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         )}
       </AnimatePresence>
 
+      {/* Level-up popup — only fires after the achievement queue is empty */}
       <AnimatePresence>
-        {levelUpNotification !== null && (
-          <LevelUpPopup 
-            level={levelUpNotification} 
-            onClose={() => setLevelUpNotification(null)} 
+        {showLevelUp && (
+          <LevelUpPopup
+            level={pendingLevelUp!}
+            onClose={() => setPendingLevelUp(null)}
           />
         )}
       </AnimatePresence>
