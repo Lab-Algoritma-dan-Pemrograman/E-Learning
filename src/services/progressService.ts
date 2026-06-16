@@ -3,6 +3,7 @@ import { UserProfile, useStore } from '../store/useStore';
 import { getOverallProgress } from './centralApiService';
 import { Level } from '../data/curriculum';
 import { Achievement, checkAndUnlockAchievements, checkXpAchievements } from './achievementService';
+import { useProgress } from '../store/useProgress';
 
 // Dynamic leveling formula: level = floor(sqrt(xp / 50)) + 1
 export const calculateLevel = (xp: number): number => {
@@ -99,6 +100,12 @@ export const completeLesson = async (
       streak: streakUpdate,
       lastActive: new Date().toISOString()
     });
+
+    // Update the completed lessons in useProgress store immediately
+    const currentCompleted = useProgress.getState().completedLessons;
+    if (!currentCompleted.includes(lessonId)) {
+      useProgress.getState().setCompletedLessons([...currentCompleted, lessonId]);
+    }
 
     if (newLevel > oldLevel) {
       useStore.getState().setLevelUpNotification(newLevel);
@@ -240,7 +247,10 @@ export const resetUserProgress = async (nim: string): Promise<void> => {
 
     if (userErr) throw userErr;
 
-
+    const currentUser = useStore.getState().user;
+    if (currentUser && currentUser.nim === nim) {
+      useProgress.getState().setCompletedLessons([]);
+    }
 
     console.log(`✅ All progress and achievements reset in Supabase for ${nim}`);
   } catch (error) {
@@ -311,6 +321,10 @@ export const resetLevelProgress = async (
             xp: deductedXp,
             level: newLevel
           });
+          // Update completed lessons in store immediately
+          const currentCompleted = useProgress.getState().completedLessons;
+          const remainingCompleted = currentCompleted.filter(id => !completedInLevel.includes(id));
+          useProgress.getState().setCompletedLessons(remainingCompleted);
         }
       }
     }
