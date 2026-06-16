@@ -382,6 +382,15 @@ export const adjustUserXp = async (nim: string, newXp: number): Promise<void> =>
     console.log(`✅ XP set to ${safeXp} and level set to ${newLevel} for ${nim}`);
 
     const currentUser = useStore.getState().user;
+    if (currentUser) {
+      const { monitoringService } = await import('./monitoringService');
+      await monitoringService.addAuditLog(
+        currentUser.nim,
+        currentUser.nama,
+        'xp_adjusted',
+        `Mengubah XP mahasiswa NIM: ${nim} menjadi ${safeXp} (Level: ${newLevel})`
+      );
+    }
     if (currentUser && currentUser.nim === nim) {
       useStore.getState().setUser({
         ...currentUser,
@@ -407,6 +416,18 @@ export const adjustUserXp = async (nim: string, newXp: number): Promise<void> =>
 
 export const deleteUser = async (nim: string): Promise<void> => {
   try {
+    // Audit log before deleting, so we can retrieve current admin user data from store
+    const currentUser = useStore.getState().user;
+    if (currentUser) {
+      const { monitoringService } = await import('./monitoringService');
+      await monitoringService.addAuditLog(
+        currentUser.nim,
+        currentUser.nama,
+        'user_deleted',
+        `Menghapus akun mahasiswa NIM: ${nim}`
+      );
+    }
+
     const { error } = await supabase
       .from('users')
       .delete()

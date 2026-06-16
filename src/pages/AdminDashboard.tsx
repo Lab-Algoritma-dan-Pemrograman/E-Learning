@@ -1317,20 +1317,49 @@ export const AdminDashboard: React.FC = () => {
         {/* Modal */}
         <AnimatePresence>
           {showModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
+            >
               <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', damping: 20, stiffness: 300 }}
                 className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl relative border border-zinc-100 flex flex-col items-center text-center mt-8"
               >
-                {/* Floating Alert Badges */}
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-rose-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                  <AlertTriangle className="text-amber-500 w-10 h-10" />
-                </div>
+                {/* Dynamic Floating Alert Badges */}
+                {(() => {
+                  const titleLower = showModal.title.toLowerCase();
+                  const messageLower = showModal.message.toLowerCase();
+                  const isSuccess = titleLower.includes('berhasil') || messageLower.includes('berhasil');
+                  const isError = titleLower.includes('gagal') || titleLower.includes('error') || messageLower.includes('gagal');
+                  
+                  if (isSuccess) {
+                    return (
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-emerald-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
+                        <CheckCircle2 className="text-emerald-500 w-10 h-10" />
+                      </div>
+                    );
+                  }
+                  if (isError) {
+                    return (
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-rose-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
+                        <X className="text-red-500 w-10 h-10" />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-rose-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
+                      <AlertTriangle className="text-amber-500 w-10 h-10" />
+                    </div>
+                  );
+                })()}
                 
                 <div className="mt-8 space-y-3 w-full">
-                  <h3 className="text-xl font-black tracking-tight text-zinc-900">{showModal.title}</h3>
+                  <h3 className="text-2xl font-black tracking-tight text-zinc-900">{showModal.title}</h3>
                   <p className="text-sm text-zinc-500 font-semibold leading-relaxed">
                     {showModal.message}
                   </p>
@@ -1341,7 +1370,7 @@ export const AdminDashboard: React.FC = () => {
                     <>
                       <button 
                         onClick={() => setShowModal(null)}
-                        className="flex-1 py-3.5 bg-zinc-50 border border-zinc-200 text-zinc-650 font-black rounded-2xl text-sm transition-all hover:bg-zinc-100"
+                        className="flex-1 py-3.5 bg-zinc-50 border border-zinc-200 text-zinc-600 font-black rounded-2xl text-sm transition-all hover:bg-zinc-100"
                       >
                         Batal
                       </button>
@@ -1365,7 +1394,7 @@ export const AdminDashboard: React.FC = () => {
                   )}
                 </div>
               </motion.div>
-            </div>
+            </motion.div>
           )}
         </AnimatePresence>
 
