@@ -31,11 +31,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const handleLogout = async () => {
     try {
       if (user?.nim) {
+        const { monitoringService } = await import('../services/monitoringService');
+        await monitoringService.addAuditLog(user.nim, user.nama, 'logout', 'Melakukan logout dari sistem');
+        
         await supabase
           .from('active_sessions')
           .delete()
           .eq('nim', user.nim);
       }
+      sessionStorage.removeItem('logged_in_audit_logged');
       clearToken();
       window.location.reload();
     } catch (error) {

@@ -118,7 +118,7 @@ export const monitoringService = {
   async addAuditLog(
     nim: string,
     nama: string,
-    eventType: 'login' | 'logout' | 'start_test' | 'submit_test' | 'token_generated' | 'token_used' | 'access_modified' | 'ai_grading',
+    eventType: 'login' | 'logout' | 'start_test' | 'submit_test' | 'token_generated' | 'token_used' | 'access_modified' | 'ai_grading' | 'curriculum_modified' | 'progress_reset',
     details: string
   ): Promise<void> {
     try {

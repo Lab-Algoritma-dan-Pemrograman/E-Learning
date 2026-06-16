@@ -248,8 +248,17 @@ export const resetUserProgress = async (nim: string): Promise<void> => {
     if (userErr) throw userErr;
 
     const currentUser = useStore.getState().user;
-    if (currentUser && currentUser.nim === nim) {
-      useProgress.getState().setCompletedLessons([]);
+    if (currentUser) {
+      const { monitoringService } = await import('./monitoringService');
+      await monitoringService.addAuditLog(
+        currentUser.nim,
+        currentUser.nama,
+        'progress_reset',
+        `Mereset seluruh progress belajar mahasiswa NIM: ${nim}`
+      );
+      if (currentUser.nim === nim) {
+        useProgress.getState().setCompletedLessons([]);
+      }
     }
 
     console.log(`✅ All progress and achievements reset in Supabase for ${nim}`);
@@ -315,16 +324,25 @@ export const resetLevelProgress = async (
           .eq('nim', nim);
 
         const currentUser = useStore.getState().user;
-        if (currentUser && currentUser.nim === nim) {
-          useStore.getState().setUser({
-            ...currentUser,
-            xp: deductedXp,
-            level: newLevel
-          });
-          // Update completed lessons in store immediately
-          const currentCompleted = useProgress.getState().completedLessons;
-          const remainingCompleted = currentCompleted.filter(id => !completedInLevel.includes(id));
-          useProgress.getState().setCompletedLessons(remainingCompleted);
+        if (currentUser) {
+          const { monitoringService } = await import('./monitoringService');
+          await monitoringService.addAuditLog(
+            currentUser.nim,
+            currentUser.nama,
+            'progress_reset',
+            `Mereset progres level "${levelId}" untuk mahasiswa NIM: ${nim}`
+          );
+          if (currentUser.nim === nim) {
+            useStore.getState().setUser({
+              ...currentUser,
+              xp: deductedXp,
+              level: newLevel
+            });
+            // Update completed lessons in store immediately
+            const currentCompleted = useProgress.getState().completedLessons;
+            const remainingCompleted = currentCompleted.filter(id => !completedInLevel.includes(id));
+            useProgress.getState().setCompletedLessons(remainingCompleted);
+          }
         }
       }
     }

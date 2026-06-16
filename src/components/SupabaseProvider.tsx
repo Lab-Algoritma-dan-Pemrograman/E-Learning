@@ -183,6 +183,14 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log("Setting store user:", profileData.nama);
         setStoreUser(profileData);
 
+        // Record login audit log once per session
+        const sessionLoggedIn = sessionStorage.getItem('logged_in_audit_logged');
+        if (!sessionLoggedIn && profileData.nim) {
+          const { monitoringService } = await import('../services/monitoringService');
+          await monitoringService.addAuditLog(profileData.nim, profileData.nama, 'login', 'Masuk ke sistem E-Learning');
+          sessionStorage.setItem('logged_in_audit_logged', 'true');
+        }
+
         // 3. Realtime Subscription for Profile updates
         console.log("Subscribing to realtime profile updates via Supabase...");
         unsubProfileChannel = supabase

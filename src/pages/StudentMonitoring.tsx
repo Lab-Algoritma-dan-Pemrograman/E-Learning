@@ -736,40 +736,44 @@ export const StudentMonitoring: React.FC = () => {
 
         {/* Action Confirmation Modal */}
         {confirmAction && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 border border-zinc-100 transform scale-100 transition-transform">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-650 flex items-center justify-center shrink-0">
-                  <AlertTriangle size={24} />
-                </div>
-                <div>
-                  <h3 className="font-black text-zinc-950 text-base leading-tight">
-                    {confirmAction.type === 'reset' ? 'Konfirmasi Reset Progres' : 'Hapus Akun Mahasiswa'}
-                  </h3>
-                  <p className="text-xs text-zinc-400 font-bold mt-0.5">{confirmAction.nama} ({confirmAction.nim})</p>
-                </div>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl border border-zinc-100 relative flex flex-col items-center text-center mt-8">
+              {/* Floating Warning Badge */}
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-rose-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
+                <AlertTriangle className="text-amber-500 w-10 h-10" />
               </div>
-              
-              <p className="text-sm text-zinc-600 font-medium leading-relaxed">
-                {confirmAction.type === 'reset'
-                  ? 'Apakah Anda yakin ingin mereset progres belajar? Seluruh riwayat penyelesaian pelajaran, XP, dan streak harian akan dikembalikan ke 0. Tindakan ini permanen.'
-                  : 'Apakah Anda yakin ingin menghapus akun mahasiswa ini? Seluruh data profil, progress belajar, XP, dan pencapaian akan dihapus selamanya dari database.'}
-              </p>
 
-              <div className="flex gap-2.5 pt-2">
+              <div className="mt-8 space-y-3 w-full">
+                <h3 className="text-xl font-black tracking-tight text-zinc-950">
+                  {confirmAction.type === 'reset' ? 'Reset Progres?' : 'Hapus Akun?'}
+                </h3>
+                <p className="text-xs text-zinc-400 font-bold">
+                  {confirmAction.nama} ({confirmAction.nim})
+                </p>
+                <p className="text-sm text-zinc-500 font-semibold leading-relaxed">
+                  {confirmAction.type === 'reset'
+                    ? 'Apakah Anda yakin ingin mereset progres belajar? Seluruh riwayat pelajaran, XP, dan streak akan kembali ke 0.'
+                    : 'Apakah Anda yakin ingin menghapus akun mahasiswa ini? Seluruh data progres dan pencapaian akan terhapus selamanya.'}
+                </p>
+                <p className="text-sm text-red-500 font-extrabold">
+                  Tindakan ini bersifat permanen dan tidak bisa dibatalkan.
+                </p>
+              </div>
+
+              <div className="flex gap-3 w-full mt-8">
                 <button 
                   onClick={() => setConfirmAction(null)} 
                   disabled={actionLoading} 
-                  className="flex-1 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-black rounded-2xl text-sm transition-colors"
+                  className="flex-1 py-3.5 bg-zinc-50 border border-zinc-200 text-zinc-650 font-black rounded-2xl text-sm transition-all hover:bg-zinc-100"
                 >
                   Batal
                 </button>
                 <button 
                   onClick={() => confirmAction.type === 'reset' ? handleResetProgress(confirmAction.nim) : handleDeleteUser(confirmAction.nim)} 
                   disabled={actionLoading} 
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl text-sm transition-all shadow-lg shadow-red-600/10 active:scale-95 disabled:opacity-50"
+                  className="flex-1 py-3.5 bg-red-650 border-b-4 border-red-800 text-white font-black rounded-2xl text-sm shadow-md shadow-red-500/10 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-red-700"
                 >
-                  {actionLoading ? 'Memproses...' : confirmAction.type === 'reset' ? 'Reset Sekarang' : 'Hapus Sekarang'}
+                  {actionLoading ? 'Memproses...' : confirmAction.type === 'reset' ? 'Ya, Reset!' : 'Ya, Hapus!'}
                 </button>
               </div>
             </div>

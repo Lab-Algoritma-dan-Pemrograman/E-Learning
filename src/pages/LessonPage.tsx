@@ -14,7 +14,7 @@ import { useProgress } from '../store/useProgress';
 import { completeLesson as completeLessonService, grantXp } from '../services/progressService';
 import { cn } from '../lib/utils';
 import { useCodeRunner, detectLanguage, CodeLanguage } from '../hooks/useCodeRunner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 /**
  * Normalize output for flexible comparison:
@@ -108,6 +108,7 @@ export const LessonPage: React.FC = () => {
   const [showLessonNav, setShowLessonNav] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [quizXpGranted, setQuizXpGranted] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const scrollToActiveLesson = () => {
     setTimeout(() => {
@@ -454,6 +455,58 @@ export const LessonPage: React.FC = () => {
                 >
                   Kembali ke Dashboard
                 </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Reset Confirm Modal */}
+        <AnimatePresence>
+          {showResetConfirm && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm animate-fade-in">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl relative border border-zinc-100 flex flex-col items-center text-center mt-8"
+              >
+                {/* Floating Alert Badges */}
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-rose-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
+                  <AlertTriangle className="text-amber-500 w-10 h-10" />
+                </div>
+                
+                <div className="mt-8 space-y-3 w-full">
+                  <h3 className="text-2xl font-black tracking-tight text-zinc-900">Reset Kode?</h3>
+                  <p className="text-sm text-zinc-500 font-semibold leading-relaxed">
+                    Apakah kamu yakin ingin mereset kode ke pengaturan awal?
+                  </p>
+                  <p className="text-sm text-red-500 font-extrabold">
+                    Semua perubahanmu di pelajaran ini akan hilang.
+                  </p>
+                </div>
+                
+                <div className="flex gap-3 w-full mt-8">
+                  <button 
+                    onClick={() => setShowResetConfirm(false)}
+                    className="flex-1 py-3.5 bg-zinc-50 border border-zinc-200 text-zinc-650 font-black rounded-2xl text-sm transition-all hover:bg-zinc-100"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const defaultCode = lesson.initialCode || lesson.codeExample || '';
+                      setCode(defaultCode);
+                      localStorage.removeItem(`lesson-code:${lesson.id}`);
+                      setOutput('');
+                      setError(null);
+                      setIsCorrect(null);
+                      setShowResetConfirm(false);
+                    }}
+                    className="flex-1 py-3.5 bg-red-650 border-b-4 border-red-800 text-white font-black rounded-2xl text-sm shadow-md shadow-red-500/10 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-red-700"
+                  >
+                    Ya, Reset!
+                  </button>
+                </div>
               </motion.div>
             </div>
           )}
@@ -872,14 +925,7 @@ export const LessonPage: React.FC = () => {
                     }} 
                     onRun={handleRun}
                     onReset={() => {
-                      if (window.confirm('Apakah Anda yakin ingin mereset kode ke pengaturan awal? Semua perubahan Anda pada pelajaran ini akan hilang.')) {
-                        const defaultCode = lesson.initialCode || lesson.codeExample || '';
-                        setCode(defaultCode);
-                        localStorage.removeItem(`lesson-code:${lesson.id}`);
-                        setOutput('');
-                        setError(null);
-                        setIsCorrect(null);
-                      }
+                      setShowResetConfirm(true);
                     }}
                     isLoading={isLoading}
                     language={lessonLanguage}

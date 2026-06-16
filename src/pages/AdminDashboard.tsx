@@ -248,6 +248,10 @@ export const AdminDashboard: React.FC = () => {
           const { curriculumService } = await import('../services/curriculumService');
           await curriculumService.clearCurriculum();
           await curriculumService.saveFullCurriculum(generatedCurriculum);
+          if (currentUser) {
+            const { monitoringService } = await import('../services/monitoringService');
+            await monitoringService.addAuditLog(currentUser.nim, currentUser.nama, 'curriculum_modified', 'Membuat kurikulum baru menggunakan AI');
+          }
           setShowModal({ type: 'alert', title: 'Berhasil', message: 'Kurikulum berhasil disimpan!' });
           setGeneratedCurriculum(null);
           setAiMaterial('');
@@ -310,6 +314,10 @@ export const AdminDashboard: React.FC = () => {
           const { curriculum: staticCurriculum } = await import('../data/curriculum');
           await curriculumService.clearCurriculum();
           await curriculumService.saveFullCurriculum(staticCurriculum);
+          if (currentUser) {
+            const { monitoringService } = await import('../services/monitoringService');
+            await monitoringService.addAuditLog(currentUser.nim, currentUser.nama, 'curriculum_modified', 'Mereset kurikulum ke bawaan default');
+          }
           setShowModal({ type: 'alert', title: 'Berhasil', message: 'Kurikulum berhasil direset ke pengaturan awal!' });
         } catch (error) {
           setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mereset kurikulum.' });
@@ -739,6 +747,10 @@ export const AdminDashboard: React.FC = () => {
       console.log("Does draft contain any validation rules?", hasRules);
 
       await curriculumService.saveFullCurriculum(draftCurriculum);
+      if (currentUser) {
+        const { monitoringService } = await import('../services/monitoringService');
+        await monitoringService.addAuditLog(currentUser.nim, currentUser.nama, 'curriculum_modified', 'Mengubah struktur kurikulum (level, modul, atau pelajaran)');
+      }
       setHasChanges(false);
       setShowModal({ type: 'alert', title: 'Berhasil', message: 'Semua perubahan berhasil disimpan ke database.' });
     } catch (error) {
@@ -1305,23 +1317,31 @@ export const AdminDashboard: React.FC = () => {
         {/* Modal */}
         <AnimatePresence>
           {showModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm">
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6"
+                className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl relative border border-zinc-100 flex flex-col items-center text-center mt-8"
               >
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold">{showModal.title}</h3>
-                  <p className="text-zinc-500 leading-relaxed">{showModal.message}</p>
+                {/* Floating Alert Badges */}
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-rose-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                  <AlertTriangle className="text-amber-500 w-10 h-10" />
                 </div>
-                <div className="flex gap-3">
+                
+                <div className="mt-8 space-y-3 w-full">
+                  <h3 className="text-xl font-black tracking-tight text-zinc-900">{showModal.title}</h3>
+                  <p className="text-sm text-zinc-500 font-semibold leading-relaxed">
+                    {showModal.message}
+                  </p>
+                </div>
+                
+                <div className="flex gap-3 w-full mt-8">
                   {showModal.type === 'confirm' ? (
                     <>
                       <button 
                         onClick={() => setShowModal(null)}
-                        className="flex-1 py-3 bg-zinc-100 text-zinc-600 font-bold rounded-xl hover:bg-zinc-200 transition-all"
+                        className="flex-1 py-3.5 bg-zinc-50 border border-zinc-200 text-zinc-650 font-black rounded-2xl text-sm transition-all hover:bg-zinc-100"
                       >
                         Batal
                       </button>
@@ -1330,15 +1350,15 @@ export const AdminDashboard: React.FC = () => {
                           showModal.onConfirm?.();
                           setShowModal(null);
                         }}
-                        className="flex-1 py-3 bg-rose-800 text-white font-bold rounded-xl hover:bg-rose-900 shadow-lg shadow-rose-700/20 transition-all"
+                        className="flex-1 py-3.5 bg-red-650 border-b-4 border-red-800 text-white font-black rounded-2xl text-sm shadow-md shadow-red-500/10 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-red-700"
                       >
-                        Ya, Lanjutkan
+                        Lanjutkan
                       </button>
                     </>
                   ) : (
                     <button 
                       onClick={() => setShowModal(null)}
-                      className="w-full py-3 bg-zinc-900 text-white font-bold rounded-xl hover:bg-zinc-800 transition-all"
+                      className="w-full py-3.5 bg-zinc-900 border-b-4 border-zinc-950 text-white font-black rounded-2xl text-sm shadow-md active:border-b-0 active:translate-y-[4px] transition-all hover:bg-zinc-800"
                     >
                       Tutup
                     </button>
@@ -1347,7 +1367,9 @@ export const AdminDashboard: React.FC = () => {
               </motion.div>
             </div>
           )}
+        </AnimatePresence>
 
+        <AnimatePresence>
           {movingLesson && (() => {
             const srcLevel = draftCurriculum.find(l => l.id === movingLesson.levelId);
             const srcMod = srcLevel?.modules?.[movingLesson.modIdx];
