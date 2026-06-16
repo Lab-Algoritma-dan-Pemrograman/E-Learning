@@ -233,7 +233,7 @@ export const LessonPage: React.FC = () => {
             stripStrings: rule.stripStrings
           });
 
-          const regex = new RegExp(rule.pattern, rule.flags || 'i');
+          const regex = new RegExp(rule.pattern, rule.flags || 'im');
           const exists = regex.test(cleanCode);
           
           if (rule.shouldExist && !exists) {
