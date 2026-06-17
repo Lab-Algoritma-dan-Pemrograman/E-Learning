@@ -6,7 +6,9 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import { Trash2, Copy, Share2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
+import { PlaygroundExample, getPlaygroundExamples } from '../services/playgroundService';
 
 const DEFAULT_CODE: Record<CodeLanguage, string> = {
   python: '# Tulis kode Python Anda di sini\n# Gunakan input() untuk menerima input dari terminal\n\nnama = input("Siapa nama kamu? ")\nprint(f"Halo, {nama}! Selamat datang!")',
@@ -19,6 +21,23 @@ export const Playground: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const { runCode, isLoading } = useCodeRunner(language);
   const { pyodideWorker } = useStore();
+
+  // Example code state
+  const [showExamples, setShowExamples] = useState(false);
+  const [examples, setExamples] = useState<PlaygroundExample[]>([]);
+  const [loadingExamples, setLoadingExamples] = useState(false);
+
+  // Load examples when modal opens
+  useEffect(() => {
+    if (!showExamples) return;
+    const load = async () => {
+      setLoadingExamples(true);
+      const data = await getPlaygroundExamples(language);
+      setExamples(data);
+      setLoadingExamples(false);
+    };
+    load();
+  }, [showExamples, language]);
 
   // xterm.js refs
   const termContainerRef = useRef<HTMLDivElement>(null);
@@ -395,6 +414,14 @@ export const Playground: React.FC = () => {
             >
               <i className="fa-solid fa-share-nodes"></i>
             </button>
+            <div className="w-px h-8 bg-zinc-200" />
+            <button 
+              onClick={() => setShowExamples(true)}
+              className="px-4 py-2.5 bg-rose-700 text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-[0_3px_0_#5C0E25] active:translate-y-[3px] active:shadow-none btn-bubbly cursor-pointer transition-all hover:bg-rose-600"
+            >
+              <i className="fa-solid fa-book-open"></i>
+              Contoh Kode
+            </button>
           </div>
         </div>
 
@@ -422,10 +449,11 @@ export const Playground: React.FC = () => {
               </span>
               <button 
                 onClick={clearOutput}
-                className="p-1.5 bg-zinc-700/50 hover:bg-zinc-700 border border-zinc-650 rounded text-zinc-350 hover:text-white transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-700/60 hover:bg-zinc-600 border border-zinc-600 rounded-lg text-zinc-300 hover:text-white transition-colors cursor-pointer text-[11px] font-bold"
                 title="Bersihkan Output"
               >
-                <i className="fa-solid fa-trash text-[11px]"></i>
+                <i className="fa-solid fa-trash text-[10px]"></i>
+                <span>Bersihkan</span>
               </button>
             </div>
 
@@ -445,6 +473,108 @@ export const Playground: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Example Code Modal */}
+      <AnimatePresence>
+        {showExamples && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
+            onClick={() => setShowExamples(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border border-zinc-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+                <div>
+                  <h3 className="text-xl font-black tracking-tight text-zinc-900 flex items-center gap-2">
+                    <i className="fa-solid fa-book-open text-rose-700"></i>
+                    Contoh Kode
+                  </h3>
+                  <p className="text-zinc-500 text-xs font-semibold mt-0.5">
+                    Pilih contoh kode {language === 'python' ? 'Python' : 'Bahasa C'} untuk dipelajari.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowExamples(false)}
+                  className="p-2 bg-white text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200 transition-colors"
+                >
+                  <i className="fa-solid fa-xmark text-lg"></i>
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
+                {loadingExamples ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3">
+                    <div className="w-10 h-10 border-4 border-rose-700 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-zinc-400 font-bold text-sm">Memuat contoh kode...</p>
+                  </div>
+                ) : examples.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                    <div className="w-16 h-16 bg-zinc-100 rounded-2xl flex items-center justify-center">
+                      <i className="fa-solid fa-code text-2xl text-zinc-300"></i>
+                    </div>
+                    <p className="text-zinc-400 font-bold text-sm">Belum ada contoh kode untuk {language === 'python' ? 'Python' : 'Bahasa C'}.</p>
+                    <p className="text-zinc-300 text-xs">Hubungi admin untuk menambahkan contoh.</p>
+                  </div>
+                ) : (
+                  examples.map((ex) => (
+                    <div
+                      key={ex.id}
+                      className="group border border-zinc-200 rounded-2xl overflow-hidden hover:border-rose-200 hover:shadow-lg hover:shadow-rose-500/5 transition-all"
+                    >
+                      <div className="p-4 flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                              ex.language === 'python'
+                                ? 'bg-rose-100 text-rose-700'
+                                : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {ex.language === 'python' ? 'Python' : 'C'}
+                            </span>
+                            <h4 className="font-bold text-sm text-zinc-900 truncate">{ex.title}</h4>
+                          </div>
+                          {ex.description && (
+                            <p className="text-xs text-zinc-500 line-clamp-2 mt-1">{ex.description}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setCode(ex.code);
+                            setShowExamples(false);
+                          }}
+                          className="shrink-0 px-4 py-2 bg-rose-700 text-white rounded-xl text-xs font-bold hover:bg-rose-600 transition-all active:scale-95 shadow-lg shadow-rose-700/20"
+                        >
+                          Gunakan
+                        </button>
+                      </div>
+                      {/* Code preview */}
+                      <div className="bg-zinc-900 px-4 py-3 border-t border-zinc-200 max-h-24 overflow-hidden relative">
+                        <pre className="text-[11px] text-emerald-400 font-mono whitespace-pre leading-relaxed">
+                          {ex.code.split('\n').slice(0, 5).join('\n')}
+                        </pre>
+                        {ex.code.split('\n').length > 5 && (
+                          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-zinc-900 to-transparent" />
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 };

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Learning - Eksplorasi Kurikulum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        // Brand Colors
+                        maroon: {
+                            DEFAULT: '#8A1538', // Warna utama Maroon
+                            light: '#B21F47',   // Maroon lebih terang untuk hover
+                            dark: '#5C0E25',    // Maroon gelap untuk shadow
+                            bg: '#FDF2F4',      // Latar belakang pink/maroon sangat pudar
+                        },
+                        // Cheerful Accent Colors
+                        fun: {
+                            yellow: '#FFC300',  // Kuning ceria
+                            blue: '#48CAE4',    // Biru langit
+                            green: '#06D6A0',   // Hijau mint
+                            purple: '#9D4EDD',  // Ungu cerah
+                        },
+                        dark: '#2D3142',
+                        python: '#3776AB',
+                        c: '#00599C',
+                        sidebar: '#FFFFFF',
+                        cardbg: '#FFFFFF',
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 25px -5px rgba(138, 21, 56, 0.05), 0 8px 10px -6px rgba(138, 21, 56, 0.02)',
+                        'bubbly': '0 6px 0 rgba(0,0,0,0.1)',
+                        'bubbly-maroon': '0 6px 0 #5C0E25', // Shadow khusus tombol maroon
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FDFBF7; /* Warna latar krem hangat agar tidak kaku */
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 195, 0, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(138, 21, 56, 0.04) 0%, transparent 20%);
+            background-attachment: fixed;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FDF2F4; 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D9A0B0; 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8A1538; 
+        }
+
+        .btn-bubbly {
+            transition: all 0.1s ease;
+        }
+        .btn-bubbly:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 transparent;
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 30px -5px rgba(138, 21, 56, 0.1), 0 10px 10px -5px rgba(138, 21, 56, 0.04);
+        }
+
+        /* Checkbox styling ceria */
+        .checkbox-ceria:checked + div {
+            background-color: #06D6A0;
+            border-color: #06D6A0;
+        }
+        .checkbox-ceria:checked + div svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="text-dark font-sans h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-sidebar flex flex-col justify-between shadow-[4px_0_24px_rgba(138,21,56,0.05)] z-20 h-full relative border-r border-maroon/5">
+        
+        <!-- Fancy Top Decoration Maroon-Yellow -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-maroon via-fun-yellow to-fun-blue"></div>
+
+        <div>
+            <!-- Logo -->
+            <div class="p-6 flex items-center space-x-3 mt-2">
+                <div class="w-11 h-11 bg-maroon rounded-xl flex items-center justify-center text-white font-black text-2xl shadow-bubbly-maroon transform rotate-[-6deg] hover:rotate-0 transition-transform cursor-pointer">
+                    E
+                </div>
+                <span class="text-xl font-black tracking-tight text-maroon">E-Learning</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="px-4 mt-6 space-y-3">
+                <a href="#" class="flex items-center space-x-4 px-4 py-3 text-gray-500 hover:bg-maroon-bg hover:text-maroon rounded-2xl transition-all font-bold group">
+                    <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all text-gray-400 group-hover:text-maroon">
+                        <i class="fa-solid fa-shapes"></i>
+                    </div>
+                    <span>Dasbor</span>
+                </a>
+
+                <!-- Active Menu: Maroon -->
+                <a href="#" class="flex items-center space-x-4 px-4 py-3 bg-maroon text-white rounded-2xl shadow-bubbly-maroon font-black relative overflow-hidden transform transition-transform hover:-translate-y-1">
+                    <!-- Sparkle effect in background -->
+                    <div class="absolute -right-2 -top-2 text-white/10 text-4xl"><i class="fa-solid fa-burst"></i></div>
+                    
+                    <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-white relative z-10">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <span class="relative z-10 tracking-wide">Kursus</span>
+                </a>
+
+                <a href="#" class="flex items-center space-x-4 px-4 py-3 text-gray-500 hover:bg-maroon-bg hover:text-maroon rounded-2xl transition-all font-bold group">
+                    <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all text-gray-400 group-hover:text-fun-blue">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                    <span>Playground</span>
+                </a>
+
+                <a href="#" class="flex items-center space-x-4 px-4 py-3 text-gray-500 hover:bg-maroon-bg hover:text-maroon rounded-2xl transition-all font-bold group">
+                    <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all text-gray-400 group-hover:text-fun-yellow">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <span>Papan Peringkat</span>
+                </a>
+            </nav>
+
+            <!-- Divider -->
+            <div class="px-8 my-6">
+                <div class="h-1 bg-maroon-bg rounded-full"></div>
+            </div>
+
+            <!-- Staff Panel -->
+            <div class="px-8 mb-3">
+                <span class="text-xs font-black text-maroon/40 tracking-widest uppercase bg-maroon-bg px-3 py-1 rounded-full">Panel Staf</span>
+            </div>
+            <nav class="px-4 space-y-1">
+                <a href="#" class="flex items-center space-x-4 px-4 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-dark rounded-xl transition-colors font-bold text-sm group">
+                    <i class="fa-solid fa-shield-halved text-gray-300 group-hover:text-maroon w-5 text-center transition-colors"></i>
+                    <span>Admin Panel</span>
+                </a>
+                <a href="#" class="flex items-center space-x-4 px-4 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-dark rounded-xl transition-colors font-bold text-sm group">
+                    <i class="fa-solid fa-users-viewfinder text-gray-300 group-hover:text-fun-blue w-5 text-center transition-colors"></i>
+                    <span>Monitoring</span>
+                </a>
+                <a href="#" class="flex items-center space-x-4 px-4 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-dark rounded-xl transition-colors font-bold text-sm group">
+                    <i class="fa-solid fa-clipboard-list text-gray-300 group-hover:text-fun-green w-5 text-center transition-colors"></i>
+                    <span>Audit Log</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Logout -->
+        <div class="p-6">
+            <a href="#" class="flex items-center space-x-3 text-gray-400 hover:text-red-500 font-black transition-colors group px-2">
+                <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-red-100 group-hover:text-red-500 transition-all">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </div>
+                <span>Keluar</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- Floating decorative blobs behind content -->
+        <div class="absolute top-[-50px] right-[-50px] w-64 h-64 bg-fun-yellow/20 rounded-full blur-3xl z-0 pointer-events-none"></div>
+        <div class="absolute bottom-1/4 left-1/4 w-96 h-96 bg-maroon/5 rounded-full blur-3xl z-0 pointer-events-none"></div>
+
+        <!-- Top Header -->
+        <header class="bg-[#FDFBF7]/80 backdrop-blur-md sticky top-0 z-10 px-8 py-4 flex justify-between items-center border-b border-maroon/5">
+            <div class="flex items-center space-x-4">
+                <button class="w-10 h-10 rounded-full hover:bg-maroon-bg flex items-center justify-center text-maroon transition-colors focus:outline-none">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <a href="#" class="text-sm font-bold text-gray-400 hover:text-maroon flex items-center space-x-2 transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                    <span>Kembali ke Dashboard</span>
+                </a>
+            </div>
+
+            <!-- Profile Chip Ceria -->
+            <div class="flex items-center space-x-3 cursor-pointer bg-white hover:bg-maroon-bg p-1.5 pr-5 rounded-full transition-colors border-2 border-transparent hover:border-maroon/20 shadow-sm group">
+                <div class="w-10 h-10 rounded-full bg-fun-yellow flex items-center justify-center text-maroon font-black shadow-inner border-2 border-white group-hover:scale-105 transition-transform text-lg">
+                    I
+                </div>
+                <div class="text-left hidden sm:block">
+                    <p class="text-sm font-black text-dark leading-none mb-1 group-hover:text-maroon transition-colors">IVAN JOSE</p>
+                    <div class="flex items-center">
+                        <span class="bg-maroon text-white text-[10px] px-2 py-0.5 rounded-md font-bold mr-2">LVL 3</span>
+                        <p class="text-xs font-bold text-gray-500 flex items-center">
+                            <i class="fa-solid fa-star text-fun-yellow mr-1"></i> 294 XP
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto p-8 relative z-10">
+            <div class="max-w-6xl mx-auto pb-12">
+                
+                <!-- Page Title -->
+                <div class="mb-10 animate-fade-in-up">
+                    <h1 class="text-4xl md:text-5xl font-black text-maroon mb-4 tracking-tight flex items-center">
+                        Eksplorasi Kurikulum <i class="fa-solid fa-wand-magic-sparkles text-fun-yellow ml-4 text-3xl"></i>
+                    </h1>
+                    <p class="text-lg text-gray-600 max-w-3xl leading-relaxed font-bold">
+                        Yuk mulai petualangan ngoding kamu! Pilih <span class="font-black text-python bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">Python</span> untuk kemudahan dan dunia data, atau <span class="font-black text-c bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">Bahasa C</span> untuk ngulik jeroan sistem lebih dalam.
+                    </p>
+                </div>
+
+                <!-- Section Header (Bahasa C) -->
+                <div class="bg-white rounded-[2rem] p-6 shadow-soft mb-8 flex flex-col md:flex-row items-start md:items-center gap-6 border-2 border-gray-100 relative overflow-hidden group hover:border-maroon/30 transition-colors">
+                    
+                    <!-- Decorative background patterns -->
+                    <div class="absolute right-0 top-0 w-32 h-32 bg-fun-blue/5 rounded-bl-full pointer-events-none"></div>
+                    
+                    <div class="flex-shrink-0 relative">
+                        <!-- Playful Number Badge -->
+                        <div class="w-20 h-20 bg-fun-blue rounded-3xl flex items-center justify-center text-white font-black text-4xl shadow-[0_8px_0_#023E8A] transform rotate-[-5deg] group-hover:rotate-0 transition-all cursor-pointer z-10 relative">
+                            1
+                        </div>
+                        <!-- Little sparkle -->
+                        <i class="fa-solid fa-star absolute -top-2 -right-2 text-fun-yellow text-xl z-20 animate-pulse"></i>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <div class="flex flex-wrap items-center gap-3 mb-2">
+                            <h2 class="text-2xl font-black text-dark tracking-tight uppercase">DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C</h2>
+                            <span class="bg-blue-100 text-blue-700 text-xs font-black px-3 py-1.5 rounded-xl border-2 border-blue-200 uppercase tracking-wide">Bahasa C</span>
+                        </div>
+                        <p class="text-gray-500 font-bold bg-gray-50 inline-block px-3 py-1 rounded-lg text-sm border border-gray-100">Materi Level 1</p>
+                    </div>
+                    
+                    <!-- Overall Progress -->
+                    <div class="md:w-56 w-full bg-maroon-bg p-4 rounded-2xl border-2 border-maroon/10 flex flex-col items-center justify-center relative overflow-hidden">
+                        <div class="text-xs font-black text-maroon/70 uppercase mb-1 tracking-widest z-10">Progres Level</div>
+                        <div class="flex items-baseline space-x-1 z-10">
+                            <span class="text-3xl font-black text-maroon">0%</span>
+                            <span class="text-sm font-bold text-maroon/70">Selesai</span>
+                        </div>
+                        <!-- Progress Bar Container -->
+                        <div class="w-full h-3 bg-white rounded-full mt-3 overflow-hidden border border-maroon/20 z-10 shadow-inner">
+                            <div class="h-full bg-maroon rounded-full w-0 relative">
+                                <!-- Shine effect on progress bar -->
+                                <div class="absolute top-0 left-0 right-0 h-1 bg-white/30 rounded-t-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Card 1 -->
+                    <div class="bg-white rounded-[2rem] p-7 shadow-soft border-2 border-gray-100 card-hover flex flex-col h-full relative overflow-hidden group">
+                        
+                        <div class="mb-5 flex justify-between items-start mt-2">
+                            <!-- Bubbly Icon -->
+                            <div class="w-14 h-14 bg-blue-50 text-fun-blue rounded-2xl flex items-center justify-center text-2xl shadow-[0_4px_0_#DBEAFE] group-hover:bg-fun-blue group-hover:text-white group-hover:shadow-[0_4px_0_#0284C7] transition-all duration-300 transform group-hover:scale-110 group-hover:-rotate-6">
+                                <i class="fa-solid fa-book-open-reader"></i>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-black text-dark mb-3 leading-tight group-hover:text-fun-blue transition-colors">Struktur Penulisan Program Bahasa C</h3>
+                        
+                        <!-- Badges -->
+                        <div class="flex items-center text-xs font-bold text-gray-500 mb-6 space-x-2">
+                            <span class="bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 flex items-center text-gray-600"><i class="fa-solid fa-list-ul mr-1.5 text-fun-yellow"></i> 4 Pelajaran</span>
+                            <span class="bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 flex items-center text-gray-600"><i class="fa-solid fa-clock mr-1.5 text-fun-blue"></i> ~20 mnt</span>
+                        </div>
+                        
+                        <!-- Checkboxes Ceria -->
+                        <div class="space-y-4 flex-1 mb-6">
+                            <label class="flex items-start space-x-3 cursor-pointer group/item">
+                                <div class="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                                    <input type="checkbox" class="peer sr-only checkbox-ceria">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white peer-hover:border-maroon/50 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transform scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-600 group-hover/item:text-maroon transition-colors pt-0.5">Penggunaan `#include` dan Header File</span>
+                            </label>
+                            
+                            <label class="flex items-start space-x-3 cursor-pointer group/item">
+                                <div class="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                                    <input type="checkbox" class="peer sr-only checkbox-ceria">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white peer-hover:border-maroon/50 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transform scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-600 group-hover/item:text-maroon transition-colors pt-0.5">Pembuatan Header File Sendiri</span>
+                            </label>
+
+                            <label class="flex items-start space-x-3 cursor-pointer group/item">
+                                <div class="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                                    <input type="checkbox" class="peer sr-only checkbox-ceria">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white peer-hover:border-maroon/50 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transform scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-600 group-hover/item:text-maroon transition-colors pt-0.5">Penggunaan `int main()` dan `return 0`</span>
+                            </label>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <button class="text-xs font-black text-fun-blue hover:text-blue-700 uppercase tracking-widest mb-5 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg w-full text-left">+ 1 PELAJARAN LAGI</button>
+                            
+                            <div class="pt-5 border-t-2 border-dashed border-gray-100 flex items-center justify-between">
+                                <span class="text-xs font-black text-gray-400 tracking-widest uppercase bg-gray-50 px-3 py-1 rounded-full">0% Selesai</span>
+                                <button class="bg-gray-100 hover:bg-maroon text-gray-500 hover:text-white w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm hover:shadow-bubbly-maroon transform hover:-translate-y-1">
+                                    <i class="fa-solid fa-play ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="bg-white rounded-[2rem] p-7 shadow-soft border-2 border-gray-100 card-hover flex flex-col h-full relative overflow-hidden group">
+                        
+                        <div class="mb-5 flex justify-between items-start mt-2">
+                            <div class="w-14 h-14 bg-teal-50 text-fun-green rounded-2xl flex items-center justify-center text-2xl shadow-[0_4px_0_#CCFBF1] group-hover:bg-fun-green group-hover:text-white group-hover:shadow-[0_4px_0_#047857] transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-6">
+                                <i class="fa-solid fa-laptop-code"></i>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-black text-dark mb-3 leading-tight group-hover:text-fun-green transition-colors">Tipe Data Dasar</h3>
+                        
+                        <div class="flex items-center text-xs font-bold text-gray-500 mb-6 space-x-2">
+                            <span class="bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 flex items-center text-gray-600"><i class="fa-solid fa-list-ul mr-1.5 text-fun-yellow"></i> 6 Pelajaran</span>
+                            <span class="bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 flex items-center text-gray-600"><i class="fa-solid fa-clock mr-1.5 text-fun-green"></i> ~30 mnt</span>
+                        </div>
+                        
+                        <div class="space-y-4 flex-1 mb-6">
+                            <label class="flex items-start space-x-3 cursor-pointer group/item">
+                                <div class="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                                    <input type="checkbox" class="peer sr-only checkbox-ceria">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white peer-hover:border-maroon/50 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transform scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-600 group-hover/item:text-maroon transition-colors pt-0.5">Tipe Data `char`</span>
+                            </label>
+                            
+                            <label class="flex items-start space-x-3 cursor-pointer group/item">
+                                <div class="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                                    <input type="checkbox" class="peer sr-only checkbox-ceria">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white peer-hover:border-maroon/50 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transform scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-600 group-hover/item:text-maroon transition-colors pt-0.5">Tipe Data `int`</span>
+                            </label>
+
+                            <label class="flex items-start space-x-3 cursor-pointer group/item">
+                                <div class="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                                    <input type="checkbox" class="peer sr-only checkbox-ceria">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white peer-hover:border-maroon/50 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transform scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-600 group-hover/item:text-maroon transition-colors pt-0.5">Tipe Data `float` dan `double`</span>
+                            </label>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <button class="text-xs font-black text-fun-green hover:text-emerald-700 uppercase tracking-widest mb-5 transition-colors bg-teal-50 px-3 py-1.5 rounded-lg w-full text-left">+ 3 PELAJARAN LAGI</button>
+                            
+                            <div class="pt-5 border-t-2 border-dashed border-gray-100 flex items-center justify-between">
+                                <span class="text-xs font-black text-gray-400 tracking-widest uppercase bg-gray-50 px-3 py-1 rounded-full">0% Selesai</span>
+                                <button class="bg-gray-100 hover:bg-maroon text-gray-500 hover:text-white w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm hover:shadow-bubbly-maroon transform hover:-translate-y-1">
+                                    <i class="fa-solid fa-play ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="bg-white rounded-[2rem] p-7 shadow-soft border-2 border-gray-100 card-hover flex flex-col h-full relative overflow-hidden group">
+                        
+                        <div class="mb-5 flex justify-between items-start mt-2">
+                            <div class="w-14 h-14 bg-purple-50 text-fun-purple rounded-2xl flex items-center justify-center text-2xl shadow-[0_4px_0_#F3E8FF] group-hover:bg-fun-purple group-hover:text-white group-hover:shadow-[0_4px_0_#7E22CE] transition-all duration-300 transform group-hover:scale-110 group-hover:-rotate-3">
+                                <i class="fa-solid fa-box-archive"></i>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-black text-dark mb-3 leading-tight group-hover:text-fun-purple transition-colors">Deklarasi Variabel</h3>
+                        
+                        <div class="flex items-center text-xs font-bold text-gray-500 mb-6 space-x-2">
+                            <span class="bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 flex items-center text-gray-600"><i class="fa-solid fa-list-ul mr-1.5 text-fun-yellow"></i> 3 Pelajaran</span>
+                            <span class="bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 flex items-center text-gray-600"><i class="fa-solid fa-clock mr-1.5 text-fun-purple"></i> ~15 mnt</span>
+                        </div>
+                        
+                        <div class="space-y-4 flex-1 mb-6">
+                            <label class="flex items-start space-x-3 cursor-pointer group/item">
+                                <div class="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                                    <input type="checkbox" class="peer sr-only checkbox-ceria">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white peer-hover:border-maroon/50 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transform scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-600 group-hover/item:text-maroon transition-colors pt-0.5">Konsep dan Format Variabel</span>
+                            </label>
+                            
+                            <label class="flex items-start space-x-3 cursor-pointer group/item">
+                                <div class="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                                    <input type="checkbox" class="peer sr-only checkbox-ceria">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white peer-hover:border-maroon/50 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transform scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-600 group-hover/item:text-maroon transition-colors pt-0.5">Aturan Penamaan Variabel</span>
+                            </label>
+
+                            <label class="flex items-start space-x-3 cursor-pointer group/item">
+                                <div class="relative w-6 h-6 mt-0.5 flex-shrink-0">
+                                    <input type="checkbox" class="peer sr-only checkbox-ceria">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white peer-hover:border-maroon/50 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transform scale-50 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-gray-600 group-hover/item:text-maroon transition-colors pt-0.5">Sifat Case-Sensitive</span>
+                            </label>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <!-- Empty space to align with other cards -->
+                            <div class="h-[34px] mb-5"></div>
+                            
+                            <div class="pt-5 border-t-2 border-dashed border-gray-100 flex items-center justify-between">
+                                <span class="text-xs font-black text-gray-400 tracking-widest uppercase bg-gray-50 px-3 py-1 rounded-full">0% Selesai</span>
+                                <button class="bg-gray-100 hover:bg-maroon text-gray-500 hover:text-white w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm hover:shadow-bubbly-maroon transform hover:-translate-y-1">
+                                    <i class="fa-solid fa-play ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Simple entry animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.card-hover');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 * (index + 1));
+            });
+        });
+    </script>
+</body>
+</html>

@@ -513,7 +513,7 @@ export const LessonPage: React.FC = () => {
                       setIsCorrect(null);
                       setShowResetConfirm(false);
                     }}
-                    className="flex-1 py-3.5 bg-red-650 border-b-4 border-red-800 text-white font-black rounded-2xl text-sm shadow-md shadow-red-500/10 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-red-700"
+                    className="flex-1 py-3.5 bg-red-600 border-b-4 border-red-700 text-white font-black rounded-2xl text-sm shadow-md shadow-red-500/10 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-red-700"
                   >
                     Ya, Reset!
                   </button>

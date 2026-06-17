@@ -16,6 +16,7 @@ import { extractDocxText } from '../lib/documentParser';
 import { documentImportService, mergeCurriculum, ParseResult } from '../services/documentImportService';
 import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings, forceResetGameQuestions } from '../services/gameService';
+import { PlaygroundExample, getPlaygroundExamples, addPlaygroundExample, updatePlaygroundExample, deletePlaygroundExample } from '../services/playgroundService';
 import { Achievement, getAchievements } from '../services/achievementService';
 import initialAchievements from '../data/achievements.json';
 
@@ -91,6 +92,14 @@ export const AdminDashboard: React.FC = () => {
 
   const [resetLoading, setResetLoading] = useState(false);
 
+  // Bug Hunt import file input ref
+  const bugHuntImportRef = useRef<HTMLInputElement>(null);
+
+  // Playground examples management state
+  const [playgroundExamples, setPlaygroundExamples] = useState<PlaygroundExample[]>([]);
+  const [editingExample, setEditingExample] = useState<PlaygroundExample | null>(null);
+  const [loadingExamples, setLoadingExamples] = useState(false);
+
   const [showModal, setShowModal] = useState<{
     type: 'confirm' | 'alert';
     title: string;
@@ -144,6 +153,10 @@ export const AdminDashboard: React.FC = () => {
         const pyList = await getGameQuestions('python', 100);
         setAllQuestions([...qList, ...pyList]);
         setGameSettings(settings);
+
+        // Load playground examples
+        const exList = await getPlaygroundExamples();
+        setPlaygroundExamples(exList);
       } catch (e) {
         console.error(e);
       } finally {
@@ -985,7 +998,7 @@ export const AdminDashboard: React.FC = () => {
         language: lang,
         difficulty: 'medium',
         title: result.title,
-        code: result.code,
+        code: (result.code || '').replace(/\\n/g, '\n'),
         bugLine: result.bugLine,
         explanation: result.explanation
       });
@@ -2492,7 +2505,7 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <button 
-                            onClick={() => setEditingQuestion(q)}
+                            onClick={() => setEditingQuestion({ ...q, code: q.code.replace(/\\n/g, '\n') })}
                             className="p-2 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
                           >
                             <Edit2 size={16} />
@@ -2525,7 +2538,7 @@ export const AdminDashboard: React.FC = () => {
             {/* Question Editor Modal */}
             <AnimatePresence>
               {editingQuestion && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -2535,11 +2548,47 @@ export const AdminDashboard: React.FC = () => {
                     <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
                       <div>
                         <h3 className="text-xl font-bold">{editingQuestion.id ? 'Edit Soal' : 'Tambah Soal Baru'}</h3>
-                        <p className="text-zinc-500 text-xs">Konfigurasi materi untuk tantangan Bug Hunt.</p>
+                        <p className="text-zinc-500 text-xs">Konfigurasi materi untuk tantangan Bug Hunt. Tekan Enter untuk baris baru.</p>
                       </div>
-                      <button onClick={() => setEditingQuestion(null)} className="p-2 bg-white text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200">
-                        <X size={20} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <input
+                          ref={bugHuntImportRef}
+                          type="file"
+                          accept=".docx,.md,.txt"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file || !editingQuestion) return;
+                            try {
+                              let codeContent = '';
+                              const fileName = file.name.toLowerCase();
+                              if (fileName.endsWith('.docx')) {
+                                const paragraphs = await extractDocxText(file);
+                                codeContent = paragraphs.filter(p => p.trim()).join('\n');
+                              } else {
+                                // .md or .txt — read as plain text
+                                codeContent = await file.text();
+                              }
+                              setEditingQuestion({ ...editingQuestion, code: codeContent.trim() });
+                            } catch (err) {
+                              console.error('Import error:', err);
+                              setShowModal({ type: 'alert', title: 'Gagal Import', message: 'Tidak dapat membaca file. Pastikan format file benar (.docx, .md, atau .txt).' });
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                        <button
+                          onClick={() => bugHuntImportRef.current?.click()}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition-all"
+                          title="Import kode dari file Word, Markdown, atau teks"
+                        >
+                          <Upload size={14} />
+                          Import
+                        </button>
+                        <button onClick={() => setEditingQuestion(null)} className="p-2 bg-white text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200">
+                          <X size={20} />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
@@ -2583,16 +2632,24 @@ export const AdminDashboard: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between px-1">
                           <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Snippet Kode (Buggy)</label>
-                          <span className="text-[10px] text-zinc-400 italic">Gunakan baris baru untuk setiap kode</span>
+                          <span className="text-[10px] text-zinc-400 italic">Tekan Enter untuk baris baru</span>
                         </div>
-                        <textarea 
-                          rows={6}
-                          value={editingQuestion.code}
-                          onChange={(e) => setEditingQuestion({ ...editingQuestion, code: e.target.value })}
-                          onKeyDown={(e) => handleCodeKeyDown(e, editingQuestion.code, (val) => setEditingQuestion({ ...editingQuestion, code: val }))}
-                          placeholder="Tulis kode di sini..."
-                          className="w-full px-4 py-3 bg-zinc-900 text-emerald-400 font-mono text-sm border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
-                        />
+                        <div className="relative">
+                          <textarea 
+                            rows={10}
+                            value={editingQuestion.code}
+                            onChange={(e) => setEditingQuestion({ ...editingQuestion, code: e.target.value })}
+                            onKeyDown={(e) => handleCodeKeyDown(e, editingQuestion.code, (val) => setEditingQuestion({ ...editingQuestion, code: val }))}
+                            placeholder="Tulis kode di sini... (Tekan Enter untuk baris baru)"
+                            className="w-full px-4 py-3 bg-zinc-900 text-emerald-400 font-mono text-sm border border-zinc-700 rounded-xl focus:ring-2 focus:ring-rose-700/20 leading-relaxed"
+                            style={{ tabSize: 2, whiteSpace: 'pre' }}
+                          />
+                          <div className="absolute top-2 right-2 flex items-center gap-1">
+                            <span className="text-[9px] text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded font-mono">
+                              {editingQuestion.code.split('\n').length} baris
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2608,7 +2665,7 @@ export const AdminDashboard: React.FC = () => {
                         <div className="space-y-2">
                           <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Preview Baris Salah</label>
                           <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 text-xs font-mono truncate">
-                            {editingQuestion.code.replace(/\\n/g, '\n').split('\n')[editingQuestion.bugLine] || '(Baris tidak valid)'}
+                            {editingQuestion.code.split('\n')[editingQuestion.bugLine] || '(Baris tidak valid)'}
                           </div>
                         </div>
                       </div>
@@ -2636,12 +2693,14 @@ export const AdminDashboard: React.FC = () => {
                         onClick={async () => {
                           setLoadingGameData(true);
                           try {
+                            // Convert actual newlines back to \n for storage
+                            const questionToSave = { ...editingQuestion, code: editingQuestion.code.replace(/\n/g, '\\n') };
                             if (editingQuestion.id) {
-                              await updateGameQuestion(editingQuestion.id, editingQuestion);
-                              setAllQuestions(prev => prev.map(q => q.id === editingQuestion.id ? editingQuestion : q));
+                              await updateGameQuestion(editingQuestion.id, questionToSave);
+                              setAllQuestions(prev => prev.map(q => q.id === editingQuestion.id ? questionToSave : q));
                             } else {
-                              const newId = await addGameQuestion(editingQuestion);
-                              setAllQuestions(prev => [...prev, { ...editingQuestion, id: newId }]);
+                              const newId = await addGameQuestion(questionToSave);
+                              setAllQuestions(prev => [...prev, { ...questionToSave, id: newId }]);
                             }
                             setEditingQuestion(null);
                           } catch (e) {
@@ -2653,6 +2712,201 @@ export const AdminDashboard: React.FC = () => {
                         className="flex-1 py-3 bg-rose-700 text-white font-bold rounded-xl hover:bg-rose-800 shadow-lg shadow-rose-700/20 transition-all"
                       >
                         Simpan Materi
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* ===== Playground Examples Manager ===== */}
+            <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-sm">
+              <div className="px-6 py-4 bg-zinc-50 border-b border-zinc-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    <Terminal size={18} className="text-rose-700" />
+                    Contoh Kode Playground
+                  </h3>
+                  <p className="text-zinc-500 text-xs">Kelola contoh kode yang tersedia di Playground. Total {playgroundExamples.length} contoh.</p>
+                </div>
+                <button
+                  onClick={() => setEditingExample({
+                    id: '',
+                    title: '',
+                    language: 'python',
+                    code: '',
+                    description: null,
+                    sortOrder: playgroundExamples.length,
+                  })}
+                  className="bg-zinc-900 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-zinc-800 transition-all active:scale-95"
+                >
+                  <Plus size={16} /> Tambah Contoh
+                </button>
+              </div>
+
+              <div className="divide-y divide-zinc-100">
+                {playgroundExamples.length > 0 ? (
+                  playgroundExamples.map((ex) => (
+                    <div key={ex.id} className="p-4 hover:bg-zinc-50 transition-colors flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0",
+                          ex.language === 'c' ? "bg-blue-50 text-blue-700" : "bg-rose-50 text-rose-700"
+                        )}>
+                          {ex.language === 'c' ? 'C' : 'Py'}
+                        </div>
+                        <div className="truncate">
+                          <h4 className="font-bold text-sm truncate">{ex.title}</h4>
+                          {ex.description && (
+                            <p className="text-[11px] text-zinc-400 truncate mt-0.5">{ex.description}</p>
+                          )}
+                          <span className="text-[10px] text-zinc-300 font-mono">Urutan: {ex.sortOrder}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setEditingExample(ex)}
+                          className="p-2 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowModal({
+                              type: 'confirm',
+                              title: 'Hapus Contoh Kode',
+                              message: `Apakah Anda yakin ingin menghapus contoh "${ex.title}"?`,
+                              onConfirm: async () => {
+                                await deletePlaygroundExample(ex.id);
+                                setPlaygroundExamples(prev => prev.filter(item => item.id !== ex.id));
+                              }
+                            });
+                          }}
+                          className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-12 text-center text-zinc-400 italic">Belum ada contoh kode. Klik "Tambah Contoh" untuk memulai.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Playground Example Editor Modal */}
+            <AnimatePresence>
+              {editingExample && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                  >
+                    <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+                      <div>
+                        <h3 className="text-xl font-bold">{editingExample.id ? 'Edit Contoh Kode' : 'Tambah Contoh Baru'}</h3>
+                        <p className="text-zinc-500 text-xs">Contoh kode yang akan ditampilkan di Playground.</p>
+                      </div>
+                      <button onClick={() => setEditingExample(null)} className="p-2 bg-white text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200">
+                        <X size={20} />
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Bahasa</label>
+                          <select
+                            value={editingExample.language}
+                            onChange={(e) => setEditingExample({ ...editingExample, language: e.target.value as any })}
+                            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold focus:ring-2 focus:ring-rose-700/20"
+                          >
+                            <option value="c">Bahasa C</option>
+                            <option value="python">Python</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Urutan Tampil</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={editingExample.sortOrder}
+                            onChange={(e) => setEditingExample({ ...editingExample, sortOrder: parseInt(e.target.value) || 0 })}
+                            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold focus:ring-2 focus:ring-rose-700/20"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Judul</label>
+                        <input
+                          type="text"
+                          value={editingExample.title}
+                          onChange={(e) => setEditingExample({ ...editingExample, title: e.target.value })}
+                          placeholder="Contoh: Hello World"
+                          className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Deskripsi (Opsional)</label>
+                        <textarea
+                          rows={2}
+                          value={editingExample.description || ''}
+                          onChange={(e) => setEditingExample({ ...editingExample, description: e.target.value || null })}
+                          placeholder="Deskripsi singkat contoh kode..."
+                          className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Kode</label>
+                          <span className="text-[10px] text-zinc-400 italic">Tekan Enter untuk baris baru</span>
+                        </div>
+                        <textarea
+                          rows={10}
+                          value={editingExample.code}
+                          onChange={(e) => setEditingExample({ ...editingExample, code: e.target.value })}
+                          onKeyDown={(e) => handleCodeKeyDown(e, editingExample.code, (val) => setEditingExample({ ...editingExample, code: val }))}
+                          placeholder="Tulis kode contoh di sini..."
+                          className="w-full px-4 py-3 bg-zinc-900 text-emerald-400 font-mono text-sm border border-zinc-700 rounded-xl focus:ring-2 focus:ring-rose-700/20 leading-relaxed"
+                          style={{ tabSize: 2, whiteSpace: 'pre' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-6 bg-zinc-50 border-t border-zinc-100 flex gap-3">
+                      <button
+                        onClick={() => setEditingExample(null)}
+                        className="flex-1 py-3 bg-white border border-zinc-200 text-zinc-600 font-bold rounded-xl hover:bg-zinc-100 transition-all"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setLoadingExamples(true);
+                          try {
+                            if (editingExample.id) {
+                              await updatePlaygroundExample(editingExample.id, editingExample);
+                              setPlaygroundExamples(prev => prev.map(ex => ex.id === editingExample.id ? editingExample : ex));
+                            } else {
+                              const newId = await addPlaygroundExample(editingExample);
+                              setPlaygroundExamples(prev => [...prev, { ...editingExample, id: newId }]);
+                            }
+                            setEditingExample(null);
+                          } catch (e) {
+                            console.error(e);
+                          } finally {
+                            setLoadingExamples(false);
+                          }
+                        }}
+                        className="flex-1 py-3 bg-rose-700 text-white font-bold rounded-xl hover:bg-rose-800 shadow-lg shadow-rose-700/20 transition-all"
+                      >
+                        Simpan Contoh
                       </button>
                     </div>
                   </motion.div>
@@ -3274,7 +3528,7 @@ export const AdminDashboard: React.FC = () => {
         {/* AI GEN MODAL */}
         <AnimatePresence>
           {aiGenModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
