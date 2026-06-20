@@ -215,6 +215,10 @@ export const LessonPage: React.FC = () => {
     );
   }
 
+  const isLessonDone = completedLessons.includes(lesson.id);
+  const isQuizPassed = isLessonDone || quizXpGranted;
+
+
   const handleRun = async () => {
     // Collect stdin from the first test case that has an input field
     const firstInput = lesson.testCases?.find(tc => tc.input)?.input || undefined;
@@ -293,6 +297,10 @@ export const LessonPage: React.FC = () => {
 
 
   const nextLesson = async () => {
+    if (!isQuizPassed) {
+      alert("Harap selesaikan kuis terlebih dahulu!");
+      return;
+    }
     if (isCompleting) return;
     setIsCompleting(true);
     
@@ -379,7 +387,6 @@ export const LessonPage: React.FC = () => {
   // Save step progress to localStorage for resume feature
   useEffect(() => {
     if (lesson) {
-      const isLessonDone = completedLessons.includes(lesson.id);
       if (!isLessonDone) {
         // Save per-lesson step for within-lesson resume
         localStorage.setItem(`lesson-step:${lesson.id}`, step);
@@ -976,7 +983,7 @@ export const LessonPage: React.FC = () => {
                 </div>
                 {/* Selesaikan Pelajaran — posisi asli di kolom kanan */}
                 <button
-                  disabled={!isCorrect || isCompleting}
+                  disabled={!isCorrect || !isQuizPassed || isCompleting}
                   onClick={nextLesson}
                   className="w-full py-4 bg-rose-700 text-white font-bold rounded-2xl hover:bg-rose-600 disabled:opacity-50 transition-all shadow-lg shadow-rose-700/20 active:scale-95 flex items-center justify-center gap-2"
                 >
