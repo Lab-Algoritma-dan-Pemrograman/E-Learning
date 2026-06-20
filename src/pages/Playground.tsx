@@ -367,7 +367,7 @@ export const Playground: React.FC = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col gap-6 h-[calc(100vh-160px)] pb-6">
+      <div className="flex flex-col gap-6 h-auto lg:h-[calc(100vh-160px)] pb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none">
           <div>
             <h1 className="text-3xl font-black text-maroon mb-1 tracking-tight flex items-center">
@@ -425,8 +425,8 @@ export const Playground: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-          <div className="lg:col-span-2 h-full bg-white border-2 border-gray-100 rounded-[2rem] shadow-soft p-4 flex flex-col justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 lg:h-full h-auto">
+          <div className="lg:col-span-2 h-[450px] lg:h-full bg-white border-2 border-gray-100 rounded-[2rem] shadow-soft p-4 flex flex-col justify-between">
             <CodeEditor 
               code={code} 
               onChange={(val) => setCode(val || '')} 
@@ -436,7 +436,7 @@ export const Playground: React.FC = () => {
             />
           </div>
 
-          <div className="rounded-[2rem] overflow-hidden border-2 border-zinc-950 bg-zinc-900 shadow-[0_8px_0_#000] flex flex-col">
+          <div className="rounded-[2rem] overflow-hidden border-2 border-zinc-950 bg-zinc-900 shadow-[0_8px_0_#000] flex flex-col h-[300px] lg:h-full">
             {/* macOS-style terminal title bar */}
             <div className="flex items-center gap-2 px-4 py-3 bg-zinc-800/80 border-b-2 border-zinc-950/40">
               <div className="flex gap-1.5">

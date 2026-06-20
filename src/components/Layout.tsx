@@ -35,6 +35,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     }
   }, [levelUpNotification]);
 
+  // Initial check: close sidebar on mount if on mobile/tablet screen
+  useEffect(() => {
+    if (window.innerWidth < 1024 && isSidebarOpen) {
+      toggleSidebar();
+    }
+  }, []);
+
+  // Auto-close sidebar on mobile/tablet when page changes
+  useEffect(() => {
+    if (window.innerWidth < 1024 && isSidebarOpen) {
+      toggleSidebar();
+    }
+  }, [page]);
+
   // Only show level-up popup when the achievement queue is fully drained
   const showLevelUp = pendingLevelUp !== null && !unlockedAchievement && achievementQueue.length === 0;
 
@@ -361,6 +375,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         )}
       </AnimatePresence>
 
+      {/* Sidebar Backdrop Overlay for Mobile/Tablet */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.4 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black z-40 lg:hidden cursor-pointer"
+            onClick={toggleSidebar}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Main Content */}
       <main className={cn(
         "flex-1 flex flex-col h-screen overflow-hidden relative transition-all duration-300",
@@ -386,7 +414,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   className="text-sm font-bold text-gray-400 hover:text-maroon flex items-center space-x-2 transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 cursor-pointer"
                 >
                   <i className="fa-solid fa-arrow-left text-xs"></i>
-                  <span>Kembali ke Dashboard</span>
+                  <span className="hidden sm:inline">Kembali ke Dashboard</span>
                 </button>
               )}
             </div>

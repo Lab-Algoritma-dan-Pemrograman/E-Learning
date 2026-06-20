@@ -839,9 +839,9 @@ export const LessonPage: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-280px)]"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-auto lg:h-[calc(100vh-280px)]"
             >
-              <div className="flex flex-col gap-6 overflow-y-auto pr-4 custom-scrollbar">
+              <div className="flex flex-col gap-6 lg:overflow-y-auto pr-4 custom-scrollbar h-auto lg:h-full">
                 <h2 className="text-3xl font-bold tracking-tight">Latihan Pemrograman</h2>
                 <div className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm">
                   <h3 className="font-bold text-lg mb-4">Tugas Anda</h3>
@@ -926,8 +926,8 @@ export const LessonPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4 h-auto lg:h-full">
+                <div className="h-[400px] lg:h-full lg:flex-1">
                   <CodeEditor 
                     code={code} 
                     onChange={(val) => {
