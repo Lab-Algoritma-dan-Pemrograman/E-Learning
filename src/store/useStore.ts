@@ -21,7 +21,7 @@ export interface UserProfile {
   studyTime?: number; // study time tracked in seconds
 }
 
-type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin' | 'assessments' | 'monitoring' | 'auditlog' | 'terminal-demo';
+type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin' | 'monitoring' | 'auditlog' | 'terminal-demo';
 
 interface AppState {
   user: UserProfile | null;

@@ -176,12 +176,27 @@ export const Dashboard: React.FC = () => {
     }
     if (allLessons.length === 0) return;
 
+    // Find the first uncompleted lesson in curriculum order
+    const firstUncompleted = allLessons.find(id => !completedLessons.includes(id));
+
     // Strategy 1: Use global checkpoint (saved from LessonPage)
     const rawCheckpoint = localStorage.getItem('last-lesson-checkpoint');
     if (rawCheckpoint) {
       try {
         const cp = JSON.parse(rawCheckpoint) as { lessonId: string; step: string; timestamp: number };
         if (cp.lessonId && allLessons.includes(cp.lessonId)) {
+          const cpIdx = allLessons.indexOf(cp.lessonId);
+          const firstUncompletedIdx = firstUncompleted ? allLessons.indexOf(firstUncompleted) : -1;
+
+          // If there is an uncompleted lesson before the checkpoint (e.g. due to admin reset),
+          // prioritize going back to that uncompleted lesson at the start step.
+          if (firstUncompletedIdx !== -1 && firstUncompletedIdx < cpIdx) {
+            localStorage.setItem(`lesson-step:${firstUncompleted}`, 'learn');
+            setCurrentLessonId(firstUncompleted);
+            setPage('lesson');
+            return;
+          }
+
           if (!completedLessons.includes(cp.lessonId)) {
             // Checkpoint lesson is still incomplete — resume there (LessonPage reads per-lesson step)
             setCurrentLessonId(cp.lessonId);
@@ -189,7 +204,6 @@ export const Dashboard: React.FC = () => {
             return;
           } else {
             // Checkpoint lesson is already completed (stale) — find the NEXT lesson after it
-            const cpIdx = allLessons.indexOf(cp.lessonId);
             const nextAfterCp = allLessons.slice(cpIdx + 1).find(id => !completedLessons.includes(id));
             if (nextAfterCp) {
               setCurrentLessonId(nextAfterCp);
@@ -202,8 +216,8 @@ export const Dashboard: React.FC = () => {
     }
 
     // Strategy 2: Find first uncompleted lesson in curriculum order
-    const firstUncompleted = allLessons.find(id => !completedLessons.includes(id));
     if (firstUncompleted) {
+      localStorage.setItem(`lesson-step:${firstUncompleted}`, 'learn');
       setCurrentLessonId(firstUncompleted);
       setPage('lesson');
       return;

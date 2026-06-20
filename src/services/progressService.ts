@@ -356,6 +356,70 @@ export const resetLevelProgress = async (
   }
 };
 
+export const resetLessonProgress = async (
+  nim: string,
+  lessonId: string,
+  lessonTitle: string
+): Promise<void> => {
+  try {
+    // 1. Delete progress record for this specific lesson
+    const { error: deleteErr } = await supabase
+      .from('student_progress')
+      .delete()
+      .eq('nim', nim)
+      .eq('lesson_id', lessonId);
+
+    if (deleteErr) throw deleteErr;
+
+    // 2. Deduct user XP (60 per lesson)
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('xp, level')
+      .eq('nim', nim)
+      .single();
+
+    if (userProfile) {
+      const deductedXp = Math.max(0, userProfile.xp - 60);
+      const newLevel = calculateLevel(deductedXp);
+      await supabase
+        .from('users')
+        .update({
+          xp: deductedXp,
+          level: newLevel
+        })
+        .eq('nim', nim);
+
+      const currentUser = useStore.getState().user;
+      if (currentUser) {
+        const { monitoringService } = await import('./monitoringService');
+        await monitoringService.addAuditLog(
+          currentUser.nim,
+          currentUser.nama,
+          'progress_reset',
+          `Mereset progres pelajaran "${lessonTitle}" untuk mahasiswa NIM: ${nim}`
+        );
+        if (currentUser.nim === nim) {
+          useStore.getState().setUser({
+            ...currentUser,
+            xp: deductedXp,
+            level: newLevel
+          });
+          // Update completed lessons in store immediately
+          const currentCompleted = useProgress.getState().completedLessons;
+          const remainingCompleted = currentCompleted.filter(id => id !== lessonId);
+          useProgress.getState().setCompletedLessons(remainingCompleted);
+        }
+      }
+    }
+
+    console.log(`✅ Lesson "${lessonId}" progress reset in Supabase for ${nim}`);
+  } catch (error) {
+    console.error("Failed to reset lesson progress:", error);
+    throw error;
+  }
+};
+
+
 export const adjustUserXp = async (nim: string, newXp: number): Promise<void> => {
   try {
     const safeXp = Math.max(0, Math.round(newXp));

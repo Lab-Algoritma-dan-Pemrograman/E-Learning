@@ -17,7 +17,6 @@ import { Leaderboard } from './pages/Leaderboard';
 import { CourseExplorer } from './pages/CourseExplorer';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
-import { AssessmentPage } from './pages/AssessmentPage';
 import { StudentMonitoring } from './pages/StudentMonitoring';
 import { AuditLogPage } from './pages/AuditLogPage';
 import { TerminalDemo } from './pages/TerminalDemo';
@@ -50,7 +49,6 @@ function AppContent() {
         case 'courses': return <CourseExplorer />;
         case 'profile': return <Profile />;
         case 'admin': return (['admin', 'kordas'].includes(user?.role || '')) ? <AdminDashboard /> : <Dashboard />;
-        case 'assessments': return (['admin', 'kordas'].includes(user?.role || '')) ? <AssessmentPage /> : <Dashboard />;
         case 'monitoring': return (['admin', 'kordas', 'asisten'].includes(user?.role || '')) ? <StudentMonitoring /> : <Dashboard />;
         case 'auditlog': return (['admin', 'kordas'].includes(user?.role || '')) ? <AuditLogPage /> : <Dashboard />;
         case 'terminal-demo': return <TerminalDemo />;
@@ -75,7 +73,6 @@ function AppContent() {
         if (href === '/leaderboard') { e.preventDefault(); setPage('leaderboard'); }
         if (href === '/profile') { e.preventDefault(); setPage('profile'); }
         if (href === '/admin') { e.preventDefault(); setPage('admin'); }
-        if (href === '/assessments') { e.preventDefault(); setPage('assessments'); }
         if (href === '/monitoring') { e.preventDefault(); setPage('monitoring'); }
         if (href === '/auditlog') { e.preventDefault(); setPage('auditlog'); }
         if (href === '/terminal-demo') { e.preventDefault(); setPage('terminal-demo'); }

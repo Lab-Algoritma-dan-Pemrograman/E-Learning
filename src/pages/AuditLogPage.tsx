@@ -2,20 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useStore } from '../store/useStore';
 import { monitoringService, ActivityLog } from '../services/monitoringService';
-import { Trash2, Search, Filter, RefreshCw, Download, Calendar, Clock, Shield, LogIn, LogOut, FileText, Key, Brain, ChevronLeft, ChevronRight, X, Lock, BookOpen, RotateCcw } from 'lucide-react';
+import { Trash2, Search, Filter, RefreshCw, Download, Calendar, Clock, Shield, LogIn, LogOut, ChevronLeft, ChevronRight, X, Lock, BookOpen, RotateCcw, Zap } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const EVENT_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   login: { label: 'Login', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: <LogIn size={12} /> },
   logout: { label: 'Logout', color: 'bg-zinc-100 text-zinc-600 border-zinc-200', icon: <LogOut size={12} /> },
-  start_test: { label: 'Mulai Ujian', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: <FileText size={12} /> },
-  submit_test: { label: 'Submit Ujian', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: <FileText size={12} /> },
-  token_generated: { label: 'Token Dibuat', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: <Key size={12} /> },
-  token_used: { label: 'Token Dipakai', color: 'bg-orange-50 text-orange-700 border-orange-200', icon: <Key size={12} /> },
   access_modified: { label: 'Akses Diubah', color: 'bg-red-50 text-red-700 border-red-200', icon: <Shield size={12} /> },
-  ai_grading: { label: 'AI Grading', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: <Brain size={12} /> },
   curriculum_modified: { label: 'Ubah Kurikulum', color: 'bg-rose-50 text-rose-700 border-rose-200', icon: <BookOpen size={12} /> },
   progress_reset: { label: 'Reset Progress', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: <RotateCcw size={12} /> },
+  xp_adjusted: { label: 'Ubah XP', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: <Zap size={12} /> },
+  user_deleted: { label: 'Hapus Peserta', color: 'bg-rose-50 text-rose-700 border-rose-200', icon: <Trash2 size={12} /> },
 };
 
 const formatGMT7 = (iso: string) => {

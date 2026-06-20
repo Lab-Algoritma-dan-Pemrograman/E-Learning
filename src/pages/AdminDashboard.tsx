@@ -14,7 +14,7 @@ import { Level, Module, Lesson } from '../data/curriculum';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { extractDocxText } from '../lib/documentParser';
 import { documentImportService, mergeCurriculum, ParseResult } from '../services/documentImportService';
-import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
+import { resetUserProgress, resetLevelProgress, resetLessonProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings, forceResetGameQuestions } from '../services/gameService';
 import { PlaygroundExample, getPlaygroundExamples, addPlaygroundExample, updatePlaygroundExample, deletePlaygroundExample } from '../services/playgroundService';
 import { Achievement, getAchievements } from '../services/achievementService';
@@ -1059,6 +1059,38 @@ export const AdminDashboard: React.FC = () => {
     });
   };
 
+  const getLessonTitle = (lessonId: string): string => {
+    for (const lvl of appCurriculum) {
+      for (const mod of lvl.modules || []) {
+        for (const les of mod.lessons || []) {
+          if (les.id === lessonId) return les.title;
+        }
+      }
+    }
+    return lessonId;
+  };
+
+  const handleResetLessonForUser = async (lessonId: string, lessonTitle: string) => {
+    if (!selectedUser) return;
+    setShowModal({
+      type: 'confirm',
+      title: 'Reset Progress Pelajaran',
+      message: `Reset progress pelajaran "${lessonTitle}" untuk ${selectedUser.nama}? XP akan dikurangi 60.`,
+      onConfirm: async () => {
+        setResetLoading(true);
+        try {
+          await resetLessonProgress(selectedUser.nim, lessonId, lessonTitle);
+          setShowModal({ type: 'alert', title: 'Berhasil', message: `Pelajaran "${lessonTitle}" berhasil direset.` });
+          fetchUserProgress(selectedUser.nim);
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mereset pelajaran.' });
+        } finally {
+          setResetLoading(false);
+        }
+      }
+    });
+  };
+
   const handleAdjustXp = async () => {
     if (!selectedUser || !xpAdjustValue) return;
     const newXp = parseInt(xpAdjustValue);
@@ -1814,17 +1846,30 @@ export const AdminDashboard: React.FC = () => {
                         {loadingProgress ? (
                           <div className="text-center py-4 text-zinc-400 text-sm italic">Memuat progres...</div>
                         ) : userProgress.length > 0 ? (
-                          userProgress.map((p) => (
-                            <div key={p.lessonId} className="flex items-center justify-between p-3 bg-zinc-50 rounded-xl">
-                              <div className="flex items-center gap-3">
-                                <CheckCircle2 size={16} className="text-rose-700" />
-                                <div className="text-sm font-medium truncate max-w-[120px]">{p.lessonId}</div>
-                              </div>
-                              <div className="text-[10px] text-zinc-400">
-                                {new Date(p.completedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                              </div>
-                            </div>
-                          ))
+                           userProgress.map((p) => {
+                             const title = getLessonTitle(p.lessonId);
+                             return (
+                               <div key={p.lessonId} className="flex items-center justify-between p-3 bg-zinc-50 rounded-xl">
+                                 <div className="flex items-center gap-3 min-w-0 flex-1">
+                                   <CheckCircle2 size={16} className="text-rose-700 shrink-0" />
+                                   <div className="text-sm font-medium truncate" title={title}>{title}</div>
+                                 </div>
+                                 <div className="flex items-center gap-2 shrink-0 ml-2">
+                                   <div className="text-[10px] text-zinc-400">
+                                     {new Date(p.completedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                   </div>
+                                   <button
+                                     onClick={() => handleResetLessonForUser(p.lessonId, title)}
+                                     disabled={resetLoading}
+                                     className="p-1 hover:bg-red-50 rounded text-zinc-400 hover:text-red-600 transition-colors"
+                                     title="Reset progress pelajaran ini"
+                                   >
+                                     <RotateCcw size={12} />
+                                   </button>
+                                 </div>
+                               </div>
+                             );
+                           })
                         ) : (
                           <div className="text-center py-4 text-zinc-400 text-sm italic">Belum ada pelajaran selesai.</div>
                         )}
