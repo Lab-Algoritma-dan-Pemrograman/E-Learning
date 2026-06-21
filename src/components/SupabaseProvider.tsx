@@ -67,8 +67,11 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSyncError(null);
 
       try {
-        // Set header authorization token for RLS
+      // Set header authorization token for RLS
         setSupabaseSession(savedToken);
+        
+        // Expose supabase client to window so that console security test scripts can access it without frame block errors
+        (window as any).supabase = supabase;
 
         // Load curriculum from Supabase
         await loadCurriculum(payload.role);
