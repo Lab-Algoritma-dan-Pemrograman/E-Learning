@@ -71,7 +71,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setSupabaseSession(savedToken);
 
         // Load curriculum from Supabase
-        await loadCurriculum();
+        await loadCurriculum(payload.role);
 
         // 2. Fetch or Create User Profile in Supabase
         const nim = payload.nim;
@@ -299,7 +299,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     };
 
-    const loadCurriculum = async () => {
+    const loadCurriculum = async (userRole?: string) => {
       try {
         console.log("Loading curriculum levels from Supabase database...");
         let levelsData: any[] | null = null;
@@ -335,8 +335,11 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           .select('*')
           .order('sort_order');
 
+        const isStaff = userRole === 'admin' || userRole === 'kordas' || userRole === 'asisten';
+        const lessonsTable = isStaff ? 'lessons' : 'student_lessons';
+
         const { data: lessonsData } = await supabase
-          .from('lessons')
+          .from(lessonsTable)
           .select('*')
           .order('sort_order');
 

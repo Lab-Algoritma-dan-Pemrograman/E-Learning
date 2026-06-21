@@ -180,7 +180,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         headers: {
           'Content-Type': 'application/json',
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${localStorage.getItem('sb-tvsawtkevzfqobsfkiag-auth-token') || ''}`
+          'Authorization': `Bearer ${sessionStorage.getItem('elearning_token') || ''}`
         },
         body: payload,
         keepalive: true

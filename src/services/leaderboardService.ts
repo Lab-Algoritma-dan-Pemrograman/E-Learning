@@ -5,7 +5,7 @@ export const getLeaderboard = async (limitCount: number = 10, kelas?: string, ju
   try {
     let query = supabase
       .from('users')
-      .select('*')
+      .select('nim, nama, kelas, jurusan, xp, level, streak')
       .eq('role', 'praktikan');
 
     if (kelas) {
@@ -30,14 +30,14 @@ export const getLeaderboard = async (limitCount: number = 10, kelas?: string, ju
       nama: u.nama,
       kelas: u.kelas,
       jurusan: u.jurusan,
-      email: u.email,
+      email: null,
       xp: u.xp || 0,
       level: u.level || 1,
       streak: u.streak || 0,
-      lastActive: u.last_active || '',
-      createdAt: u.created_at || '',
-      role: u.role || 'praktikan',
-      assessmentAccess: u.assessment_access
+      lastActive: '',
+      createdAt: '',
+      role: 'praktikan',
+      assessmentAccess: {}
     })) as UserProfile[];
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
@@ -51,7 +51,7 @@ export const getUserRank = async (xp: number, kelas?: string, jurusan?: string):
   try {
     let query = supabase
       .from('users')
-      .select('*', { count: 'exact', head: true })
+      .select('nim', { count: 'exact', head: true })
       .eq('role', 'praktikan')
       .gt('xp', xp);
 

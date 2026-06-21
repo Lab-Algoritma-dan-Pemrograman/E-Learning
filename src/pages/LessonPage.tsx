@@ -822,6 +822,7 @@ export const LessonPage: React.FC = () => {
               className="max-w-2xl mx-auto"
             >
               <Quiz 
+                lessonId={lesson.id}
                 question={lesson.quiz.question}
                 options={lesson.quiz.options}
                 correctAnswer={lesson.quiz.correctAnswer}

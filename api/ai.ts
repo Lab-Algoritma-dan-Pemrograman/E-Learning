@@ -56,9 +56,8 @@ export default async function handler(req: Request) {
 
     const role = userData.role || 'praktikan';
 
-    // 3. SECURE RBAC
-    if (role !== 'admin' && role !== 'editor' && role !== 'kordas') {
-       return new Response(JSON.stringify({ error: 'Akses Ditolak: Fitur AI ini hanya tersedia untuk Admin atau Editor.' }), { status: 403 });
+    if (role !== 'admin' && role !== 'kordas') {
+       return new Response(JSON.stringify({ error: 'Akses Ditolak: Fitur AI ini hanya tersedia untuk Admin atau Koordinator.' }), { status: 403 });
     }
 
     // 4. Configure Gemini Model with Rotation Logic

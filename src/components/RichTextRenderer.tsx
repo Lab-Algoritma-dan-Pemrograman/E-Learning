@@ -25,6 +25,16 @@ const cleanContent = (html: string): string => {
   const tagRegex = /&lt;(\/?(div|pre|code|span|p|br|h1|h2|h3|h4|h5|h6|ul|ol|li|strong|em|table|thead|tbody|tr|td|th|a|img|blockquote|svg|path|hr)[^>]*?)&gt;/gi;
   cleaned = cleaned.replace(tagRegex, '<$1>');
 
+  // Sanitize decoded tags to prevent XSS:
+  // 1. Remove inline event handlers (any attribute starting with 'on', e.g., onload, onerror, onclick)
+  cleaned = cleaned.replace(/\s+on[a-zA-Z]+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '');
+
+  // 2. Remove javascript:, data:, and vbscript: protocols from href, src, and action attributes
+  cleaned = cleaned.replace(/\s+(href|src|action)\s*=\s*(?:'[^']*(?:javascript|data|vbscript):[^']*'|"[^"]*(?:javascript|data|vbscript):[^"]*"|[^\s>]+(?:javascript|data|vbscript):[^\s>]+)/gi, ' $1="#"');
+
+  // 3. Remove script tags entirely just in case
+  cleaned = cleaned.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
   // Clean terminal artifacts and strip command lines along with surrounding whitespace to prevent empty spaces/newlines
   cleaned = cleaned
     .replace(/Output Terminal\s*\(Mac\):/gi, 'Output Terminal:')

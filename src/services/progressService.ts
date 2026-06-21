@@ -216,6 +216,12 @@ export const syncProgress = (userId: string, setCompletedLessons: (lessons: stri
 // =========================================================================
 
 export const resetUserProgress = async (nim: string): Promise<void> => {
+  const currentUser = useStore.getState().user;
+  const isStaff = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas' || currentUser.role === 'asisten');
+  if (!isStaff) {
+    throw new Error('Akses Ditolak: Hanya staf yang diperbolehkan mereset progres.');
+  }
+
   try {
     // 1. Delete all progress records
     const { error: deleteErr } = await supabase
@@ -273,6 +279,12 @@ export const resetLevelProgress = async (
   levelId: string,
   curriculum: Level[]
 ): Promise<void> => {
+  const currentUser = useStore.getState().user;
+  const isStaff = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas' || currentUser.role === 'asisten');
+  if (!isStaff) {
+    throw new Error('Akses Ditolak: Hanya staf yang diperbolehkan mereset progres level.');
+  }
+
   try {
     const level = curriculum.find(l => l.id === levelId);
     if (!level) throw new Error(`Level ${levelId} not found`);
@@ -361,6 +373,12 @@ export const resetLessonProgress = async (
   lessonId: string,
   lessonTitle: string
 ): Promise<void> => {
+  const currentUser = useStore.getState().user;
+  const isStaff = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas' || currentUser.role === 'asisten');
+  if (!isStaff) {
+    throw new Error('Akses Ditolak: Hanya staf yang diperbolehkan mereset progres pelajaran.');
+  }
+
   try {
     // 1. Delete progress record for this specific lesson
     const { error: deleteErr } = await supabase
@@ -421,6 +439,12 @@ export const resetLessonProgress = async (
 
 
 export const adjustUserXp = async (nim: string, newXp: number): Promise<void> => {
+  const currentUser = useStore.getState().user;
+  const isAdminOrKordas = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas');
+  if (!isAdminOrKordas) {
+    throw new Error('Akses Ditolak: Hanya Admin atau Kordas yang dapat menyesuaikan XP.');
+  }
+
   try {
     const safeXp = Math.max(0, Math.round(newXp));
     const newLevel = calculateLevel(safeXp);
@@ -479,6 +503,12 @@ export const adjustUserXp = async (nim: string, newXp: number): Promise<void> =>
 };
 
 export const deleteUser = async (nim: string): Promise<void> => {
+  const currentUser = useStore.getState().user;
+  const isAdminOrKordas = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas');
+  if (!isAdminOrKordas) {
+    throw new Error('Akses Ditolak: Hanya Admin atau Kordas yang dapat menghapus pengguna.');
+  }
+
   try {
     // Audit log before deleting, so we can retrieve current admin user data from store
     const currentUser = useStore.getState().user;
