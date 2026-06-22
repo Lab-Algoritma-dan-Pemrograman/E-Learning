@@ -27,16 +27,16 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // postMessage listener — menerima token dari Web Utama jika E-Learning
   // dibuka sebagai popup atau iframe (tanpa URL redirect)
   useEffect(() => {
-    const stopListener = startPostMessageListener(async (result) => {
-      // Token diterima via postMessage — jalankan inisialisasi ulang
-      // dengan token yang sudah terverifikasi
-      setStoreUser(null); // reset sementara
-      window.location.reload(); // reload agar initializeFromToken baca dari sessionStorage
+    const stopListener = startPostMessageListener(async () => {
+      setStoreUser(null);
+      window.location.reload();
     });
     return stopListener;
   }, []);
 
-
+  useEffect(() => {
+    let unsubProfileChannel: any = null;
+    let unsubProgressChannel: any = null;
 
     const initialize = async () => {
       console.log("Initializing E-Learning Supabase session...");
