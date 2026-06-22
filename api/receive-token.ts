@@ -2,39 +2,30 @@
  * api/receive-token.ts
  *
  * Endpoint yang menerima token dari Web Utama via POST JSON.
+ * Mendukung JWT format Web Utama ({ username, full_name, role }) maupun
+ * format E-Learning ({ nim, nama, kelas, role }).
  *
- * Cara kerja:
- *   Web Utama melakukan POST ke https://e-learning.domain.com/api/receive-token
- *   dengan body: { "token": "eyJ..." }
- *
- *   Endpoint ini memverifikasi token, men-sign ulang untuk Supabase RLS,
- *   lalu redirect user ke halaman utama dengan token yang sudah di-sign
- *   sebagai query parameter (agar tokenService.ts bisa langsung membacanya).
- *
- * Alternatif:
- *   Web Utama juga bisa tetap pakai GET ?token=... seperti sebelumnya.
- *   Kedua cara berjalan paralel.
+ * Flow:
+ *   POST /api/receive-token  { "token": "eyJ..." }
+ *   → verify → normalize fields → sign ulang → return { token, redirectUrl }
+ *   → Web Utama redirect user ke redirectUrl
  */
 
 import { verifyToken, detectSupabaseSecret } from './auth.js';
 import { SignJWT } from 'jose';
 
 export default async function handler(req: any, res: any) {
-  // ── Handle CORS preflight ──────────────────────────────────────────────
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
+  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
   try {
-    // ── Baca token dari body ───────────────────────────────────────────────
     const body = req.body as { token?: string };
     const token = body?.token;
 
@@ -42,31 +33,49 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Field "token" wajib disertakan di request body.' });
     }
 
-    // ── Verifikasi token Web Utama ─────────────────────────────────────────
+    // Verifikasi token (Web Utama secret atau Supabase secret)
     const tokenPayload = await verifyToken(token);
-    if (!tokenPayload || !tokenPayload.nim || !tokenPayload.nama) {
-      return res.status(401).json({ error: 'Token tidak valid atau tidak memiliki field yang diperlukan (nim, nama).' });
+    if (!tokenPayload) {
+      return res.status(401).json({ error: 'Token tidak valid.' });
     }
 
-    // ── Normalisasi role ───────────────────────────────────────────────────
-    const rawRole = (tokenPayload as any).user_role || (tokenPayload as any).role;
-    let appRole: string = rawRole || 'praktikan';
-    if (appRole === 'koordinator') appRole = 'kordas';
-    if (appRole === 'authenticated' || appRole === 'anon') appRole = 'praktikan';
+    // Normalize field names
+    // Web Utama JWT: { username, full_name, role: 'koordinator', division, ... }
+    // E-Learning JWT: { nim, nama, kelas, role, ... }
+    const p = tokenPayload as any;
+    const nim     = p.nim || p.username || p.sub || null;
+    const nama    = p.nama || p.full_name || p.name || null;
+    const kelas   = p.kelas || p.class_code || '';
+    const jurusan = p.jurusan || p.major || null;
+    const email   = p.email || null;
 
-    // ── Sign ulang dengan Supabase JWT secret ─────────────────────────────
+    if (!nim || !nama) {
+      return res.status(400).json({
+        error: 'Token tidak memiliki field yang diperlukan (nim/username, nama/full_name).',
+        receivedKeys: Object.keys(p),
+      });
+    }
+
+    // Normalize role
+    const rawRole = p.user_role || p.role || 'praktikan';
+    let appRole: string = rawRole;
+    if (appRole === 'koordinator') appRole = 'kordas';
+    if (['authenticated', 'anon', 'user'].includes(appRole)) appRole = 'praktikan';
+
+    // Sign ulang dengan Supabase JWT secret
     let signedToken = token;
     const supabaseSecret = await detectSupabaseSecret();
     if (supabaseSecret) {
       signedToken = await new SignJWT({
-        nim: (tokenPayload as any).nim,
-        nama: (tokenPayload as any).nama,
-        kelas: (tokenPayload as any).kelas || '',
+        nim,
+        nama,
+        kelas,
+        jurusan,
         role: 'authenticated',
         user_role: appRole,
-        email: (tokenPayload as any).email || null,
+        email,
         iss: 'supabase',
-        sub: (tokenPayload as any).nim,
+        sub: nim,
         aud: 'authenticated',
       })
         .setProtectedHeader({ alg: 'HS256' })
@@ -75,21 +84,11 @@ export default async function handler(req: any, res: any) {
         .sign(supabaseSecret);
     }
 
-    // ── Kembalikan token yang sudah di-sign + payload ──────────────────────
-    // Web Utama menerima ini, lalu redirect user ke:
-    //   https://e-learning.domain.com?token=<signedToken>
-    // atau simpan token di localStorage/cookie sendiri.
     return res.status(200).json({
       success: true,
       token: signedToken,
       redirectUrl: `/?token=${encodeURIComponent(signedToken)}`,
-      payload: {
-        nim: (tokenPayload as any).nim,
-        nama: (tokenPayload as any).nama,
-        kelas: (tokenPayload as any).kelas,
-        role: appRole,
-        email: (tokenPayload as any).email || null,
-      },
+      payload: { nim, nama, kelas, jurusan, email, role: appRole },
     });
 
   } catch (error: any) {

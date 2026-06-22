@@ -45,25 +45,31 @@ const apiDevServer = (env: Record<string, string>) => ({
               tokenPayload = payload;
             }
 
-            if (!tokenPayload.nim || !tokenPayload.nama) {
+            if (!tokenPayload.nim && !tokenPayload.username) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Token missing required fields (nim, nama)' }));
+              res.end(JSON.stringify({ error: 'Token missing required fields (nim/username)' }));
               return;
             }
 
-            if (tokenPayload.role === 'koordinator') {
-              tokenPayload.role = 'kordas';
-            }
+            // Normalize field names
+            const nim   = tokenPayload.nim || tokenPayload.username || tokenPayload.sub || '';
+            const nama  = tokenPayload.nama || tokenPayload.full_name || tokenPayload.name || '';
+            const kelas = tokenPayload.kelas || tokenPayload.class_code || '';
+            const email = tokenPayload.email || null;
+
+            const rawRole = tokenPayload.user_role || tokenPayload.role;
+            let appRole = rawRole || 'praktikan';
+            if (appRole === 'koordinator') appRole = 'kordas';
+            if (appRole === 'authenticated' || appRole === 'anon' || appRole === 'user') appRole = 'praktikan';
 
             let returnedToken = token;
             if (supabaseSecretStr) {
               const secret = new TextEncoder().encode(supabaseSecretStr);
               returnedToken = await new SignJWT({
-                nim: tokenPayload.nim,
-                nama: tokenPayload.nama,
-                kelas: tokenPayload.kelas,
-                role: tokenPayload.role || 'praktikan',
-                email: tokenPayload.email || null
+                nim, nama, kelas, email,
+                role: 'authenticated',
+                user_role: appRole,
+                iss: 'supabase', sub: nim, aud: 'authenticated',
               })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
@@ -73,9 +79,9 @@ const apiDevServer = (env: Record<string, string>) => ({
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
-              payload: tokenPayload,
+              payload: { nim, nama, kelas, email, role: appRole },
               token: returnedToken,
-              firebaseToken: null
+              firebaseToken: null,
             }));
           } catch (error: any) {
             console.error('Local API mock error:', error.message);
@@ -104,51 +110,49 @@ const apiDevServer = (env: Record<string, string>) => ({
               return;
             }
 
+            // Verify token
             let tokenPayload: any = null;
-            let verified = false;
-
             const supabaseSecretStr = env.SUPABASE_JWT_SECRET;
             if (supabaseSecretStr) {
               try {
                 const secret = new TextEncoder().encode(supabaseSecretStr);
                 const { payload } = await jwtVerify(token, secret);
                 tokenPayload = payload;
-                verified = true;
               } catch { /* fallback */ }
             }
-
-            if (!verified) {
+            if (!tokenPayload) {
               const secret = new TextEncoder().encode(env.JWT_SECRET || env.VITE_JWT_SECRET);
               const { payload } = await jwtVerify(token, secret);
               tokenPayload = payload;
             }
 
-            if (!tokenPayload?.nim || !tokenPayload?.nama) {
+            if (!tokenPayload?.nim && !tokenPayload?.username) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Token missing required fields (nim, nama).' }));
+              res.end(JSON.stringify({ error: 'Token missing required fields (nim/username, nama/full_name).' }));
               return;
             }
+
+            // Normalize field names (Web Utama uses username/full_name)
+            const nim   = tokenPayload.nim || tokenPayload.username || tokenPayload.sub || '';
+            const nama  = tokenPayload.nama || tokenPayload.full_name || tokenPayload.name || '';
+            const kelas = tokenPayload.kelas || tokenPayload.class_code || '';
+            const email = tokenPayload.email || null;
 
             // Normalisasi role
             const rawRole = tokenPayload.user_role || tokenPayload.role;
             let appRole = rawRole || 'praktikan';
             if (appRole === 'koordinator') appRole = 'kordas';
-            if (appRole === 'authenticated' || appRole === 'anon') appRole = 'praktikan';
+            if (appRole === 'authenticated' || appRole === 'anon' || appRole === 'user') appRole = 'praktikan';
 
             // Sign ulang dengan Supabase secret
             let signedToken = token;
             if (supabaseSecretStr) {
               const secret = new TextEncoder().encode(supabaseSecretStr);
               signedToken = await new SignJWT({
-                nim: tokenPayload.nim,
-                nama: tokenPayload.nama,
-                kelas: tokenPayload.kelas || '',
+                nim, nama, kelas, email,
                 role: 'authenticated',
                 user_role: appRole,
-                email: tokenPayload.email || null,
-                iss: 'supabase',
-                sub: tokenPayload.nim,
-                aud: 'authenticated',
+                iss: 'supabase', sub: nim, aud: 'authenticated',
               })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
@@ -161,13 +165,7 @@ const apiDevServer = (env: Record<string, string>) => ({
               success: true,
               token: signedToken,
               redirectUrl: `/?token=${encodeURIComponent(signedToken)}`,
-              payload: {
-                nim: tokenPayload.nim,
-                nama: tokenPayload.nama,
-                kelas: tokenPayload.kelas,
-                role: appRole,
-                email: tokenPayload.email || null,
-              },
+              payload: { nim, nama, kelas, email, role: appRole },
             }));
           } catch (error: any) {
             console.error('[dev /api/receive-token] Error:', error.message);
