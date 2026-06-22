@@ -91,7 +91,7 @@ export function startPostMessageListener(
   window.addEventListener('message', handler);
   return () => window.removeEventListener('message', handler);
 }
- */
+
 export function getTokenFromUrl(): string | null {
   const params = new URLSearchParams(window.location.search);
   return params.get('token');
