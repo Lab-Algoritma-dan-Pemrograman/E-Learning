@@ -1,12 +1,17 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/pyodide.worker.js",
-      "destination": "/pyodide.worker.js"
+      "src": "/pyodide.worker.js",
+      "dest": "/pyodide.worker.js"
     },
     {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "src": "/",
+      "methods": ["POST"],
+      "dest": "/api/index"
+    },
+    {
+      "src": "/((?!api/).*)",
+      "dest": "/index.html"
     }
   ],
   "headers": [
