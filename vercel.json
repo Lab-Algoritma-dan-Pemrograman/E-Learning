@@ -5,12 +5,16 @@
       "dest": "/pyodide.worker.js"
     },
     {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
       "src": "/",
-      "methods": ["POST"],
+      "methods": ["POST", "OPTIONS"],
       "dest": "/api/index"
     },
     {
-      "src": "/((?!api/).*)",
+      "src": "/(.*)",
       "dest": "/index.html"
     }
   ],
