@@ -86,7 +86,99 @@ const apiDevServer = (env: Record<string, string>) => ({
         return;
       }
 
-      // 2. Intercept /api/validate-quiz
+      // 2. Intercept /api/receive-token — terima POST JSON { token } dari Web Utama
+      if (req.url && req.url.startsWith('/api/receive-token') && req.method === 'POST') {
+        // CORS preflight
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        let body = '';
+        req.on('data', (chunk: any) => { body += chunk; });
+        req.on('end', async () => {
+          try {
+            const { token } = JSON.parse(body);
+            if (!token) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Field "token" wajib disertakan.' }));
+              return;
+            }
+
+            let tokenPayload: any = null;
+            let verified = false;
+
+            const supabaseSecretStr = env.SUPABASE_JWT_SECRET;
+            if (supabaseSecretStr) {
+              try {
+                const secret = new TextEncoder().encode(supabaseSecretStr);
+                const { payload } = await jwtVerify(token, secret);
+                tokenPayload = payload;
+                verified = true;
+              } catch { /* fallback */ }
+            }
+
+            if (!verified) {
+              const secret = new TextEncoder().encode(env.JWT_SECRET || env.VITE_JWT_SECRET);
+              const { payload } = await jwtVerify(token, secret);
+              tokenPayload = payload;
+            }
+
+            if (!tokenPayload?.nim || !tokenPayload?.nama) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Token missing required fields (nim, nama).' }));
+              return;
+            }
+
+            // Normalisasi role
+            const rawRole = tokenPayload.user_role || tokenPayload.role;
+            let appRole = rawRole || 'praktikan';
+            if (appRole === 'koordinator') appRole = 'kordas';
+            if (appRole === 'authenticated' || appRole === 'anon') appRole = 'praktikan';
+
+            // Sign ulang dengan Supabase secret
+            let signedToken = token;
+            if (supabaseSecretStr) {
+              const secret = new TextEncoder().encode(supabaseSecretStr);
+              signedToken = await new SignJWT({
+                nim: tokenPayload.nim,
+                nama: tokenPayload.nama,
+                kelas: tokenPayload.kelas || '',
+                role: 'authenticated',
+                user_role: appRole,
+                email: tokenPayload.email || null,
+                iss: 'supabase',
+                sub: tokenPayload.nim,
+                aud: 'authenticated',
+              })
+                .setProtectedHeader({ alg: 'HS256' })
+                .setIssuedAt()
+                .setExpirationTime('1d')
+                .sign(secret);
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              token: signedToken,
+              redirectUrl: `/?token=${encodeURIComponent(signedToken)}`,
+              payload: {
+                nim: tokenPayload.nim,
+                nama: tokenPayload.nama,
+                kelas: tokenPayload.kelas,
+                role: appRole,
+                email: tokenPayload.email || null,
+              },
+            }));
+          } catch (error: any) {
+            console.error('[dev /api/receive-token] Error:', error.message);
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Token tidak valid: ' + error.message }));
+          }
+        });
+        return;
+      }
+
+      // 3. Intercept /api/validate-quiz
       if (req.url && req.url.startsWith('/api/validate-quiz') && req.method === 'POST') {
         let body = '';
         req.on('data', (chunk: any) => { body += chunk; });

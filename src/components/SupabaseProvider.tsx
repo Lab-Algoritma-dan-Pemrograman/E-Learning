@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { supabase, setSupabaseSession } from '../lib/supabase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
-import { initializeFromToken, TokenPayload } from '../services/tokenService';
+import { initializeFromToken, TokenPayload, startPostMessageListener } from '../services/tokenService';
 import { Loader2 } from 'lucide-react';
 
 interface SupabaseContextType {
@@ -24,9 +24,19 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isSyncing, setIsSyncing] = useState(false);
   const hasSubscribedProfile = useRef(false);
 
+  // postMessage listener — menerima token dari Web Utama jika E-Learning
+  // dibuka sebagai popup atau iframe (tanpa URL redirect)
   useEffect(() => {
-    let unsubProfileChannel: any = null;
-    let unsubProgressChannel: any = null;
+    const stopListener = startPostMessageListener(async (result) => {
+      // Token diterima via postMessage — jalankan inisialisasi ulang
+      // dengan token yang sudah terverifikasi
+      setStoreUser(null); // reset sementara
+      window.location.reload(); // reload agar initializeFromToken baca dari sessionStorage
+    });
+    return stopListener;
+  }, []);
+
+
 
     const initialize = async () => {
       console.log("Initializing E-Learning Supabase session...");
