@@ -1,5 +1,14 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/ping",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "routes": [
+    {
+      "handle": "filesystem"
+    },
     {
       "src": "/pyodide.worker.js",
       "dest": "/pyodide.worker.js"
