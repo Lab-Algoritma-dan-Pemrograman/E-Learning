@@ -58,6 +58,10 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 
   const [activeTemplateIdx, setActiveTemplateIdx] = useState<number | null>(null);
 
+  // Mobile Input helper states
+  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
+  const [mobileInputValue, setMobileInputValue] = useState('');
+
   // xterm.js refs
   const termContainerRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
@@ -115,6 +119,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       if (waitingForInputRef.current) {
         if (keyCode === 13) {
           waitingForInputRef.current = false;
+          setIsWaitingForInput(false);
           term.write('\r\n');
           const inputValue = inputBufferRef.current;
           inputBufferRef.current = '';
@@ -133,6 +138,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       } else if (cStdinModeRef.current) {
         if (keyCode === 13) {
           term.write('\r\n');
+          setIsWaitingForInput(false);
           cStdinLinesRef.current.push(cStdinBufferRef.current);
           cStdinBufferRef.current = '';
           const allStdin = cStdinLinesRef.current.join('\n') + '\n';
@@ -188,7 +194,9 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           term.write(prompt);
         }
         waitingForInputRef.current = true;
+        setIsWaitingForInput(true);
         inputBufferRef.current = '';
+        setMobileInputValue('');
       } else if (e.data.type === 'RUN_DONE') {
         pyodideWorker.removeEventListener('message', handler);
         const output = e.data.output || '';
@@ -198,14 +206,17 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
         term.writeln('');
         term.writeln('\x1b[1;32m✓ Selesai!\x1b[0m');
         setIsRunning(false);
+        setIsWaitingForInput(false);
       } else if (e.data.type === 'RUN_ERROR') {
         pyodideWorker.removeEventListener('message', handler);
         term.writeln(`\x1b[1;31m❌ Error: ${e.data.error}\x1b[0m`);
         setIsRunning(false);
+        setIsWaitingForInput(false);
       } else if (e.data.type === 'RUN_CANCELLED') {
         pyodideWorker.removeEventListener('message', handler);
         term.writeln('\x1b[1;33m⚠ Dibatalkan.\x1b[0m');
         setIsRunning(false);
+        setIsWaitingForInput(false);
       }
     };
 
@@ -227,6 +238,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 
     if (result.error && !result.output) {
       cStdinModeRef.current = false;
+      setIsWaitingForInput(false);
       term.clear();
       term.writeln('\x1b[1;36m$ gcc main.c -o main && ./main\x1b[0m');
       term.writeln('');
@@ -276,9 +288,12 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 
     if (result.waitingForInput) {
       cStdinModeRef.current = true;
+      setIsWaitingForInput(true);
       cStdinBufferRef.current = '';
+      setMobileInputValue('');
     } else {
       cStdinModeRef.current = false;
+      setIsWaitingForInput(false);
       if (!output.endsWith('\n') && output.length > 0) term.writeln('');
       term.writeln('');
       term.writeln('\x1b[1;32m✓ Selesai!\x1b[0m');
@@ -318,6 +333,28 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     }
   };
 
+  const handleMobileInputSubmit = () => {
+    const val = mobileInputValue;
+    setMobileInputValue('');
+    setIsWaitingForInput(false);
+
+    const term = xtermRef.current;
+    if (!term) return;
+
+    if (waitingForInputRef.current) {
+      waitingForInputRef.current = false;
+      term.writeln(val);
+      if (pyodideWorker) {
+        pyodideWorker.postMessage({ type: 'INPUT_RESPONSE', value: val });
+      }
+    } else if (cStdinModeRef.current) {
+      term.writeln(val);
+      cStdinLinesRef.current.push(val);
+      const allStdin = cStdinLinesRef.current.join('\n') + '\n';
+      executeCCode(allStdin);
+    }
+  };
+
   const handleLanguageChange = (newLang: CodeLanguage) => {
     const term = xtermRef.current;
     if (term && (term as any).__cleanup) {
@@ -331,6 +368,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     cStdinBufferRef.current = '';
     cStdinOffsetsRef.current = [];
     setIsRunning(false);
+    setIsWaitingForInput(false);
     setActiveTemplateIdx(null);
 
     setLanguage(newLang);
@@ -354,6 +392,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     cStdinLinesRef.current = [];
     cStdinBufferRef.current = '';
     setIsRunning(false);
+    setIsWaitingForInput(false);
     setActiveTemplateIdx(null);
     setCode(DEFAULT_CODE[language]);
     term.clear();
@@ -378,6 +417,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       cStdinLinesRef.current = [];
       cStdinBufferRef.current = '';
       setIsRunning(false);
+      setIsWaitingForInput(false);
       term.clear();
       term.writeln(`\x1b[1;36m📝 Menggunakan template: ${DEMO_SCRIPTS[language][idx].name}\x1b[0m`);
       term.writeln('\x1b[2mKetik kode di editor atas, lalu klik "Jalankan" untuk menguji!\x1b[0m');
@@ -520,21 +560,66 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           )}
         </motion.div>
 
-        {/* Live Playground Widget */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: "circOut", delay: 0.2 }}
-          className="flex flex-col gap-4 relative z-10 w-full"
-          id="interactive-playground"
+          className="relative"
         >
+          <div className="bg-zinc-950 rounded-[3rem] p-8 shadow-[0_50px_100px_-20px_rgba(138,21,56,0.3)] border border-white/5 relative z-10 overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-tr from-maroon/10 via-transparent to-fun-blue/10 opacity-50" />
+            <div className="flex items-center justify-between mb-8 px-2 relative z-10">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                <div className="w-3 h-3 rounded-full bg-green-500/80" />
+              </div>
+              <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest font-bold">coding_adventure.v1</div>
+            </div>
+            <pre className="font-mono text-sm md:text-lg text-zinc-300 p-4 leading-relaxed relative z-10">
+              <span className="text-zinc-650 italic">// Bahasa C</span><br />
+              <span className="text-rose-400">#include</span> <span className="text-amber-300">&lt;stdio.h&gt;</span><br />
+              <span className="text-rose-400">int</span> <span className="text-blue-450">main</span>() {"{"}<br />
+              &nbsp;&nbsp;<span className="text-blue-450">printf</span>(<span className="text-amber-300">"Waktunya Jadi Pro!"</span>);<br />
+              &nbsp;&nbsp;<span className="text-rose-400">return</span> <span className="text-amber-300">0</span>;<br />
+              {"}"}<br />
+              <br />
+              <span className="text-zinc-650 italic"># Python</span><br />
+              <span className="text-rose-400">def</span> <span className="text-blue-450">semangat</span>():<br />
+              &nbsp;&nbsp;<span className="text-blue-450">print</span>(<span className="text-amber-300">"Kamu Pasti Bisa!"</span>)<br />
+            </pre>
+            
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-maroon/20 blur-3xl rounded-full" />
+          </div>
+          <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-maroon/10 rounded-full blur-[100px]" />
+        </motion.div>
+      </section>
+
+      {/* Interactive Playground Section (Full Width) */}
+      <section id="interactive-playground" className="px-6 md:px-12 py-20 max-w-7xl mx-auto relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-maroon/5 rounded-full blur-[160px] -z-10 pointer-events-none" />
+        
+        <div className="mb-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-maroon-bg border border-maroon/10 text-maroon rounded-2xl text-xs font-black uppercase tracking-wider">
+            <Terminal size={14} className="text-maroon animate-pulse" />
+            Live WebAssembly Playground
+          </div>
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-dark">
+            Cobain Editor Interaktif <span className="text-transparent bg-clip-text bg-gradient-to-r from-maroon via-maroon-light to-rose-600">Tanpa Batas</span>
+          </h2>
+          <p className="text-zinc-550 font-bold max-w-2xl text-base leading-relaxed">
+            Tidak perlu login, registrasi, atau instalasi. Tulis kode Python atau C Anda langsung di browser secara offline dan lihat eksekusinya secara instan!
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-5 relative z-10 w-full">
           {/* Controls Bar: Language + Templates */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white/80 backdrop-blur-md border border-maroon/5 p-4 rounded-3xl shadow-soft">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white/95 backdrop-blur-md border border-maroon/5 p-4 rounded-[2rem] shadow-soft">
             {/* Language Selection */}
             <div className="flex items-center bg-zinc-100 rounded-2xl p-1 border border-zinc-200/50 shadow-inner">
               <button
                 onClick={() => handleLanguageChange('python')}
-                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                className={`px-5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   language === 'python' 
                     ? 'bg-maroon text-white shadow-bubbly-maroon active:translate-y-[2px]' 
                     : 'text-zinc-500 hover:text-zinc-900'
@@ -544,7 +629,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               </button>
               <button
                 onClick={() => handleLanguageChange('c')}
-                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                className={`px-5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   language === 'c' 
                     ? 'bg-maroon text-white shadow-bubbly-maroon active:translate-y-[2px]' 
                     : 'text-zinc-500 hover:text-zinc-900'
@@ -556,18 +641,18 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 
             {/* Template Selector */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-black text-maroon/60 uppercase tracking-wider mr-1 flex items-center gap-1">
-                <Sparkles size={12} className="text-fun-yellow fill-fun-yellow" />
+              <span className="text-[11px] font-black text-maroon/60 uppercase tracking-wider mr-1.5 flex items-center gap-1">
+                <Sparkles size={12} className="text-fun-yellow fill-fun-yellow animate-pulse" />
                 Template:
               </span>
               {DEMO_SCRIPTS[language].map((script, idx) => (
                 <button
                   key={idx}
                   onClick={() => selectTemplate(idx)}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                  className={`px-3.5 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer hover:scale-105 active:scale-95 ${
                     activeTemplateIdx === idx
-                      ? 'bg-maroon-bg border-maroon/30 text-maroon'
-                      : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:border-zinc-350'
+                      ? 'bg-maroon-bg border-maroon/30 text-maroon font-black'
+                      : 'bg-white border-zinc-200 text-zinc-650 hover:bg-zinc-50 hover:border-zinc-300'
                   }`}
                 >
                   {script.name}
@@ -576,10 +661,12 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             </div>
           </div>
 
-          {/* IDE Window: CodeEditor + xterm.js Terminal */}
-          <div className="bg-zinc-950 rounded-[2.5rem] p-4 shadow-[0_50px_100px_-20px_rgba(138,21,56,0.3)] border border-white/5 flex flex-col gap-3">
-            {/* Editor Container */}
-            <div className="h-[250px] overflow-hidden rounded-2xl border border-white/5">
+          {/* IDE Window: CodeEditor (Left) + xterm.js Terminal (Right) side-by-side on desktop */}
+          <div className="bg-zinc-950 rounded-[3rem] p-6 shadow-[0_50px_100px_-20px_rgba(138,21,56,0.35)] border border-white/10 grid grid-cols-1 lg:grid-cols-3 gap-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-tr from-maroon/5 via-transparent to-fun-blue/5 opacity-40 pointer-events-none" />
+
+            {/* Editor Area (Left 2 cols) */}
+            <div className="lg:col-span-2 h-[380px] overflow-hidden rounded-2xl border border-white/5 shadow-2xl relative z-10">
               <CodeEditor 
                 code={code} 
                 onChange={(val) => setCode(val || '')} 
@@ -590,27 +677,55 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               />
             </div>
 
-            {/* Terminal Container */}
-            <div className="h-[150px] bg-[#09090b] rounded-2xl border border-white/5 flex flex-col overflow-hidden shadow-inner">
-              <div className="flex items-center justify-between px-4 py-2 bg-zinc-900/60 border-b border-white/5">
+            {/* Terminal Area (Right 1 col) */}
+            <div className="h-[380px] bg-[#09090b] rounded-2xl border border-white/5 flex flex-col overflow-hidden shadow-2xl relative z-10">
+              <div className="flex items-center justify-between px-4 py-3 bg-zinc-900/60 border-b border-white/5">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <div className={`w-2.5 h-2.5 rounded-full ${isRunning ? 'bg-amber-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`} />
                   <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase tracking-wider">Terminal Output</span>
                 </div>
                 <button 
                   onClick={handleReset}
-                  className="text-[9px] text-zinc-400 hover:text-white bg-zinc-800 border border-white/5 px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold flex items-center gap-1.5"
+                  className="text-[9px] text-zinc-400 hover:text-white bg-zinc-800 border border-white/10 hover:border-white/20 px-3 py-1 rounded-lg transition-all cursor-pointer font-bold flex items-center gap-1.5"
                 >
                   <RotateCcw size={10} />
                   Reset
                 </button>
               </div>
               <div ref={termContainerRef} className="flex-1 p-3 min-h-0 font-mono text-xs overflow-hidden" />
+              
+              {/* Mobile Input Helper */}
+              {isWaitingForInput && (
+                <div className="flex gap-2 p-2 bg-zinc-900 border-t border-white/5 relative z-20 items-center">
+                  <span className="text-[9px] text-maroon font-black bg-maroon-bg/20 border border-maroon/20 px-2.5 py-1 rounded-lg uppercase tracking-wider shrink-0 animate-pulse">
+                    Ketik Jawaban:
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Masukkan jawaban Anda..."
+                    value={mobileInputValue}
+                    onChange={(e) => setMobileInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleMobileInputSubmit();
+                      }
+                    }}
+                    className="flex-1 bg-zinc-800 border border-white/10 text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-maroon/50 transition-all font-mono"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleMobileInputSubmit}
+                    className="bg-maroon hover:bg-maroon-light text-white px-4 py-1.5 rounded-xl text-xs font-black transition-all active:scale-95 cursor-pointer shadow-md"
+                  >
+                    Kirim
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Sandbox Load Status / Tips */}
-            <div className="px-2 text-[10px] text-zinc-550 font-bold flex justify-between items-center">
-              <span className="flex items-center gap-1">
+            <div className="lg:col-span-3 px-2 text-[10px] text-zinc-550 font-bold flex justify-between items-center relative z-10 mt-2">
+              <span className="flex items-center gap-1.5">
                 {(language === 'python' ? isPyodideLoading : isCLoading) ? (
                   <>
                     <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
@@ -626,9 +741,9 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               <span>Ketik langsung di terminal saat input() / scanf() dipanggil</span>
             </div>
           </div>
+        </div>
 
-          <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-maroon/10 rounded-full blur-[100px] -z-10" />
-        </motion.div>
+        <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-maroon/10 rounded-full blur-[100px] -z-10" />
       </section>
 
       {/* Curriculum Grid */}
