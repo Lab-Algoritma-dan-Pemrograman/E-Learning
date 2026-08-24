@@ -277,16 +277,20 @@ export const LessonPage: React.FC = () => {
     const inputsNeeded = lesson.testCases.filter(tc => tc.input);
     let allPassed = true;
 
+    // Use clean text (stripped of __IMAGE_DATA__ base64 plot strings) for test case output comparison
+    const cleanOutputForValidation = parseOutputWithImages(result.output).cleanText;
+
     if (inputsNeeded.length <= 1) {
       // Single or no stdin — use the first run's output
       allPassed = lesson.testCases.every(tc => {
-        return normalizeOutput(result.output) === normalizeOutput(tc.expectedOutput);
+        return normalizeOutput(cleanOutputForValidation) === normalizeOutput(tc.expectedOutput);
       });
     } else {
       // Multiple test cases with different stdin — run each separately
       for (const tc of lesson.testCases) {
         const tcResult = tc.input ? await runCode(code, tc.input) : result;
-        if (tcResult.error || normalizeOutput(tcResult.output) !== normalizeOutput(tc.expectedOutput)) {
+        const cleanTcOutput = parseOutputWithImages(tcResult.output).cleanText;
+        if (tcResult.error || normalizeOutput(cleanTcOutput) !== normalizeOutput(tc.expectedOutput)) {
           allPassed = false;
           if (tcResult.error) setError(tcResult.error);
           break;

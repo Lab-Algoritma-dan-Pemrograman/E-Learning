@@ -3874,5 +3874,260 @@ export const curriculum: Level[] = [
         ]
       }
     ]
+  },
+  {
+    "id": "py-level-7",
+    "title": "PENGOLAHAN DAN VISUALISASI DATA PYTHON",
+    "description": "Mempelajari statistik deskriptif (pemusatan, penyebaran, posisi & korelasi) dan teknik visualisasi data grafik interaktif menggunakan Matplotlib.",
+    "accessMode": "auto",
+    "locked": false,
+    "modules": [
+      {
+        "id": "py7-m1",
+        "title": "Statistik Deskriptif & Analisis Data",
+        "lessons": [
+          {
+            "id": "py7-l1",
+            "title": "Ukuran Pemusatan Data (Mean, Median, Mode)",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Ukuran pemusatan data digunakan untuk menemukan titik sentral atau nilai yang paling representatif dari suatu kelompok data numerik.</p>\n  <ul class=\"list-disc pl-5 space-y-2 text-zinc-700\">\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">statistics.mean()</code>: Menghitung nilai rata-rata aritmatika seluruh elemen.</li>\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">statistics.median()</code>: Mencari nilai tengah dari data yang telah terurut. Lebih tahan terhadap nilai anomali (outlier).</li>\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">statistics.mode()</code>: Mencari modus atau nilai yang paling sering muncul (frekuensi tertinggi).</li>\n  </ul>\n</div>",
+            "codeExample": "import statistics\n\ndata = [80, 90, 85, 70, 90, 100]\n\nrata_rata = statistics.mean(data)\nnilai_tengah = statistics.median(data)\nmodus = statistics.mode(data)\n\nprint(f\"Mean: {rata_rata:.2f}\")\nprint(f\"Median: {nilai_tengah}\")\nprint(f\"Modus: {modus}\")",
+            "initialCode": "import statistics\n\nnilai = [75, 80, 85, 80, 95]\n\n# TODO: Lengkapi kode rumpang di bawah ini\nrata = statistics.____(nilai)       # Panggil fungsi rata-rata\ntengah = statistics.____(nilai)     # Panggil fungsi nilai tengah\nmodus = statistics.____(nilai)      # Panggil fungsi modus\n\nprint(f\"Rata-rata: {rata:.1f}\")\nprint(f\"Nilai Tengah: {tengah}\")\nprint(f\"Modus: {modus}\")",
+            "solution": "import statistics\n\nnilai = [75, 80, 85, 80, 95]\n\nrata = statistics.mean(nilai)\ntengah = statistics.median(nilai)\nmodus = statistics.mode(nilai)\n\nprint(f\"Rata-rata: {rata:.1f}\")\nprint(f\"Nilai Tengah: {tengah}\")\nprint(f\"Modus: {modus}\")",
+            "hint": "Ganti garis bawah ____ dengan mean, median, dan mode.",
+            "quiz": {
+              "options": [
+                "mean()",
+                "median()",
+                "mode()",
+                "sum()"
+              ],
+              "question": "Fungsi pemusatan data apakah yang paling tahan terhadap kehadiran anomali (outlier) data yang sangat besar/kecil?",
+              "correctAnswer": 1
+            },
+            "testCases": [
+              {
+                "description": "Menghitung mean, median, dan mode dari list nilai",
+                "expectedOutput": "Rata-rata: 83.0\nNilai Tengah: 80\nModus: 80\n"
+              }
+            ],
+            "validationRules": []
+          },
+          {
+            "id": "py7-l2",
+            "title": "Ukuran Penyebaran Data (Min, Max, Variance, Stdev)",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Fungsi penyebaran data mengukur seberapa jauh atau lebar sebaran titik data dari titik pusatnya.</p>\n  <ul class=\"list-disc pl-5 space-y-2 text-zinc-700\">\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">min()</code> & <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">max()</code>: Menemukan nilai terendah dan tertinggi di kelompok data.</li>\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">statistics.variance()</code>: Menghitung varians sampel (rata-rata kuadrat selisih tiap data terhadap rata-rata).</li>\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">statistics.stdev()</code>: Menghitung standar deviasi (simpangan baku), metrik penyimpangan data pada skala aslinya.</li>\n  </ul>\n</div>",
+            "codeExample": "import statistics\n\nsuhu = [28.5, 30.1, 29.0, 31.5, 27.8]\n\nterendah = min(suhu)\ntertinggi = max(suhu)\nvarians = statistics.variance(suhu)\nstd_dev = statistics.stdev(suhu)\n\nprint(f\"Min: {terendah}, Max: {tertinggi}\")\nprint(f\"Varians: {varians:.4f}\")\nprint(f\"Stdev: {std_dev:.4f}\")",
+            "initialCode": "import statistics\n\nsampel = [10, 12, 15, 18, 20]\n\n# TODO: Lengkapi kode rumpang penyebaran data di bawah ini\nn_min = ____(sampel)                  # Fungsi nilai minimum\nn_max = ____(sampel)                  # Fungsi nilai maksimum\nvar = statistics.____(sampel)         # Fungsi varians\nstd = statistics.____(sampel)         # Fungsi standar deviasi\n\nprint(f\"Min: {n_min}\")\nprint(f\"Max: {n_max}\")\nprint(f\"Varians: {var:.2f}\")\nprint(f\"Stdev: {std:.2f}\")",
+            "solution": "import statistics\n\nsampel = [10, 12, 15, 18, 20]\n\nn_min = min(sampel)\nn_max = max(sampel)\nvar = statistics.variance(sampel)\nstd = statistics.stdev(sampel)\n\nprint(f\"Min: {n_min}\")\nprint(f\"Max: {n_max}\")\nprint(f\"Varians: {var:.2f}\")\nprint(f\"Stdev: {std:.2f}\")",
+            "hint": "Isi garis bawah ____ berturut-turut dengan min, max, variance, dan stdev.",
+            "quiz": {
+              "options": [
+                "Median",
+                "Standar Deviasi (stdev)",
+                "Modus",
+                "Kuartil"
+              ],
+              "question": "Metrik statistik apakah yang dihitung dari akar kuadrat nilai varians?",
+              "correctAnswer": 1
+            },
+            "testCases": [
+              {
+                "description": "Menghitung min, max, varians, dan stdev data sampel",
+                "expectedOutput": "Min: 10\nMax: 20\nVarians: 17.00\nStdev: 4.12\n"
+              }
+            ],
+            "validationRules": []
+          },
+          {
+            "id": "py7-l3",
+            "title": "Posisi & Hubungan Variabel (Quantiles & Correlation)",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Fungsi posisi dan hubungan variabel digunakan untuk membagi interval data dan mengukur keterkaitan antar himpunan data.</p>\n  <ul class=\"list-disc pl-5 space-y-2 text-zinc-700\">\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">quantiles(n=4)</code>: Membagi data terurut ke dalam interval probabilitas yang sama (kuartil Q1, Q2, Q3).</li>\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">correlation(x, y)</code>: Menghitung koefisien korelasi Pearson antara dua variabel (rentang -1 hingga 1).</li>\n  </ul>\n</div>",
+            "codeExample": "import statistics\n\n# Kuartil (n=4)\ndata = [10, 20, 30, 40, 50, 60, 70, 80]\nkuartil = statistics.quantiles(data, n=4)\nprint(f\"Kuartil: {kuartil}\")\n\n# Korelasi\njam = [2, 4, 6, 8]\nnilai = [50, 65, 80, 95]\nkor = statistics.correlation(jam, nilai)\nprint(f\"Korelasi: {kor:.2f}\")",
+            "initialCode": "import statistics\n\ndata = [12, 24, 36, 48, 60, 72, 84]\n\n# TODO: Lengkapi fungsi kuartil untuk membagi menjadi 4 bagian\nq = statistics.____(data, n=4)\n\nprint(f\"Q1, Q2, Q3: {[round(x, 1) for x in q]}\")",
+            "solution": "import statistics\n\ndata = [12, 24, 36, 48, 60, 72, 84]\n\nq = statistics.quantiles(data, n=4)\n\nprint(f\"Q1, Q2, Q3: {[round(x, 1) for x in q]}\")",
+            "hint": "Ganti garis bawah ____ dengan quantiles.",
+            "quiz": {
+              "options": [
+                "0 hingga 100",
+                "-1 hingga 1",
+                "0 hingga 1",
+                "-100 hingga 100"
+              ],
+              "question": "Berapakah rentang nilai koefisien korelasi Pearson yang dihasilkan oleh fungsi correlation()?",
+              "correctAnswer": 1
+            },
+            "testCases": [
+              {
+                "description": "Membagi interval kuartil data",
+                "expectedOutput": "Q1, Q2, Q3: [24.0, 48.0, 72.0]\n"
+              }
+            ],
+            "validationRules": []
+          }
+        ]
+      },
+      {
+        "id": "py7-m2",
+        "title": "Visualisasi Data Dasar dengan Matplotlib",
+        "lessons": [
+          {
+            "id": "py7-l4",
+            "title": "Konfigurasi & Pelengkap Grafik (Title, Label, Grid, Show)",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Sebelum merender grafik, kita menggunakan modul <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">matplotlib.pyplot</code> untuk mengatur tata letak pelengkap grafik:</p>\n  <ul class=\"list-disc pl-5 space-y-2 text-zinc-700\">\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.title(\"...\")</code>: Menisipkan judul utama di bagian atas bingkai grafik.</li>\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.xlabel(\"...\")</code> & <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.ylabel(\"...\")</code>: Memberikan label keterangan pada sumbu X dan Y.</li>\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.grid(True)</code>: Menampilkan garis pembantu kisi di latar belakang.</li>\n    <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.show()</code>: Perintah wajib untuk merender dan menampilkan seluruh bingkai grafik ke layar.</li>\n  </ul>\n</div>",
+            "codeExample": "import matplotlib.pyplot as plt\n\nplt.plot([1, 2, 3], [10, 20, 30])\nplt.title(\"Grafik Sederhana\")\nplt.xlabel(\"Sumbu X\")\nplt.ylabel(\"Sumbu Y\")\nplt.grid(True)\nplt.show()",
+            "initialCode": "import matplotlib.pyplot as plt\n\nx = [1, 2, 3, 4]\ny = [5, 10, 15, 20]\n\nplt.plot(x, y)\n\n# TODO: Lengkapi konfigurasi grafik di bawah ini\nplt.____(\"Grafik Perkembangan\")   # Fungsi Judul\nplt.____(\"Waktu\")                 # Fungsi Label Sumbu X\nplt.____(\"Nilai\")                 # Fungsi Label Sumbu Y\nplt.grid(True)\n\nplt.____()                         # Perintah wajib penampil grafik\n\nprint(\"Konfigurasi grafik selesai!\")",
+            "solution": "import matplotlib.pyplot as plt\n\nx = [1, 2, 3, 4]\ny = [5, 10, 15, 20]\n\nplt.plot(x, y)\n\nplt.title(\"Grafik Perkembangan\")\nplt.xlabel(\"Waktu\")\nplt.ylabel(\"Nilai\")\nplt.grid(True)\n\nplt.show()\n\nprint(\"Konfigurasi grafik selesai!\")",
+            "hint": "Ganti garis bawah ____ dengan title, xlabel, ylabel, dan show.",
+            "quiz": {
+              "options": [
+                "plt.xlabel()",
+                "plt.ylabel()",
+                "plt.title()",
+                "plt.grid()"
+              ],
+              "question": "Fungsi Matplotlib manakah yang digunakan untuk memberi nama label pada garis sumbu vertikal (tegak)?",
+              "correctAnswer": 1
+            },
+            "testCases": [
+              {
+                "description": "Melengkapi judul, label sumbu X/Y, dan plt.show()",
+                "expectedOutput": "Konfigurasi grafik selesai!\n"
+              }
+            ],
+            "validationRules": []
+          },
+          {
+            "id": "py7-l5",
+            "title": "Visualisasi Grafik Garis - Line Chart (plot)",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Grafik garis atau Line Chart dibentuk menggunakan perintah <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.plot(x, y)</code>.</p>\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Grafik ini paling optimal diterapkan untuk memvisualisasikan kumpulan data berkelanjutan (kontinu) untuk melacak <strong>tren pergerakan nilai seiring waktu</strong> (deret waktu).</p>\n</div>",
+            "codeExample": "import matplotlib.pyplot as plt\n\nbulan = [\"Jan\", \"Feb\", \"Mar\", \"Apr\"]\npenjualan = [10, 25, 18, 30]\n\nplt.plot(bulan, penjualan, marker='o', color='maroon')\nplt.title(\"Tren Penjualan Bulanan\")\nplt.show()",
+            "initialCode": "import matplotlib.pyplot as plt\n\nhari = [\"Sen\", \"Sel\", \"Rab\", \"Kam\", \"Jum\"]\nsuhu = [28, 29, 31, 30, 32]\n\n# TODO: Gunakan fungsi plot() untuk membuat grafik garis\nplt.____(hari, suhu, color='blue')\nplt.title(\"Tren Suhu Harian\")\n\nplt.show()\nprint(\"Line chart berhasil dibuat!\")",
+            "solution": "import matplotlib.pyplot as plt\n\nhari = [\"Sen\", \"Sel\", \"Rab\", \"Kam\", \"Jum\"]\nsuhu = [28, 29, 31, 30, 32]\n\nplt.plot(hari, suhu, color='blue')\nplt.title(\"Tren Suhu Harian\")\n\nplt.show()\nprint(\"Line chart berhasil dibuat!\")",
+            "hint": "Ganti garis bawah ____ dengan plot.",
+            "quiz": {
+              "options": [
+                "plt.bar()",
+                "plt.plot()",
+                "plt.pie()",
+                "plt.scatter()"
+              ],
+              "question": "Fungsi Matplotlib manakah yang digunakan untuk membuat grafik garis (line chart)?",
+              "correctAnswer": 1
+            },
+            "testCases": [
+              {
+                "description": "Membuat Grafik Garis (Line Chart) dengan plt.plot()",
+                "expectedOutput": "Line chart berhasil dibuat!\n"
+              }
+            ],
+            "validationRules": []
+          },
+          {
+            "id": "py7-l6",
+            "title": "Visualisasi Grafik Batang - Bar Chart (bar)",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Grafik batang atau Bar Chart dibuat menggunakan fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.bar(kategori, nilai)</code>.</p>\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Plot pilar ini biasa diandalkan dalam skenario penganalisisan komparatif antar kategori (diskrit) untuk <strong>membandingkan kuantitas dari setiap kelompok variabel</strong>.</p>\n</div>",
+            "codeExample": "import matplotlib.pyplot as plt\n\nproduk = [\"Laptop\", \"Mouse\", \"Keyboard\"]\nstok = [15, 50, 30]\n\nplt.bar(produk, stok, color='maroon')\nplt.title(\"Stok Produk\")\nplt.show()",
+            "initialCode": "import matplotlib.pyplot as plt\n\nbuah = [\"Apel\", \"Jeruk\", \"Mangga\"]\njumlah = [40, 60, 35]\n\n# TODO: Gunakan fungsi bar() untuk membuat grafik batang\nplt.____(buah, jumlah, color='orange')\nplt.title(\"Penjualan Buah\")\n\nplt.show()\nprint(\"Bar chart berhasil dibuat!\")",
+            "solution": "import matplotlib.pyplot as plt\n\nbuah = [\"Apel\", \"Jeruk\", \"Mangga\"]\njumlah = [40, 60, 35]\n\nplt.bar(buah, jumlah, color='orange')\nplt.title(\"Penjualan Buah\")\n\nplt.show()\nprint(\"Bar chart berhasil dibuat!\")",
+            "hint": "Ganti garis bawah ____ dengan bar.",
+            "quiz": {
+              "options": [
+                "Membandingkan kuantitas antar kategori diskrit",
+                "Melacak tren kontinu deret waktu",
+                "Membagi interval kuartil data",
+                "Menghitung varians sampel"
+              ],
+              "question": "Kapan penggunaan grafik batang (bar chart) paling tepat diterapkan?",
+              "correctAnswer": 0
+            },
+            "testCases": [
+              {
+                "description": "Membuat Grafik Batang (Bar Chart) dengan plt.bar()",
+                "expectedOutput": "Bar chart berhasil dibuat!\n"
+              }
+            ],
+            "validationRules": []
+          },
+          {
+            "id": "py7-l7",
+            "title": "Visualisasi Grafik Lingkaran - Pie Chart (pie)",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Grafik lingkaran atau Pie Chart dibuat menggunakan fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.pie(nilai, labels=kategori)</code>.</p>\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Visualisasi sirkuler ini digunakan untuk menampilkan <strong>proporsi relatif atau persentase pecahan kategori</strong> dari suatu total nilai populasi.</p>\n</div>",
+            "codeExample": "import matplotlib.pyplot as plt\n\nkategori = [\"Pendidikan\", \"Kesehatan\", \"Transportasi\"]\npengeluaran = [40, 35, 25]\n\nplt.pie(pengeluaran, labels=kategori, autopct='%1.1f%%')\nplt.title(\"Proporsi Pengeluaran\")\nplt.show()",
+            "initialCode": "import matplotlib.pyplot as plt\n\nbahasa = [\"Python\", \"C\", \"Java\", \"JS\"]\nporsi = [40, 25, 20, 15]\n\n# TODO: Gunakan fungsi pie() untuk membuat grafik lingkaran\nplt.____(porsi, labels=bahasa, autopct='%1.1f%%')\nplt.title(\"Bahasa Pemrograman Populer\")\n\nplt.show()\nprint(\"Pie chart berhasil dibuat!\")",
+            "solution": "import matplotlib.pyplot as plt\n\nbahasa = [\"Python\", \"C\", \"Java\", \"JS\"]\nporsi = [40, 25, 20, 15]\n\nplt.pie(porsi, labels=bahasa, autopct='%1.1f%%')\nplt.title(\"Bahasa Pemrograman Populer\")\n\nplt.show()\nprint(\"Pie chart berhasil dibuat!\")",
+            "hint": "Ganti garis bawah ____ dengan pie.",
+            "quiz": {
+              "options": [
+                "plt.circle()",
+                "plt.pie()",
+                "plt.bar()",
+                "plt.scatter()"
+              ],
+              "question": "Fungsi Matplotlib manakah yang digunakan untuk membuat grafik lingkaran (pie chart)?",
+              "correctAnswer": 1
+            },
+            "testCases": [
+              {
+                "description": "Membuat Grafik Lingkaran (Pie Chart) dengan plt.pie()",
+                "expectedOutput": "Pie chart berhasil dibuat!\n"
+              }
+            ],
+            "validationRules": []
+          },
+          {
+            "id": "py7-l8",
+            "title": "Visualisasi Diagram Pencar - Scatter Plot (scatter)",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Diagram pencar atau Scatter Plot dibangun menggunakan fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.scatter(x, y)</code>.</p>\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Grafik ini menampilkan sebaran titik koordinat data mentah yang independen pada pertemuan sumbu X dan Y. Sangat berguna untuk membuktikan ada/tidaknya <strong>korelasi empiris antar dua variabel</strong>.</p>\n</div>",
+            "codeExample": "import matplotlib.pyplot as plt\n\njam_belajar = [1, 2, 3, 4, 5]\nnilai_ujian = [55, 60, 75, 80, 95]\n\nplt.scatter(jam_belajar, nilai_ujian, color='blue', marker='o')\nplt.title(\"Hubungan Jam Belajar vs Nilai Ujian\")\nplt.xlabel(\"Jam Belajar\")\nplt.ylabel(\"Nilai Ujian\")\nplt.show()",
+            "initialCode": "import matplotlib.pyplot as plt\n\nx = [2, 4, 6, 8, 10]\ny = [10, 25, 45, 65, 85]\n\n# TODO: Gunakan fungsi scatter() untuk membuat diagram pencar\nplt.____(x, y, color='green')\nplt.title(\"Scatter Plot Korelasi\")\n\nplt.show()\nprint(\"Scatter plot berhasil dibuat!\")",
+            "solution": "import matplotlib.pyplot as plt\n\nx = [2, 4, 6, 8, 10]\ny = [10, 25, 45, 65, 85]\n\nplt.scatter(x, y, color='green')\nplt.title(\"Scatter Plot Korelasi\")\n\nplt.show()\nprint(\"Scatter plot berhasil dibuat!\")",
+            "hint": "Ganti garis bawah ____ dengan scatter.",
+            "quiz": {
+              "options": [
+                "plt.hist()",
+                "plt.scatter()",
+                "plt.bar()",
+                "plt.pie()"
+              ],
+              "question": "Fungsi visualisasi Matplotlib apakah yang paling tepat untuk membuktikan ada atau tidaknya korelasi antar dua variabel independen?",
+              "correctAnswer": 1
+            },
+            "testCases": [
+              {
+                "description": "Membuat Diagram Pencar (Scatter Plot) dengan plt.scatter()",
+                "expectedOutput": "Scatter plot berhasil dibuat!\n"
+              }
+            ],
+            "validationRules": []
+          },
+          {
+            "id": "py7-l9",
+            "title": "Distribusi Frekuensi dengan Histogram (hist)",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Histogram dibentuk menggunakan fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">plt.hist(data, bins=n)</code>.</p>\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Histogram menerapkan kalkulasi internal untuk meringkas distribusi himpunan numerik dengan cara menyortirnya dalam rentang selang tertentu (<em>bins/interval</em>) lalu menggambarkan frekuensi volumenya secara berurutan tanpa celah spasi antar batang.</p>\n</div>",
+            "codeExample": "import matplotlib.pyplot as plt\n\nusia = [18, 19, 19, 20, 20, 20, 21, 21, 22, 23, 25, 25, 30]\n\nplt.hist(usia, bins=5, color='green', edgecolor='black')\nplt.title(\"Distribusi Usia Pengguna\")\nplt.xlabel(\"Rentang Usia\")\nplt.ylabel(\"Frekuensi\")\nplt.show()",
+            "initialCode": "import matplotlib.pyplot as plt\n\nskor = [65, 70, 72, 75, 78, 80, 82, 85, 88, 90, 92, 95]\n\n# TODO: Gunakan fungsi hist() untuk membuat histogram\nplt.____(skor, bins=4, color='purple', edgecolor='black')\nplt.title(\"Distribusi Skor Ujian\")\n\nplt.show()\nprint(\"Histogram berhasil dibuat!\")",
+            "solution": "import matplotlib.pyplot as plt\n\nskor = [65, 70, 72, 75, 78, 80, 82, 85, 88, 90, 92, 95]\n\nplt.hist(skor, bins=4, color='purple', edgecolor='black')\nplt.title(\"Distribusi Skor Ujian\")\n\nplt.show()\nprint(\"Histogram berhasil dibuat!\")",
+            "hint": "Ganti garis bawah ____ dengan hist.",
+            "quiz": {
+              "options": [
+                "Labels",
+                "Bins",
+                "Grid",
+                "Ticks"
+              ],
+              "question": "Apakah nama interval selang pengelompokan rentang data numerik pada grafik Histogram?",
+              "correctAnswer": 1
+            },
+            "testCases": [
+              {
+                "description": "Membuat Histogram sebaran frekuensi dengan plt.hist()",
+                "expectedOutput": "Histogram berhasil dibuat!\n"
+              }
+            ],
+            "validationRules": []
+          }
+        ]
+      }
+    ]
   }
 ];
