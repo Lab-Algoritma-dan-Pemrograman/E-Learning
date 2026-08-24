@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Level } from '../data/curriculum';
+import { Level, curriculum as defaultCurriculum } from '../data/curriculum';
 import { Achievement } from '../services/achievementService';
 
 export interface UserProfile {
@@ -56,7 +56,7 @@ interface AppState {
 export const useStore = create<AppState>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
-  curriculum: [],
+  curriculum: defaultCurriculum,
   setCurriculum: (curriculum) => set({ curriculum }),
   currentLessonId: null,
   setCurrentLessonId: (id) => set({ currentLessonId: id }),

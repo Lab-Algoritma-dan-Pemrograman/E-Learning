@@ -172,11 +172,23 @@ export const LessonPage: React.FC = () => {
     ? curriculum[currentLevelIdx]?.modules?.[currentModuleIdx]?.lessons?.[currentLessonIdx]
     : null;
   
-  // Langsung cek bahasa murni berdasarkan level ID pembungkus dari struktur Curriculum (c-level vs py-level)
   const currentLevel = curriculum[currentLevelIdx];
-  const lessonLanguage: CodeLanguage = currentLevel?.id.startsWith('c-') 
-    ? 'c' 
-    : 'python';
+  
+  // Deteksi bahasa pelajaran:
+  // 1. Properti `language` eksplisit pada level / lesson jika ada
+  // 2. Deteksi otomatis dari isi kode template/jawaban
+  // 3. Fallback berdasarkan prefix ID Level ('c-' vs 'py-')
+  const lessonLanguage: CodeLanguage = (() => {
+    const explicitLang = (currentLevel as any)?.language || (lesson as any)?.language;
+    if (explicitLang === 'c' || explicitLang === 'python') {
+      return explicitLang;
+    }
+    const sampleCode = code || lesson?.initialCode || lesson?.codeExample || '';
+    if (sampleCode.trim().length > 0) {
+      return detectLanguage(sampleCode);
+    }
+    return currentLevel?.id.startsWith('c-') ? 'c' : 'python';
+  })();
   
   const { runCode, isLoading, error: runnerError } = useCodeRunner(lessonLanguage);
 

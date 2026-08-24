@@ -338,7 +338,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
 
         if (levelsError || !levelsData || levelsData.length === 0) {
-          console.warn("No curriculum in database. Initial setup needed.");
+          console.warn("No curriculum in database. Using local static fallback...");
+          const { curriculum: defaultCurriculum } = await import('../data/curriculum');
+          setCurriculum(defaultCurriculum);
           return;
         }
 
@@ -394,6 +396,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setCurriculum(resolvedLevels);
       } catch (err) {
         console.error("Failed to load curriculum from Supabase:", err);
+        const { curriculum: defaultCurriculum } = await import('../data/curriculum');
+        setCurriculum(defaultCurriculum);
       }
     };
 

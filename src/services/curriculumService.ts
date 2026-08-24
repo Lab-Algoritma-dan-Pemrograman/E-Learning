@@ -29,7 +29,9 @@ export const curriculumService = {
       }
 
       if (levelsError || !levelsData || levelsData.length === 0) {
-        return [];
+        console.warn("No curriculum in database or failed to fetch. Falling back to local static curriculum...");
+        const { curriculum: defaultCurriculum } = await import('../data/curriculum');
+        return defaultCurriculum;
       }
 
       const { data: modulesData } = await supabase
@@ -77,7 +79,8 @@ export const curriculumService = {
       });
     } catch (error) {
       console.error("Failed to load curriculum:", error);
-      return [];
+      const { curriculum: defaultCurriculum } = await import('../data/curriculum');
+      return defaultCurriculum;
     }
   },
 
