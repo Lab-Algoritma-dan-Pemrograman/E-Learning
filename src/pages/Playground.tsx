@@ -9,6 +9,8 @@ import { Trash2, Copy, Share2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { PlaygroundExample, getPlaygroundExamples } from '../services/playgroundService';
+import { parseOutputWithImages } from '../utils/parseOutputWithImages';
+import { PlotDisplay } from '../components/PlotDisplay';
 
 const DEFAULT_CODE: Record<CodeLanguage, string> = {
   python: '# Tulis kode Python Anda di sini\n# Gunakan input() untuk menerima input dari terminal\n\nnama = input("Siapa nama kamu? ")\nprint(f"Halo, {nama}! Selamat datang!")',
@@ -26,6 +28,7 @@ export const Playground: React.FC = () => {
   const [showExamples, setShowExamples] = useState(false);
   const [examples, setExamples] = useState<PlaygroundExample[]>([]);
   const [loadingExamples, setLoadingExamples] = useState(false);
+  const [plotImages, setPlotImages] = useState<string[]>([]);
 
   // Load examples when modal opens
   useEffect(() => {
@@ -153,6 +156,7 @@ export const Playground: React.FC = () => {
     if (!term || !pyodideWorker) return;
 
     setIsRunning(true);
+    setPlotImages([]);
     term.clear();
     term.writeln('\x1b[1;36m$ python run\x1b[0m');
     term.writeln('');
@@ -164,10 +168,14 @@ export const Playground: React.FC = () => {
       if (e.data.id !== id) return;
 
       if (e.data.type === 'INPUT_REQUEST') {
-        const output = e.data.output || '';
-        if (output.length > lastOutputLength) {
-          term.write(output.slice(lastOutputLength));
-          lastOutputLength = output.length;
+        const rawOutput = e.data.output || '';
+        const { cleanText, images } = parseOutputWithImages(rawOutput);
+        if (images.length > 0) {
+          setPlotImages(images);
+        }
+        if (cleanText.length > lastOutputLength) {
+          term.write(cleanText.slice(lastOutputLength));
+          lastOutputLength = cleanText.length;
         }
         const prompt = e.data.prompt || '';
         if (prompt) {
@@ -177,9 +185,13 @@ export const Playground: React.FC = () => {
         inputBufferRef.current = '';
       } else if (e.data.type === 'RUN_DONE') {
         pyodideWorker.removeEventListener('message', handler);
-        const output = e.data.output || '';
-        if (output.length > lastOutputLength) {
-          term.write(output.slice(lastOutputLength));
+        const rawOutput = e.data.output || '';
+        const { cleanText, images } = parseOutputWithImages(rawOutput);
+        if (images.length > 0) {
+          setPlotImages(images);
+        }
+        if (cleanText.length > lastOutputLength) {
+          term.write(cleanText.slice(lastOutputLength));
         }
         term.writeln('');
         term.writeln('\x1b[1;32m✓ Program selesai!\x1b[0m');
@@ -335,6 +347,7 @@ export const Playground: React.FC = () => {
     setIsRunning(false);
 
     setLanguage(newLang);
+    setPlotImages([]);
     setCode(DEFAULT_CODE[newLang]);
     if (term) {
       term.clear();
@@ -358,6 +371,7 @@ export const Playground: React.FC = () => {
     cStdinInputCountRef.current = 0;
     cStdinFullOutputRef.current = '';
     setIsRunning(false);
+    setPlotImages([]);
     term.clear();
     term.writeln('\x1b[2mJalankan kode Anda untuk melihat hasil...\x1b[0m');
   };
@@ -460,7 +474,14 @@ export const Playground: React.FC = () => {
             {/* Stdin input field — removed, C now uses terminal-based stdin */}
             
             {/* xterm.js terminal container */}
-            <div ref={termContainerRef} className="flex-1 p-2.5 min-h-0 font-mono" />
+            <div ref={termContainerRef} className="flex-1 p-2.5 min-h-0 font-mono overflow-hidden" />
+
+            {/* Matplotlib plot display */}
+            {plotImages.length > 0 && (
+              <div className="p-3 border-t border-zinc-800 bg-zinc-950 max-h-[350px] overflow-y-auto custom-scrollbar">
+                <PlotDisplay images={plotImages} />
+              </div>
+            )}
           </div>
         </div>
 

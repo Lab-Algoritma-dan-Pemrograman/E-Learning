@@ -50,15 +50,64 @@ self.onmessage = async (event) => {
       }
 
       const { input = '' } = event.data;
+
+      // Auto load any imported packages like matplotlib, numpy, etc.
+      if (pyodide.loadPackagesFromImports) {
+        await pyodide.loadPackagesFromImports(code);
+      }
       
       await pyodide.runPythonAsync(`
 import sys
 import io
+import base64
+
 sys.stdout = io.StringIO()
 sys.stdin = io.StringIO(${JSON.stringify(input)})
+
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    
+    def _elearning_custom_show(*args, **kwargs):
+        fignums = plt.get_fignums()
+        if fignums:
+            for num in fignums:
+                fig = plt.figure(num)
+                buf = io.BytesIO()
+                fig.savefig(buf, format='png', bbox_inches='tight')
+                buf.seek(0)
+                img_b64 = base64.b64encode(buf.read()).decode('utf-8')
+                print(f"\\n__IMAGE_DATA__:data:image/png;base64,{img_b64}\\n")
+                plt.close(fig)
+        else:
+            fig = plt.gcf()
+            if fig:
+                buf = io.BytesIO()
+                fig.savefig(buf, format='png', bbox_inches='tight')
+                buf.seek(0)
+                img_b64 = base64.b64encode(buf.read()).decode('utf-8')
+                print(f"\\n__IMAGE_DATA__:data:image/png;base64,{img_b64}\\n")
+                plt.close(fig)
+            
+    plt.show = _elearning_custom_show
+except Exception:
+    pass
       `);
 
       await pyodide.runPythonAsync(code);
+
+      // Auto flush any open matplotlib figures if plt.show() was not explicitly called
+      await pyodide.runPythonAsync(`
+try:
+    if 'matplotlib.pyplot' in sys.modules:
+        import matplotlib.pyplot as plt
+        if plt.get_fignums():
+            plt.show()
+except Exception:
+    pass
+      `);
+
       const stdout = await pyodide.runPythonAsync('sys.stdout.getvalue()');
       
       self.postMessage({ type: 'RUN_DONE', id, output: stdout });
@@ -71,6 +120,11 @@ sys.stdin = io.StringIO(${JSON.stringify(input)})
       if (!pyodide) {
         self.postMessage({ type: 'RUN_ERROR', id, error: 'Pyodide not initialized' });
         return;
+      }
+
+      // Auto load any imported packages like matplotlib, numpy, etc.
+      if (pyodide.loadPackagesFromImports) {
+        await pyodide.loadPackagesFromImports(code);
       }
 
       // Update the current run ID (read by the module's readLine callback)
@@ -107,14 +161,45 @@ sys.stdin = io.StringIO(${JSON.stringify(input)})
         }
       }
 
-      // Setup stdout+stderr capture + async input function
+      // Setup stdout+stderr capture + async input function + Matplotlib patch
       await pyodide.runPythonAsync(`
 import sys
 import io
+import base64
 
 _term_buf = io.StringIO()
 sys.stdout = _term_buf
 sys.stderr = _term_buf
+
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    
+    def _elearning_custom_show(*args, **kwargs):
+        fignums = plt.get_fignums()
+        if fignums:
+            for num in fignums:
+                fig = plt.figure(num)
+                buf = io.BytesIO()
+                fig.savefig(buf, format='png', bbox_inches='tight')
+                buf.seek(0)
+                img_b64 = base64.b64encode(buf.read()).decode('utf-8')
+                print(f"\\n__IMAGE_DATA__:data:image/png;base64,{img_b64}\\n")
+                plt.close(fig)
+        else:
+            fig = plt.gcf()
+            if fig:
+                buf = io.BytesIO()
+                fig.savefig(buf, format='png', bbox_inches='tight')
+                buf.seek(0)
+                img_b64 = base64.b64encode(buf.read()).decode('utf-8')
+                print(f"\\n__IMAGE_DATA__:data:image/png;base64,{img_b64}\\n")
+                plt.close(fig)
+            
+    plt.show = _elearning_custom_show
+except Exception:
+    pass
 
 import __terminal_io
 
@@ -143,6 +228,17 @@ await __interactive_run()
 `;
 
       await pyodide.runPythonAsync(wrappedCode);
+
+      // Auto flush any open matplotlib figures if plt.show() was not explicitly called
+      await pyodide.runPythonAsync(`
+try:
+    if 'matplotlib.pyplot' in sys.modules:
+        import matplotlib.pyplot as plt
+        if plt.get_fignums():
+            plt.show()
+except Exception:
+    pass
+      `);
 
       // Final flush
       const stdout = await pyodide.runPythonAsync('_term_buf.getvalue()');

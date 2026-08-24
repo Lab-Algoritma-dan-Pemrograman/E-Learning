@@ -4,6 +4,8 @@ import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, 
 import { useStore } from '../store/useStore';
 import { CodeEditor } from '../components/CodeEditor';
 import { useCodeRunner, CodeLanguage } from '../hooks/useCodeRunner';
+import { parseOutputWithImages } from '../utils/parseOutputWithImages';
+import { PlotDisplay } from '../components/PlotDisplay';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
@@ -23,6 +25,10 @@ const DEMO_SCRIPTS = {
     {
       name: '⭐ Bintang',
       code: 'baris = input("Masukkan jumlah baris: ")\nfor i in range(1, int(baris) + 1):\n    print("*" * i)'
+    },
+    {
+      name: '📊 Grafik',
+      code: 'import matplotlib.pyplot as plt\n\nbulan = ["Jan", "Feb", "Mar", "Apr", "Mei"]\npenjualan = [10, 25, 18, 30, 42]\n\nplt.plot(bulan, penjualan, marker="o", color="#800000", linewidth=2)\nplt.title("Grafik Penjualan Bulanan")\nplt.xlabel("Bulan")\nplt.ylabel("Penjualan (Juta)")\nplt.grid(True)\n\nplt.show()\nprint("Grafik berhasil ditampilkan!")'
     }
   ],
   c: [
@@ -57,6 +63,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const { pyodideWorker, isPyodideLoading, isCLoading } = useStore();
 
   const [activeTemplateIdx, setActiveTemplateIdx] = useState<number | null>(null);
+  const [plotImages, setPlotImages] = useState<string[]>([]);
 
   // Mobile Input helper states
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
@@ -173,6 +180,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     if (!term || !pyodideWorker) return;
 
     setIsRunning(true);
+    setPlotImages([]);
     term.clear();
     term.writeln('\x1b[1;36m$ python main.py\x1b[0m');
     term.writeln('');
@@ -184,10 +192,14 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       if (e.data.id !== id) return;
 
       if (e.data.type === 'INPUT_REQUEST') {
-        const output = e.data.output || '';
-        if (output.length > lastOutputLength) {
-          term.write(output.slice(lastOutputLength));
-          lastOutputLength = output.length;
+        const rawOutput = e.data.output || '';
+        const { cleanText, images } = parseOutputWithImages(rawOutput);
+        if (images.length > 0) {
+          setPlotImages(images);
+        }
+        if (cleanText.length > lastOutputLength) {
+          term.write(cleanText.slice(lastOutputLength));
+          lastOutputLength = cleanText.length;
         }
         const prompt = e.data.prompt || '';
         if (prompt) {
@@ -199,9 +211,13 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
         setMobileInputValue('');
       } else if (e.data.type === 'RUN_DONE') {
         pyodideWorker.removeEventListener('message', handler);
-        const output = e.data.output || '';
-        if (output.length > lastOutputLength) {
-          term.write(output.slice(lastOutputLength));
+        const rawOutput = e.data.output || '';
+        const { cleanText, images } = parseOutputWithImages(rawOutput);
+        if (images.length > 0) {
+          setPlotImages(images);
+        }
+        if (cleanText.length > lastOutputLength) {
+          term.write(cleanText.slice(lastOutputLength));
         }
         term.writeln('');
         term.writeln('\x1b[1;32m✓ Selesai!\x1b[0m');
@@ -333,8 +349,8 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     }
   };
 
-  const handleMobileInputSubmit = () => {
-    const val = mobileInputValue;
+  const handleMobileInputSubmit = (forcedValue?: string) => {
+    const val = forcedValue !== undefined ? forcedValue : mobileInputValue;
     setMobileInputValue('');
     setIsWaitingForInput(false);
 
@@ -372,6 +388,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     setActiveTemplateIdx(null);
 
     setLanguage(newLang);
+    setPlotImages([]);
     setCode(DEFAULT_CODE[newLang]);
     if (term) {
       term.clear();
@@ -418,6 +435,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       cStdinBufferRef.current = '';
       setIsRunning(false);
       setIsWaitingForInput(false);
+      setPlotImages([]);
       term.clear();
       term.writeln(`\x1b[1;36m📝 Menggunakan template: ${DEMO_SCRIPTS[language][idx].name}\x1b[0m`);
       term.writeln('\x1b[2mKetik kode di editor atas, lalu klik "Jalankan" untuk menguji!\x1b[0m');
@@ -694,9 +712,22 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               </div>
               <div ref={termContainerRef} className="flex-1 p-3 min-h-0 font-mono text-xs overflow-hidden" />
               
+              {/* Matplotlib plot display on LandingPage */}
+              {plotImages.length > 0 && (
+                <div className="p-3 border-t border-white/10 bg-zinc-950 max-h-[300px] overflow-y-auto custom-scrollbar">
+                  <PlotDisplay images={plotImages} />
+                </div>
+              )}
+              
               {/* Mobile Input Helper */}
               {isWaitingForInput && (
-                <div className="flex gap-2 p-2 bg-zinc-900 border-t border-white/5 relative z-20 items-center">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleMobileInputSubmit();
+                  }}
+                  className="flex gap-2 p-2 bg-zinc-900 border-t border-white/5 relative z-20 items-center w-full"
+                >
                   <span className="text-[9px] text-maroon font-black bg-maroon-bg/20 border border-maroon/20 px-2.5 py-1 rounded-lg uppercase tracking-wider shrink-0 animate-pulse">
                     Ketik Jawaban:
                   </span>
@@ -707,19 +738,19 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
                     onChange={(e) => setMobileInputValue(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleMobileInputSubmit();
+                        handleMobileInputSubmit(e.currentTarget.value);
                       }
                     }}
                     className="flex-1 bg-zinc-800 border border-white/10 text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-maroon/50 transition-all font-mono"
                     autoFocus
                   />
                   <button
-                    onClick={handleMobileInputSubmit}
+                    type="submit"
                     className="bg-maroon hover:bg-maroon-light text-white px-4 py-1.5 rounded-xl text-xs font-black transition-all active:scale-95 cursor-pointer shadow-md"
                   >
                     Kirim
                   </button>
-                </div>
+                </form>
               )}
             </div>
 

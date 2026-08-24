@@ -16,6 +16,8 @@ import { completeLesson as completeLessonService, grantXp } from '../services/pr
 import { cn } from '../lib/utils';
 import { useCodeRunner, detectLanguage, CodeLanguage } from '../hooks/useCodeRunner';
 import { Loader2, AlertTriangle } from 'lucide-react';
+import { parseOutputWithImages } from '../utils/parseOutputWithImages';
+import { PlotDisplay } from '../components/PlotDisplay';
 
 /**
  * Normalize output for flexible comparison:
@@ -803,7 +805,15 @@ export const LessonPage: React.FC = () => {
                     {sandboxError ? (
                       <span className="text-red-400">{sandboxError}</span>
                     ) : sandboxOutput ? (
-                      <span className="text-emerald-400">{sandboxOutput}</span>
+                      (() => {
+                        const { cleanText, images } = parseOutputWithImages(sandboxOutput);
+                        return (
+                          <div className="space-y-3">
+                            {cleanText && <span className="text-emerald-400">{cleanText}</span>}
+                            {images.length > 0 && <PlotDisplay images={images} />}
+                          </div>
+                        );
+                      })()
                     ) : (
                       <span className="text-zinc-600 italic">// Klik 'Jalankan' atau Ctrl+Enter untuk melihat output</span>
                     )}
@@ -979,7 +989,19 @@ export const LessonPage: React.FC = () => {
                     )}
                   </div>
                   <div className="flex-1 overflow-y-auto text-zinc-100 whitespace-pre-wrap">
-                    {error ? <span className="text-red-400">{error}</span> : output}
+                    {error ? (
+                      <span className="text-red-400">{error}</span>
+                    ) : (
+                      (() => {
+                        const { cleanText, images } = parseOutputWithImages(output);
+                        return (
+                          <div className="space-y-3">
+                            {cleanText && <span>{cleanText}</span>}
+                            {images.length > 0 && <PlotDisplay images={images} />}
+                          </div>
+                        );
+                      })()
+                    )}
                   </div>
                 </div>
                 {/* Selesaikan Pelajaran — posisi asli di kolom kanan */}

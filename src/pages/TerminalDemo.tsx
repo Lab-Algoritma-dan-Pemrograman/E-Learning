@@ -5,6 +5,8 @@ import '@xterm/xterm/css/xterm.css';
 import { Layout } from '../components/Layout';
 import { Play, RotateCcw, Loader2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { parseOutputWithImages } from '../utils/parseOutputWithImages';
+import { PlotDisplay } from '../components/PlotDisplay';
 
 const DEMO_SCRIPTS = [
   {
@@ -44,6 +46,23 @@ if int(tebakan) == angka:
 else:
     print(f"❌ Salah! Jawabannya: {angka}")`,
   },
+  {
+    name: '📊 Grafik Matplotlib',
+    code: `import matplotlib.pyplot as plt
+
+print("Membuat grafik penjualan...")
+bulan = ["Jan", "Feb", "Mar", "Apr", "Mei"]
+penjualan = [12, 19, 15, 25, 30]
+
+plt.plot(bulan, penjualan, marker='o', color='#800000', linewidth=2)
+plt.title("Grafik Penjualan Bulanan")
+plt.xlabel("Bulan")
+plt.ylabel("Penjualan (Juta)")
+plt.grid(True)
+
+plt.show()
+print("Grafik berhasil dibuat!")`,
+  },
 ];
 
 export const TerminalDemo: React.FC = () => {
@@ -53,6 +72,7 @@ export const TerminalDemo: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [selectedScript, setSelectedScript] = useState(0);
+  const [plotImages, setPlotImages] = useState<string[]>([]);
 
   // Use existing Pyodide worker from store
   const { pyodideWorker, isPyodideLoading } = useStore();
@@ -149,6 +169,7 @@ export const TerminalDemo: React.FC = () => {
     if (!term || !pyodideWorker) return;
 
     setIsRunning(true);
+    setPlotImages([]);
     
     // Track output position to only write new content
     let lastOutputLength = 0;
@@ -160,10 +181,14 @@ export const TerminalDemo: React.FC = () => {
 
       if (e.data.type === 'INPUT_REQUEST') {
         // Write any new output BEFORE the prompt (output is included in the message)
-        const output = e.data.output || '';
-        if (output.length > lastOutputLength) {
-          term.write(output.slice(lastOutputLength));
-          lastOutputLength = output.length;
+        const rawOutput = e.data.output || '';
+        const { cleanText, images } = parseOutputWithImages(rawOutput);
+        if (images.length > 0) {
+          setPlotImages(images);
+        }
+        if (cleanText.length > lastOutputLength) {
+          term.write(cleanText.slice(lastOutputLength));
+          lastOutputLength = cleanText.length;
         }
         // Show prompt and wait for user input
         const prompt = e.data.prompt || '';
@@ -175,9 +200,13 @@ export const TerminalDemo: React.FC = () => {
       } else if (e.data.type === 'RUN_DONE') {
         pyodideWorker.removeEventListener('message', handler);
         // Write final output
-        const output = e.data.output || '';
-        if (output.length > lastOutputLength) {
-          term.write(output.slice(lastOutputLength));
+        const rawOutput = e.data.output || '';
+        const { cleanText, images } = parseOutputWithImages(rawOutput);
+        if (images.length > 0) {
+          setPlotImages(images);
+        }
+        if (cleanText.length > lastOutputLength) {
+          term.write(cleanText.slice(lastOutputLength));
         }
         term.writeln('');
         term.writeln('\x1b[1;32m✓ Program selesai!\x1b[0m');
@@ -239,6 +268,7 @@ export const TerminalDemo: React.FC = () => {
     waitingForInputRef.current = false;
     inputBufferRef.current = '';
     setIsRunning(false);
+    setPlotImages([]);
     
     term.clear();
     term.writeln('\x1b[1;36m╔══════════════════════════════════════════╗\x1b[0m');
@@ -328,6 +358,13 @@ export const TerminalDemo: React.FC = () => {
           {/* xterm.js container */}
           <div ref={termRef} className="p-2 h-[calc(100%-40px)]" />
         </div>
+
+        {/* Matplotlib Plot Display */}
+        {plotImages.length > 0 && (
+          <div className="mt-2">
+            <PlotDisplay images={plotImages} />
+          </div>
+        )}
 
         {/* Info */}
         <div className="text-xs text-zinc-400 flex items-center gap-4">
