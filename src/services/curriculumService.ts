@@ -166,55 +166,66 @@ export const curriculumService = {
         if (deleteLevelsError) throw deleteLevelsError;
       }
 
-      // 5. Insert / Upsert the remaining/new levels, modules, and lessons
+      // 5. Batch / Bulk Upsert (3 requests instead of 132 sequential requests)
+      const levelsToUpsert: any[] = [];
+      const modulesToUpsert: any[] = [];
+      const lessonsToUpsert: any[] = [];
+
       for (let lIdx = 0; lIdx < levels.length; lIdx++) {
         const level = levels[lIdx];
-        await supabase
-          .from('levels')
-          .upsert({
-            id: level.id,
-            title: level.title,
-            description: level.description,
-            access_mode: level.accessMode || 'auto',
-            locked: level.locked || false,
-            sort_order: lIdx
-          });
+        levelsToUpsert.push({
+          id: level.id,
+          title: level.title,
+          description: level.description,
+          access_mode: level.accessMode || 'auto',
+          locked: level.locked || false,
+          sort_order: lIdx
+        });
 
         if (level.modules) {
           for (let mIdx = 0; mIdx < level.modules.length; mIdx++) {
             const mod = level.modules[mIdx];
-            await supabase
-              .from('modules')
-              .upsert({
-                id: mod.id,
-                level_id: level.id,
-                title: mod.title,
-                sort_order: mIdx
-              });
+            modulesToUpsert.push({
+              id: mod.id,
+              level_id: level.id,
+              title: mod.title,
+              sort_order: mIdx
+            });
 
             if (mod.lessons) {
-              for (let lIdx = 0; lIdx < mod.lessons.length; lIdx++) {
-                const lesson = mod.lessons[lIdx];
-                await supabase
-                  .from('lessons')
-                  .upsert({
-                    id: lesson.id,
-                    module_id: mod.id,
-                    title: lesson.title,
-                    explanation: lesson.explanation,
-                    code_example: lesson.codeExample,
-                    initial_code: lesson.initialCode,
-                    solution: lesson.solution,
-                    hint: lesson.hint,
-                    quiz: lesson.quiz || {},
-                    test_cases: lesson.testCases || [],
-                    validation_rules: lesson.validationRules || [],
-                    sort_order: lIdx
-                  });
+              for (let lesIdx = 0; lesIdx < mod.lessons.length; lesIdx++) {
+                const lesson = mod.lessons[lesIdx];
+                lessonsToUpsert.push({
+                  id: lesson.id,
+                  module_id: mod.id,
+                  title: lesson.title,
+                  explanation: lesson.explanation,
+                  code_example: lesson.codeExample,
+                  initial_code: lesson.initialCode,
+                  solution: lesson.solution,
+                  hint: lesson.hint,
+                  quiz: lesson.quiz || {},
+                  test_cases: lesson.testCases || [],
+                  validation_rules: lesson.validationRules || [],
+                  sort_order: lesIdx
+                });
               }
             }
           }
         }
+      }
+
+      if (levelsToUpsert.length > 0) {
+        const { error: err1 } = await supabase.from('levels').upsert(levelsToUpsert);
+        if (err1) throw err1;
+      }
+      if (modulesToUpsert.length > 0) {
+        const { error: err2 } = await supabase.from('modules').upsert(modulesToUpsert);
+        if (err2) throw err2;
+      }
+      if (lessonsToUpsert.length > 0) {
+        const { error: err3 } = await supabase.from('lessons').upsert(lessonsToUpsert);
+        if (err3) throw err3;
       }
     } catch (error) {
       console.error("Failed to save full curriculum:", error);
@@ -228,7 +239,9 @@ export const curriculumService = {
         .from('levels')
         .update({
           access_mode: level.accessMode,
-          locked: level.locked
+          locked: level.locked,
+          title: level.title,
+          description: level.description
         })
         .eq('id', level.id);
 

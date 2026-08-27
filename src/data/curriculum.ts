@@ -1,48 +1,4 @@
-// Auto-generated curriculum file synced from Supabase DB
-export interface ValidationRule {
-  pattern: string;
-  message: string;
-  shouldExist: boolean;
-  flags?: string;
-  stripStrings?: boolean;
-  presetId?: string;
-}
-
-export interface Lesson {
-  id: string;
-  title: string;
-  explanation: string;
-  codeExample: string;
-  initialCode: string;
-  solution: string;
-  hint: string;
-  quiz: {
-    question: string;
-    options: string[];
-    correctAnswer: number;
-  };
-  testCases: {
-    input?: string;
-    expectedOutput: string;
-    description: string;
-  }[];
-  validationRules?: ValidationRule[];
-}
-
-export interface Module {
-  id: string;
-  title: string;
-  lessons: Lesson[];
-}
-
-export interface Level {
-  id: string;
-  title: string;
-  description: string;
-  locked?: boolean;
-  accessMode?: 'auto' | 'unlocked' | 'locked'; 
-  modules: Module[];
-}
+import { Level } from '../types';
 
 export const curriculum: Level[] = [
   {
@@ -3504,8 +3460,8 @@ export const curriculum: Level[] = [
   },
   {
     "id": "py-level-6",
-    "title": "LIST, DICTIONARY, DAN OPERASI FILE",
-    "description": "Materi Level 6",
+    "title": "LIST, TUPLE, DICTIONARY, DAN OPERASI FILE",
+    "description": "Mempelajari data structure terurut & tidak terurut (List, Tuple, Dictionary) serta teknik manipulasi file I/O di Python.",
     "accessMode": "auto",
     "locked": false,
     "modules": [
@@ -3601,88 +3557,115 @@ export const curriculum: Level[] = [
       },
       {
         "id": "py-level-6-m2",
-        "title": "Dictionary",
+        "title": "Tuple",
         "lessons": [
           {
             "id": "py-level-6-m2-l1",
-            "title": "Konsep Key-Value Pairs",
-            "explanation": "<div class=\"space-y-4\">\n      <ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li>*Dictionary (dict)<strong> adalah struktur data yang menyimpan data dalam bentuk </strong>pasangan kunci-nilai (key-value pairs)<strong>, ditulis dengan kurung kurawal <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">{}</code>: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">data = {\"nama\": \"Budi\", \"usia\": 20}</code>. Berbeda dengan list yang diakses dengan </strong>indeks numerik berurutan<strong>, elemen dictionary diakses menggunakan </strong>kunci (key)** yang bisa berupa string, angka, atau tipe immutable lainnya — <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">data[\"nama\"]</code> mengembalikan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"Budi\"</code>.</li>\n</ul>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Setiap <strong>key harus unik</strong> dalam satu dictionary — jika key yang sama digunakan dua kali saat membuat dict, nilai yang terakhir akan menimpa yang sebelumnya. Dictionary bersifat <strong>mutable</strong> seperti list: nilai bisa diubah (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">data[\"usia\"] = 21</code>), dan pasangan baru bisa ditambahkan dengan menetapkan key baru (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">data[\"kota\"] = \"Bandung\"</code>). Sejak Python 3.7, dictionary <strong>menjaga urutan penyisipan</strong> elemen.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>mahasiswa = {\n    &quot;nama&quot;: &quot;Sari&quot;,\n    &quot;usia&quot;: 21,\n    &quot;jurusan&quot;: &quot;Informatika&quot;\n}\n\nprint(mahasiswa[&quot;nama&quot;])     # Akses dengan key\nmahasiswa[&quot;usia&quot;] = 22       # Mengubah nilai\nmahasiswa[&quot;ipk&quot;] = 3.8       # Menambah key-value baru\n\nprint(mahasiswa)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Sari\n{&#039;nama&#039;: &#039;Sari&#039;, &#039;usia&#039;: 22, &#039;jurusan&#039;: &#039;Informatika&#039;, &#039;ipk&#039;: 3.8}</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            "codeExample": "mahasiswa = {\n    \"nama\": \"Sari\",\n    \"usia\": 21,\n    \"jurusan\": \"Informatika\"\n}\n\nprint(mahasiswa[\"nama\"])     # Akses dengan key\nmahasiswa[\"usia\"] = 22       # Mengubah nilai\nmahasiswa[\"ipk\"] = 3.8       # Menambah key-value baru\n\nprint(mahasiswa)",
-            "initialCode": "produk = {\"nama\": \"Pulpen\", \"harga\": 3000}\nproduk[__] = __\nproduk[__] = __\nprint(produk)",
-            "solution": "produk = {\"nama\": \"Pulpen\", \"harga\": 3000}\nproduk[\"harga\"] = 3500\nproduk[\"stok\"] = 100\nprint(produk)",
-            "hint": "1. Lengkapi statement untuk mengubah nilai key \"harga\" pada\n   dictionary produk menjadi 3500, menggunakan tanda kurung\n   siku dan operator assignment =.\n\n2. Lengkapi statement untuk menambahkan key baru \"stok\" dengan\n   nilai 100 pada dictionary produk, menggunakan cara yang sama\n   seperti langkah 1 (key yang belum ada akan otomatis dibuat).\n\n3. print(produk) di baris terakhir sudah benar — jangan diubah.",
+            "title": "Konsep Tuple dan Sifat Immutable",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\"><strong>Tuple</strong> adalah struktur data bawaan Python yang digunakan untuk menyimpan kumpulan elemen terurut, mirip seperti List. Namun, perbedaan paling mendasar adalah <strong>Tuple bersifat immutable</strong> (tidak dapat diubah, ditambah, atau dihapus elemennya setelah dibuat).</p>\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Tuple ditulis menggunakan kurung biasa <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(...)</code> dan elemennya dipisahkan koma. Akses elemen dilakukan menggunakan indeks seperti pada List <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">tup[0]</code>.</p>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n    <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Membuat Tuple\ntitik = (10, 20, 30)\n\nprint(\"Koordinat:\", titik)\nprint(\"Nilai X:\", titik[0])\nprint(\"Nilai Z:\", titik[-1])\n\n# Sifat immutable:\n# titik[0] = 99  # Error! TypeError: 'tuple' object does not support item assignment</code></pre>\n  </div>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n    <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n      <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n        <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n      </div>\n      <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n        <span class=\"text-zinc-500\">$ python program.py</span>\n        <span class=\"block mt-1 text-zinc-100\">Koordinat: (10, 20, 30)\nNilai X: 10\nNilai Z: 30</span>\n      </div>\n    </div>\n  </div>\n</div>",
+            "codeExample": "titik = (10, 20, 30)\n\nprint(\"Koordinat:\", titik)\nprint(\"Nilai X:\", titik[0])\nprint(\"Nilai Z:\", titik[-1])",
+            "initialCode": "data_sensor = (24.5, 60.0, 1013.25)\n\n# TODO: Lengkapi pengaksesan indeks Tuple\nsuhu = data_sensor[__]\nkelembaban = data_sensor[__]\n\nprint(\"Suhu:\", suhu)\nprint(\"Kelembaban:\", kelembaban)",
+            "solution": "data_sensor = (24.5, 60.0, 1013.25)\n\nsuhu = data_sensor[0]\nkelembaban = data_sensor[1]\n\nprint(\"Suhu:\", suhu)\nprint(\"Kelembaban:\", kelembaban)",
+            "hint": "1. Isi rumpang pertama pada data_sensor[__] dengan indeks 0 untuk mengambil elemen pertama (suhu 24.5).\n2. Isi rumpang kedua pada data_sensor[__] dengan indeks 1 untuk mengambil elemen kedua (kelembaban 60.0).",
             "quiz": {
               "options": [
-                "data[0]",
-                "data.kota",
-                "data[\"kota\"]",
-                "data.get(0)"
+                "Tuple menggunakan [...] dan elemennya bisa diubah",
+                "Tuple menggunakan (...) dan elemennya bersifat immutable (tidak bisa diubah)",
+                "Tuple hanya bisa menyimpan tipe data integer",
+                "Tuple secara otomatis diurutkan secara ascending"
               ],
-              "question": "Bagaimana cara mengakses nilai dari dictionary data = {\"kota\": \"Jakarta\"} untuk mendapatkan \"Jakarta\"?",
-              "correctAnswer": 2
+              "question": "Apa perbedaan utama antara Tuple dan List di Python?",
+              "correctAnswer": 1
             },
             "testCases": [
               {
-                "description": "<span>Buat dictionary <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">produk = {\"nama\": \"Pulpen\", \"harga\": 3000}</code>. Tambahkan key baru <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"stok\"</code> dengan nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">100</code>, ubah <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"harga\"</code> menjadi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">3500</code>, lalu tampilkan seluruh dictionary.</span>",
-                "expectedOutput": "{'nama': 'Pulpen', 'harga': 3500, 'stok': 100}\n"
+                "description": "<span>Akses elemen <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">data_sensor = (24.5, 60.0, 1013.25)</code> pada indeks <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0</code> untuk variabel <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">suhu</code> dan indeks <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">1</code> untuk variabel <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">kelembaban</code>.</span>",
+                "expectedOutput": "Suhu: 24.5\nKelembaban: 60.0\n"
               }
             ],
             "validationRules": [
               {
-                "message": "Ubah harga dengan: produk[\"harga\"] = 3500",
-                "pattern": "^produk\\s*\\[\\s*[\"']harga[\"']\\s*\\]\\s*=\\s*3500\\s*$",
+                "message": "Ambil suhu dengan: suhu = data_sensor[0]",
+                "pattern": "^suhu\\s*=\\s*data_sensor\\s*\\[\\s*0\\s*\\]\\s*$",
                 "shouldExist": true
               },
               {
-                "message": "Tambahkan key baru dengan: produk[\"stok\"] = 100",
-                "pattern": "^produk\\s*\\[\\s*[\"']stok[\"']\\s*\\]\\s*=\\s*100\\s*$",
-                "shouldExist": true
-              },
-              {
-                "message": "Urutan harus: ubah harga dahulu, lalu tambahkan key stok",
-                "pattern": "produk\\s*\\[\\s*[\"']harga[\"']\\s*\\]\\s*=\\s*3500[\\s\\S]*produk\\s*\\[\\s*[\"']stok[\"']\\s*\\]\\s*=\\s*100",
+                "message": "Ambil kelembaban dengan: kelembaban = data_sensor[1]",
+                "pattern": "^kelembaban\\s*=\\s*data_sensor\\s*\\[\\s*1\\s*\\]\\s*$",
                 "shouldExist": true
               }
             ]
           },
           {
             "id": "py-level-6-m2-l2",
-            "title": "Fungsi Dict (keys, values, items, get)",
-            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Dictionary menyediakan beberapa method penting untuk mengakses isinya secara aman dan efisien. <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">keys()</code> mengembalikan semua <strong>kunci</strong> dalam dictionary. <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">values()</code> mengembalikan semua <strong>nilai</strong>. <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">items()</code> mengembalikan pasangan <strong>(key, value)</strong> sebagai tuple — sangat berguna untuk iterasi dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">for key, value in dict.items():</code>.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Method <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">get(key, default)</code> adalah cara <strong>aman</strong> untuk mengambil nilai — jika <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">key</code> tidak ditemukan, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">get()</code> mengembalikan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">default</code> (atau <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">None</code> jika tidak diberikan) <strong>tanpa error</strong>, berbeda dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">dict[key]</code> yang akan menghasilkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">KeyError</code> jika key tidak ada. Untuk memeriksa apakah sebuah key ada, gunakan operator <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">in</code>: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"nama\" in data</code>.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>biodata = {&quot;nama&quot;: &quot;Andi&quot;, &quot;umur&quot;: 20, &quot;kota&quot;: &quot;Bogor&quot;}\n\nprint(list(biodata.keys()))     # Semua kunci\nprint(list(biodata.values()))   # Semua nilai\n\nfor key, value in biodata.items():\n    print(f&quot;{key}: {value}&quot;)\n\nprint(biodata.get(&quot;hobi&quot;, &quot;Tidak diketahui&quot;))  # key tidak ada -&gt; default\nprint(&quot;nama&quot; in biodata)  # cek keberadaan key</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">[&#039;nama&#039;, &#039;umur&#039;, &#039;kota&#039;]\n[&#039;Andi&#039;, 20, &#039;Bogor&#039;]\nnama: Andi\numur: 20\nkota: Bogor\nTidak diketahui\nTrue</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            "codeExample": "biodata = {\"nama\": \"Andi\", \"umur\": 20, \"kota\": \"Bogor\"}\n\nprint(list(biodata.keys()))     # Semua kunci\nprint(list(biodata.values()))   # Semua nilai\n\nfor key, value in biodata.items():\n    print(f\"{key}: {value}\")\n\nprint(biodata.get(\"hobi\", \"Tidak diketahui\"))  # key tidak ada -> default\nprint(\"nama\" in biodata)  # cek keberadaan key",
-            "initialCode": "nilai_siswa = {\"Andi\": 85, \"Budi\": 70}\nfor __, __ in nilai_siswa.__()__\n    print(__\"{__}: {__}\")\n\nprint(\"Nilai Citra:\", nilai_siswa.__(\"__\", \"__\"))",
-            "solution": "nilai_siswa = {\"Andi\": 85, \"Budi\": 70}\nfor nama, nilai in nilai_siswa.items():\n    print(f\"{nama}: {nilai}\")\n\nprint(\"Nilai Citra:\", nilai_siswa.get(\"Citra\", \"Tidak ada data\"))",
-            "hint": "1. Lengkapi struktur for loop untuk mengiterasi dictionary\n   nilai_siswa menggunakan method items(): dua variabel loop\n   (nama, nilai), diakhiri titik dua.\n\n2. Lengkapi print() di dalam loop (indentasi 4 spasi)\n   menggunakan f-string untuk menampilkan format \"nama: nilai\".\n\n3. Lengkapi pemanggilan method get() pada nilai_siswa dengan\n   dua argumen: key \"Citra\" dan nilai default \"Tidak ada data\".",
+            "title": "Tuple Unpacking dan Multiple Return Values",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Python memiliki fitur istimewa bernama <strong>Tuple Unpacking</strong>, di mana elemen-elemen Tuple dapat langsung diuraikan (di-assign) ke beberapa variabel secara sekaligus.</p>\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Selain itu, ketika sebuah fungsi mengembalikan beberapa nilai dipisahkan koma (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">return a, b</code>), Python sebenarnya membungkus nilai-nilai tersebut ke dalam sebuah Tuple secara implisit!</p>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n    <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Tuple Unpacking\nx, y, z = (10, 20, 30)\n\n# Function Multiple Return Values\ndef hitung_lingkaran(r):\n    luas = 3.14 * r * r\n    keliling = 2 * 3.14 * r\n    return luas, keliling  # Mengembalikan tuple (luas, keliling)\n\nl, k = hitung_lingkaran(7)\nprint(\"Luas:\", l)\nprint(\"Keliling:\", k)</code></pre>\n  </div>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n    <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n      <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n        <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n      </div>\n      <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n        <span class=\"text-zinc-500\">$ python program.py</span>\n        <span class=\"block mt-1 text-zinc-100\">Luas: 153.86\nKeliling: 43.96</span>\n      </div>\n    </div>\n  </div>\n</div>",
+            "codeExample": "def hitung_lingkaran(r):\n    luas = 3.14 * r * r\n    keliling = 2 * 3.14 * r\n    return luas, keliling\n\nl, k = hitung_lingkaran(7)\nprint(\"Luas:\", l)\nprint(\"Keliling:\", k)",
+            "initialCode": "def hitung_persegi_panjang(panjang, lebar):\n    luas = panjang * lebar\n    keliling = 2 * (panjang + lebar)\n    return ____, ____\n\n# TODO: Unpack hasil return fungsi ke variabel l dan k\nl, k = hitung_persegi_panjang(10, 5)\n\nprint(\"Luas:\", l)\nprint(\"Keliling:\", k)",
+            "solution": "def hitung_persegi_panjang(panjang, lebar):\n    luas = panjang * lebar\n    keliling = 2 * (panjang + lebar)\n    return luas, keliling\n\nl, k = hitung_persegi_panjang(10, 5)\n\nprint(\"Luas:\", l)\nprint(\"Keliling:\", k)",
+            "hint": "Lengkapi baris return fungsi dengan return luas, keliling secara berurutan dipisahkan tanda koma.",
             "quiz": {
               "options": [
-                "get() lebih cepat secara signifikan",
-                "get() mengembalikan nilai default tanpa error jika key tidak ditemukan, sedangkan dict[key] akan error",
-                "get() bisa mengubah nilai dictionary, dict[key] tidak bisa",
-                "Tidak ada perbedaan, keduanya identik"
+                "Nilai-nilai tersebut secara otomatis dibungkus menjadi sebuah Tuple",
+                "Akan terjadi SyntaxError karena fungsi hanya boleh return satu nilai",
+                "Nilai pertama akan diabaikan dan hanya nilai terakhir yang dikembalikan",
+                "Secara otomatis dikonversi menjadi sebuah List"
               ],
-              "question": "Apa keuntungan menggunakan dict.get(key, default) dibandingkan dict[key] saat mengambil nilai dari dictionary?",
-              "correctAnswer": 1
+              "question": "Apa yang sebenarnya terjadi di Python saat sebuah fungsi memiliki statement 'return a, b'?",
+              "correctAnswer": 0
             },
             "testCases": [
               {
-                "description": "<span>Buat dictionary <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">nilai_siswa = {\"Andi\": 85, \"Budi\": 70}</code>. Gunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">for ... in .items()</code> untuk menampilkan setiap nama dan nilainya, lalu gunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">get()</code> untuk mencari nilai \"Citra\" dengan default <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"Tidak ada data\"</code>.</span>",
-                "expectedOutput": "Andi: 85\nBudi: 70\nNilai Citra: Tidak ada data\n"
+                "description": "<span>Lengkapi fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">hitung_persegi_panjang</code> agar mengembalikan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">return luas, keliling</code>, lalu unpack ke variabel <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">l, k</code>.</span>",
+                "expectedOutput": "Luas: 50\nKeliling: 30\n"
               }
             ],
             "validationRules": [
               {
-                "message": "Gunakan: for nama, nilai in nilai_siswa.items():",
-                "pattern": "^for\\s+nama\\s*,\\s*nilai\\s+in\\s+nilai_siswa\\.items\\s*\\(\\s*\\)\\s*:\\s*$",
+                "message": "Fungsi harus return luas, keliling dengan: return luas, keliling",
+                "pattern": "return\\s+luas\\s*,\\s*keliling",
                 "shouldExist": true
               },
               {
-                "message": "Di dalam loop (indentasi 4 spasi), gunakan: print(f\"{nama}: {nilai}\")",
-                "pattern": "items\\s*\\(\\s*\\)\\s*:\\s*\\n {4}print\\s*\\(\\s*f[\"']\\{nama\\}:\\s*\\{nilai\\}[\"']\\s*\\)",
+                "message": "Unpack hasil fungsi dengan: l, k = hitung_persegi_panjang(10, 5)",
+                "pattern": "l\\s*,\\s*k\\s*=\\s*hitung_persegi_panjang\\s*\\(\\s*10\\s*,\\s*5\\s*\\)",
+                "shouldExist": true
+              }
+            ]
+          },
+          {
+            "id": "py-level-6-m2-l3",
+            "title": "Method Tuple dan Konversi Tipe Data",
+            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Meskipun bersifat <strong>immutable</strong>, Tuple menyediakan method pencarian bawaan serta fungsi pendukung untuk manipulasi data:</p>\n\n  <div class=\"my-4 overflow-x-auto\">\n    <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n      <thead>\n        <tr>\n          <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Method / Fungsi</th>\n          <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Deskripsi Fungsi</th>\n          <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Contoh Penggunaan</th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">count(x)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Menghitung frekuensi kemunculan nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x</code> di dalam Tuple.</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(1, 2, 2, 3).count(2)</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">2</code></td>\n        </tr>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">index(x)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Mengembalikan posisi indeks pertama kali nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x</code> ditemukan.</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(\"a\", \"b\", \"c\").index(\"b\")</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">1</code></td>\n        </tr>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">list(tup)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Mengonversi Tuple menjadi List agar elemennya dapat diubah (mutable).</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">list((1, 2))</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1, 2]</code></td>\n        </tr>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">tuple(lst)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Mengonversi List kembali menjadi Tuple (immutable).</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">tuple([1, 2])</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(1, 2)</code></td>\n        </tr>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">len(tup)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Menghitung total jumlah elemen di dalam Tuple.</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">len((10, 20, 30))</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">3</code></td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Untuk mengubah isi Tuple yang sudah dibuat, trik yang biasa dilakukan adalah mengonversinya terlebih dahulu ke List dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">list(tup)</code>, melakukan perubahan (misalnya <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">append()</code>), lalu mengembalikannya menjadi Tuple dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">tuple(lst)</code>.</p>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n    <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>angka = (5, 10, 15, 10, 20, 10)\n\nprint(\"Jumlah 10:\", angka.count(10))\nprint(\"Posisi 15:\", angka.index(15))\n\n# Konversi Tuple -> List -> Tuple\nlst = list(angka)\nlst.append(99)\ntuple_baru = tuple(lst)\nprint(\"Tuple Baru:\", tuple_baru)</code></pre>\n  </div>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n    <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n      <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n        <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n      </div>\n      <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n        <span class=\"text-zinc-500\">$ python program.py</span>\n        <span class=\"block mt-1 text-zinc-100\">Jumlah 10: 3\nPosisi 15: 2\nTuple Baru: (5, 10, 15, 10, 20, 10, 99)</span>\n      </div>\n    </div>\n  </div>\n</div>",
+            "codeExample": "angka = (5, 10, 15, 10, 20, 10)\n\nprint(\"Jumlah 10:\", angka.count(10))\nprint(\"Posisi 15:\", angka.index(15))",
+            "initialCode": "nilai_ujian = (80, 90, 80, 75, 80, 95)\n\n# TODO: Hitung kemunculan angka 80 dan cari posisi angka 95\njumlah_80 = nilai_ujian.____(80)\nposisi_95 = nilai_ujian.____(95)\n\nprint(\"Jumlah angka 80:\", jumlah_80)\nprint(\"Posisi angka 95:\", posisi_95)",
+            "solution": "nilai_ujian = (80, 90, 80, 75, 80, 95)\n\njumlah_80 = nilai_ujian.count(80)\nposisi_95 = nilai_ujian.index(95)\n\nprint(\"Jumlah angka 80:\", jumlah_80)\nprint(\"Posisi angka 95:\", posisi_95)",
+            "hint": "1. Gunakan method count(80) untuk menghitung kemunculan angka 80.\n2. Gunakan method index(95) untuk mencari indeks pertama dari angka 95.",
+            "quiz": {
+              "options": [
+                "count() menghitung frekuensi kemunculan, index() mencari posisi indeks pertama",
+                "index() menghitung frekuensi kemunculan, count() mencari posisi indeks",
+                "Keduanya menghitung jumlah elemen",
+                "Keduanya mengurutkan isi Tuple"
+              ],
+              "question": "Manakah perbedaan fungsi method count() dan index() pada Tuple?",
+              "correctAnswer": 0
+            },
+            "testCases": [
+              {
+                "description": "<span>Gunakan method <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">count(80)</code> dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">index(95)</code> pada <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">nilai_ujian</code>.</span>",
+                "expectedOutput": "Jumlah angka 80: 3\nPosisi angka 95: 5\n"
+              }
+            ],
+            "validationRules": [
+              {
+                "message": "Panggil method count(80) dengan: jumlah_80 = nilai_ujian.count(80)",
+                "pattern": "jumlah_80\\s*=\\s*nilai_ujian\\.count\\s*\\(\\s*80\\s*\\)",
                 "shouldExist": true
               },
               {
-                "message": "Gunakan: print(\"Nilai Citra:\", nilai_siswa.get(\"Citra\", \"Tidak ada data\"))",
-                "pattern": "print\\s*\\(\\s*[\"']Nilai Citra:[\"']\\s*,\\s*nilai_siswa\\.get\\s*\\(\\s*[\"']Citra[\"']\\s*,\\s*[\"']Tidak ada data[\"']\\s*\\)\\s*\\)",
+                "message": "Panggil method index(95) dengan: posisi_95 = nilai_ujian.index(95)",
+                "pattern": "posisi_95\\s*=\\s*nilai_ujian\\.index\\s*\\(\\s*95\\s*\\)",
                 "shouldExist": true
               }
             ]
