@@ -374,7 +374,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                   hint: les.hint,
                   quiz: les.quiz,
                   testCases: les.test_cases,
-                  validationRules: les.validation_rules
+                  validationRules: les.validation_rules,
+                  xpReward: les.xp_reward ?? 60
                 }));
               return {
                 id: mod.id,

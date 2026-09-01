@@ -75,7 +75,9 @@ export const saveGameHistory = async (
 
     const now = new Date().toISOString();
 
-    // 1. Record in game_history
+    // 1. Record in game_history FIRST
+    //    (trigger check_user_xp_level menghitung XP riil dari game_history,
+    //     jadi record ini HARUS ada sebelum UPDATE users.xp)
     const { error: historyErr } = await supabase
       .from('game_history')
       .insert([{
@@ -94,6 +96,7 @@ export const saveGameHistory = async (
     const newXp = currentXp + history.xpEarned;
     const newLevel = calculateLevel(newXp);
     
+    // 3. Update user XP (trigger can now see the new game_history record)
     const { error: userErr } = await supabase
       .from('users')
       .update({

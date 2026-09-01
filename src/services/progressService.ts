@@ -79,7 +79,27 @@ export const completeLesson = async (
     const newLevel = calculateLevel(newXp);
     const oldLevel = user.level || 1;
 
-    // 3. Update User profile in Supabase
+    // 3. Save progress record to Supabase FIRST
+    //    (trigger check_user_xp_level menghitung XP riil dari student_progress,
+    //     jadi record ini HARUS ada sebelum UPDATE users.xp)
+    const { error: progressError } = await supabase
+      .from('student_progress')
+      .insert([{
+        nim: user.nim,
+        lesson_id: lessonId,
+        completed: true,
+        completed_at: new Date().toISOString()
+      }]);
+
+    if (progressError) throw progressError;
+
+    // Update the completed lessons in useProgress store immediately
+    const currentCompleted = useProgress.getState().completedLessons;
+    if (!currentCompleted.includes(lessonId)) {
+      useProgress.getState().setCompletedLessons([...currentCompleted, lessonId]);
+    }
+
+    // 4. Update User profile in Supabase (trigger can now see the new progress)
     const { error: userError } = await supabase
       .from('users')
       .update({
@@ -101,27 +121,9 @@ export const completeLesson = async (
       lastActive: new Date().toISOString()
     });
 
-    // Update the completed lessons in useProgress store immediately
-    const currentCompleted = useProgress.getState().completedLessons;
-    if (!currentCompleted.includes(lessonId)) {
-      useProgress.getState().setCompletedLessons([...currentCompleted, lessonId]);
-    }
-
     if (newLevel > oldLevel) {
       useStore.getState().setLevelUpNotification(newLevel);
     }
-
-    // 4. Save progress record to Supabase
-    const { error: progressError } = await supabase
-      .from('student_progress')
-      .insert([{
-        nim: user.nim,
-        lesson_id: lessonId,
-        completed: true,
-        completed_at: new Date().toISOString()
-      }]);
-
-    if (progressError) throw progressError;
 
 
 

@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
-import { completeLesson as completeLessonService, grantXp } from '../services/progressService';
+import { completeLesson as completeLessonService } from '../services/progressService';
 import { cn } from '../lib/utils';
 import { useCodeRunner, detectLanguage, CodeLanguage } from '../hooks/useCodeRunner';
 import { Loader2, AlertTriangle } from 'lucide-react';
@@ -325,7 +325,8 @@ export const LessonPage: React.FC = () => {
     try {
       if (user) {
         playLessonCompleteSound();
-        const newlyUnlocked = await completeLessonService(user, lesson.id, 35, curriculum, completedLessons);
+        const xpReward = (lesson as any).xpReward || 60;
+        const newlyUnlocked = await completeLessonService(user, lesson.id, xpReward, curriculum, completedLessons);
         if (newlyUnlocked && newlyUnlocked.length > 0) {
           setUnlockedAchievement(newlyUnlocked[0]);
         }
@@ -853,13 +854,8 @@ export const LessonPage: React.FC = () => {
                 options={lesson.quiz.options}
                 correctAnswer={lesson.quiz.correctAnswer}
                 onComplete={async (correct) => {
-                  if (correct && !quizXpGranted && user && !completedLessons.includes(lesson.id)) {
+                  if (correct && !quizXpGranted && !completedLessons.includes(lesson.id)) {
                     setQuizXpGranted(true);
-                    try {
-                      await grantXp(user, 25);
-                    } catch (e) {
-                      console.error('Failed to grant quiz XP:', e);
-                    }
                   }
                   if (correct) setTimeout(() => setStep('code'), 1500);
                 }}
