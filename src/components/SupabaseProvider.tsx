@@ -3,6 +3,7 @@ import { supabase, setSupabaseSession } from '../lib/supabase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
 import { initializeFromToken, TokenPayload, startPostMessageListener } from '../services/tokenService';
+import { calculateStreak } from '../services/streakService';
 import { Loader2 } from 'lucide-react';
 
 interface SupabaseContextType {
@@ -109,7 +110,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             email: payload.email || null,
             xp: 0,
             level: 1,
-            streak: 0,
+            streak: 1, // Day 1 active streak
             study_time: 0,
             last_active: new Date().toISOString(),
             created_at: new Date().toISOString(),
@@ -153,6 +154,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         } else {
           console.log("Profile found in Supabase, loading data...");
           
+          // Calculate streak based on last_active before overwriting it
+          const { newStreak } = calculateStreak(userProfile.last_active, userProfile.streak);
+
           // Map snake_case to camelCase
           profileData = {
             nim: userProfile.nim,
@@ -162,7 +166,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             email: userProfile.email,
             xp: userProfile.xp,
             level: userProfile.level,
-            streak: userProfile.streak,
+            streak: newStreak,
             lastActive: userProfile.last_active,
             createdAt: userProfile.created_at,
             role: userProfile.role as any,
@@ -171,8 +175,11 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             studyTime: userProfile.study_time || 0
           };
 
-          // Always update last_active on login/load, and update nama/kelas/role/jurusan if changed in Web Utama
-          const updates: any = { last_active: new Date().toISOString() };
+          // Always update last_active and streak on login/load, and update nama/kelas/role/jurusan if changed in Web Utama
+          const updates: any = { 
+            last_active: new Date().toISOString(),
+            streak: newStreak
+          };
           const hasRoleChange = payload.role && profileData.role !== payload.role;
           const hasJurusanChange = (payload as any).jurusan && profileData.jurusan !== (payload as any).jurusan;
           
@@ -187,10 +194,22 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .eq('nim', nim);
 
           profileData.lastActive = updates.last_active;
+          profileData.streak = newStreak;
           profileData.nama = payload.nama;
           profileData.kelas = payload.kelas;
           if (payload.role) profileData.role = payload.role as any;
           if ((payload as any).jurusan) profileData.jurusan = (payload as any).jurusan;
+
+          // Check for streak milestones (e.g., streak-3, streak-7)
+          if (newStreak >= 3) {
+            try {
+              const { checkAndUnlockAchievements } = await import('../services/achievementService');
+              const newlyUnlocked = await checkAndUnlockAchievements(profileData, {});
+              newlyUnlocked.forEach(ach => useStore.getState().pushAchievement(ach));
+            } catch (err) {
+              console.warn("Achievement check on login warning:", err);
+            }
+          }
         }
 
         console.log("Setting store user:", profileData.nama);

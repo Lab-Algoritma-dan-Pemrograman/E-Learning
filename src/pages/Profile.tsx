@@ -88,14 +88,20 @@ export const Profile: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Achievements */}
           <div className="lg:col-span-2 space-y-6">
-            <h3 className="text-xl font-black flex items-center gap-3 select-none">
-              <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center text-white shadow-[0_3px_0_#5C0E25]">
-                <i className="fa-solid fa-award text-sm"></i>
+            <div className="flex items-center justify-between flex-wrap gap-2 select-none">
+              <h3 className="text-xl font-black flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center text-white shadow-[0_3px_0_#5C0E25]">
+                  <i className="fa-solid fa-award text-sm"></i>
+                </div>
+                Pencapaian
+              </h3>
+              <div className="bg-rose-50 text-maroon border border-rose-200 px-3.5 py-1.5 rounded-full text-xs font-black shadow-sm">
+                <i className="fa-solid fa-trophy mr-1.5 text-amber-500"></i>
+                {unlockedIds.size} / {(achievementsData as Achievement[]).length} Terbuka
               </div>
-              Pencapaian
-            </h3>
+            </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {(achievementsData as Achievement[]).map((ach) => (
                 <AchievementCard 
                   key={ach.id}
@@ -164,7 +170,14 @@ const AchievementCard: React.FC<{ title: string; desc: string; icon: string; unl
     Zap: "fa-bolt",
     Trophy: "fa-trophy",
     Flame: "fa-fire",
-    Star: "fa-star"
+    Star: "fa-star",
+    Award: "fa-award",
+    Crown: "fa-crown",
+    Heart: "fa-heart",
+    Rocket: "fa-rocket",
+    Medal: "fa-medal",
+    Gift: "fa-gift",
+    Gem: "fa-gem"
   };
   const iconClass = IconMap[icon] || "fa-trophy";
   

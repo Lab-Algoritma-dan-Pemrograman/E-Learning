@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
 import { calculateLevel } from './progressService';
+import { calculateStreak } from './streakService';
 
 export interface GameQuestion {
   id: string;
@@ -95,13 +96,17 @@ export const saveGameHistory = async (
     const oldLevel = (currentUser && currentUser.nim === userId) ? (currentUser.level || 1) : 1;
     const newXp = currentXp + history.xpEarned;
     const newLevel = calculateLevel(newXp);
+    const { newStreak } = currentUser 
+      ? calculateStreak(currentUser.lastActive, currentUser.streak) 
+      : { newStreak: 1 };
     
-    // 3. Update user XP (trigger can now see the new game_history record)
+    // 3. Update user XP & streak (trigger can now see the new game_history record)
     const { error: userErr } = await supabase
       .from('users')
       .update({
         xp: newXp,
         level: newLevel,
+        streak: newStreak,
         last_active: now
       })
       .eq('nim', userId);
@@ -110,7 +115,13 @@ export const saveGameHistory = async (
 
     // Optimistically update the local store so XP/level displays immediately
     if (currentUser && currentUser.nim === userId) {
-      useStore.getState().setUser({ ...currentUser, xp: newXp, level: newLevel, lastActive: now });
+      useStore.getState().setUser({ 
+        ...currentUser, 
+        xp: newXp, 
+        level: newLevel, 
+        streak: newStreak,
+        lastActive: now 
+      });
       if (newLevel > oldLevel) {
         useStore.getState().setLevelUpNotification(newLevel);
       }

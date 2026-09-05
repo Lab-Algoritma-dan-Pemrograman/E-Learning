@@ -7,6 +7,7 @@ import { clearToken } from '../services/tokenService';
 import { AchievementPopup } from './AchievementPopup';
 import { LevelUpPopup } from './LevelUpPopup';
 import { supabase } from '../lib/supabase';
+import { calculateStreak } from '../services/streakService';
 
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -201,10 +202,28 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             current_activity: page
           });
         
+        const currentUser = useStore.getState().user;
+        const { newStreak, isChanged } = currentUser 
+          ? calculateStreak(currentUser.lastActive, currentUser.streak)
+          : { newStreak: 1, isChanged: false };
+
+        const userUpdates: any = { last_active: now };
+        if (isChanged) {
+          userUpdates.streak = newStreak;
+        }
+
         await supabase
           .from('users')
-          .update({ last_active: now })
+          .update(userUpdates)
           .eq('nim', user.nim);
+
+        if (currentUser) {
+          useStore.getState().setUser({
+            ...currentUser,
+            lastActive: now,
+            ...(isChanged ? { streak: newStreak } : {})
+          });
+        }
       } catch (e) {
         console.error("Failed to send heartbeat:", e);
       }
@@ -223,14 +242,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       })
       .then(({ error }) => {
         if (error) console.error("Initial heartbeat failed:", error);
-      });
-
-    supabase
-      .from('users')
-      .update({ last_active: initialNow })
-      .eq('nim', user.nim)
-      .then(({ error }) => {
-        if (error) console.error("Initial user active sync failed:", error);
       });
 
     window.addEventListener('beforeunload', handleUnload);

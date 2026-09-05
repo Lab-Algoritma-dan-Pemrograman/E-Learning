@@ -4,6 +4,7 @@ import { getOverallProgress } from './centralApiService';
 import { Level } from '../data/curriculum';
 import { Achievement, checkAndUnlockAchievements, checkXpAchievements } from './achievementService';
 import { useProgress } from '../store/useProgress';
+import { calculateStreak } from './streakService';
 
 // Dynamic leveling formula: level = floor(sqrt(xp / 50)) + 1
 export const calculateLevel = (xp: number): number => {
@@ -64,16 +65,7 @@ export const completeLesson = async (
     }
 
     // 2. Calculate streak
-    const today = new Date().toDateString();
-    const lastActive = user.lastActive ? new Date(user.lastActive).toDateString() : '';
-    
-    let streakUpdate = user.streak || 0;
-    if (today !== lastActive) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const isYesterday = yesterday.toDateString() === lastActive;
-      streakUpdate = isYesterday ? (user.streak || 0) + 1 : 1;
-    }
+    const { newStreak: streakUpdate } = calculateStreak(user.lastActive, user.streak);
 
     const newXp = (user.xp || 0) + xpReward;
     const newLevel = calculateLevel(newXp);
@@ -128,10 +120,17 @@ export const completeLesson = async (
 
 
     // 6. Check for Achievements
-    const newlyUnlocked = await checkAndUnlockAchievements(user, { 
+    const latestCompleted = useProgress.getState().completedLessons;
+    const newlyUnlocked = await checkAndUnlockAchievements({
+      ...user,
       xp: newXp,
+      level: newLevel,
+      streak: streakUpdate
+    }, { 
+      xp: newXp,
+      lessonCount: latestCompleted.length,
       completedLevelIds: curriculum
-        .filter(l => getOverallProgress(lessonId, curriculum, completedLessons).completedLevels.includes(l.title))
+        .filter(l => getOverallProgress(lessonId, curriculum, latestCompleted).completedLevels.includes(l.title))
         .map(l => l.id)
     });
 
