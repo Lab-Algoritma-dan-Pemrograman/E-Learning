@@ -15,11 +15,14 @@
     },
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "https://api.algohub.web.id/api/$1"
     },
     {
       "src": "/",
-      "methods": ["POST", "OPTIONS"],
+      "methods": [
+        "POST",
+        "OPTIONS"
+      ],
       "dest": "/api/index"
     },
     {
