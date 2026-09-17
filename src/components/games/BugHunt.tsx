@@ -2,17 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bug, Timer, CheckCircle2, XCircle, Trophy, ArrowRight, X, Terminal, Brain, Loader2 } from 'lucide-react';
 import { GameQuestion, getGameQuestions, saveGameHistory, canPlayBugHunt, getGameSettings } from '../../services/gameService';
-import { checkAndUnlockAchievements } from '../../services/achievementService';
+import { checkAndUnlockAchievements, checkXpAchievements } from '../../services/achievementService';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../lib/utils';
 
 interface BugHuntProps {
   language: 'c' | 'python';
   onClose: () => void;
+  onGameFinished?: () => void;
 }
 
-export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
-  const { user, setUnlockedAchievement } = useStore();
+export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose, onGameFinished }) => {
+  const { user, pushAchievement } = useStore();
   const [questions, setQuestions] = useState<GameQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -26,14 +27,30 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
   const [lastResult, setLastResult] = useState<{ correct: boolean; xp: number } | null>(null);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const scoreRef = useRef(0);
+  const totalXpRef = useRef(0);
+
+  useEffect(() => {
+    scoreRef.current = 0;
+    totalXpRef.current = 0;
+  }, []);
 
   useEffect(() => {
     const loadQuestions = async () => {
+      setLoading(true);
+      setCurrentIndex(0);
+      setSelectedLine(null);
+      setLastResult(null);
+      setTotalXp(0);
+      setScore(0);
+      scoreRef.current = 0;
+      totalXpRef.current = 0;
+
       // 1. Get settings first to know how many questions to fetch
       const settings = await getGameSettings();
       const questionCount = settings.bugHuntQuestionCount || 5;
 
-      // 2. Fresh limit check from Firestore before starting the game
+      // 2. Fresh limit check from database before starting the game
       if (user?.nim) {
         const check = await canPlayBugHunt(user.nim);
         if (!check.allowed) {
@@ -49,7 +66,7 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
       setGameStatus('playing');
     };
     loadQuestions();
-  }, [language, user]);
+  }, [language, user?.nim]);
 
   useEffect(() => {
     if (gameStatus === 'playing' && !loading && questions.length > 0) {
@@ -81,8 +98,20 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
 
     setSelectedLine(lineIndex);
     setLastResult({ correct: isCorrect, xp: earnedXp });
-    setTotalXp((prev) => prev + earnedXp);
-    if (isCorrect) setScore((prev) => prev + 1);
+    
+    setTotalXp((prev) => {
+      const newVal = prev + earnedXp;
+      totalXpRef.current = newVal;
+      return newVal;
+    });
+    
+    if (isCorrect) {
+      setScore((prev) => {
+        const newVal = prev + 1;
+        scoreRef.current = newVal;
+        return newVal;
+      });
+    }
     
     setGameStatus('result');
   };
@@ -103,24 +132,41 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
     setGameStatus('finished');
     try {
       if (user) {
+        const finalScore = scoreRef.current;
+        const finalXp = totalXpRef.current;
+
         await saveGameHistory(user.nim, {
           gameType: 'bug_hunt',
-          score,
+          score: finalScore,
           totalQuestions: questions.length,
-          xpEarned: totalXp,
+          xpEarned: finalXp,
           playedAt: new Date().toISOString()
         });
 
-        // Check for achievements
+        // Trigger dashboard count refresh immediately
+        if (onGameFinished) {
+          onGameFinished();
+        }
+
+        // Get current XP from store (updated by saveGameHistory)
+        const currentUser = useStore.getState().user;
+        const currentXp = (currentUser && currentUser.nim === user.nim) ? (currentUser.xp || 0) : user.xp + finalXp;
+
+        // Check for game_score and level_completed achievements
         const newlyUnlocked = await checkAndUnlockAchievements(user, { 
-          xp: user.xp + totalXp,
+          xp: currentXp,
           gamesPlayed: 1,
-          perfectGames: score === questions.length ? 1 : 0 
+          perfectGames: finalScore === questions.length ? 1 : 0 
         });
 
-        if (newlyUnlocked.length > 0) {
-          // Show the first one
-          setUnlockedAchievement(newlyUnlocked[0]);
+        // Also check XP-based achievements with current XP
+        const xpAch = await checkXpAchievements(user.nim, currentXp);
+
+        newlyUnlocked.forEach(ach => {
+          pushAchievement(ach);
+        });
+        if (xpAch) {
+          pushAchievement(xpAch);
         }
       }
     } catch (error: any) {
@@ -128,6 +174,7 @@ export const BugHunt: React.FC<BugHuntProps> = ({ language, onClose }) => {
         setLimitError(true);
         // Reset XP display since it wasn't actually saved
         setTotalXp(0);
+        totalXpRef.current = 0;
         console.warn('Game result NOT saved: weekly limit was reached');
       } else {
         console.error("Failed to save game history:", error);

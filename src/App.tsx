@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { useState } from 'react';
 import { SupabaseProvider } from './components/SupabaseProvider';
 import { PyodideInitializer } from './components/PyodideInitializer';
+import { ClangInitializer } from './components/ClangInitializer';
 import { useStore } from './store/useStore';
 import { secureLog, secureError } from './lib/securityUtils';
 import { LandingPage } from './pages/LandingPage';
@@ -15,9 +17,10 @@ import { Leaderboard } from './pages/Leaderboard';
 import { CourseExplorer } from './pages/CourseExplorer';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
-import { AssessmentPage } from './pages/AssessmentPage';
-import { MonitoringDashboard } from './pages/MonitoringDashboard';
-import { QuestionBankDashboard } from './pages/QuestionBankDashboard';
+import { StudentMonitoring } from './pages/StudentMonitoring';
+import { AuditLogPage } from './pages/AuditLogPage';
+import { TerminalDemo } from './pages/TerminalDemo';
+
 
 function AppContent() {
   const { user, page, setPage } = useStore();
@@ -45,10 +48,11 @@ function AppContent() {
         case 'leaderboard': return <Leaderboard />;
         case 'courses': return <CourseExplorer />;
         case 'profile': return <Profile />;
-        case 'admin': return <AdminDashboard />;
-        case 'assessments': return <AssessmentPage />;
-        case 'monitoring': return <MonitoringDashboard />;
-        case 'bank_soal': return <QuestionBankDashboard />;
+        case 'admin': return (['admin', 'kordas'].includes(user?.role || '')) ? <AdminDashboard /> : <Dashboard />;
+        case 'monitoring': return (['admin', 'kordas', 'asisten'].includes(user?.role || '')) ? <StudentMonitoring /> : <Dashboard />;
+        case 'auditlog': return (['admin', 'kordas'].includes(user?.role || '')) ? <AuditLogPage /> : <Dashboard />;
+        case 'terminal-demo': return <TerminalDemo />;
+
         default: return <Dashboard />;
       }
     } catch (error) {
@@ -69,9 +73,10 @@ function AppContent() {
         if (href === '/leaderboard') { e.preventDefault(); setPage('leaderboard'); }
         if (href === '/profile') { e.preventDefault(); setPage('profile'); }
         if (href === '/admin') { e.preventDefault(); setPage('admin'); }
-        if (href === '/assessments') { e.preventDefault(); setPage('assessments'); }
         if (href === '/monitoring') { e.preventDefault(); setPage('monitoring'); }
-        if (href === '/bank_soal') { e.preventDefault(); setPage('bank_soal'); }
+        if (href === '/auditlog') { e.preventDefault(); setPage('auditlog'); }
+        if (href === '/terminal-demo') { e.preventDefault(); setPage('terminal-demo'); }
+
       }
     }}>
       {renderPage()}
@@ -83,7 +88,10 @@ export default function App() {
   return (
     <SupabaseProvider>
       <PyodideInitializer />
-      <AppContent />
+      <ClangInitializer />
+      <div className="relative min-h-screen">
+        <AppContent />
+      </div>
     </SupabaseProvider>
   );
 }

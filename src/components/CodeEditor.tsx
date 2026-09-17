@@ -6,6 +6,7 @@ interface CodeEditorProps {
   code: string;
   onChange: (value: string | undefined) => void;
   onRun: () => void;
+  onReset?: () => void;
   isLoading?: boolean;
   language?: CodeLanguage;
 }
@@ -15,7 +16,7 @@ const LANGUAGE_CONFIG: Record<CodeLanguage, { monacoLang: string; fileName: stri
   c: { monacoLang: 'c', fileName: 'main.c' },
 };
 
-export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, isLoading, language = 'python' }) => {
+export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset, isLoading, language = 'python' }) => {
   const config = LANGUAGE_CONFIG[language] || LANGUAGE_CONFIG.python;
   const onRunRef = useRef(onRun);
 
@@ -51,24 +52,35 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, i
             {language === 'c' ? 'C' : 'Python'}
           </span>
         </div>
-        <button
-          onClick={onRun}
-          disabled={isLoading}
-          className="px-4 py-1.5 bg-rose-700 hover:bg-rose-600 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-rose-700/20 active:scale-95"
-        >
-          {isLoading ? (
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <svg fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+        <div className="flex items-center gap-2">
+          {onReset && (
+            <button
+              onClick={onReset}
+              disabled={isLoading}
+              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-white text-xs font-bold rounded-lg transition-all active:scale-95 cursor-pointer"
+            >
+              Reset
+            </button>
           )}
-          Jalankan
-          <span className="hidden sm:inline text-[10px] font-normal text-white/50 ml-1">Ctrl+Enter</span>
-        </button>
+          <button
+            onClick={onRun}
+            disabled={isLoading}
+            className="px-4 py-1.5 bg-rose-700 hover:bg-rose-600 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-rose-700/20 active:scale-95 cursor-pointer"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <svg fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            )}
+            Jalankan
+            <span className="hidden sm:inline text-[10px] font-normal text-white/50 ml-1">Ctrl+Enter</span>
+          </button>
+        </div>
       </div>
       
-      <div className="flex-1 relative min-h-[400px]">
+      <div className="flex-1 relative min-h-[200px]">
         <div className="absolute inset-0">
           <Editor
             height="100%"

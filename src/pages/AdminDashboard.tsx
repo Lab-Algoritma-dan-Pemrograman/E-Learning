@@ -1,20 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { UserProfile, useStore } from '../store/useStore';
 import { cn } from '../lib/utils';
 import { 
   Users, Trophy, Zap, Clock, ChevronRight, Search, Shield, 
-  User as UserIcon, CheckCircle2, Sparkles, Loader2, BookOpen,
+  User as UserIcon, CheckCircle2, Sparkles, Loader2, BookOpen, Layers,
   Lock, Unlock, ChevronUp, ChevronDown, Trash2, Plus, GripVertical,
-  RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff, Terminal
+  RotateCcw, Minus, AlertTriangle, Edit2, Save, X, Eye, EyeOff, Terminal, Upload, Move
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Level, Module, Lesson } from '../data/curriculum';
-import { resetUserProgress, resetLevelProgress, adjustUserXp, deleteUser } from '../services/progressService';
+import { RichTextEditor } from '../components/RichTextEditor';
+import { extractDocxText } from '../lib/documentParser';
+import { documentImportService, mergeCurriculum, ParseResult } from '../services/documentImportService';
+import { resetUserProgress, resetLevelProgress, resetLessonProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, deleteGameQuestion, getGameSettings, updateGameSettings, GameSettings, forceResetGameQuestions } from '../services/gameService';
+import { PlaygroundExample, getPlaygroundExamples, addPlaygroundExample, updatePlaygroundExample, deletePlaygroundExample } from '../services/playgroundService';
 import { Achievement, getAchievements } from '../services/achievementService';
-import { monitoringService } from '../services/monitoringService';
 import initialAchievements from '../data/achievements.json';
 
 interface LessonProgress {
@@ -33,17 +36,14 @@ export const AdminDashboard: React.FC = () => {
   const [userProgress, setUserProgress] = useState<LessonProgress[]>([]);
   const [loadingProgress, setLoadingProgress] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'users' | 'curriculum' | 'structure' | 'games' | 'grading'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'curriculum' | 'structure' | 'games'>('users');
   const [aiMaterial, setAiMaterial] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState('');
   const [generatedCurriculum, setGeneratedCurriculum] = useState<Level[] | null>(null);
 
-  // Grading Rules State
-  const [gradingRules, setGradingRules] = useState<Record<string, any>>({});
-  const [loadingGradingRules, setLoadingGradingRules] = useState(false);
-  const [savingGradingRules, setSavingGradingRules] = useState(false);
+  
 
   const [currentCurriculum, setCurrentCurriculum] = useState<Level[]>([]);
   const [draftCurriculum, setDraftCurriculum] = useState<Level[]>([]);
@@ -52,6 +52,23 @@ export const AdminDashboard: React.FC = () => {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [editingLevel, setEditingLevel] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ title: string; description: string }>({ title: '', description: '' });
+
+  // Module title editing state
+  const [editingModuleKey, setEditingModuleKey] = useState<string | null>(null);
+  const [moduleEditTitle, setModuleEditTitle] = useState('');
+
+  // Document import state
+  const [importDocTarget, setImportDocTarget] = useState<{ levelId: string; modIdx: number } | 'global' | null>(null);
+  const [isImportingDoc, setIsImportingDoc] = useState(false);
+  const docFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Premium Smart Document Import States
+  const [showImportPreviewModal, setShowImportPreviewModal] = useState(false);
+  const [importFileName, setImportFileName] = useState('');
+  const [importFileContent, setImportFileContent] = useState('');
+  const [importParseMode, setImportParseMode] = useState<'regex' | 'ai'>('regex');
+  const [importParsedResult, setImportParsedResult] = useState<ParseResult | null>(null);
+  const [isProcessingImport, setIsProcessingImport] = useState(false);
 
   // Lesson editor state
   const [editingLessonInfo, setEditingLessonInfo] = useState<{ levelId: string; modIdx: number; lessonIdx: number } | null>(null);
@@ -75,12 +92,24 @@ export const AdminDashboard: React.FC = () => {
 
   const [resetLoading, setResetLoading] = useState(false);
 
+  // Bug Hunt import file input ref
+  const bugHuntImportRef = useRef<HTMLInputElement>(null);
+
+  // Playground examples management state
+  const [playgroundExamples, setPlaygroundExamples] = useState<PlaygroundExample[]>([]);
+  const [editingExample, setEditingExample] = useState<PlaygroundExample | null>(null);
+  const [loadingExamples, setLoadingExamples] = useState(false);
+
   const [showModal, setShowModal] = useState<{
     type: 'confirm' | 'alert';
     title: string;
     message: string;
     onConfirm?: () => void;
   } | null>(null);
+
+  const [movingLesson, setMovingLesson] = useState<{ levelId: string; modIdx: number; lessonIdx: number; } | null>(null);
+  const [targetMoveLevelId, setTargetMoveLevelId] = useState<string>('');
+  const [targetMoveModId, setTargetMoveModId] = useState<string>('');
 
   const [aiGenModal, setAiGenModal] = useState<{ type: 'module' | 'lesson'; levelId: string; modIdx?: number; levelLanguage: string; } | null>(null);
   const [aiGenContext, setAiGenContext] = useState('');
@@ -124,6 +153,10 @@ export const AdminDashboard: React.FC = () => {
         const pyList = await getGameQuestions('python', 100);
         setAllQuestions([...qList, ...pyList]);
         setGameSettings(settings);
+
+        // Load playground examples
+        const exList = await getPlaygroundExamples();
+        setPlaygroundExamples(exList);
       } catch (e) {
         console.error(e);
       } finally {
@@ -133,26 +166,6 @@ export const AdminDashboard: React.FC = () => {
     fetchGameData();
   }, [canAccess, activeTab]);
 
-  // Fetch grading rules when grading tab is selected
-  useEffect(() => {
-    if (!canAccess || activeTab !== 'grading') return;
-    const fetchGradingRules = async () => {
-      setLoadingGradingRules(true);
-      try {
-        const { data, error } = await supabase.from('assessment_grading_rules').select('*');
-        if (data) {
-          const rulesMap: Record<string, any> = {};
-          data.forEach((row: any) => { rulesMap[row.id] = row.rules; });
-          setGradingRules(rulesMap);
-        }
-      } catch (e) {
-        console.error('Failed to fetch grading rules:', e);
-      } finally {
-        setLoadingGradingRules(false);
-      }
-    };
-    fetchGradingRules();
-  }, [canAccess, activeTab]);
 
   useEffect(() => {
     // Sinkronisasi pertama kali ke draft saat membuka tab structure
@@ -248,6 +261,10 @@ export const AdminDashboard: React.FC = () => {
           const { curriculumService } = await import('../services/curriculumService');
           await curriculumService.clearCurriculum();
           await curriculumService.saveFullCurriculum(generatedCurriculum);
+          if (currentUser) {
+            const { monitoringService } = await import('../services/monitoringService');
+            await monitoringService.addAuditLog(currentUser.nim, currentUser.nama, 'curriculum_modified', 'Membuat kurikulum baru menggunakan AI');
+          }
           setShowModal({ type: 'alert', title: 'Berhasil', message: 'Kurikulum berhasil disimpan!' });
           setGeneratedCurriculum(null);
           setAiMaterial('');
@@ -310,6 +327,10 @@ export const AdminDashboard: React.FC = () => {
           const { curriculum: staticCurriculum } = await import('../data/curriculum');
           await curriculumService.clearCurriculum();
           await curriculumService.saveFullCurriculum(staticCurriculum);
+          if (currentUser) {
+            const { monitoringService } = await import('../services/monitoringService');
+            await monitoringService.addAuditLog(currentUser.nim, currentUser.nama, 'curriculum_modified', 'Mereset kurikulum ke bawaan default');
+          }
           setShowModal({ type: 'alert', title: 'Berhasil', message: 'Kurikulum berhasil direset ke pengaturan awal!' });
         } catch (error) {
           setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mereset kurikulum.' });
@@ -446,6 +467,118 @@ export const AdminDashboard: React.FC = () => {
     });
   };
 
+  // ===== MOVE LESSON TO ANOTHER LEVEL/MODULE =====
+  useEffect(() => {
+    if (movingLesson) {
+      setTargetMoveLevelId(movingLesson.levelId);
+      const level = draftCurriculum.find(l => l.id === movingLesson.levelId);
+      if (level?.modules && level.modules.length > 0) {
+        setTargetMoveModId(level.modules[0].id);
+      } else {
+        setTargetMoveModId('');
+      }
+    }
+  }, [movingLesson, draftCurriculum]);
+
+  const handleMoveLevelChange = (levelId: string) => {
+    setTargetMoveLevelId(levelId);
+    const level = draftCurriculum.find(l => l.id === levelId);
+    if (level?.modules && level.modules.length > 0) {
+      setTargetMoveModId(level.modules[0].id);
+    } else {
+      setTargetMoveModId('');
+    }
+  };
+
+  const handleMoveLessonToTarget = (targetLevelId: string, targetModId: string) => {
+    if (!movingLesson) return;
+    const { levelId: srcLevelId, modIdx: srcModIdx, lessonIdx: srcLessonIdx } = movingLesson;
+    
+    const srcLevel = draftCurriculum.find(l => l.id === srcLevelId);
+    if (!srcLevel || !srcLevel.modules?.[srcModIdx]) return;
+    const srcMod = srcLevel.modules[srcModIdx];
+    if (!srcMod.lessons?.[srcLessonIdx]) return;
+    
+    const lessonToMove = srcMod.lessons[srcLessonIdx];
+    
+    const updatedCurriculum = draftCurriculum.map(level => {
+      let nextModules = level.modules ? [...level.modules] : [];
+      
+      if (level.id === srcLevelId) {
+        nextModules = nextModules.map((m, mIdx) => {
+          if (mIdx === srcModIdx) {
+            const nextLessons = (m.lessons || []).filter((_, idx) => idx !== srcLessonIdx);
+            return { ...m, lessons: nextLessons };
+          }
+          return m;
+        });
+      }
+      
+      if (level.id === targetLevelId) {
+        nextModules = nextModules.map(m => {
+          if (m.id === targetModId) {
+            const nextLessons = [...(m.lessons || []), lessonToMove];
+            return { ...m, lessons: nextLessons };
+          }
+          return m;
+        });
+      }
+      
+      return { ...level, modules: nextModules };
+    });
+    
+    setDraftCurriculum(updatedCurriculum);
+    setHasChanges(true);
+    setMovingLesson(null);
+    setShowModal({
+      type: 'alert',
+      title: 'Pelajaran Dipindahkan',
+      message: `Pelajaran "${lessonToMove.title}" berhasil dipindahkan. Jangan lupa klik "Simpan ke Server" untuk menyimpan perubahan.`
+    });
+  };
+
+  // ===== MANAGE LEVEL ORDER/PRESENCE =====
+  const handleAddLevel = () => {
+    const newLevelId = `level-${Date.now()}`;
+    const newLevel = {
+      id: newLevelId,
+      title: `Level Baru ${draftCurriculum.length + 1}`,
+      description: 'Deskripsi level baru...',
+      accessMode: 'auto',
+      locked: false,
+      modules: []
+    } as Level;
+    setDraftCurriculum([...draftCurriculum, newLevel]);
+    setHasChanges(true);
+    setExpandedLevels(prev => new Set(prev).add(newLevelId));
+  };
+
+  const handleMoveLevel = (lIdx: number, direction: -1 | 1) => {
+    const targetIdx = lIdx + direction;
+    if (targetIdx < 0 || targetIdx >= draftCurriculum.length) return;
+    
+    const newDraft = [...draftCurriculum];
+    const temp = newDraft[lIdx];
+    newDraft[lIdx] = newDraft[targetIdx];
+    newDraft[targetIdx] = temp;
+    
+    setDraftCurriculum(newDraft);
+    setHasChanges(true);
+  };
+
+  const handleDeleteLevel = (levelId: string) => {
+    setShowModal({
+      type: 'confirm',
+      title: 'Hapus Level',
+      message: `Apakah Anda yakin ingin menghapus level ini beserta semua subbab dan pelajarannya? Tindakan ini tidak dapat dibatalkan!`,
+      onConfirm: () => {
+        const newDraft = draftCurriculum.filter(l => l.id !== levelId);
+        setDraftCurriculum(newDraft);
+        setHasChanges(true);
+      }
+    });
+  };
+
   // ===== EDIT LEVEL TITLE/DESCRIPTION =====
   const handleSaveLevelEdit = (levelId: string) => {
     const level = draftCurriculum.find(l => l.id === levelId);
@@ -457,6 +590,161 @@ export const AdminDashboard: React.FC = () => {
       description: editForm.description || level.description 
     });
     setEditingLevel(null);
+  };
+
+  // ===== EDIT MODULE TITLE =====
+  const handleSaveModuleEdit = (levelId: string, modIdx: number) => {
+    const level = draftCurriculum.find(l => l.id === levelId);
+    if (!level?.modules?.[modIdx]) return;
+    const newModules = [...level.modules];
+    newModules[modIdx] = { ...newModules[modIdx], title: moduleEditTitle.trim() || newModules[modIdx].title };
+    updateDraftLevel({ ...level, modules: newModules });
+    setEditingModuleKey(null);
+    setModuleEditTitle('');
+  };
+
+  // ===== SMART IMPORT DOCUMENT (TXT/DOCX) =====
+  const handleDocFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !importDocTarget) return;
+
+    setIsImportingDoc(true);
+    try {
+      let content = '';
+      if (file.name.endsWith('.docx')) {
+        const paragraphs = await extractDocxText(file);
+        content = paragraphs.join('\n');
+      } else {
+        content = await file.text();
+      }
+
+      setImportFileName(file.name);
+      setImportFileContent(content);
+      setImportParseMode('regex'); // default to fast regex
+      setImportParsedResult(null); // clear previous results
+      setShowImportPreviewModal(true);
+    } catch (err) {
+      console.error('Failed to read document:', err);
+      setShowModal({
+        type: 'alert',
+        title: 'Gagal Membaca File',
+        message: 'Pastikan file .txt, .docx, atau .md yang valid.'
+      });
+    } finally {
+      setIsImportingDoc(false);
+      if (docFileInputRef.current) docFileInputRef.current.value = '';
+    }
+  };
+
+  const handleProcessImportDocument = async () => {
+    setIsProcessingImport(true);
+    try {
+      const result = await documentImportService.importFromText(
+        importFileContent,
+        importParseMode === 'ai'
+      );
+      setImportParsedResult(result);
+    } catch (err: any) {
+      console.error('Failed to parse document:', err);
+      setShowModal({
+        type: 'alert',
+        title: 'Gagal Memproses Dokumen',
+        message: err.message || 'Gagal mengekstrak konten dari dokumen.'
+      });
+    } finally {
+      setIsProcessingImport(false);
+    }
+  };
+
+  const handleApplyImportDocument = () => {
+    if (!importParsedResult) return;
+
+    try {
+      if (importDocTarget === 'global') {
+        // Global merge
+        const merged = mergeCurriculum(draftCurriculum, importParsedResult.levels);
+        setDraftCurriculum(merged);
+        setHasChanges(true);
+        setShowModal({
+          type: 'alert',
+          title: 'Import Berhasil',
+          message: 'Seluruh level, modul, dan pelajaran yang diekstrak telah berhasil digabungkan ke draf kurikulum.'
+        });
+      } else {
+        // Specific module merge
+        const { levelId, modIdx } = importDocTarget;
+        const level = draftCurriculum.find(l => l.id === levelId);
+        if (level && level.modules?.[modIdx]) {
+          // Merge lessons into the specific module
+          const importedLessons: Lesson[] = [];
+          importParsedResult.levels.forEach(lvl => {
+            lvl.modules.forEach(mod => {
+              if (mod.lessons) {
+                importedLessons.push(...mod.lessons);
+              }
+            });
+          });
+
+          if (importedLessons.length === 0) {
+            throw new Error('Tidak ada materi pelajaran yang terdeteksi di dalam dokumen.');
+          }
+
+          const currentMod = level.modules[modIdx];
+          const newLessons = [...(currentMod.lessons || [])];
+
+          importedLessons.forEach(impLes => {
+            const cleanTitle = impLes.title.trim().toLowerCase();
+            const existingIdx = newLessons.findIndex(l => l.title.trim().toLowerCase() === cleanTitle || l.id === impLes.id);
+
+            if (existingIdx === -1) {
+              const newLesId = impLes.id || `${currentMod.id}-l${newLessons.length + 1}`;
+              newLessons.push({
+                ...impLes,
+                id: newLesId
+              });
+            } else {
+              const target = newLessons[existingIdx];
+              if (impLes.explanation) target.explanation = impLes.explanation;
+              target.codeExample = impLes.codeExample;
+              target.initialCode = impLes.initialCode;
+              target.solution = impLes.solution;
+              target.hint = impLes.hint;
+              if (impLes.quiz && impLes.quiz.question) target.quiz = impLes.quiz;
+              if (impLes.testCases && impLes.testCases.length > 0) target.testCases = impLes.testCases;
+              if (impLes.validationRules && impLes.validationRules.length > 0) target.validationRules = impLes.validationRules;
+            }
+          });
+
+          const newModules = [...level.modules];
+          newModules[modIdx] = {
+            ...currentMod,
+            lessons: newLessons
+          };
+
+          updateDraftLevel({ ...level, modules: newModules });
+
+          // Auto-expand module
+          const modKey = `${levelId}:${currentMod.id}`;
+          setExpandedModules(prev => new Set(prev).add(modKey));
+
+          setShowModal({
+            type: 'alert',
+            title: 'Import Berhasil',
+            message: `Materi pelajaran dari file telah berhasil digabungkan ke modul "${currentMod.title}".`
+          });
+        }
+      }
+      setShowImportPreviewModal(false);
+      setImportDocTarget(null);
+      setImportParsedResult(null);
+    } catch (err: any) {
+      console.error('Failed to apply import:', err);
+      setShowModal({
+        type: 'alert',
+        title: 'Gagal Menerapkan Import',
+        message: err.message || 'Terjadi kesalahan saat menerapkan data.'
+      });
+    }
   };
 
   const handleCommitChanges = async () => {
@@ -472,6 +760,10 @@ export const AdminDashboard: React.FC = () => {
       console.log("Does draft contain any validation rules?", hasRules);
 
       await curriculumService.saveFullCurriculum(draftCurriculum);
+      if (currentUser) {
+        const { monitoringService } = await import('../services/monitoringService');
+        await monitoringService.addAuditLog(currentUser.nim, currentUser.nama, 'curriculum_modified', 'Mengubah struktur kurikulum (level, modul, atau pelajaran)');
+      }
       setHasChanges(false);
       setShowModal({ type: 'alert', title: 'Berhasil', message: 'Semua perubahan berhasil disimpan ke database.' });
     } catch (error) {
@@ -706,7 +998,7 @@ export const AdminDashboard: React.FC = () => {
         language: lang,
         difficulty: 'medium',
         title: result.title,
-        code: result.code,
+        code: (result.code || '').replace(/\\n/g, '\n'),
         bugLine: result.bugLine,
         explanation: result.explanation
       });
@@ -760,6 +1052,38 @@ export const AdminDashboard: React.FC = () => {
           fetchUserProgress(selectedUser.nim);
         } catch (error) {
           setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mereset level.' });
+        } finally {
+          setResetLoading(false);
+        }
+      }
+    });
+  };
+
+  const getLessonTitle = (lessonId: string): string => {
+    for (const lvl of appCurriculum) {
+      for (const mod of lvl.modules || []) {
+        for (const les of mod.lessons || []) {
+          if (les.id === lessonId) return les.title;
+        }
+      }
+    }
+    return lessonId;
+  };
+
+  const handleResetLessonForUser = async (lessonId: string, lessonTitle: string) => {
+    if (!selectedUser) return;
+    setShowModal({
+      type: 'confirm',
+      title: 'Reset Progress Pelajaran',
+      message: `Reset progress pelajaran "${lessonTitle}" untuk ${selectedUser.nama}? XP akan dikurangi 60.`,
+      onConfirm: async () => {
+        setResetLoading(true);
+        try {
+          await resetLessonProgress(selectedUser.nim, lessonId, lessonTitle);
+          setShowModal({ type: 'alert', title: 'Berhasil', message: `Pelajaran "${lessonTitle}" berhasil direset.` });
+          fetchUserProgress(selectedUser.nim);
+        } catch (error) {
+          setShowModal({ type: 'alert', title: 'Gagal', message: 'Gagal mereset pelajaran.' });
         } finally {
           setResetLoading(false);
         }
@@ -883,71 +1207,6 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleUpdateUserKelas = async (nim: string, newKelas: string) => {
-    const trimmed = newKelas.trim();
-    const targetUser = users.find(u => u.nim === nim);
-    if (!targetUser || trimmed === (targetUser.kelas || '')) return;
-
-    try {
-      setResetLoading(true);
-      const { error } = await supabase
-        .from('users')
-        .update({ kelas: trimmed })
-        .eq('nim', nim);
-
-      if (error) throw error;
-
-      await monitoringService.addAuditLog(
-        currentUser?.nim || 'system',
-        currentUser?.nama || 'System',
-        'access_modified',
-        `Mengubah kelas peserta ${targetUser.nama} (${nim}) menjadi: ${trimmed || '—'}`
-      );
-
-      setUsers(prevUsers => prevUsers.map(u => u.nim === nim ? { ...u, kelas: trimmed } : u));
-      if (selectedUser?.nim === nim) {
-        setSelectedUser(prev => prev ? { ...prev, kelas: trimmed } : null);
-      }
-    } catch (err) {
-      console.error(err);
-      setShowModal({ type: 'alert', title: 'Error', message: 'Gagal memperbarui kelas' });
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const handleUpdateUserJurusan = async (nim: string, newJurusan: string) => {
-    const targetUser = users.find(u => u.nim === nim);
-    if (!targetUser || newJurusan === (targetUser.jurusan || '')) return;
-
-    try {
-      setResetLoading(true);
-      const val = newJurusan || null;
-      const { error } = await supabase
-        .from('users')
-        .update({ jurusan: val })
-        .eq('nim', nim);
-
-      if (error) throw error;
-
-      await monitoringService.addAuditLog(
-        currentUser?.nim || 'system',
-        currentUser?.nama || 'System',
-        'access_modified',
-        `Mengubah jurusan peserta ${targetUser.nama} (${nim}) menjadi: ${newJurusan || '—'}`
-      );
-
-      setUsers(prevUsers => prevUsers.map(u => u.nim === nim ? { ...u, jurusan: val } : u));
-      if (selectedUser?.nim === nim) {
-        setSelectedUser(prev => prev ? { ...prev, jurusan: val } : null);
-      }
-    } catch (err) {
-      console.error(err);
-      setShowModal({ type: 'alert', title: 'Error', message: 'Gagal memperbarui jurusan' });
-    } finally {
-      setResetLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (!canAccess || activeTab !== 'users') return;
@@ -1103,23 +1362,60 @@ export const AdminDashboard: React.FC = () => {
         {/* Modal */}
         <AnimatePresence>
           {showModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
+            >
               <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6"
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl relative border border-zinc-100 flex flex-col items-center text-center mt-8"
               >
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold">{showModal.title}</h3>
-                  <p className="text-zinc-500 leading-relaxed">{showModal.message}</p>
+                {/* Dynamic Floating Alert Badges */}
+                {(() => {
+                  const titleLower = showModal.title.toLowerCase();
+                  const messageLower = showModal.message.toLowerCase();
+                  const isSuccess = titleLower.includes('berhasil') || messageLower.includes('berhasil');
+                  const isError = titleLower.includes('gagal') || titleLower.includes('error') || messageLower.includes('gagal');
+                  
+                  if (isSuccess) {
+                    return (
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-emerald-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
+                        <CheckCircle2 className="text-emerald-500 w-10 h-10" />
+                      </div>
+                    );
+                  }
+                  if (isError) {
+                    return (
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-rose-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
+                        <X className="text-red-500 w-10 h-10" />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-rose-50 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
+                      <AlertTriangle className="text-amber-500 w-10 h-10" />
+                    </div>
+                  );
+                })()}
+                
+                <div className="mt-8 space-y-3 w-full">
+                  <h3 className="text-2xl font-black tracking-tight text-zinc-900">{showModal.title}</h3>
+                  <p className="text-sm text-zinc-500 font-semibold leading-relaxed">
+                    {showModal.message}
+                  </p>
                 </div>
-                <div className="flex gap-3">
+                
+                <div className="flex gap-3 w-full mt-8">
                   {showModal.type === 'confirm' ? (
                     <>
                       <button 
                         onClick={() => setShowModal(null)}
-                        className="flex-1 py-3 bg-zinc-100 text-zinc-600 font-bold rounded-xl hover:bg-zinc-200 transition-all"
+                        className="flex-1 py-3.5 bg-zinc-50 border border-zinc-200 text-zinc-600 font-black rounded-2xl text-sm transition-all hover:bg-zinc-100"
                       >
                         Batal
                       </button>
@@ -1128,23 +1424,103 @@ export const AdminDashboard: React.FC = () => {
                           showModal.onConfirm?.();
                           setShowModal(null);
                         }}
-                        className="flex-1 py-3 bg-rose-800 text-white font-bold rounded-xl hover:bg-rose-900 shadow-lg shadow-rose-700/20 transition-all"
+                        className="flex-1 py-3.5 bg-red-650 border-b-4 border-red-800 text-white font-black rounded-2xl text-sm shadow-md shadow-red-500/10 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-red-700"
                       >
-                        Ya, Lanjutkan
+                        Lanjutkan
                       </button>
                     </>
                   ) : (
                     <button 
                       onClick={() => setShowModal(null)}
-                      className="w-full py-3 bg-zinc-900 text-white font-bold rounded-xl hover:bg-zinc-800 transition-all"
+                      className="w-full py-3.5 bg-zinc-900 border-b-4 border-zinc-950 text-white font-black rounded-2xl text-sm shadow-md active:border-b-0 active:translate-y-[4px] transition-all hover:bg-zinc-800"
                     >
                       Tutup
                     </button>
                   )}
                 </div>
               </motion.div>
-            </div>
+            </motion.div>
           )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {movingLesson && (() => {
+            const srcLevel = draftCurriculum.find(l => l.id === movingLesson.levelId);
+            const srcMod = srcLevel?.modules?.[movingLesson.modIdx];
+            const lesson = srcMod?.lessons?.[movingLesson.lessonIdx];
+            if (!lesson) return null;
+
+            const selectedLevel = draftCurriculum.find(l => l.id === targetMoveLevelId);
+
+            return (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 text-zinc-900"
+                >
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                      <Move size={20} className="text-rose-700" />
+                      Pindahkan Pelajaran
+                    </h3>
+                    <p className="text-zinc-500 text-sm">
+                      Memindahkan pelajaran <span className="font-semibold text-zinc-800">"{lesson.title}"</span> dari subbab <span className="font-semibold text-zinc-800">"{srcMod?.title}"</span> ke:
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-zinc-400 uppercase">Subbab / Level Tujuan</label>
+                      <select 
+                        value={targetMoveLevelId}
+                        onChange={(e) => handleMoveLevelChange(e.target.value)}
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-rose-700 text-sm"
+                      >
+                        {draftCurriculum.map(l => (
+                          <option key={l.id} value={l.id}>{l.title}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-zinc-400 uppercase">Modul Tujuan</label>
+                      <select 
+                        value={targetMoveModId}
+                        onChange={(e) => setTargetMoveModId(e.target.value)}
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-rose-700 text-sm"
+                      >
+                        {selectedLevel?.modules && selectedLevel.modules.length > 0 ? (
+                          selectedLevel.modules.map(m => (
+                            <option key={m.id} value={m.id}>{m.title}</option>
+                          ))
+                        ) : (
+                          <option value="">(Tidak ada modul di level ini)</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      onClick={() => setMovingLesson(null)}
+                      className="flex-1 py-3 bg-zinc-100 text-zinc-600 font-bold rounded-xl hover:bg-zinc-200 transition-all text-sm"
+                    >
+                      Batal
+                    </button>
+                    <button 
+                      onClick={() => handleMoveLessonToTarget(targetMoveLevelId, targetMoveModId)}
+                      disabled={!targetMoveModId}
+                      className="flex-1 py-3 bg-rose-800 text-white font-bold rounded-xl hover:bg-rose-900 shadow-lg shadow-rose-700/20 transition-all text-sm disabled:opacity-50"
+                    >
+                      Pindahkan
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            );
+          })()}
         </AnimatePresence>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1153,7 +1529,7 @@ export const AdminDashboard: React.FC = () => {
             <p className="text-zinc-500 mt-1">Kelola peserta, kurikulum, dan struktur kursus.</p>
           </div>
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-2xl">
-            {(['users', 'structure', 'games', 'curriculum', 'grading'] as const).map((tab) => (
+            {(['users', 'structure', 'games', 'curriculum'] as const).map((tab) => (
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -1162,7 +1538,7 @@ export const AdminDashboard: React.FC = () => {
                   activeTab === tab ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
                 )}
               >
-                {tab === 'users' ? 'Peserta' : tab === 'structure' ? 'Struktur' : tab === 'games' ? 'Game & Soal' : tab === 'curriculum' ? 'Kurikulum AI' : 'Atur Penilaian'}
+                {tab === 'users' ? 'Peserta' : tab === 'structure' ? 'Struktur' : tab === 'games' ? 'Game & Soal' : 'Kurikulum AI'}
               </button>
             ))}
           </div>
@@ -1232,32 +1608,11 @@ export const AdminDashboard: React.FC = () => {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                              <input
-                                type="text"
-                                defaultValue={u.kelas || ''}
-                                onBlur={(e) => handleUpdateUserKelas(u.nim, e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    handleUpdateUserKelas(u.nim, (e.target as HTMLInputElement).value);
-                                    (e.target as HTMLInputElement).blur();
-                                  }
-                                }}
-                                className="w-20 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-center text-xs focus:bg-white focus:outline-none focus:border-rose-700 font-bold"
-                                placeholder="—"
-                              />
+                            <td className="px-6 py-4 text-center">
+                              <span className="text-xs font-bold text-zinc-600">{u.kelas || '—'}</span>
                             </td>
-                            <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                              <select
-                                value={u.jurusan || ''}
-                                onChange={(e) => handleUpdateUserJurusan(u.nim, e.target.value)}
-                                className="px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-xs focus:bg-white focus:outline-none focus:border-rose-700 font-bold text-center"
-                              >
-                                <option value="">Deteksi NIM</option>
-                                <option value="Teknik Informatika">Teknik Informatika</option>
-                                <option value="Sistem Informasi">Sistem Informasi</option>
-                                <option value="Teknik Komputer">Teknik Komputer</option>
-                              </select>
+                            <td className="px-6 py-4 text-center">
+                              <span className="text-xs font-bold text-zinc-600">{u.jurusan || '—'}</span>
                             </td>
                             <td className="px-6 py-4 text-center">
                               <div className="flex items-center justify-center gap-1 font-bold text-rose-800">
@@ -1491,17 +1846,30 @@ export const AdminDashboard: React.FC = () => {
                         {loadingProgress ? (
                           <div className="text-center py-4 text-zinc-400 text-sm italic">Memuat progres...</div>
                         ) : userProgress.length > 0 ? (
-                          userProgress.map((p) => (
-                            <div key={p.lessonId} className="flex items-center justify-between p-3 bg-zinc-50 rounded-xl">
-                              <div className="flex items-center gap-3">
-                                <CheckCircle2 size={16} className="text-rose-700" />
-                                <div className="text-sm font-medium truncate max-w-[120px]">{p.lessonId}</div>
-                              </div>
-                              <div className="text-[10px] text-zinc-400">
-                                {new Date(p.completedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                              </div>
-                            </div>
-                          ))
+                           userProgress.map((p) => {
+                             const title = getLessonTitle(p.lessonId);
+                             return (
+                               <div key={p.lessonId} className="flex items-center justify-between p-3 bg-zinc-50 rounded-xl">
+                                 <div className="flex items-center gap-3 min-w-0 flex-1">
+                                   <CheckCircle2 size={16} className="text-rose-700 shrink-0" />
+                                   <div className="text-sm font-medium truncate" title={title}>{title}</div>
+                                 </div>
+                                 <div className="flex items-center gap-2 shrink-0 ml-2">
+                                   <div className="text-[10px] text-zinc-400">
+                                     {new Date(p.completedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                   </div>
+                                   <button
+                                     onClick={() => handleResetLessonForUser(p.lessonId, title)}
+                                     disabled={resetLoading}
+                                     className="p-1 hover:bg-red-50 rounded text-zinc-400 hover:text-red-600 transition-colors"
+                                     title="Reset progress pelajaran ini"
+                                   >
+                                     <RotateCcw size={12} />
+                                   </button>
+                                 </div>
+                               </div>
+                             );
+                           })
                         ) : (
                           <div className="text-center py-4 text-zinc-400 text-sm italic">Belum ada pelajaran selesai.</div>
                         )}
@@ -1525,6 +1893,14 @@ export const AdminDashboard: React.FC = () => {
         {/* ==================== STRUCTURE TAB ==================== */}
         {activeTab === 'structure' && (
           <div className="max-w-4xl mx-auto space-y-6">
+            {/* Hidden file input for document import */}
+            <input
+              ref={docFileInputRef}
+              type="file"
+              accept=".txt,.docx,.md"
+              className="hidden"
+              onChange={handleDocFileSelected}
+            />
             <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -1538,12 +1914,65 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <button 
+                    onClick={handleAddLevel}
+                    className="px-4 py-2 bg-zinc-900 text-white font-bold rounded-xl hover:bg-zinc-800 transition-all flex items-center gap-2 text-xs"
+                  >
+                    <Plus size={14} />
+                    Tambah Level
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setImportDocTarget('global');
+                      setTimeout(() => docFileInputRef.current?.click(), 50);
+                    }}
+                    disabled={isImportingDoc}
+                    className="px-4 py-2 bg-emerald-50 text-emerald-700 font-bold rounded-xl hover:bg-emerald-100 transition-all flex items-center gap-2 text-xs border border-emerald-100 disabled:opacity-50"
+                  >
+                    <Upload size={14} />
+                    Import Dokumen
+                  </button>
+                  <button 
                     onClick={handleSyncValidationRules}
                     className="px-4 py-2 bg-rose-50 text-rose-700 font-bold rounded-xl hover:bg-rose-100 transition-all flex items-center gap-2 text-xs border border-rose-100"
                   >
                     <Terminal size={14} />
                     Sync Validasi Statis
                   </button>
+                </div>
+              </div>
+
+              {/* Stats Banner */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-zinc-50 border border-zinc-200/60 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
+                  <div className="w-10 h-10 bg-rose-50 text-rose-700 rounded-xl flex items-center justify-center shrink-0">
+                    <Layers size={18} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider">Total Level</div>
+                    <div className="text-lg font-black text-zinc-850">{draftCurriculum.length}</div>
+                  </div>
+                </div>
+                <div className="bg-zinc-50 border border-zinc-200/60 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
+                  <div className="w-10 h-10 bg-amber-50 text-amber-700 rounded-xl flex items-center justify-center shrink-0">
+                    <BookOpen size={18} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider">Total Subbab</div>
+                    <div className="text-lg font-black text-zinc-850">
+                      {draftCurriculum.reduce((sum, lvl) => sum + (lvl.modules?.length || 0), 0)}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-zinc-50 border border-zinc-200/60 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
+                  <div className="w-10 h-10 bg-blue-50 text-blue-700 rounded-xl flex items-center justify-center shrink-0">
+                    <Terminal size={18} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-zinc-500 font-black uppercase tracking-wider">Total Pelajaran</div>
+                    <div className="text-lg font-black text-zinc-850">
+                      {draftCurriculum.reduce((sum, lvl) => sum + (lvl.modules?.reduce((mSum, m) => mSum + (m.lessons?.length || 0), 0) || 0), 0)}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1635,6 +2064,25 @@ export const AdminDashboard: React.FC = () => {
                           </div>
 
                           <div className="flex items-center gap-1">
+                            {/* Move Up */}
+                            <button
+                              disabled={lIdx === 0}
+                              onClick={() => handleMoveLevel(lIdx, -1)}
+                              className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                              title="Pindahkan Ke Atas"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            {/* Move Down */}
+                            <button
+                              disabled={lIdx === draftCurriculum.length - 1}
+                              onClick={() => handleMoveLevel(lIdx, 1)}
+                              className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                              title="Pindahkan Ke Bawah"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                            {/* Edit */}
                             <button
                               onClick={() => {
                                 setEditingLevel(level.id);
@@ -1645,6 +2093,7 @@ export const AdminDashboard: React.FC = () => {
                             >
                               <Edit2 size={14} />
                             </button>
+                            {/* Cycle Access Mode */}
                             <button
                               onClick={() => handleCycleAccessMode(level)}
                               className={cn(
@@ -1661,6 +2110,14 @@ export const AdminDashboard: React.FC = () => {
                                 if (mode === 'unlocked') return <><Unlock size={14} /> Terbuka</>;
                                 return <><CheckCircle2 size={14} /> Auto</>;
                               })()}
+                            </button>
+                            {/* Delete */}
+                            <button
+                              onClick={() => handleDeleteLevel(level.id)}
+                              className="p-2 text-zinc-400 hover:text-red-650 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Hapus Level"
+                            >
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </div>
@@ -1701,11 +2158,41 @@ export const AdminDashboard: React.FC = () => {
                                           >
                                             {isModExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                                           </button>
-                                          <BookOpen size={14} className="text-zinc-400" />
-                                          <span className="font-bold text-sm truncate">{mod.title}</span>
-                                          <span className="text-[10px] text-zinc-400 shrink-0">({mod.lessons?.length || 0} pelajaran)</span>
+                                          <BookOpen size={14} className="text-zinc-400 shrink-0" />
+                                          {editingModuleKey === modKey ? (
+                                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                                              <input
+                                                value={moduleEditTitle}
+                                                onChange={e => setModuleEditTitle(e.target.value)}
+                                                onKeyDown={e => { if (e.key === 'Enter') handleSaveModuleEdit(level.id, mIdx); if (e.key === 'Escape') setEditingModuleKey(null); }}
+                                                className="flex-1 min-w-0 px-2 py-0.5 bg-white border border-zinc-200 rounded text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20"
+                                                autoFocus
+                                              />
+                                              <button onClick={() => handleSaveModuleEdit(level.id, mIdx)} className="p-1 text-rose-700 hover:bg-rose-50 rounded" title="Simpan">
+                                                <Save size={12} />
+                                              </button>
+                                              <button onClick={() => setEditingModuleKey(null)} className="p-1 text-zinc-400 hover:bg-zinc-100 rounded" title="Batal">
+                                                <X size={12} />
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <>
+                                              <span className="font-bold text-sm truncate">{mod.title}</span>
+                                              <span className="text-[10px] text-zinc-400 shrink-0">({mod.lessons?.length || 0} pelajaran)</span>
+                                            </>
+                                          )}
                                         </div>
                                         <div className="flex items-center gap-0.5">
+                                          <button
+                                            onClick={() => {
+                                              setEditingModuleKey(modKey);
+                                              setModuleEditTitle(mod.title);
+                                            }}
+                                            className="p-1.5 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors"
+                                            title="Edit Nama Modul"
+                                          >
+                                            <Edit2 size={14} />
+                                          </button>
                                           <button
                                             onClick={() => handleMoveModule(level.id, mIdx, 'up')}
                                             disabled={mIdx === 0}
@@ -1743,6 +2230,16 @@ export const AdminDashboard: React.FC = () => {
                                           >
                                             <div className="px-4 pb-3 space-y-1">
                                               <div className="flex items-center justify-end gap-2 mb-2">
+                                                <button
+                                                  onClick={() => {
+                                                    setImportDocTarget({ levelId: level.id, modIdx: mIdx });
+                                                    setTimeout(() => docFileInputRef.current?.click(), 50);
+                                                  }}
+                                                  disabled={isImportingDoc}
+                                                  className="text-[10px] font-bold px-2 py-1 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-colors flex items-center gap-1 border border-emerald-200/50 disabled:opacity-50"
+                                                >
+                                                  {isImportingDoc ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />} Import Materi
+                                                </button>
                                                 <button onClick={() => setAiGenModal({ type: 'lesson', levelId: level.id, modIdx: mIdx, levelLanguage: level.id.includes('c-') ? 'C' : 'Python' })} className="text-[10px] font-bold px-2 py-1 bg-amber-50 text-amber-600 rounded hover:bg-amber-100 transition-colors flex items-center gap-1 border border-amber-200/50">
                                                   <Zap size={10} /> + Pelajaran (AI)
                                                 </button>
@@ -1777,6 +2274,13 @@ export const AdminDashboard: React.FC = () => {
                                                       className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200 rounded disabled:opacity-30 transition-colors"
                                                     >
                                                       <ChevronDown size={12} />
+                                                    </button>
+                                                    <button
+                                                      onClick={() => setMovingLesson({ levelId: level.id, modIdx: mIdx, lessonIdx: lesIdx })}
+                                                      className="p-1 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors"
+                                                      title="Pindahkan Pelajaran ke Subbab/Level Lain"
+                                                    >
+                                                      <Move size={12} />
                                                     </button>
                                                     <button
                                                       onClick={() => handleDeleteLesson(level.id, mIdx, lesIdx)}
@@ -2046,7 +2550,7 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <button 
-                            onClick={() => setEditingQuestion(q)}
+                            onClick={() => setEditingQuestion({ ...q, code: q.code.replace(/\\n/g, '\n') })}
                             className="p-2 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
                           >
                             <Edit2 size={16} />
@@ -2079,7 +2583,7 @@ export const AdminDashboard: React.FC = () => {
             {/* Question Editor Modal */}
             <AnimatePresence>
               {editingQuestion && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -2089,11 +2593,47 @@ export const AdminDashboard: React.FC = () => {
                     <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
                       <div>
                         <h3 className="text-xl font-bold">{editingQuestion.id ? 'Edit Soal' : 'Tambah Soal Baru'}</h3>
-                        <p className="text-zinc-500 text-xs">Konfigurasi materi untuk tantangan Bug Hunt.</p>
+                        <p className="text-zinc-500 text-xs">Konfigurasi materi untuk tantangan Bug Hunt. Tekan Enter untuk baris baru.</p>
                       </div>
-                      <button onClick={() => setEditingQuestion(null)} className="p-2 bg-white text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200">
-                        <X size={20} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <input
+                          ref={bugHuntImportRef}
+                          type="file"
+                          accept=".docx,.md,.txt"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file || !editingQuestion) return;
+                            try {
+                              let codeContent = '';
+                              const fileName = file.name.toLowerCase();
+                              if (fileName.endsWith('.docx')) {
+                                const paragraphs = await extractDocxText(file);
+                                codeContent = paragraphs.filter(p => p.trim()).join('\n');
+                              } else {
+                                // .md or .txt — read as plain text
+                                codeContent = await file.text();
+                              }
+                              setEditingQuestion({ ...editingQuestion, code: codeContent.trim() });
+                            } catch (err) {
+                              console.error('Import error:', err);
+                              setShowModal({ type: 'alert', title: 'Gagal Import', message: 'Tidak dapat membaca file. Pastikan format file benar (.docx, .md, atau .txt).' });
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                        <button
+                          onClick={() => bugHuntImportRef.current?.click()}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition-all"
+                          title="Import kode dari file Word, Markdown, atau teks"
+                        >
+                          <Upload size={14} />
+                          Import
+                        </button>
+                        <button onClick={() => setEditingQuestion(null)} className="p-2 bg-white text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200">
+                          <X size={20} />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
@@ -2137,16 +2677,24 @@ export const AdminDashboard: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between px-1">
                           <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Snippet Kode (Buggy)</label>
-                          <span className="text-[10px] text-zinc-400 italic">Gunakan baris baru untuk setiap kode</span>
+                          <span className="text-[10px] text-zinc-400 italic">Tekan Enter untuk baris baru</span>
                         </div>
-                        <textarea 
-                          rows={6}
-                          value={editingQuestion.code}
-                          onChange={(e) => setEditingQuestion({ ...editingQuestion, code: e.target.value })}
-                          onKeyDown={(e) => handleCodeKeyDown(e, editingQuestion.code, (val) => setEditingQuestion({ ...editingQuestion, code: val }))}
-                          placeholder="Tulis kode di sini..."
-                          className="w-full px-4 py-3 bg-zinc-900 text-emerald-400 font-mono text-sm border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
-                        />
+                        <div className="relative">
+                          <textarea 
+                            rows={10}
+                            value={editingQuestion.code}
+                            onChange={(e) => setEditingQuestion({ ...editingQuestion, code: e.target.value })}
+                            onKeyDown={(e) => handleCodeKeyDown(e, editingQuestion.code, (val) => setEditingQuestion({ ...editingQuestion, code: val }))}
+                            placeholder="Tulis kode di sini... (Tekan Enter untuk baris baru)"
+                            className="w-full px-4 py-3 bg-zinc-900 text-emerald-400 font-mono text-sm border border-zinc-700 rounded-xl focus:ring-2 focus:ring-rose-700/20 leading-relaxed"
+                            style={{ tabSize: 2, whiteSpace: 'pre' }}
+                          />
+                          <div className="absolute top-2 right-2 flex items-center gap-1">
+                            <span className="text-[9px] text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded font-mono">
+                              {editingQuestion.code.split('\n').length} baris
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2162,7 +2710,7 @@ export const AdminDashboard: React.FC = () => {
                         <div className="space-y-2">
                           <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Preview Baris Salah</label>
                           <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 text-xs font-mono truncate">
-                            {editingQuestion.code.replace(/\\n/g, '\n').split('\n')[editingQuestion.bugLine] || '(Baris tidak valid)'}
+                            {editingQuestion.code.split('\n')[editingQuestion.bugLine] || '(Baris tidak valid)'}
                           </div>
                         </div>
                       </div>
@@ -2190,12 +2738,14 @@ export const AdminDashboard: React.FC = () => {
                         onClick={async () => {
                           setLoadingGameData(true);
                           try {
+                            // Convert actual newlines back to \n for storage
+                            const questionToSave = { ...editingQuestion, code: editingQuestion.code.replace(/\n/g, '\\n') };
                             if (editingQuestion.id) {
-                              await updateGameQuestion(editingQuestion.id, editingQuestion);
-                              setAllQuestions(prev => prev.map(q => q.id === editingQuestion.id ? editingQuestion : q));
+                              await updateGameQuestion(editingQuestion.id, questionToSave);
+                              setAllQuestions(prev => prev.map(q => q.id === editingQuestion.id ? questionToSave : q));
                             } else {
-                              const newId = await addGameQuestion(editingQuestion);
-                              setAllQuestions(prev => [...prev, { ...editingQuestion, id: newId }]);
+                              const newId = await addGameQuestion(questionToSave);
+                              setAllQuestions(prev => [...prev, { ...questionToSave, id: newId }]);
                             }
                             setEditingQuestion(null);
                           } catch (e) {
@@ -2207,6 +2757,201 @@ export const AdminDashboard: React.FC = () => {
                         className="flex-1 py-3 bg-rose-700 text-white font-bold rounded-xl hover:bg-rose-800 shadow-lg shadow-rose-700/20 transition-all"
                       >
                         Simpan Materi
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* ===== Playground Examples Manager ===== */}
+            <div className="bg-white border border-zinc-200 rounded-3xl overflow-hidden shadow-sm">
+              <div className="px-6 py-4 bg-zinc-50 border-b border-zinc-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    <Terminal size={18} className="text-rose-700" />
+                    Contoh Kode Playground
+                  </h3>
+                  <p className="text-zinc-500 text-xs">Kelola contoh kode yang tersedia di Playground. Total {playgroundExamples.length} contoh.</p>
+                </div>
+                <button
+                  onClick={() => setEditingExample({
+                    id: '',
+                    title: '',
+                    language: 'python',
+                    code: '',
+                    description: null,
+                    sortOrder: playgroundExamples.length,
+                  })}
+                  className="bg-zinc-900 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-zinc-800 transition-all active:scale-95"
+                >
+                  <Plus size={16} /> Tambah Contoh
+                </button>
+              </div>
+
+              <div className="divide-y divide-zinc-100">
+                {playgroundExamples.length > 0 ? (
+                  playgroundExamples.map((ex) => (
+                    <div key={ex.id} className="p-4 hover:bg-zinc-50 transition-colors flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shrink-0",
+                          ex.language === 'c' ? "bg-blue-50 text-blue-700" : "bg-rose-50 text-rose-700"
+                        )}>
+                          {ex.language === 'c' ? 'C' : 'Py'}
+                        </div>
+                        <div className="truncate">
+                          <h4 className="font-bold text-sm truncate">{ex.title}</h4>
+                          {ex.description && (
+                            <p className="text-[11px] text-zinc-400 truncate mt-0.5">{ex.description}</p>
+                          )}
+                          <span className="text-[10px] text-zinc-300 font-mono">Urutan: {ex.sortOrder}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setEditingExample(ex)}
+                          className="p-2 text-zinc-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowModal({
+                              type: 'confirm',
+                              title: 'Hapus Contoh Kode',
+                              message: `Apakah Anda yakin ingin menghapus contoh "${ex.title}"?`,
+                              onConfirm: async () => {
+                                await deletePlaygroundExample(ex.id);
+                                setPlaygroundExamples(prev => prev.filter(item => item.id !== ex.id));
+                              }
+                            });
+                          }}
+                          className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-12 text-center text-zinc-400 italic">Belum ada contoh kode. Klik "Tambah Contoh" untuk memulai.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Playground Example Editor Modal */}
+            <AnimatePresence>
+              {editingExample && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                  >
+                    <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+                      <div>
+                        <h3 className="text-xl font-bold">{editingExample.id ? 'Edit Contoh Kode' : 'Tambah Contoh Baru'}</h3>
+                        <p className="text-zinc-500 text-xs">Contoh kode yang akan ditampilkan di Playground.</p>
+                      </div>
+                      <button onClick={() => setEditingExample(null)} className="p-2 bg-white text-zinc-400 hover:text-zinc-600 rounded-full border border-zinc-200">
+                        <X size={20} />
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Bahasa</label>
+                          <select
+                            value={editingExample.language}
+                            onChange={(e) => setEditingExample({ ...editingExample, language: e.target.value as any })}
+                            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold focus:ring-2 focus:ring-rose-700/20"
+                          >
+                            <option value="c">Bahasa C</option>
+                            <option value="python">Python</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Urutan Tampil</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={editingExample.sortOrder}
+                            onChange={(e) => setEditingExample({ ...editingExample, sortOrder: parseInt(e.target.value) || 0 })}
+                            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold focus:ring-2 focus:ring-rose-700/20"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Judul</label>
+                        <input
+                          type="text"
+                          value={editingExample.title}
+                          onChange={(e) => setEditingExample({ ...editingExample, title: e.target.value })}
+                          placeholder="Contoh: Hello World"
+                          className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">Deskripsi (Opsional)</label>
+                        <textarea
+                          rows={2}
+                          value={editingExample.description || ''}
+                          onChange={(e) => setEditingExample({ ...editingExample, description: e.target.value || null })}
+                          placeholder="Deskripsi singkat contoh kode..."
+                          className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-rose-700/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Kode</label>
+                          <span className="text-[10px] text-zinc-400 italic">Tekan Enter untuk baris baru</span>
+                        </div>
+                        <textarea
+                          rows={10}
+                          value={editingExample.code}
+                          onChange={(e) => setEditingExample({ ...editingExample, code: e.target.value })}
+                          onKeyDown={(e) => handleCodeKeyDown(e, editingExample.code, (val) => setEditingExample({ ...editingExample, code: val }))}
+                          placeholder="Tulis kode contoh di sini..."
+                          className="w-full px-4 py-3 bg-zinc-900 text-emerald-400 font-mono text-sm border border-zinc-700 rounded-xl focus:ring-2 focus:ring-rose-700/20 leading-relaxed"
+                          style={{ tabSize: 2, whiteSpace: 'pre' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-6 bg-zinc-50 border-t border-zinc-100 flex gap-3">
+                      <button
+                        onClick={() => setEditingExample(null)}
+                        className="flex-1 py-3 bg-white border border-zinc-200 text-zinc-600 font-bold rounded-xl hover:bg-zinc-100 transition-all"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setLoadingExamples(true);
+                          try {
+                            if (editingExample.id) {
+                              await updatePlaygroundExample(editingExample.id, editingExample);
+                              setPlaygroundExamples(prev => prev.map(ex => ex.id === editingExample.id ? editingExample : ex));
+                            } else {
+                              const newId = await addPlaygroundExample(editingExample);
+                              setPlaygroundExamples(prev => [...prev, { ...editingExample, id: newId }]);
+                            }
+                            setEditingExample(null);
+                          } catch (e) {
+                            console.error(e);
+                          } finally {
+                            setLoadingExamples(false);
+                          }
+                        }}
+                        className="flex-1 py-3 bg-rose-700 text-white font-bold rounded-xl hover:bg-rose-800 shadow-lg shadow-rose-700/20 transition-all"
+                      >
+                        Simpan Contoh
                       </button>
                     </div>
                   </motion.div>
@@ -2430,280 +3175,6 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* ==================== GRADING RULES TAB ==================== */}
-        {activeTab === 'grading' && (
-          <div className="max-w-5xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-black">Atur Penilaian Asesmen</h2>
-                <p className="text-zinc-500 text-sm mt-1">Konfigurasi bobot kriteria penilaian untuk setiap tipe asesmen secara dinamis.</p>
-              </div>
-              <button
-                onClick={async () => {
-                  setSavingGradingRules(true);
-                  try {
-                    for (const [id, rules] of Object.entries(gradingRules)) {
-                      await supabase.from('assessment_grading_rules').upsert({ id, rules }, { onConflict: 'id' });
-                    }
-                    alert('✅ Aturan penilaian berhasil disimpan!');
-                  } catch (e: any) {
-                    alert('Gagal menyimpan: ' + e.message);
-                  } finally {
-                    setSavingGradingRules(false);
-                  }
-                }}
-                disabled={savingGradingRules}
-                className="px-6 py-3 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold rounded-xl shadow-md shadow-rose-700/10 transition-all active:scale-95 flex items-center gap-2 text-sm"
-              >
-                {savingGradingRules ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                Simpan Semua Perubahan
-              </button>
-            </div>
-
-            {loadingGradingRules ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 size={32} className="animate-spin text-rose-700" />
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {/* Program Keterampilan */}
-                <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-lg">Program Keterampilan</h3>
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs font-bold text-zinc-400">Total Maks Poin:</label>
-                      <input
-                        type="number"
-                        value={gradingRules.program_keterampilan?.total_max_score ?? 85}
-                        onChange={(e) => {
-                          const updated = { ...gradingRules };
-                          updated.program_keterampilan = { ...updated.program_keterampilan, total_max_score: Number(e.target.value) };
-                          setGradingRules({ ...updated });
-                        }}
-                        className="w-20 text-center py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div className="overflow-x-auto border border-zinc-100 rounded-2xl">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="bg-zinc-50 text-zinc-500 font-bold border-b border-zinc-100">
-                          <th className="p-3 text-left">No</th>
-                          <th className="p-3 text-left">Kriteria</th>
-                          <th className="p-3 text-center w-32">Nilai</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-100">
-                        {(gradingRules.program_keterampilan?.criteria || []).map((c: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-zinc-50/50">
-                            <td className="p-3 font-bold text-zinc-500">{c.no}</td>
-                            <td className="p-3 text-zinc-800 font-medium">{c.label}</td>
-                            <td className="p-3 text-center">
-                              <input
-                                type="number"
-                                value={c.nilai}
-                                onChange={(e) => {
-                                  const updated = { ...gradingRules };
-                                  updated.program_keterampilan.criteria[idx].nilai = Number(e.target.value);
-                                  setGradingRules({ ...updated });
-                                }}
-                                className="w-20 text-center py-1.5 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50"
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Durasi (menit):</label>
-                    <input
-                      type="number"
-                      value={gradingRules.program_keterampilan?.duration_minutes || 90}
-                      onChange={(e) => {
-                        const updated = { ...gradingRules };
-                        updated.program_keterampilan = { ...updated.program_keterampilan, duration_minutes: Number(e.target.value) };
-                        setGradingRules({ ...updated });
-                      }}
-                      className="w-24 py-1.5 px-3 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Pre-Test & Post-Test */}
-                {['pre_test', 'post_test'].map(type => (
-                  <div key={type} className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-lg">{type === 'pre_test' ? 'Pre-Test' : 'Post-Test'}</h3>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <label className="text-xs font-bold text-zinc-400">Total Maks Poin:</label>
-                          <input
-                            type="number"
-                            value={gradingRules[type]?.total_max_score ?? 100}
-                            onChange={(e) => {
-                              const updated = { ...gradingRules };
-                              updated[type] = { ...updated[type], total_max_score: Number(e.target.value) };
-                              setGradingRules({ ...updated });
-                            }}
-                            className="w-20 text-center py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <label className="text-xs font-bold text-zinc-400">Durasi:</label>
-                          <input
-                            type="number"
-                            value={gradingRules[type]?.duration_minutes || 15}
-                            onChange={(e) => {
-                              const updated = { ...gradingRules };
-                              updated[type] = { ...updated[type], duration_minutes: Number(e.target.value) };
-                              setGradingRules({ ...updated });
-                            }}
-                            className="w-20 py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                          />
-                          <span className="text-xs text-zinc-400">mnt</span>
-                        </div>
-                      </div>
-                    </div>
-                    {['easy', 'medium', 'hard'].map(diff => {
-                      const diffData = gradingRules[type]?.difficulties?.[diff];
-                      if (!diffData) return null;
-                      return (
-                        <div key={diff} className="border border-zinc-100 rounded-2xl p-4 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className={cn(
-                              "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
-                              diff === 'easy' ? "bg-emerald-50 text-emerald-700" :
-                              diff === 'medium' ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
-                            )}>{diff}</span>
-                            <div className="flex items-center gap-3 text-xs text-zinc-500">
-                              <span>Jumlah Soal: <strong>{diffData.question_count}</strong></span>
-                              <span>Total Poin: <strong>{diffData.total_points}</strong></span>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            {Object.entries(diffData.criteria || {}).map(([key, val]: [string, any]) => (
-                              <div key={key} className="space-y-1">
-                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">{key.replace(/_/g, ' ')}</label>
-                                <input
-                                  type="number"
-                                  value={val}
-                                  onChange={(e) => {
-                                    const updated = { ...gradingRules };
-                                    updated[type].difficulties[diff].criteria[key] = Number(e.target.value);
-                                    setGradingRules({ ...updated });
-                                  }}
-                                  className="w-full py-1.5 px-3 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-
-                {/* Ujian Praktik */}
-                <div className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-lg">Ujian Praktik</h3>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-zinc-400">Total Maks Poin:</label>
-                        <input
-                          type="number"
-                          value={gradingRules.ujian_praktik?.total_max_score ?? 100}
-                          onChange={(e) => {
-                            const updated = { ...gradingRules };
-                            updated.ujian_praktik = { ...updated.ujian_praktik, total_max_score: Number(e.target.value) };
-                            setGradingRules({ ...updated });
-                          }}
-                          className="w-20 text-center py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-zinc-400">Durasi:</label>
-                        <input
-                          type="number"
-                          value={gradingRules.ujian_praktik?.duration_minutes || 120}
-                          onChange={(e) => {
-                            const updated = { ...gradingRules };
-                            updated.ujian_praktik = { ...updated.ujian_praktik, duration_minutes: Number(e.target.value) };
-                            setGradingRules({ ...updated });
-                          }}
-                          className="w-20 py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                        />
-                        <span className="text-xs text-zinc-400">mnt</span>
-                      </div>
-                    </div>
-                  </div>
-                  {['soal_1', 'soal_2', 'soal_3', 'soal_4', 'soal_5', 'soal_6'].map(section => {
-                    const sectionData = gradingRules.ujian_praktik?.[section] || {
-                      max_score: section === 'soal_6' ? 25 : 15,
-                      criteria: section === 'soal_6' ? {
-                        kesesuaian_sintaks: 5,
-                        dapat_berjalan_tanpa_error: 8,
-                        sesuai_petunjuk: 7,
-                        tepat_waktu: 5
-                      } : {
-                        kesesuaian_sintaks: 2,
-                        dapat_berjalan_tanpa_error: 5,
-                        sesuai_petunjuk: 5,
-                        tepat_waktu: 3
-                      }
-                    };
-                    return (
-                      <div key={section} className="border border-zinc-100 rounded-2xl p-4 space-y-3">
-                        <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
-                          <span className="text-xs font-bold text-zinc-600 uppercase">
-                            {section.replace('_', ' ').toUpperCase()} {section === 'soal_6' ? '(Flowchart to Program)' : '(Coding)'}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Poin Maks Soal:</label>
-                            <input
-                              type="number"
-                              value={sectionData.max_score}
-                              onChange={(e) => {
-                                const updated = { ...gradingRules };
-                                if (!updated.ujian_praktik[section]) {
-                                  updated.ujian_praktik[section] = JSON.parse(JSON.stringify(sectionData));
-                                }
-                                updated.ujian_praktik[section].max_score = Number(e.target.value);
-                                setGradingRules({ ...updated });
-                              }}
-                              className="w-16 py-1 px-2 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-xs text-center"
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          {Object.entries(sectionData.criteria || {}).map(([key, val]: [string, any]) => (
-                            <div key={key} className="space-y-1">
-                              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">{key.replace(/_/g, ' ')}</label>
-                              <input
-                                type="number"
-                                value={val}
-                                onChange={(e) => {
-                                  const updated = { ...gradingRules };
-                                  if (!updated.ujian_praktik[section]) {
-                                    updated.ujian_praktik[section] = JSON.parse(JSON.stringify(sectionData));
-                                  }
-                                  updated.ujian_praktik[section].criteria[key] = Number(e.target.value);
-                                  setGradingRules({ ...updated });
-                                }}
-                                className="w-full py-1.5 px-3 border border-zinc-200 rounded-lg outline-none focus:border-rose-700 font-bold bg-zinc-50 text-sm"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* ==================== LESSON EDITOR MODAL ==================== */}
         <AnimatePresence>
@@ -2741,90 +3212,66 @@ export const AdminDashboard: React.FC = () => {
 
                 {/* Modal Body */}
                 <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-                  {/* Title */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Judul Pelajaran</label>
-                    <input
-                      value={lessonEditForm.title}
-                      onChange={e => setLessonEditForm({ ...lessonEditForm, title: e.target.value })}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all"
-                    />
-                  </div>
+                  {/* ========================================================================= */}
+                  {/* BAGIAN ATAS: MATERI & PENJELASAN */}
+                  {/* ========================================================================= */}
+                  <div className="space-y-6">
+                    <div className="border-b border-zinc-100 pb-2">
+                      <h4 className="font-bold text-zinc-800 text-base">📖 Materi & Penjelasan</h4>
+                    </div>
+                    
+                    {/* Title */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Judul Pelajaran</label>
+                      <input
+                        value={lessonEditForm.title}
+                        onChange={e => setLessonEditForm({ ...lessonEditForm, title: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all"
+                      />
+                    </div>
 
-                  {/* Explanation */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Materi Penjelasan (Markdown)</label>
-                    <textarea
-                      value={lessonEditForm.explanation}
-                      onChange={e => setLessonEditForm({ ...lessonEditForm, explanation: e.target.value })}
-                      rows={8}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all resize-y"
-                    />
-                  </div>
+                    {/* Explanation */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Materi Penjelasan (Rich Text)</label>
+                      <RichTextEditor
+                        value={lessonEditForm.explanation}
+                        onChange={html => setLessonEditForm({ ...lessonEditForm, explanation: html })}
+                      />
+                    </div>
 
-                  {/* Code Example & Initial Code */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Code Example */}
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Contoh Kode</label>
                       <textarea
                         value={lessonEditForm.codeExample}
                         onChange={e => setLessonEditForm({ ...lessonEditForm, codeExample: e.target.value })}
                         onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.codeExample || '', (val) => setLessonEditForm({ ...lessonEditForm, codeExample: val }))}
-                        rows={5}
+                        rows={6}
                         className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Kode Awal (Initial)</label>
-                      <textarea
-                        value={lessonEditForm.initialCode}
-                        onChange={e => setLessonEditForm({ ...lessonEditForm, initialCode: e.target.value })}
-                        onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.initialCode || '', (val) => setLessonEditForm({ ...lessonEditForm, initialCode: val }))}
-                        rows={5}
-                        className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
+                        placeholder="Tulis contoh kode di sini..."
                       />
                     </div>
                   </div>
 
-                  {/* Solution & Hint */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Solusi (Referensi)</label>
-                      <textarea
-                        value={lessonEditForm.solution}
-                        onChange={e => setLessonEditForm({ ...lessonEditForm, solution: e.target.value })}
-                        onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.solution || '', (val) => setLessonEditForm({ ...lessonEditForm, solution: val }))}
-                        rows={4}
-                        className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Petunjuk (Hint)</label>
-                      <textarea
-                        value={lessonEditForm.hint}
-                        onChange={e => setLessonEditForm({ ...lessonEditForm, hint: e.target.value })}
-                        rows={4}
-                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-700/20 focus:border-rose-700 transition-all resize-y"
-                      />
-                    </div>
-                  </div>
+                  <hr className="border-zinc-200" />
 
-                  {/* Quiz Section */}
-                  <div className="bg-amber-50/50 border border-amber-200/50 rounded-2xl p-6 space-y-5">
-                    <div className="flex items-center gap-2">
+                  {/* ========================================================================= */}
+                  {/* BAGIAN TENGAH: KUIS */}
+                  {/* ========================================================================= */}
+                  <div className="bg-amber-50/30 border border-amber-200/50 rounded-2xl p-6 space-y-5">
+                    <div className="flex items-center gap-2 border-b border-amber-200/30 pb-2">
                       <Sparkles size={18} className="text-amber-600" />
-                      <h4 className="font-bold text-amber-900">Soal Kuis</h4>
+                      <h4 className="font-bold text-amber-900 text-base">✏️ Soal Kuis</h4>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pertanyaan</label>
-                      <input
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pertanyaan (Rich Text)</label>
+                      <RichTextEditor
                         value={lessonEditForm.quiz?.question || ''}
-                        onChange={e => setLessonEditForm({
+                        onChange={html => setLessonEditForm({
                           ...lessonEditForm,
-                          quiz: { ...(lessonEditForm.quiz || { question: '', options: ['', '', '', ''], correctAnswer: 0 }), question: e.target.value }
+                          quiz: { ...(lessonEditForm.quiz || { question: '', options: ['', '', '', ''], correctAnswer: 0 }), question: html }
                         })}
-                        className="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                       />
                     </div>
 
@@ -2866,157 +3313,204 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Validation Rules (Static Checks) */}
-                  <div className="bg-rose-50/50 border border-rose-200/50 rounded-2xl p-6 space-y-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Terminal size={18} className="text-rose-700" />
-                        <h4 className="font-bold text-rose-900">Validasi Kode Statis (Non-AI)</h4>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          const rules = [...(lessonEditForm.validationRules || [])];
-                          rules.push({ pattern: '', message: '', shouldExist: true });
-                          setLessonEditForm({ ...lessonEditForm, validationRules: rules });
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-rose-200 text-rose-700 text-[10px] font-bold rounded-lg hover:bg-rose-100 transition-all"
-                      >
-                        <Plus size={12} /> Tambah Aturan
-                      </button>
+                  <hr className="border-zinc-200" />
+
+                  {/* ========================================================================= */}
+                  {/* BAGIAN BAWAH: LATIHAN (KODE AWAL, SOLUSI, PETUNJUK, TEST CASE) */}
+                  {/* ========================================================================= */}
+                  <div className="space-y-6">
+                    <div className="border-b border-zinc-100 pb-2">
+                      <h4 className="font-bold text-zinc-800 text-base">💻 Latihan Praktik</h4>
                     </div>
 
-                    <div className="space-y-4">
-                      {(!lessonEditForm.validationRules || lessonEditForm.validationRules.length === 0) ? (
-                        <div className="text-center py-4 text-rose-300 text-xs italic">Belum ada aturan validasi statis.</div>
-                      ) : (
-                        lessonEditForm.validationRules.map((rule, rIdx) => (
-                          <div key={rIdx} className="bg-white/60 p-4 rounded-xl border border-rose-100 space-y-3 relative group/rule">
-                            <button 
-                              onClick={() => {
-                                const rules = lessonEditForm.validationRules?.filter((_, i) => i !== rIdx);
-                                setLessonEditForm({ ...lessonEditForm, validationRules: rules });
-                              }}
-                              className="absolute top-2 right-2 p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover/rule:opacity-100 transition-all"
-                            >
-                              <X size={14} />
-                            </button>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Regex Pattern</label>
-                                <input
-                                  value={rule.pattern}
-                                  onChange={e => {
-                                    const rules = [...(lessonEditForm.validationRules || [])];
-                                    rules[rIdx].pattern = e.target.value;
-                                    setLessonEditForm({ ...lessonEditForm, validationRules: rules });
-                                  }}
-                                  placeholder="Contoh: for.*range"
-                                  className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-mono focus:ring-1 focus:ring-rose-700"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Pesan Error</label>
-                                <input
-                                  value={rule.message}
-                                  onChange={e => {
-                                    const rules = [...(lessonEditForm.validationRules || [])];
-                                    rules[rIdx].message = e.target.value;
-                                    setLessonEditForm({ ...lessonEditForm, validationRules: rules });
-                                  }}
-                                  placeholder="Contoh: Gunakan for loop!"
-                                  className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-700"
-                                />
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
+                    {/* Initial Code & Solution */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Kode Awal (Initial)</label>
+                        <textarea
+                          value={lessonEditForm.initialCode}
+                          onChange={e => setLessonEditForm({ ...lessonEditForm, initialCode: e.target.value })}
+                          onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.initialCode || '', (val) => setLessonEditForm({ ...lessonEditForm, initialCode: val }))}
+                          rows={6}
+                          className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
+                          placeholder="Kode awal yang akan dikerjakan siswa..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Solusi (Referensi)</label>
+                        <textarea
+                          value={lessonEditForm.solution}
+                          onChange={e => setLessonEditForm({ ...lessonEditForm, solution: e.target.value })}
+                          onKeyDown={(e) => handleCodeKeyDown(e, lessonEditForm.solution || '', (val) => setLessonEditForm({ ...lessonEditForm, solution: val }))}
+                          rows={6}
+                          className="w-full px-4 py-3 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-700/20 transition-all resize-y"
+                          placeholder="Kode solusi yang benar..."
+                        />
+                      </div>
+                    </div>
+
+                    {/* Hint (Petunjuk) - Menggunakan RichTextEditor */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Petunjuk Penyelesaian (Hint - Rich Text)</label>
+                      <RichTextEditor
+                        value={lessonEditForm.hint || ''}
+                        onChange={html => setLessonEditForm({ ...lessonEditForm, hint: html })}
+                      />
+                    </div>
+
+                    {/* Validation Rules (Static Checks) */}
+                    <div className="bg-rose-50/30 border border-rose-200/50 rounded-2xl p-6 space-y-5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Terminal size={18} className="text-rose-700" />
+                          <h4 className="font-bold text-rose-900">Validasi Kode Statis (Non-AI)</h4>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            const rules = [...(lessonEditForm.validationRules || [])];
+                            rules.push({ pattern: '', message: '', shouldExist: true });
+                            setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-rose-200 text-rose-700 text-[10px] font-bold rounded-lg hover:bg-rose-100 transition-all"
+                        >
+                          <Plus size={12} /> Tambah Aturan
+                        </button>
+                      </div>
+
+                      <div className="space-y-4">
+                        {(!lessonEditForm.validationRules || lessonEditForm.validationRules.length === 0) ? (
+                          <div className="text-center py-4 text-rose-300 text-xs italic">Belum ada aturan validasi statis.</div>
+                        ) : (
+                          lessonEditForm.validationRules.map((rule, rIdx) => (
+                            <div key={rIdx} className="bg-white p-4 rounded-xl border border-rose-100 space-y-3 relative group/rule">
                               <button 
                                 onClick={() => {
-                                  const rules = [...(lessonEditForm.validationRules || [])];
-                                  rules[rIdx].shouldExist = !rules[rIdx].shouldExist;
+                                  const rules = lessonEditForm.validationRules?.filter((_, i) => i !== rIdx);
                                   setLessonEditForm({ ...lessonEditForm, validationRules: rules });
                                 }}
-                                className={cn(
-                                  "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5",
-                                  rule.shouldExist 
-                                    ? "bg-green-100 text-green-700" 
-                                    : "bg-red-100 text-red-700"
-                                )}
+                                className="absolute top-2 right-2 p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover/rule:opacity-100 transition-all"
                               >
-                                {rule.shouldExist ? <CheckCircle2 size={12} /> : <X size={12} />}
-                                {rule.shouldExist ? 'Wajib Ada (Include)' : 'Dilarang Ada (Exclude)'}
+                                <X size={14} />
                               </button>
-                              <span className="text-[10px] text-zinc-400 italic">Klik untuk mengubah mode validasi.</span>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Regex Pattern</label>
+                                  <input
+                                    value={rule.pattern}
+                                    onChange={e => {
+                                      const rules = [...(lessonEditForm.validationRules || [])];
+                                      rules[rIdx].pattern = e.target.value;
+                                      setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                                    }}
+                                    placeholder="Contoh: for.*range"
+                                    className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-mono focus:ring-1 focus:ring-rose-700"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Pesan Error</label>
+                                  <input
+                                    value={rule.message}
+                                    onChange={e => {
+                                      const rules = [...(lessonEditForm.validationRules || [])];
+                                      rules[rIdx].message = e.target.value;
+                                      setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                                    }}
+                                    placeholder="Contoh: Gunakan for loop!"
+                                    className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-700"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <button 
+                                  onClick={() => {
+                                    const rules = [...(lessonEditForm.validationRules || [])];
+                                    rules[rIdx].shouldExist = !rules[rIdx].shouldExist;
+                                    setLessonEditForm({ ...lessonEditForm, validationRules: rules });
+                                  }}
+                                  className={cn(
+                                    "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5",
+                                    rule.shouldExist 
+                                      ? "bg-green-100 text-green-700" 
+                                      : "bg-red-100 text-red-700"
+                                  )}
+                                >
+                                  {rule.shouldExist ? <CheckCircle2 size={12} /> : <X size={12} />}
+                                  {rule.shouldExist ? 'Wajib Ada (Include)' : 'Dilarang Ada (Exclude)'}
+                                </button>
+                                <span className="text-[10px] text-zinc-400 italic">Klik untuk mengubah mode validasi.</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Test Cases - Menggunakan RichTextEditor untuk Deskripsi */}
+                    <div className="bg-blue-50/30 border border-blue-200/50 rounded-2xl p-6 space-y-5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={18} className="text-blue-600" />
+                          <h4 className="font-bold text-blue-900">Test Cases (Validasi Output)</h4>
+                        </div>
+                        <button
+                          onClick={handleAddTestCase}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <Plus size={12} /> Tambah Test Case
+                        </button>
+                      </div>
+
+                      {lessonEditForm.testCases.map((tc, tcIdx) => (
+                        <div key={tcIdx} className="bg-white border border-blue-200/50 rounded-xl p-4 space-y-4">
+                          <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+                            <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Test Case #{tcIdx + 1}</span>
+                            {lessonEditForm.testCases.length > 1 && (
+                              <button
+                                onClick={() => handleRemoveTestCase(tcIdx)}
+                                className="p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                              >
+                                <Minus size={14} />
+                              </button>
+                            )}
+                          </div>
+                          
+                          {/* Deskripsi Uji (RichTextEditor) */}
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deskripsi Tugas / Petunjuk Uji (Rich Text)</label>
+                            <RichTextEditor
+                              value={tc.description || ''}
+                              onChange={html => handleUpdateTestCase(tcIdx, 'description', html)}
+                              placeholder="Tulis deskripsi tugas atau petunjuk uji spesifik..."
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expected Output</label>
+                              <textarea
+                                value={tc.expectedOutput}
+                                onChange={e => handleUpdateTestCase(tcIdx, 'expectedOutput', e.target.value)}
+                                rows={3}
+                                className="w-full px-3 py-2 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-y"
+                                placeholder="Output yang diharapkan..."
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Input (Opsional)</label>
+                              <textarea
+                                value={tc.input || ''}
+                                onChange={e => handleUpdateTestCase(tcIdx, 'input', e.target.value)}
+                                rows={3}
+                                className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-y"
+                                placeholder="Input opsional..."
+                              />
                             </div>
                           </div>
-                        ))
-                      )}
+                        </div>
+                      ))}
                     </div>
-                  </div>
-
-                  {/* Test Cases */}
-                  <div className="bg-blue-50/50 border border-blue-200/50 rounded-2xl p-6 space-y-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={18} className="text-blue-600" />
-                        <h4 className="font-bold text-blue-900">Test Cases (Validasi Output)</h4>
-                      </div>
-                      <button
-                        onClick={handleAddTestCase}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        <Plus size={12} />
-                        Tambah
-                      </button>
-                    </div>
-
-                    {lessonEditForm.testCases.map((tc, tcIdx) => (
-                      <div key={tcIdx} className="bg-white border border-blue-200/50 rounded-xl p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Test Case #{tcIdx + 1}</span>
-                          {lessonEditForm.testCases.length > 1 && (
-                            <button
-                              onClick={() => handleRemoveTestCase(tcIdx)}
-                              className="p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                            >
-                              <Minus size={14} />
-                            </button>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deskripsi Tugas</label>
-                          <input
-                            value={tc.description}
-                            onChange={e => handleUpdateTestCase(tcIdx, 'description', e.target.value)}
-                            className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                            placeholder="Deskripsi tugas..."
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expected Output</label>
-                            <textarea
-                              value={tc.expectedOutput}
-                              onChange={e => handleUpdateTestCase(tcIdx, 'expectedOutput', e.target.value)}
-                              rows={2}
-                              className="w-full px-3 py-2 bg-zinc-900 text-zinc-100 border border-zinc-700 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-y"
-                              placeholder="Output yang diharapkan..."
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Input (Opsional)</label>
-                            <textarea
-                              value={tc.input || ''}
-                              onChange={e => handleUpdateTestCase(tcIdx, 'input', e.target.value)}
-                              rows={2}
-                              className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-y"
-                              placeholder="Input opsional..."
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </motion.div>
@@ -3079,7 +3573,7 @@ export const AdminDashboard: React.FC = () => {
         {/* AI GEN MODAL */}
         <AnimatePresence>
           {aiGenModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -3118,6 +3612,210 @@ export const AdminDashboard: React.FC = () => {
                     {isAiTargetGenerating ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
                     {isAiTargetGenerating ? 'Memproses...' : 'Generate Sekarang'}
                   </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* PREMIUM SMART DOCUMENT IMPORT MODAL */}
+        <AnimatePresence>
+          {showImportPreviewModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-md animate-fade-in">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl relative border border-zinc-200/50 flex flex-col max-h-[90vh]"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0 animate-pulse">
+                      <Upload size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-zinc-900">Smart Document Import</h3>
+                      <p className="text-zinc-500 text-xs truncate max-w-sm">{importFileName}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => { setShowImportPreviewModal(false); setImportDocTarget(null); setImportParsedResult(null); }}
+                    className="p-2 hover:bg-zinc-100 rounded-xl text-zinc-400 hover:text-zinc-600 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Body Content */}
+                <div className="flex-1 overflow-y-auto py-6 space-y-6">
+                  {/* Step 1: Mode Selection */}
+                  {!importParsedResult && !isProcessingImport && (
+                    <div className="space-y-4">
+                      <div className="bg-zinc-50 border border-zinc-200/60 p-4 rounded-2xl">
+                        <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Cuplikan Isi Dokumen</div>
+                        <div className="bg-zinc-950 text-zinc-300 p-4 rounded-xl font-mono text-[11px] max-h-32 overflow-y-auto whitespace-pre-wrap">
+                          {importFileContent.substring(0, 1000) + (importFileContent.length > 1000 ? '...' : '')}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Standard mode card */}
+                        <div 
+                          onClick={() => setImportParseMode('regex')}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                            importParseMode === 'regex' 
+                              ? 'border-zinc-900 bg-zinc-50 shadow-sm' 
+                              : 'border-zinc-200/80 bg-white hover:border-zinc-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Terminal size={16} className={importParseMode === 'regex' ? 'text-zinc-950' : 'text-zinc-400'} />
+                            <div className="text-xs font-bold text-zinc-800">Standard Regex Parser</div>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 leading-relaxed">
+                            Mengekstrak teks berdasarkan pola kata kunci teratur secara instan di sisi klien. Cocok untuk dokumen yang mengikuti format secara ketat.
+                          </p>
+                        </div>
+
+                        {/* AI mode card */}
+                        <div 
+                          onClick={() => setImportParseMode('ai')}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                            importParseMode === 'ai' 
+                              ? 'border-emerald-500 bg-emerald-50/10 shadow-sm' 
+                              : 'border-zinc-200/80 bg-white hover:border-zinc-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Sparkles size={16} className={importParseMode === 'ai' ? 'text-emerald-500' : 'text-zinc-400'} />
+                            <div className="text-xs font-bold text-zinc-800">Smart AI Parser</div>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 leading-relaxed">
+                            Menggunakan LLM Gemini untuk mengekstrak dan memetakan struktur data secara cerdas. Cocok untuk dokumen yang tidak teratur, menghasilkan penjelasan HTML yang rapi.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 2: Processing state */}
+                  {isProcessingImport && (
+                    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                      <Loader2 size={36} className="animate-spin text-emerald-500" />
+                      <div className="text-sm font-bold text-zinc-800 animate-pulse">Sedang mengekstrak modul & pelajaran...</div>
+                      <p className="text-xs text-zinc-400 text-center max-w-md">
+                        {importParseMode === 'ai' 
+                          ? 'Model AI sedang mengurai struktur kurikulum, merapikan markup HTML materi, serta mengekstrak kuis dan testcase.' 
+                          : 'Standard parser sedang menguraikan tag level, modul, kuis, dan latihan secara lokal.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Step 3: Parsed results preview */}
+                  {!isProcessingImport && importParsedResult && (
+                    <div className="space-y-4">
+                      <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3">
+                        <CheckCircle2 className="text-emerald-500 shrink-0" size={20} />
+                        <div>
+                          <div className="text-xs font-bold text-emerald-800">Ekstraksi Selesai!</div>
+                          <div className="text-[11px] text-emerald-600">
+                            Berhasil mendeteksi {importParsedResult.levels.length} Level,{' '}
+                            {importParsedResult.levels.reduce((sum, l) => sum + l.modules.length, 0)} Modul, dan{' '}
+                            {importParsedResult.levels.reduce((sum, l) => sum + l.modules.reduce((s, m) => s + (m.lessons?.length || 0), 0), 0)} Pelajaran.
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border border-zinc-200/80 rounded-2xl divide-y divide-zinc-100 overflow-hidden bg-zinc-50 max-h-72 overflow-y-auto shadow-inner">
+                        {importParsedResult.levels.map((level, lIdx) => (
+                          <div key={lIdx} className="p-4 bg-white">
+                            <div className="text-xs font-black text-zinc-850 uppercase tracking-wide flex items-center gap-1.5">
+                              <Layers size={12} className="text-zinc-400" />
+                              {level.title || `Level ${lIdx + 1}`}
+                            </div>
+                            
+                            <div className="ml-4 mt-2 space-y-3">
+                              {level.modules.map((mod, mIdx) => (
+                                <div key={mIdx} className="border-l-2 border-zinc-200/60 pl-3">
+                                  <div className="text-[11px] font-bold text-zinc-700 flex items-center gap-1">
+                                    <BookOpen size={10} className="text-zinc-400" />
+                                    {mod.title}
+                                  </div>
+
+                                  <div className="ml-3 mt-1.5 space-y-1">
+                                    {mod.lessons?.map((les, lesIdx) => {
+                                      const isExisting = draftCurriculum.some(l => 
+                                        l.modules.some(m => 
+                                          m.lessons.some(le => le.title.trim().toLowerCase() === les.title.trim().toLowerCase())
+                                        )
+                                      );
+                                      return (
+                                        <div key={lesIdx} className="text-[10px] text-zinc-650 flex items-center justify-between py-0.5 border-b border-zinc-50 last:border-0">
+                                          <div className="flex items-center gap-1.5">
+                                            <span className="w-1 h-1 rounded-full bg-zinc-400 shrink-0"></span>
+                                            <span className="font-semibold">{les.title}</span>
+                                          </div>
+                                          <span className={`px-1.5 py-0.2 rounded font-black uppercase text-[8px] ${
+                                            isExisting 
+                                              ? 'bg-amber-100 text-amber-700' 
+                                              : 'bg-emerald-100 text-emerald-700'
+                                          }`}>
+                                            {isExisting ? 'Update/Merge' : 'Baru'}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer buttons */}
+                <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
+                  <div className="text-xs text-zinc-400 font-bold">
+                    {importDocTarget === 'global' ? 'Target: Seluruh Kurikulum (Global)' : 'Target: Modul Spesifik'}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        if (importParsedResult) {
+                          setImportParsedResult(null);
+                        } else {
+                          setShowImportPreviewModal(false);
+                          setImportDocTarget(null);
+                        }
+                      }}
+                      className="px-5 py-2.5 text-xs font-bold text-zinc-500 hover:text-zinc-700 transition-colors"
+                    >
+                      {importParsedResult ? 'Kembali' : 'Batal'}
+                    </button>
+
+                    {!importParsedResult ? (
+                      <button
+                        onClick={handleProcessImportDocument}
+                        disabled={isProcessingImport}
+                        className="px-5 py-2.5 bg-zinc-950 text-white rounded-xl text-xs font-bold hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-lg shadow-zinc-950/10"
+                      >
+                        {isProcessingImport ? <Loader2 size={12} className="animate-spin" /> : <Terminal size={12} />}
+                        Mulai Ekstraksi
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleApplyImportDocument}
+                        className="px-5 py-2.5 bg-emerald-500 text-white rounded-xl text-xs font-bold hover:bg-emerald-600 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                      >
+                        <CheckCircle2 size={12} />
+                        Terapkan Perubahan
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             </div>

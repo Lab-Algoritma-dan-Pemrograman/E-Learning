@@ -2,7 +2,8 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { supabase, setSupabaseSession } from '../lib/supabase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
-import { initializeFromToken, TokenPayload } from '../services/tokenService';
+import { initializeFromToken, TokenPayload, startPostMessageListener } from '../services/tokenService';
+import { calculateStreak } from '../services/streakService';
 import { Loader2 } from 'lucide-react';
 
 interface SupabaseContextType {
@@ -23,6 +24,16 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setCompletedLessons = useProgress((state) => state.setCompletedLessons);
   const [isSyncing, setIsSyncing] = useState(false);
   const hasSubscribedProfile = useRef(false);
+
+  // postMessage listener — menerima token dari Web Utama jika E-Learning
+  // dibuka sebagai popup atau iframe (tanpa URL redirect)
+  useEffect(() => {
+    const stopListener = startPostMessageListener(async () => {
+      setStoreUser(null);
+      window.location.reload();
+    });
+    return stopListener;
+  }, []);
 
   useEffect(() => {
     let unsubProfileChannel: any = null;
@@ -67,11 +78,14 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSyncError(null);
 
       try {
-        // Set header authorization token for RLS
+      // Set header authorization token for RLS
         setSupabaseSession(savedToken);
+        
+        // Expose supabase client to window so that console security test scripts can access it without frame block errors
+        (window as any).supabase = supabase;
 
         // Load curriculum from Supabase
-        await loadCurriculum();
+        await loadCurriculum(payload.role);
 
         // 2. Fetch or Create User Profile in Supabase
         const nim = payload.nim;
@@ -96,7 +110,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             email: payload.email || null,
             xp: 0,
             level: 1,
-            streak: 0,
+            streak: 1, // Day 1 active streak
+            study_time: 0,
             last_active: new Date().toISOString(),
             created_at: new Date().toISOString(),
             role: payload.role || 'praktikan',
@@ -132,12 +147,16 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             createdAt: newProfile.created_at,
             role: newProfile.role as any,
             assessmentAccess: newProfile.assessment_access as any,
-            levelAccessOverrides: newProfile.level_access_overrides as any
+            levelAccessOverrides: newProfile.level_access_overrides as any,
+            studyTime: newProfile.study_time || 0
           };
           console.log("New profile created successfully in Supabase");
         } else {
           console.log("Profile found in Supabase, loading data...");
           
+          // Calculate streak based on last_active before overwriting it
+          const { newStreak } = calculateStreak(userProfile.last_active, userProfile.streak);
+
           // Map snake_case to camelCase
           profileData = {
             nim: userProfile.nim,
@@ -147,35 +166,62 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             email: userProfile.email,
             xp: userProfile.xp,
             level: userProfile.level,
-            streak: userProfile.streak,
+            streak: newStreak,
             lastActive: userProfile.last_active,
             createdAt: userProfile.created_at,
             role: userProfile.role as any,
             assessmentAccess: userProfile.assessment_access as any,
-            levelAccessOverrides: userProfile.level_access_overrides || {}
+            levelAccessOverrides: userProfile.level_access_overrides || {},
+            studyTime: userProfile.study_time || 0
           };
 
-          // Update nama/kelas/role/jurusan if changed in Web Utama
+          // Always update last_active and streak on login/load, and update nama/kelas/role/jurusan if changed in Web Utama
+          const updates: any = { 
+            last_active: new Date().toISOString(),
+            streak: newStreak
+          };
           const hasRoleChange = payload.role && profileData.role !== payload.role;
           const hasJurusanChange = (payload as any).jurusan && profileData.jurusan !== (payload as any).jurusan;
-          if (profileData.nama !== payload.nama || profileData.kelas !== payload.kelas || hasRoleChange || hasJurusanChange) {
-            const updates: any = { nama: payload.nama, kelas: payload.kelas };
-            if (payload.role) updates.role = payload.role;
-            if ((payload as any).jurusan) updates.jurusan = (payload as any).jurusan;
+          
+          if (profileData.nama !== payload.nama) updates.nama = payload.nama;
+          if (profileData.kelas !== payload.kelas) updates.kelas = payload.kelas;
+          if (hasRoleChange) updates.role = payload.role;
+          if (hasJurusanChange) updates.jurusan = (payload as any).jurusan;
 
-            await supabase
-              .from('users')
-              .update(updates)
-              .eq('nim', nim);
-            profileData.nama = payload.nama;
-            profileData.kelas = payload.kelas;
-            if (payload.role) profileData.role = payload.role as any;
-            if ((payload as any).jurusan) profileData.jurusan = (payload as any).jurusan;
+          await supabase
+            .from('users')
+            .update(updates)
+            .eq('nim', nim);
+
+          profileData.lastActive = updates.last_active;
+          profileData.streak = newStreak;
+          profileData.nama = payload.nama;
+          profileData.kelas = payload.kelas;
+          if (payload.role) profileData.role = payload.role as any;
+          if ((payload as any).jurusan) profileData.jurusan = (payload as any).jurusan;
+
+          // Check for streak milestones (e.g., streak-3, streak-7)
+          if (newStreak >= 3) {
+            try {
+              const { checkAndUnlockAchievements } = await import('../services/achievementService');
+              const newlyUnlocked = await checkAndUnlockAchievements(profileData, {});
+              newlyUnlocked.forEach(ach => useStore.getState().pushAchievement(ach));
+            } catch (err) {
+              console.warn("Achievement check on login warning:", err);
+            }
           }
         }
 
         console.log("Setting store user:", profileData.nama);
         setStoreUser(profileData);
+
+        // Record login audit log once per session
+        const sessionLoggedIn = sessionStorage.getItem('logged_in_audit_logged');
+        if (!sessionLoggedIn && profileData.nim) {
+          const { monitoringService } = await import('../services/monitoringService');
+          await monitoringService.addAuditLog(profileData.nim, profileData.nama, 'login', 'Masuk ke sistem E-Learning');
+          sessionStorage.setItem('logged_in_audit_logged', 'true');
+        }
 
         // 3. Realtime Subscription for Profile updates
         console.log("Subscribing to realtime profile updates via Supabase...");
@@ -189,6 +235,11 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }, (payload) => {
             const updated = payload.new as any;
             console.log("Profile updated in realtime from Supabase:", updated.nama);
+            
+            const currentUser = useStore.getState().user;
+            const oldLevel = currentUser?.level || 1;
+            const newLevel = updated.level || 1;
+            
             setStoreUser({
               nim: updated.nim,
               nama: updated.nama,
@@ -196,14 +247,19 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               jurusan: updated.jurusan,
               email: updated.email,
               xp: updated.xp,
-              level: updated.level,
+              level: newLevel,
               streak: updated.streak,
               lastActive: updated.last_active,
               createdAt: updated.created_at,
               role: updated.role,
               assessmentAccess: updated.assessment_access,
-              levelAccessOverrides: updated.level_access_overrides || {}
+              levelAccessOverrides: updated.level_access_overrides || {},
+              studyTime: updated.study_time || 0
             });
+
+            if (newLevel > oldLevel) {
+              useStore.getState().setLevelUpNotification(newLevel);
+            }
           })
           .subscribe();
 
@@ -265,7 +321,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             program_keterampilan: false,
             ujian_praktik: false
           },
-          levelAccessOverrides: {}
+          levelAccessOverrides: {},
+          studyTime: 0
         };
         setStoreUser(fallbackProfile);
       } finally {
@@ -274,16 +331,35 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     };
 
-    const loadCurriculum = async () => {
+    const loadCurriculum = async (userRole?: string) => {
       try {
         console.log("Loading curriculum levels from Supabase database...");
-        const { data: levelsData, error: levelsError } = await supabase
+        let levelsData: any[] | null = null;
+        let levelsError: any = null;
+
+        const res = await supabase
           .from('levels')
           .select('*')
-          .order('id');
+          .order('sort_order');
+        levelsData = res.data;
+        levelsError = res.error;
+
+        if (levelsError && levelsError.code === '42703') {
+          console.warn("levels.sort_order column not found in SupabaseProvider, falling back to in-memory sort by ID");
+          const fallbackRes = await supabase
+            .from('levels')
+            .select('*');
+          levelsData = fallbackRes.data;
+          levelsError = fallbackRes.error;
+          if (levelsData) {
+            levelsData.sort((a, b) => a.id.localeCompare(b.id));
+          }
+        }
 
         if (levelsError || !levelsData || levelsData.length === 0) {
-          console.warn("No curriculum in database. Initial setup needed.");
+          console.warn("No curriculum in database. Using local static fallback...");
+          const { curriculum: defaultCurriculum } = await import('../data/curriculum');
+          setCurriculum(defaultCurriculum);
           return;
         }
 
@@ -293,8 +369,11 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           .select('*')
           .order('sort_order');
 
+        const isStaff = userRole === 'admin' || userRole === 'kordas' || userRole === 'asisten';
+        const lessonsTable = isStaff ? 'lessons' : 'student_lessons';
+
         const { data: lessonsData } = await supabase
-          .from('lessons')
+          .from(lessonsTable)
           .select('*')
           .order('sort_order');
 
@@ -314,7 +393,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                   hint: les.hint,
                   quiz: les.quiz,
                   testCases: les.test_cases,
-                  validationRules: les.validation_rules
+                  validationRules: les.validation_rules,
+                  xpReward: les.xp_reward ?? 60
                 }));
               return {
                 id: mod.id,
@@ -336,6 +416,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setCurriculum(resolvedLevels);
       } catch (err) {
         console.error("Failed to load curriculum from Supabase:", err);
+        const { curriculum: defaultCurriculum } = await import('../data/curriculum');
+        setCurriculum(defaultCurriculum);
       }
     };
 

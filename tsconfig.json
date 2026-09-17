@@ -23,5 +23,15 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "types": ["vite/client"]
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "scratch/**/*",
+    "scratch_check.ts",
+    "test_import_logic.ts",
+    "inspect_ppt.ts",
+    "inspect_paragraphs.ts",
+    "migrate.ts"
+  ]
 }

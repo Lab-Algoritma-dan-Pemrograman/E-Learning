@@ -1,5 +1,253 @@
 [
   {
+    "id": "xp-50",
+    "title": "Langkah Pemula",
+    "description": "Kumpulkan 50 XP pertamamu. Perjalanan dimulai!",
+    "icon": "Star",
+    "requirementType": "xp",
+    "requirementValue": 50
+  },
+  {
+    "id": "xp-100",
+    "title": "Penjelajah Awal",
+    "description": "Capai total 100 XP. Kamu mulai menemukan ritme belajar!",
+    "icon": "Zap",
+    "requirementType": "xp",
+    "requirementValue": 100
+  },
+  {
+    "id": "xp-250",
+    "title": "Penggemar Kode",
+    "description": "Capai total 250 XP. Semangat belajarmu luar biasa!",
+    "icon": "Award",
+    "requirementType": "xp",
+    "requirementValue": 250
+  },
+  {
+    "id": "xp-500",
+    "title": "Pelajar Tangguh",
+    "description": "Capai total 500 XP. Konsistensi kamu mulai terlihat nyata!",
+    "icon": "Flame",
+    "requirementType": "xp",
+    "requirementValue": 500
+  },
+  {
+    "id": "xp-750",
+    "title": "Pemrogram Berbakat",
+    "description": "Capai total 750 XP. Logika kodingmu semakin terasah tajam!",
+    "icon": "Medal",
+    "requirementType": "xp",
+    "requirementValue": 750
+  },
+  {
+    "id": "xp-1000",
+    "title": "Ksatria Algoritma",
+    "description": "Capai total 1.000 XP. Kamu sudah menjadi programmer yang tangguh!",
+    "icon": "Trophy",
+    "requirementType": "xp",
+    "requirementValue": 1000
+  },
+  {
+    "id": "xp-1500",
+    "title": "Master Kode",
+    "description": "Capai total 1.500 XP. Menuju barisan elit para coder!",
+    "icon": "Target",
+    "requirementType": "xp",
+    "requirementValue": 1500
+  },
+  {
+    "id": "xp-2000",
+    "title": "Pakar Pemrograman",
+    "description": "Capai total 2.000 XP. Penguasaan materi tingkat tinggi!",
+    "icon": "Gem",
+    "requirementType": "xp",
+    "requirementValue": 2000
+  },
+  {
+    "id": "xp-3000",
+    "title": "Grandmaster Sintaks",
+    "description": "Capai total 3.000 XP. Level pemahaman yang sangat mendalam!",
+    "icon": "Crown",
+    "requirementType": "xp",
+    "requirementValue": 3000
+  },
+  {
+    "id": "xp-5000",
+    "title": "Legenda Abadi",
+    "description": "Capai total 5.000 XP tertinggi! Prestasi tanpa tanding!",
+    "icon": "Rocket",
+    "requirementType": "xp",
+    "requirementValue": 5000
+  },
+  {
+    "id": "streak-2",
+    "title": "Percikan Api",
+    "description": "Aktif belajar 2 hari berturut-turut. Pertahankan ritmenya!",
+    "icon": "Flame",
+    "requirementType": "streak",
+    "requirementValue": 2
+  },
+  {
+    "id": "streak-3",
+    "title": "Konsistensi Awal",
+    "description": "Pertahankan streak belajar selama 3 hari berturut-turut.",
+    "icon": "Zap",
+    "requirementType": "streak",
+    "requirementValue": 3
+  },
+  {
+    "id": "streak-5",
+    "title": "Pembelajar Disiplin",
+    "description": "Pertahankan streak belajar selama 5 hari berturut-turut.",
+    "icon": "Award",
+    "requirementType": "streak",
+    "requirementValue": 5
+  },
+  {
+    "id": "streak-7",
+    "title": "Semangat Membara",
+    "description": "Capai streak belajar 7 hari penuh (1 minggu tanpa henti)!",
+    "icon": "Flame",
+    "requirementType": "streak",
+    "requirementValue": 7
+  },
+  {
+    "id": "streak-14",
+    "title": "Dedikasi Baja",
+    "description": "Pertahankan streak belajar selama 14 hari (2 minggu).",
+    "icon": "Medal",
+    "requirementType": "streak",
+    "requirementValue": 14
+  },
+  {
+    "id": "streak-21",
+    "title": "Kebiasaan Juara",
+    "description": "Pertahankan streak belajar selama 21 hari (3 minggu).",
+    "icon": "Crown",
+    "requirementType": "streak",
+    "requirementValue": 21
+  },
+  {
+    "id": "streak-30",
+    "title": "Penguasa Waktu",
+    "description": "Capai streak legendaris 30 hari berturut-turut (1 bulan penuh)!",
+    "icon": "Trophy",
+    "requirementType": "streak",
+    "requirementValue": 30
+  },
+  {
+    "id": "lesson-1",
+    "title": "Baris Pertama",
+    "description": "Selesaikan materi pelajaran pertamamu di kurikulum.",
+    "icon": "Award",
+    "requirementType": "lesson_count",
+    "requirementValue": 1
+  },
+  {
+    "id": "lesson-5",
+    "title": "Langkah Mantap",
+    "description": "Selesaikan 5 materi pelajaran dengan sukses.",
+    "icon": "Star",
+    "requirementType": "lesson_count",
+    "requirementValue": 5
+  },
+  {
+    "id": "lesson-15",
+    "title": "Penjelajah Modul",
+    "description": "Selesaikan 15 materi pelajaran di seluruh kurikulum.",
+    "icon": "Zap",
+    "requirementType": "lesson_count",
+    "requirementValue": 15
+  },
+  {
+    "id": "lesson-30",
+    "title": "Kolektor Pengetahuan",
+    "description": "Selesaikan 30 materi pelajaran pemrograman.",
+    "icon": "Target",
+    "requirementType": "lesson_count",
+    "requirementValue": 30
+  },
+  {
+    "id": "lesson-50",
+    "title": "Setengah Perjalanan",
+    "description": "Selesaikan 50 materi pelajaran. Lebih dari separuh perjalanan tercapai!",
+    "icon": "Medal",
+    "requirementType": "lesson_count",
+    "requirementValue": 50
+  },
+  {
+    "id": "lesson-75",
+    "title": "Maestro Pembelajar",
+    "description": "Selesaikan 75 materi pelajaran di kurikulum E-Learning.",
+    "icon": "Gem",
+    "requirementType": "lesson_count",
+    "requirementValue": 75
+  },
+  {
+    "id": "lesson-all",
+    "title": "Ensiklopedia Berjalan",
+    "description": "Selesaikan seluruh materi kurikulum Bahasa C & Python!",
+    "icon": "Crown",
+    "requirementType": "lesson_count",
+    "requirementValue": 96
+  },
+  {
+    "id": "c-dash",
+    "title": "Fondasi C Perkasa",
+    "description": "Tuntaskan Level 1 C: Dasar Logika Algoritma & Pemrograman C.",
+    "icon": "Star",
+    "requirementType": "level_completed",
+    "requirementValue": "c-level-1"
+  },
+  {
+    "id": "c-mid",
+    "title": "Penguasa Kontrol C",
+    "description": "Tuntaskan Level 2 C: Struktur Kontrol & Percabangan.",
+    "icon": "Zap",
+    "requirementType": "level_completed",
+    "requirementValue": "c-level-2"
+  },
+  {
+    "id": "c-adv",
+    "title": "Ahli Struktur C",
+    "description": "Tuntaskan Level 3 C: Array, Struct, dan Operasi File.",
+    "icon": "Trophy",
+    "requirementType": "level_completed",
+    "requirementValue": "c-level-3"
+  },
+  {
+    "id": "py-dash",
+    "title": "Penjinak Sintaks Python",
+    "description": "Tuntaskan Level 4: Pengenalan Dasar Bahasa Python.",
+    "icon": "Star",
+    "requirementType": "level_completed",
+    "requirementValue": "c-level-4"
+  },
+  {
+    "id": "py-mid",
+    "title": "Master Alur Python",
+    "description": "Tuntaskan Level 5: Percabangan dan Perulangan Python.",
+    "icon": "Target",
+    "requirementType": "level_completed",
+    "requirementValue": "py-level-5"
+  },
+  {
+    "id": "py-adv",
+    "title": "Arsitek Data Python",
+    "description": "Tuntaskan Level 6: List, Tuple, Dictionary, dan File.",
+    "icon": "Gem",
+    "requirementType": "level_completed",
+    "requirementValue": "py-level-6"
+  },
+  {
+    "id": "py-viz",
+    "title": "Visioner Data Visual",
+    "description": "Tuntaskan Level 7: Pengolahan dan Visualisasi Data Python.",
+    "icon": "Rocket",
+    "requirementType": "level_completed",
+    "requirementValue": "py-level-7"
+  },
+  {
     "id": "bug-hunter-1",
     "title": "Bug Hunter I",
     "description": "Selesaikan sesi Bug Hunt pertama Anda.",
@@ -16,75 +264,19 @@
     "requirementValue": 5
   },
   {
-    "id": "xp-beginner",
-    "title": "Pelajar Ambisius",
-    "description": "Capai total 500 XP.",
-    "icon": "Zap",
-    "requirementType": "xp",
-    "requirementValue": 500
+    "id": "bug-hunter-5",
+    "title": "Pembasmi Bug Elit",
+    "description": "Selesaikan 5 sesi permainan Bug Hunt.",
+    "icon": "Award",
+    "requirementType": "game_score",
+    "requirementValue": 5
   },
   {
-    "id": "xp-warrior",
-    "title": "Ksatria Kode",
-    "description": "Capai total 2000 XP.",
-    "icon": "Trophy",
-    "requirementType": "xp",
-    "requirementValue": 2000
-  },
-  {
-    "id": "streak-3",
-    "title": "Konsistensi Awal",
-    "description": "Pertahankan streak belajar selama 3 hari.",
-    "icon": "Flame",
-    "requirementType": "streak",
-    "requirementValue": 3
-  },
-  {
-    "id": "py-dash",
-    "title": "Master of Fundamentals (Py)",
-    "description": "Selesaikan Level 1 Python: Dasar.",
-    "icon": "Star",
-    "requirementType": "level_completed",
-    "requirementValue": "py-level-1"
-  },
-  {
-    "id": "py-mid",
-    "title": "Alur Kontrol Wizard",
-    "description": "Selesaikan Level 2 Python: Menengah.",
-    "icon": "Zap",
-    "requirementType": "level_completed",
-    "requirementValue": "py-level-2"
-  },
-  {
-    "id": "py-adv",
-    "title": "Python Architect",
-    "description": "Selesaikan Level 3 Python: Lanjutan.",
-    "icon": "Target",
-    "requirementType": "level_completed",
-    "requirementValue": "py-level-3"
-  },
-  {
-    "id": "c-dash",
-    "title": "Fondasi C Perkasa",
-    "description": "Selesaikan Level 1 Bahasa C: Dasar.",
-    "icon": "Star",
-    "requirementType": "level_completed",
-    "requirementValue": "c-level-1"
-  },
-  {
-    "id": "c-mid",
-    "title": "Penguasa Array C",
-    "description": "Selesaikan Level 2 Bahasa C: Menengah.",
-    "icon": "Zap",
-    "requirementType": "level_completed",
-    "requirementValue": "c-level-2"
-  },
-  {
-    "id": "c-adv",
-    "title": "Pointer Legend",
-    "description": "Selesaikan Level 3 Bahasa C: Lanjutan.",
-    "icon": "Trophy",
-    "requirementType": "level_completed",
-    "requirementValue": "c-level-3"
+    "id": "bug-hunter-10",
+    "title": "Algo Detective",
+    "description": "Selesaikan 10 sesi permainan Bug Hunt.",
+    "icon": "Gem",
+    "requirementType": "game_score",
+    "requirementValue": 10
   }
 ]

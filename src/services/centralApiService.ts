@@ -12,38 +12,6 @@ export interface ProgressSummaryPayload {
   currentLevel: string;
 }
 
-/**
- * Report aggregated progress to Supabase central database.
- * This report is now handled server-side for security.
- */
-export async function reportProgressToSupabase(nim: string): Promise<void> {
-  try {
-    const token = getSavedToken();
-    if (!token) {
-      console.warn('Cannot report progress: No active token found.');
-      return;
-    }
-
-    // Call server-side API instead of direct Supabase client.
-    // We only send token and nim. The server recalculates progress from Firestore.
-    const response = await fetch('/api/report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, nim }),
-    });
-
-    if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        console.error('Failed to report progress to server:', errData.error || response.statusText);
-        return;
-    }
-
-    const data = await response.json();
-    console.log(`📊 Progress verified and synced via server for ${nim}`, data.recalculated);
-  } catch (error) {
-    console.error('Error reporting progress to server:', error);
-  }
-}
 
 /**
  * Calculate total progress across ALL levels in the curriculum.
@@ -106,33 +74,4 @@ export function getOverallProgress(
   };
 }
 
-// ===== ADMIN RESET FUNCTIONS =====
 
-/**
- * Reset ALL Supabase progress for a user.
- * Deletes all rows in elearning_progress.
- */
-export async function resetSupabaseProgress(nim: string): Promise<void> {
-  try {
-    await supabase.from('elearning_progress').delete().eq('nim', nim);
-    console.log(`✅ Supabase progress reset for ${nim}`);
-  } catch (error) {
-    console.error('Error resetting Supabase progress:', error);
-  }
-}
-
-/**
- * Reset Supabase progress for a specific level.
- * Since we use 1 row per user, we just re-sync the full progress.
- * The caller should re-trigger a full progress report after this.
- */
-export async function resetSupabaseLevelProgress(nim: string, _levelId: string): Promise<void> {
-  try {
-    // With 1-row-per-user model, we can't delete a single level.
-    // Instead, we delete the entire row. It will be re-created on next lesson completion.
-    await supabase.from('elearning_progress').delete().eq('nim', nim);
-    console.log(`✅ Supabase progress reset for ${nim} (level reset triggers full reset)`);
-  } catch (error) {
-    console.error('Error resetting Supabase level progress:', error);
-  }
-}

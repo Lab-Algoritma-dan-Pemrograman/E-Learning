@@ -4,13 +4,34 @@ import { Level } from '../data/curriculum';
 export const curriculumService = {
   async getCurriculum(): Promise<Level[]> {
     try {
-      const { data: levelsData, error: levelsError } = await supabase
+      let levelsData: any[] | null = null;
+      let levelsError: any = null;
+
+      // Try fetching ordered by sort_order
+      const res = await supabase
         .from('levels')
         .select('*')
-        .order('id');
+        .order('sort_order');
+      levelsData = res.data;
+      levelsError = res.error;
+
+      // Fallback if sort_order column does not exist yet
+      if (levelsError && levelsError.code === '42703') {
+        console.warn("levels.sort_order column not found, falling back to in-memory sort by ID");
+        const fallbackRes = await supabase
+          .from('levels')
+          .select('*');
+        levelsData = fallbackRes.data;
+        levelsError = fallbackRes.error;
+        if (levelsData) {
+          levelsData.sort((a, b) => a.id.localeCompare(b.id));
+        }
+      }
 
       if (levelsError || !levelsData || levelsData.length === 0) {
-        return [];
+        console.warn("No curriculum in database or failed to fetch. Falling back to local static curriculum...");
+        const { curriculum: defaultCurriculum } = await import('../data/curriculum');
+        return defaultCurriculum;
       }
 
       const { data: modulesData } = await supabase
@@ -58,7 +79,8 @@ export const curriculumService = {
       });
     } catch (error) {
       console.error("Failed to load curriculum:", error);
-      return [];
+      const { curriculum: defaultCurriculum } = await import('../data/curriculum');
+      return defaultCurriculum;
     }
   },
 
@@ -84,55 +106,126 @@ export const curriculumService = {
 
   async saveFullCurriculum(levels: Level[]): Promise<void> {
     try {
-      // 1. Insert levels
+      // 1. Gather all incoming IDs to preserve
+      const incomingLevelIds = levels.map(l => l.id);
+      const incomingModuleIds: string[] = [];
+      const incomingLessonIds: string[] = [];
+
       for (const level of levels) {
-        await supabase
-          .from('levels')
-          .upsert({
-            id: level.id,
-            title: level.title,
-            description: level.description,
-            access_mode: level.accessMode || 'auto',
-            locked: level.locked || false
-          });
-
-        // 2. Insert modules
         if (level.modules) {
-          for (let mIdx = 0; mIdx < level.modules.length; mIdx++) {
-            const mod = level.modules[mIdx];
-            await supabase
-              .from('modules')
-              .upsert({
-                id: mod.id,
-                level_id: level.id,
-                title: mod.title,
-                sort_order: mIdx
-              });
-
-            // 3. Insert lessons
+          for (const mod of level.modules) {
+            incomingModuleIds.push(mod.id);
             if (mod.lessons) {
-              for (let lIdx = 0; lIdx < mod.lessons.length; lIdx++) {
-                const lesson = mod.lessons[lIdx];
-                await supabase
-                  .from('lessons')
-                  .upsert({
-                    id: lesson.id,
-                    module_id: mod.id,
-                    title: lesson.title,
-                    explanation: lesson.explanation,
-                    code_example: lesson.codeExample,
-                    initial_code: lesson.initialCode,
-                    solution: lesson.solution,
-                    hint: lesson.hint,
-                    quiz: lesson.quiz || {},
-                    test_cases: lesson.testCases || [],
-                    validation_rules: lesson.validationRules || [],
-                    sort_order: lIdx
-                  });
+              for (const lesson of mod.lessons) {
+                incomingLessonIds.push(lesson.id);
               }
             }
           }
         }
+      }
+
+      // 2. Fetch existing IDs in database to compare
+      const { data: dbLevels, error: levelsErr } = await supabase.from('levels').select('id');
+      if (levelsErr) throw levelsErr;
+      const { data: dbModules, error: modulesErr } = await supabase.from('modules').select('id');
+      if (modulesErr) throw modulesErr;
+      const { data: dbLessons, error: lessonsErr } = await supabase.from('lessons').select('id');
+      if (lessonsErr) throw lessonsErr;
+
+      const dbLevelIds = (dbLevels || []).map(l => l.id);
+      const dbModuleIds = (dbModules || []).map(m => m.id);
+      const dbLessonIds = (dbLessons || []).map(l => l.id);
+
+      // 3. Determine which ones to delete
+      const levelsToDelete = dbLevelIds.filter(id => !incomingLevelIds.includes(id));
+      const modulesToDelete = dbModuleIds.filter(id => !incomingModuleIds.includes(id));
+      const lessonsToDelete = dbLessonIds.filter(id => !incomingLessonIds.includes(id));
+
+      // 4. Perform deletions (lessons first, then modules, then levels)
+      if (lessonsToDelete.length > 0) {
+        const { error: deleteLessonsError } = await supabase
+          .from('lessons')
+          .delete()
+          .in('id', lessonsToDelete);
+        if (deleteLessonsError) throw deleteLessonsError;
+      }
+
+      if (modulesToDelete.length > 0) {
+        const { error: deleteModulesError } = await supabase
+          .from('modules')
+          .delete()
+          .in('id', modulesToDelete);
+        if (deleteModulesError) throw deleteModulesError;
+      }
+
+      if (levelsToDelete.length > 0) {
+        const { error: deleteLevelsError } = await supabase
+          .from('levels')
+          .delete()
+          .in('id', levelsToDelete);
+        if (deleteLevelsError) throw deleteLevelsError;
+      }
+
+      // 5. Batch / Bulk Upsert (3 requests instead of 132 sequential requests)
+      const levelsToUpsert: any[] = [];
+      const modulesToUpsert: any[] = [];
+      const lessonsToUpsert: any[] = [];
+
+      for (let lIdx = 0; lIdx < levels.length; lIdx++) {
+        const level = levels[lIdx];
+        levelsToUpsert.push({
+          id: level.id,
+          title: level.title,
+          description: level.description,
+          access_mode: level.accessMode || 'auto',
+          locked: level.locked || false,
+          sort_order: lIdx
+        });
+
+        if (level.modules) {
+          for (let mIdx = 0; mIdx < level.modules.length; mIdx++) {
+            const mod = level.modules[mIdx];
+            modulesToUpsert.push({
+              id: mod.id,
+              level_id: level.id,
+              title: mod.title,
+              sort_order: mIdx
+            });
+
+            if (mod.lessons) {
+              for (let lesIdx = 0; lesIdx < mod.lessons.length; lesIdx++) {
+                const lesson = mod.lessons[lesIdx];
+                lessonsToUpsert.push({
+                  id: lesson.id,
+                  module_id: mod.id,
+                  title: lesson.title,
+                  explanation: lesson.explanation,
+                  code_example: lesson.codeExample,
+                  initial_code: lesson.initialCode,
+                  solution: lesson.solution,
+                  hint: lesson.hint,
+                  quiz: lesson.quiz || {},
+                  test_cases: lesson.testCases || [],
+                  validation_rules: lesson.validationRules || [],
+                  sort_order: lesIdx
+                });
+              }
+            }
+          }
+        }
+      }
+
+      if (levelsToUpsert.length > 0) {
+        const { error: err1 } = await supabase.from('levels').upsert(levelsToUpsert);
+        if (err1) throw err1;
+      }
+      if (modulesToUpsert.length > 0) {
+        const { error: err2 } = await supabase.from('modules').upsert(modulesToUpsert);
+        if (err2) throw err2;
+      }
+      if (lessonsToUpsert.length > 0) {
+        const { error: err3 } = await supabase.from('lessons').upsert(lessonsToUpsert);
+        if (err3) throw err3;
       }
     } catch (error) {
       console.error("Failed to save full curriculum:", error);
@@ -146,7 +239,9 @@ export const curriculumService = {
         .from('levels')
         .update({
           access_mode: level.accessMode,
-          locked: level.locked
+          locked: level.locked,
+          title: level.title,
+          description: level.description
         })
         .eq('id', level.id);
 

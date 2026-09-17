@@ -1,0 +1,3777 @@
+
+--- PAGE 1 ---
+Modul Praktikum
+ALGORITMA 
+WEBSITE LAB
+Nama  : .............................
+NIM     : .............................
+PEMROGRAMAN
+
+--- PAGE 2 ---
+Pendahuluan | 1 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+DAFTAR ISI 
+STRUKTUR LABORATORIUM ............................................................................................................................................................. 2 
+PERATURAN DAN TATA TERTIB PRAKTIKUM ............................................................................................................................. 3 
+SUSUNAN LAPORAN .............................................................................................................................................................................. 4 
+GLOSARIUM ............................................................................................................................................................................................ 6 
+MODUL I DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C ......................................................................... 7 
+I. 
+TUJUAN..................................................................................................................................................................................... 7 
+II. 
+TEORI ........................................................................................................................................................................................ 7 
+2.1. 
+Struktur Penulisan Program Bahasa C ........................................................................................................................ 7 
+2.2. 
+Tipe Data Dasar .............................................................................................................................................................. 8 
+2.3. 
+Deklarasi Variabel........................................................................................................................................................ 10 
+2.4. 
+Fungsi Menginput/ Memasukkan Data ...................................................................................................................... 10 
+2.5. 
+Fungsi Menampilkan Data .......................................................................................................................................... 12 
+2.6. 
+Deklarasi Konstanta ..................................................................................................................................................... 13 
+2.7. 
+Fungsi ............................................................................................................................................................................ 14 
+2.8. 
+Operator ........................................................................................................................................................................ 17 
+2.9. 
+Flowchart ...................................................................................................................................................................... 20 
+III. 
+PROGRAM .............................................................................................................................................................................. 24 
+IV. 
+TUGAS AKHIR ....................................................................................................................................................................... 25 
+MODUL II STRUKTUR KONTROL DALAM BAHASA C ............................................................................................................... 26 
+I. 
+TUJUAN ................................................................................................................................................................................... 26 
+II. 
+TEORI ....................................................................................................................................................................................... 26 
+2.1. 
+Percabangan ................................................................................................................................................................... 26 
+2.2. 
+Perulangan ...................................................................................................................................................................... 29 
+2.3. 
+Peloncatan ...................................................................................................................................................................... 30 
+III. 
+PROGRAM ............................................................................................................................................................................... 33 
+IV. 
+TUGAS AKHIR ........................................................................................................................................................................ 35 
+MODUL III ARRAY, STRUCT, DAN OPERASI FILE ...................................................................................................................... 36 
+I. 
+TUJUAN ................................................................................................................................................................................... 36 
+II. 
+TEORI ....................................................................................................................................................................................... 36 
+2.1. 
+Array .............................................................................................................................................................................. 36 
+2.2. 
+STRUCT ........................................................................................................................................................................ 38 
+2.3. 
+Operasi FILE .................................................................................................................................................................. 40 
+III. 
+PROGRAM ............................................................................................................................................................................... 45 
+IV. 
+TUGAS AKHIR ........................................................................................................................................................................ 47 
+MODUL IV  PENGENALAN DASAR BAHASA PYTHON ............................................................................................................... 49 
+I. 
+TUJUAN ................................................................................................................................................................................... 49 
+II. 
+TEORI ....................................................................................................................................................................................... 49 
+2.1. 
+Pendahuluan Python ....................................................................................................................................................... 49 
+2.2. 
+Variabel .......................................................................................................................................................................... 49 
+2.3. 
+Tipe Data ........................................................................................................................................................................ 50 
+2.4. 
+Operator ......................................................................................................................................................................... 51 
+2.5. 
+Menginput/Memasukkan Data ....................................................................................................................................... 53 
+2.6. 
+Menampilkan Data ......................................................................................................................................................... 53 
+III. 
+PROGRAM ............................................................................................................................................................................... 55 
+IV. 
+TUGAS AKHIR ........................................................................................................................................................................ 56 
+MODUL V PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON ........................................................................... 57 
+I. 
+TUJUAN ................................................................................................................................................................................... 57 
+II. 
+TEORI ....................................................................................................................................................................................... 57 
+2.1. 
+Percabangan ................................................................................................................................................................... 57 
+2.2. 
+Perulangan ...................................................................................................................................................................... 58 
+2.3. 
+Deklarasi Fungsi ............................................................................................................................................................. 60 
+III. 
+PROGRAM ............................................................................................................................................................................... 61 
+IV. 
+TUGAS AKHIR ........................................................................................................................................................................ 65 
+MODUL VI LIST, DICTIONARY, DAN OPERASI FILE .................................................................................................................. 66 
+I. 
+TUJUAN ................................................................................................................................................................................... 66 
+II. 
+TEORI ....................................................................................................................................................................................... 66 
+2.1. 
+List ................................................................................................................................................................................. 66 
+2.2. 
+Dictionary....................................................................................................................................................................... 67 
+2.3. 
+Operasi File .................................................................................................................................................................... 69 
+III. 
+PROGRAM ............................................................................................................................................................................... 74 
+IV. 
+TUGAS AKHIR ........................................................................................................................................................................ 80 
+ 
+
+--- PAGE 3 ---
+Pendahuluan | 2 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+STRUKTUR LABORATORIUM  
+PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+Edisi Revisi September 2025, 
+Diedit Oleh Asisten Algoritma dan Pemrograman tahun 2025-2026 
+ Kepala Laboratorium 
+: Ir. Hendrianto Husada, MT. 
+Instruktur Laboratorium 
+: Meyhart Torsna Bangkit Sitorus, S.T, M.Eng 
+M. Nur Qosim, S.T, M.T  
+Andi Makkulau, ST, M.Ikom., MT 
+Koordinator Asisten Laboratorium 
+: Ivan Jose 
+Asisten Laboratorium 2025/2026 
+: 
+1. 
+Ivan Jose 
+2. 
+M. Adryan Lubis 
+3. 
+Amrezza Addin 
+4. 
+Billy 
+5. 
+M. Raky Alniady Siswara 
+6. 
+M. Tarech Ichsanuddin Patatu 
+7. 
+Sri Aulia 
+8. 
+Siti Janiah Latuconsina 
+9. 
+Rafi Fulvian Fahri 
+10. 
+Muhammad Djadid Ramadhan 
+11. 
+Moch. Fathoni Taufikur Rohim 
+12. 
+Kusuma Rafif Yonida 
+13. 
+Ahmad Faqod Kurnia 
+14. 
+Sephia Nur Arizka 
+15. 
+Lisa Defianti 
+16. 
+Pinky Rafa Sahila 
+17. 
+Jevandry 
+18. 
+Auliya Haqy Imammah 
+19. 
+Naufal Raihan Saputra 
+20. 
+Tifany Tia Tira Lumban Tobing 
+21. 
+Achmad Sabill Aldandhy Nadjar 
+ 
+ 
+
+--- PAGE 4 ---
+Pendahuluan | 3 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+PERATURAN DAN TATA TERTIB PRAKTIKUM 
+1. 
+Praktikan wajib berada didepan Laboratorium Algoritma dan Pemrograman sesuai jadwal 
+praktikum yang sudah ditentukan. 
+2. 
+Praktikan wajib berpakaian rapih dengan mengenakan Almamater IT PLN, baju 
+kemeja berkerah, celana atau rok panjang (bagi perempuan), kaos kaki, dan sepatu. 
+3. 
+Rambut wajib diikat bagi praktikan perempuan yang tidak mengenakan jilbab dan laki-
+laki yang memiliki rambut panjang. 
+4. 
+Praktikan tidak diperkenankan untuk melakukan kegiatan yang mengganggu saat 
+pelaksanaan praktikum. Seperti mengobrol, melepas jaket almameter di dalam lab 
+(kecuali mendapat izin dari asisten), menggunakan alat komunikasi (tanpa seizin Asisten 
+Laboratorium), dll. 
+5. 
+Praktikan tidak diperbolehkan meninggalkan laboratorium selama praktikum 
+berlangsung tanpa izin dari asisten yang bertugas. 
+6. 
+Praktikan yang terlambat lebih dari 15 menit atau tidak menghadiri praktikum tanpa 
+perizinan dan alasan yang jelas, maka nilai praktikan pada modul tersebut = 0 ( jika lebih 
+dari 1 kali, tidak diperkenankan mengikuti presentasi). 
+7. 
+Praktikan yang berhalangan hadir melakukan perizinan kepada Koordinator K3 dengan 
+disertakan bukti yang jelas. 
+8. 
+Praktikan yang berhalangan hadir karena sakit wajib  
+9. 
+Praktikan yang berhalangan hadir karena: 
+a. 
+Izin Sakit, praktikan wajib menghubungi Koordinator K3 maksimal 1 jam sebelum 
+praktikum dimulai dan melampirkan surat keterangan sakit dengan tanda tangan 
+dokter maksimal 1 hari setelah praktikum. 
+b. Izin Perlombaan atau Kegiatan Lain, praktikan wajib menghubungi Koordinator K3 
+maksimal 3 hari sebelum praktikum dan melampirkan surat dispensasi yang sudah 
+ditandatangani oleh dekan, kaprodi, atau dosen pembimbing. 
+c. 
+Izin Pernikahan, praktikan wajib menghubungi Koordinator K3 maksimal 7 hari 
+sebelum praktikum dan melampirkan surat undangan dan kartu keluarga. 
+d. Izin Meninggalnya Kerabat, praktikan wajib menghubungi Koordinator K3 sebelum 
+praktikum dimulai dengan melampirkan surat kematian maksimal 3 hari setelah 
+perizinan. 
+10. Praktikan yang tidak hadir pada saat pengarahan tanpa perizinan dan alasan yang jelas, 
+maka nilai akhir akan dikurangi sebanyak 25%. 
+11. Dilarang makan dan minum di dalam laboratorium tanpa izin ke asisten. 
+12. Dilarang membawa rokok (vape, pod, atau sejenisnya), senjata tajam, minuman keras, 
+dan narkotika. 
+13. Praktikan wajib menjaga kebersihan sebelum, selama, dan setelah pelaksanaan 
+praktikum. 
+14. Praktikan wajib bersikap sopan dan santun saat berinteraksi dengan asisten laboratorium 
+selama praktikum berlangsung. 
+  
+ 
+ 
+ 
+
+--- PAGE 5 ---
+Pendahuluan | 4 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+PENULISAN LAPORAN 
+1. 
+ACC Laporan maksimal H+2 setelah praktikum terakhir, minimal 2 modul. 
+2. 
+Laporan Besar maksimal dikumpulkan H+7 setelah praktikum terakhir. 
+3. 
+Keterlambatan penyerahan laporan praktikum, akan mengakibatkan nilai laporan anda 
+berkurang 1/7 untuk satu hari keterlambatan dari total nilai, terlambat satu minggu berarti 
+nilai laporan anda sama dengan NOL. 
+4. 
+Joki = E. 
+5. 
+Plagiarisme Analisa min. 50% ( ≥ 70% = ngulang), baik dari AI maupun sesama praktikan. 
+6. 
+Setiap KECURANGAN yang ditemukan dalam laporan praktikum akan ditindak melalui 
+PENGURANGAN NILAI laporan tersebut. 
+ 
+ 
+ 
+SUSUNAN LAPORAN 
+• 
+Cover Laporan 
+• 
+Isi Laporan Per Modul : 
+Judul Modul 
+I. 
+Tujuan  
+II. Program Keterampilan  
+➢ Flowchart 
+➢ Source Code  
+➢ SS Ouput 
+III. Analisa 
+IV. Tugas Akhir  
+V. Kesimpulan  
+• 
+Pembatas berlogo AP 
+ 
+ 
+1 Halaman 
+diketik 
+
+--- PAGE 6 ---
+Pendahuluan | 5 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+CONTOH COVER DAN  LEMBAR KERJA 
+    
+    
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+nama praktikum 
+menyesuaikan 
+jurusan 
+ 
+
+--- PAGE 7 ---
+Pendahuluan | 6 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+GLOSARIUM 
+Pada praktikum ini nantinya akan terdapat beberapa istilah baru dalam pemrograman yang perlu 
+praktikan ketahui terlebih dahulu antara lain sebagai berikut : 
+Algoritma 
+susunan langkah-langkah yang terstruktur dan logis untuk menyelesaikan suatu masalah 
+Pemrograman 
+proses 
+membuat 
+program 
+menggunakan 
+bahasa 
+pemrograman 
+tertentu 
+untuk 
+mengimplementasikan algoritma dan menghasilkan perangkat lunak (software). 
+Compiler 
+Program komputer yang menerjemahkan kode yang ditulis dalam satu bahasa pemrograman ke 
+bahasa lain yang dimengerti oleh mesin. 
+Debugging 
+Proses mengidentifikasi dan menghilangkan error pada aplikasi. 
+Executable 
+Sebuah format file yang bisa langsung dijalankan tanpa menggunakan aplikasi tambahan. 
+Interpreter 
+Program untuk menerjemahkan setiap baris kode dari bahasa pemrograman menjadi bahasa yang 
+dimengerti oleh mesin secara langsung. Tanpa melalui proses kompilasi. 
+Sintaks 
+Kaidah dalam bahasa pemrograman 
+Immutable 
+Object dengan nilai yang tetap (tidak bisa diubah) 
+Mutable 
+Object dengan nilai yang bisa diubah. 
+Parameter 
+Variabel yang digunakan dalam definisi fungsi untuk menerima dan mengolah argumen yang 
+diteruskan ke fungsi tersebut. 
+Statement 
+pernyataan atau instruksi yang digunakan untuk mengontrol aliran eksekusi program. 
+Iterasi 
+proses mengulang satu atau beberapa pernyataan program secara berulang hingga suatu kondisi 
+terpenuhi. 
+ 
+ 
+
+--- PAGE 8 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 7 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+MODUL I 
+DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C 
+I. TUJUAN 
+1. Praktikan dapat mengenal dan memahami beberapa tipe data dasar yang terdapat pada 
+Bahasa C dan dapat memahami jenis-jenis, symbol dan notasi flowchart 
+2. Praktikan dapat membuat program beserta flowchart dan memahami struktur dari 
+penulisan Bahasa C. 
+3. Praktikan mampu memahami fungsi yang terdapat pada header. 
+4. Praktikan dapat memahami dan pengaplikasian operator operator yang ada dalam 
+program Bahasa C. 
+II. TEORI 
+2.1. Struktur Penulisan Program Bahasa C 
+Contoh Program :  
+#include<stdio.h> 
+int main(){ 
+ 
+printf("Hello World!");  
+return 0; 
+} 
+Penjelasan : 
+Diatas adalah struktur penulisan program dasar bahasa C yang harus dipahami. Dimana 
+struktur program dibagi menjadi dua bagian utama: yaitu, bagian #include dan bagian 
+fungsi int main(). 
+1. Bagian include 
+ 
+• #include adalah bagian yang berfungsi untuk mengimpor fungsi tertentu yang 
+sudah didefinisikan pada header file. Header file merupakan file yang berisi 
+kumpulan kumpulan fungsi, perintah, dan definisi. 
+• Pada contoh diatas kita mengimpor header file <stdio.h> dimana file ini berisi 
+deklarasi fungsi dasar untuk membuat program, seperti printf() untuk 
+menampilkan output ke layar dan scanf() untuk membaca input yang masuk 
+kedalam program. Adapun header file lain seperti <string.h> dan <math.h>. 
+• Kita juga dapat membuat header file sendiri. Hal ini sangat berguna jika kita 
+mempunyai fungsi atau kode yang sering dipakai di banyak program. Daripada kita 
+menulis ulang terus-menerus, lebih baik kita simpan di file header buatan sendiri. 
+Kita dapat menuliskannya dengan  #include<namafile.h>. 
+
+--- PAGE 9 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 8 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+2. Bagian fungsi int main 
+• Fungsi int main() merupakan fungsi utama yang akan dieksekusi pertama kali 
+saat program dijalankan. Dimana bagian didalam fungsi main ini adalah statement1, 
+statement adalah perintah-perintah atau fungsi melakukan sesuatu. 
+• Tanda buka kurung kurawal ({) dan tutup kurung kurawal (}) merupakan fungsi 
+untuk mengelompokkan statement, ini disebut dengan aturan penulisan kode blok. 
+• Contoh diatas adalah printf(“Hello World!”); artinya kita memerintah 
+computer untuk mencetak teks Hello World! ke executable2. 
+• Perintah return 0 berhubungan dengan fungsi int main(). Dengan perintah 
+return 0 akan menutup fungsi int main() yang sekaligus mengakhiri kode 
+program bahasa C.  
+Setiap statement dalam program C wajib diakhiri dengan titik koma (;) jika tidak  maka 
+program akan error. 
+ 
+2.2. Tipe Data Dasar 
+Tipe data adalah pengelompokan data berdasarkan isi dan sifatnya. Tipe data 
+merupakan bagian program yang paling penting karena tipe data mempengaruhi setiap 
+instruktur yang akan dilaksanakan oleh computer. Setiap data memiliki tipe data, baik itu 
+angka bulat, angka pecahan, atau berupa karakter, dan sebagainya. Pada Bahasa C 
+terdapat 6 tipe data dasar di dalam bahasa pemrograman C. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+__________________ 
+1Statement merupakan pernyataan atau instruksi yang digunakan untuk mengontrol aliran eksekusi 
+program. Statement digunakan untuk memberi tahu komputer apa yang harus dilakukan atau bagaimana 
+program harus berperilaku. 
+2Executable adalah format file yang bisa langsung dijalankan tanpa menggunakan aplikasi tambahan. 
+
+--- PAGE 10 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 9 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+ 
+Mengatur tampilan bilangan pecahan (float). 
+Bentuk umum : 
+printf(“ %m.nf ”, nilai); 
+m 
+ 
+: minimum banyak karakter yang di cetak/di tampilkan (termasuk angka,   
+ 
+  
+  titik desimal, dan spasi jika ada). 
+n 
+ 
+: menyatakan max jumlah digit dibelakang koma.  
+ 
+ 
+nilai : variabel berupa bilangan angka pecahan yang akan ditampilkan. 
+Contoh : 
+#include <stdio.h> 
+int main() { 
+    printf("%4.2f", 3.5);// artinya variabel nilai akan ditampilkan 
+minimal 4 karakter  dengan 2 digit dibelakang koma. 
+    return 0; 
+} 
+ 
+Dengan contoh kode seperti diatas, outputnya adalah sebagai berikut: 
+ 
+ 
+ 
+No. 
+Tipe Data 
+Range 
+Format 
+Keterangan 
+Contoh 
+1. 
+char 
+-128 s/d 127 
+%c  
+%s 
+Karakter/String 
+‘A’ 
+“HELLO” 
+2. 
+int 
+-2,147,483,648 
+s/d 
+2,147,483,647 
+%i 
+%d 
+Integer 
+100 
+3. 
+float 
+-3.4E-38 s/d 
+3.4E+38 
+%f 
+Float/Bilangan pecahan (6 
+angka dibelakang koma) 
+0.123456 
+4. 
+double 
+-1.8E-308 s/d 
+1.8E +308 
+%lf 
+Bilangan Pecahan Kompleks 
+(15 angka dibelakang koma) 0.0123456789 
+5. 
+void 
+Untyped 
+- 
+Tidak menyimpan  apapun 
+dan tidak mengembalikan 
+nilai apapun 
+null 
+6. 
+bool 
+True/False 
+- 
+Memiliki dua nilai 
+yaitu benar (true) atau salah 
+(false) 
+1 (true) 
+0 (false) 
+
+--- PAGE 11 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 10 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+2.3. Deklarasi Variabel 
+Variabel adalah suatu pengenal (identifier) yang digunakan untuk mewakili suatu nilai 
+tertentu didalam proses program. Variabel digunakan bila Anda ingin bekerja dengan data 
+yang dapat berubah-ubah dari waktu ke waktu dan data tersebut  ingin ditempatkan pada 
+lokasi memori yang sama. Variabel dapat kita andaikan sebagai sebuah tempat 
+penampungan data, nilai variabel dapat berubah – ubah pada  saat program dijalankan. 
+Format pendeklarasian variabel : 
+Tipe_data  Nama_variabel   = <nilai> 
+Contoh : 
+#include <stdio.h> 
+int main () { 
+int angka = 
+10;  
+char karakter = 
+‘A’;  
+float pecahan = 
+2.50;  
+return 0; 
+} 
+Penjelasan:  
+• int angka akan membuat variable bernama “angka” dengan tipe data interger 
+yang hanya bisa diisi dengan bilangan angka bulat.  
+• char karakter akan membuat variabel bernama “karakter” bertipe char, 
+sehingga hanya bisa menampung karakter.  
+• float pecahan akan membuat variabel bernama “pecahan” bertipe data float 
+yang hanya bisa diisi dengan angka pecahan. 
+Nama_variabel dapat ditentukan sendiri oleh pemrogram dengan aturan sebagai 
+berikut : 
+• Terdiri dari gabungan huruf dan angka dengan karakter pertama harus berupa huruf. 
+Bahasa C bersifat case-sensitive artinya huruf besar dan kecil dianggap berbeda. 
+• Tidak boleh mengandung spasi. Jika ingin memisahkan 2 kata maka kita dapat 
+menggunakan simbol underscore/garis bawah ( _ ) 
+• Tidak boleh mengandung simbol-simbol khusus. Yang termasuk symbol khusus yang 
+tidak diperbolehkan antara lain: $, ?, %, #, !, &, *, ( , ), -, +, =  dan sebagainya . 
+• Panjangnya bebas, tetapi hanya 32 karakter pertama yang terpakai. 
+ 
+2.4. Fungsi Menginput/ Memasukkan Data 
+Dalam bahasa C proses memasukkan suatu data dapat menggunakan beberapa fungsi, 
+diantaranya: 
+• scanf() 
+
+--- PAGE 12 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 11 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Fungsi pustaka scanf() digunakan untuk menginput data berupa data numeric, 
+karakter dan string secara terformat. Hal-hal yang perlu diperhatikan dalam pemakain 
+fungsi scanf() : 
+1. Fungsi scanf() memakai penentu format. 
+2. Fungsi scanf() memberi pergantian baris secara otomatis. 
+3. Variabelnya harus menggunakan operator alamat &. 
+Kode penentu format : 
+• %c 
+ 
+: Membaca sebuah karakter 
+• %s 
+ 
+: Membaca kumpulan karakter 
+• %i, %d 
+: Membaca sebuah bilangan bulat (integer) 
+• %f, %lf 
+: Membaca sebuah bilangan pecahan (real) 
+• %o 
+ 
+: Membaca sebuah bilangan octal 
+• %x 
+ 
+: Membaca sebuah bilangan heksadesimal 
+• %[^\n] 
+: Membaca semua karakter sampai ditemukan enter (baris baru) 
+*Note: Perlu diingat jika penggunaan dua scanf("%[^\n]", nama_variabel) digunakan 
+secara berturut turut maka hanya fungsi input scanf() pertama saja yang hanya terbaca 
+sementara input scanf() kedua dianggap sebagai input kosong. Solusinya gunakan 
+fungsi getchar() untuk membuang baris baru sebelum input kedua. 
+Contoh: 
+#include <stdio.h> 
+int main() { 
+    char nama[50], jurusan[50]; 
+    printf("Masukan nama : "); 
+    scanf("%[^\n]", &nama); 
+    getchar(); // untuk membuang baris baru sebelum input selanjutnya 
+    printf("Masukan jurusan : "); 
+    scanf("%[^\n]", &jurusan); 
+ 
+    printf("Nama    : %s\n", nama); 
+    printf("Jurusan : %s\n", jurusan); 
+    return 0; 
+} 
+ 
+Output menggunakan getchar(): 
+  
+ 
+Output tanpa menggunakan getchar() : 
+
+--- PAGE 13 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 12 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+ 
+ 
+Struktur Penulisan Fungsi: 
+➢ scanf(“kode_format”, &Nama_variabel); 
+contoh: 
+#include<stdio.h> 
+int main(){ 
+ int usia; 
+ printf("masukkan usia anda:"); 
+ scanf("%d",&usia); 
+return 0; 
+} 
+• gets() 
+Fungsi gets() digunakan untuk memasukkan data bertipe karakter dan tidak dapat 
+digunakan untuk memasukkan data numerik. Harus diakhiri dengan penekan tombol 
+enter, Cursor secara otomatis akan pindah baris tidak memerlukan penentu format. 
+Struktur Penulisan:  
+➢ gets(Nama_variabel) 
+• getchar() 
+Fungsi getchar() digunakan untuk membaca data yang bertipe karakter harus 
+diakhiri dengan penekanan tombol enter. Karakter yang dimasukkan terlihat pada layar 
+Pergantian baris secara otomatis. 
+• getch() dan getche() 
+Fungsi getch() dan getche() digunakan membaca data karakter. Karakter yang 
+dimasukkan tidak perlu diakhiri dengan penekanan tombol enter. Jika menggunakan 
+fungsi getch() karakter yang dimasukkan tidak akan ditampilkan pada layar 
+sehingga sering digunakan untuk meminta input berupa password. Sedangkan pada 
+getche() karakter yang dimaksudkan akan ditampilkan pada layar. 
+ 
+2.5. Fungsi Menampilkan Data 
+Menampilkan data ke layar monitor dapat  menggunakan fungsi printf(), puts(), 
+dan putchar(). 
+• Fungsi printf(); 
+Digunakan untuk menampilkan teks biasa, nilai variabel, penentu format tetapi tidak 
+otomatis diakhiri dengan perpindahan baris 
+ 
+Struktur Penulisan: 
+
+--- PAGE 14 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 13 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+ 
+printf(“format”, nama_variabel); 
+ket: 
+▪ format: Sebuah string yang berisi teks biasa dan penentu format (seperti %d, %s, 
+%f, %c). 
+▪ nama_variabel: Variabel atau nilai yang akan menggantikan penentu format 
+sesuai urutannya. 
+ 
+contoh: 
+#include <stdio.h> 
+int main() { 
+    char nama[] = "Budi"; 
+    int umur = 22; 
+    float ipk = 3.85; 
+  
+    printf("Nama saya %s dan umur saya %d tahun.\n", nama, umur); 
+    printf("IPK saya adalah: %.2f\n", ipk); 
+ 
+    printf("Terima Kasih\n"); 
+    return 0; 
+} 
+• Fungsi puts(); 
+Digunakan untuk menampilkan data string dan secara otomatis akan diakhiri 
+dengan perpindahan baris. 
+ 
+Struktur Penulisan: 
+ 
+puts(“string”); 
+• Fungsi putchar(); 
+Digunakan untuk menampilkan sebuah karakter. 
+ 
+Struktur Penulisan: 
+putchar(‘karakter’); 
+ 
+2.6. Deklarasi Konstanta 
+Konstanta adalah sebuah tempat atau container dari suatu nilai. Sesuai dengan 
+namanya, nilai dari konstanta bersifat tetap (konstan) dan tidak bisa diubah sepanjang 
+program berjalan. Inilah yang menjadi pembeda antara konstanta dengan variable. 
+Konstanta merupakan suatu nilai yang tidak dapat diubah selama proses program 
+berlangsung. Konstanta harus didefinisikan terlebih dahulu di awal program. Dalam 
+bahasa C konstanta dideklarasikan menggunakan preprocessor #define atau 
+menggunakan fungsi const ketika mendeklarasikan variable 
+Contoh : 
+ 
+
+--- PAGE 15 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 14 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+#define PHI 3.14 
+#define nim “201811072” 
+#define nama “Fathur”  
+int main ( ){ 
+ 
+const  int g = 10; 
+return 0; 
+} 
+ 
+2.7. Fungsi 
+Fungsi merupakan suatu bagian dari program yang dimaksudkan untuk mengerjakan 
+suatu tugas tertentu dan letaknya terpisah dari program yang memanggilnya. Fungsi 
+biasanya akan mengembalikan sebuah nilai dari hasil prosesnya. Karena itu, kita harus 
+menentukan tipe data untuk nilai yang akan dikembalikan. Apabila fungsi tersebut tidak 
+memiliki nilai kembalian, maka kita harus menggunakan tipe void untuk menyatakan 
+kalau fungsi tersebut tidak akan mengembalikan nilai apa-apa.  
+Fungsi dalam bahasa C ada yang sudah disediakan sebagai fungsi pustaka seperti 
+printf(), scanf(), dan getch() untuk menggunakannya tidak perlu dideklerasikan. 
+Fungsi yang perlu dideklerasikan terlebih  dahulu adalah fungsi yang dibuat oleh 
+programmer.  
+Deklarasi fungsi, fungsi dapat dibuat diatas (sebelum) atau dibawah (sesudah) fungsi 
+main atau fungsi utama. Deklarasi fungsi adalah judul fungsi yang sederhana yang diikuti 
+oleh tanda titik koma (;), fungsi perlu dideklarasikan agar compiler1 dapat memeriksa 
+ketepatan pemnggilan fungsi yang bersangkutan. 
+Mendeklarasikan sebuah fungsi dalam Bahasa C: 
+Tipe_data nama_fungsi(parameter_fungsi); 
+ 
+Tipe fungsi adalah tipe data dari nilai yang akan dikembalikan oleh fungsi. Nama 
+fungsi adalah nama dari fungsi yang dibuat, nama ini yang akan digunakan untuk 
+memanggil fungsi yang telah dibuat. Parameter2 adalah nama atau variabel yang akan 
+
+--- PAGE 16 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 15 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+digunakan untuk menyimpan nilai yang dibutuhkan oleh fungsi tersebut. Jika dalam 
+sebuah fungsi terdapat lebih dari satu parameter, maka paremeter ditulis dengan 
+dipisahkan dengan koma. 
+Contoh: 
+#include <stdio.h> 
+int fungsi(){ 
+  printf("Hello World!"); 
+} 
+int main(){ 
+  fungsi();  
+  return 0; 
+}            
+Keuntungan penggunaan fungsi dalam program yaitu program akan memiliki struktur 
+yang jelas (mempunyai tingkat kemudahan dibaca serta dipahami yang tinggi) dan juga 
+akan menghindari penulisan bagian program yang sama. Dalam bahasa C fungsi dapat 
+dibagi menjadi dua, yaitu fungsi pustaka (telah tersedia dalam Dev C) dan yang kedua 
+yaitu fungsi yang didefinisikan (dibuat oleh programmer).  
+ 
+Beberapa Fungsi pustaka dalam C : 
+“<string.h>” (Menyimpan Fungsi Operasi String) 
+• strcpy(); 
+Berfungsi untuk menyalin suatu string asal ke variable string tujuan. Bentuk umum : 
+strcpy(var_tujuan, string_asal); 
+• strlen(); 
+Berfungsi untuk memperoleh jumlah karakter dalam suatu string. Bentuk umum : 
+strlen(string); 
+ 
+ 
+ 
+ 
+__________________ 
+1Compiler merupakan program komputer yang menerjemahkan kode yang ditulis dalam satu bahasa 
+pemrograman ke bahasa lain yang dimengerti oleh mesin. 
+2Variabel yang digunakan dalam definisi fungsi untuk menerima dan mengolah argumen yang 
+diteruskan ke fungsi tersebut. 
+
+--- PAGE 17 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 16 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+• strcmp(); 
+Digunakan untuk membandingkan dua buah string hasil dari fungsi ini bertipe 
+integer dengan nilai: 
+1. Negative, jika string pertama kurang dari string kedua 
+2. Nol, jika string pertama sama dengan string kedua 
+3. Positif, jika string pertama lebih besar dari yang kedua.  
+Bentuk umum :  
+strcmp(string1,string2); 
+ 
+“<math.h>” dan “<stdlib.h>” (Menyimpan Fungsi Operasi Matematik) 
+• sqrt(); 
+Digunakan untuk menghitung akar dari sebuah bilangan. Bentuk umum :  
+sqrt(bilangan); 
+• pow(); 
+Digunakan dalam menghitung pemangkatan dari suatu bilangan. Bentuk umum : 
+pow(bilangan, pangkat); 
+• sin(), cos(), tan(); 
+Masing- masing digunakan untuk menghitung nilai sinus, cosines, dan tangen dari 
+suatu sudut. Bentuk umum : 
+1. sin(radian); 
+2. cos(radian); 
+3. tan(radian); 
+ 
+“<windows.h>” (Menyimpan Fungsi System) 
+• system(“cls”); 
+ 
+Singkatan dari "clear the screen", digunakan untuk membersihkan layar. 
+• system(“echo …”); 
+ 
+Digunakan untuk menampilkan teks ke layar. Bentuk umum :  
+system(“echo string”); 
+• system(“color …”); 
+ 
+Digunakan untuk merubah warna semua teks secara keseluruhan. Bentuk umum : 
+system(“color 5C”); 
+Dimana 5 (Purple) merupakan warna background, sedangkan  C (Light Red) merupakan 
+warna teks.  
+
+--- PAGE 18 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 17 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Output: 
+ 
+ 
+Berikut adalah listing code warna Hexadecimal: 
+ 
+0  = Black  
+ 
+A = Light Green 
+1  
+= Blue   
+ 
+B 
+= Light Aqua 
+2  
+= Green 
+ 
+C  = Light Red 
+3  
+= Aqua  
+ 
+D  = Light Purple 
+4  
+= Red  
+ 
+E  = Light Yellow 
+5  
+= Purple 
+ 
+F  = Light White 
+6  
+= Yellow 
+7  = White 
+8  
+= Gray 
+9  
+= Light Blue 
+ 
+ 
+ 
+2.8. Operator 
+Terhadap data sejenis dapat dilakukan pengolahan, misalnya sebuah integer dapat 
+ditambahkan dengan sebuah integer, sebuah float dapat dibagi oleh sebuah float. 
+Pengolahan ini disebut operasi. Setiap jenis tipe data mempunyai jenis-jenis operasinya 
+masing-masing. Simbol untuk jenis operasi disebut operator sedangkan data (variabel atau 
+konstanta) yang dioperasikan disebut operan. 
+Bahasa C memiliki banyak sekali operator, hal ini merupakan salah satu kekuatan 
+bahasa pemrograman ini untuk menyelesaikan berbagai persoalan. Berdasarkan jenis 
+operasinya, operator dalam bahasa C dapat dikelompokkan sebagai berikut: 
+1. Operator unary 
+2. Operator aritmatika 
+3. Operator relasi 
+4. Operator logika 
+ 
+Operator Unary 
+Dalam bahasa C terdapat beberapa operator unary, yaitu :  
+ 
+ 
+ 
+
+--- PAGE 19 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 18 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Operator 
+Arti 
+Letak 
+Contoh 
+Ekivalen 
+- 
+Unary minus 
+Sebelum Operator 
+A = -B 
+- 
++ 
+Unary Plus 
+Sebelum Operator 
+A= +B 
+- 
+++ 
+Penambahan nilai 1 Sebelum dan Sesudah 
+A++ 
+A = A+1 
+-- 
+Pengurangan nilai 1 Sebelum dan Sesudah 
+A-- 
+A = A-1 
+sizeof 
+Ukuran operan 
+dalam byte 
+Sebelum 
+Sizeof(l) 
+- 
+! 
+Unary NOT 
+Sebelum 
+!A 
+- 
+~ 
+Bitwise NOT 
+Sebelum 
+~A 
+- 
+& 
+Alamat Operand 
+Sebelum 
+&A 
+- 
+* 
+Nilai dari pointer 
+Sebelum 
+*A 
+- 
+Catatan :  
+x++ dan ++x menyatakan dua operasi yang berbeda. Pada x++ variabel x diproses 
+(misalnya nilainya disalin kepada variabel lain) setelah itu nilai variabel x ditambah 
+satu. Pada ++x nilai x ditambah satu sebelum x diproses selanjutnya. 
+Contoh 1: 
+int x = 0; 
+int y = 0; 
+y = ++x; 
+// hasil : y =1, x=1 
+Dari contoh 1 ini, nilai x ditambah 1 sebelum dicopy ke variable y. 
+
+--- PAGE 20 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 19 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Contoh 2: 
+int x = 0; 
+int y = 0; 
+y = x++; 
+// hasil : y=0, x=1 
+Dari contoh 2 nilai x dicopy terlebih dahulu ke variable y baru kemudian 
+ditambahkan 1. 
+ 
+Operator Aritmatika 
+Operator aritmatika adalah operator yang digunakan untuk operasi bilangan. 
+Bahasa Cmenyediakan lima operator aritmatika, yaitu : 
+* 
+ 
+: Untuk perkalian 
+/ 
+ 
+: Untuk pembagian 
+% 
+ 
+: Untuk sisa pembagian (Modulo) 
++     
+: Untuk pertambahan 
+-     
+: Untuk pengurangan 
+Catatan :  
+Modulo digunakan untuk mencari hasil dari sisa pembagian. Contoh 10%3 =1, 
+karena 10 jika dibagi dengan 3 hanya bisa yang mendekati yaitu 3*3 = 9 dan 
+menghasilkan sisa 1. Modulo disini yaitu sisa dari hasil pembagiannya. 
+ 
+Operator Relasi 
+Operator relasi adalah operator yang digunakan untuk membandingkan dua nilai 
+sejenis.Kedua nilai tersebut dapat berupa konstanta atau variabel. 
+Operator 
+Arti 
+Contoh 
+Keterangan 
+== 
+Sama dengan 
+x==y 
+Apakah x sama dengan y 
+!= 
+Tidak sama dengan 
+x!=y 
+Apakah x tidak sama dengan y 
+< 
+Kurang dari 
+x<y 
+Apakah x kurang dari y 
+> 
+Lebih dari 
+x>y 
+Apakah x lebih dari y 
+<= 
+Kurang dari sama dengan 
+x<=y Apakah x kurang dari sama dengan y 
+>= 
+Lebih dari sama   dengan 
+x>=y Apakah x lebih dari sama dengan y 
+ 
+ 
+
+--- PAGE 21 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 20 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Operator Logika 
+Operator logika adalah operator yang berkaitan dengan operasi logika. Seperti, 
+AND (dan), OR (atau), dan NOT (invers). Jika operator hubungan membandingkan 
+hubungan antara dua buah operan, maka operator logika digunakan untuk 
+membandingkan logika hasil dari operator-operator hubungan.  
+Operator 
+Arti 
+Contoh 
+Keterangan 
+&& 
+AND 
+((5==5) && 
+(3>6)) 
+Apakah 5 sama dengan 5 (true) 
+Apakah 3 lebih besar dari 6 (false) 
+|| 
+OR 
+((5==5) || 
+(3>6)) 
+Apakah 5 sama dengan 5 (true) 
+Apakah 3 lebih besar dari 6 (true) 
+! 
+NOT 
+!(5==5) 
+Apakah 5 sama dengan 5 (false) 
+Karena operator NOT berfungsi untuk 
+membalikkan nilai yang sebenarnya. 
+ 
+         Tabel Kebenaran 2 variabel 
+A 
+B 
+!A 
+A&&B 
+A||B 
+True 
+True 
+False 
+True 
+True 
+True 
+False 
+False 
+False 
+True 
+False 
+True 
+True 
+False 
+True 
+False 
+False 
+True 
+False 
+False 
+2.9. Flowchart 
+Flowchart atau Bagan alir adalah bagan (chart) yang menunjukkan alir (flow) di dalam 
+program atau prosedur sistem secara logika yang digunakan terutama untuk alat bantu 
+komunikasi dan untuk dokumentasi. 
+2.9.1.  Aturan Penulisan Flowchart 
+Hal-hal yang perlu diperhatikan pada penulisan flowchart : 
+1. Flowchart dimulai dari atas ke bawah. 
+2. Intruksi dalam bagan alir harus jelas dengan menggunakan kata kerja dan 
+memiliki alur data yang rinci dan jelas. 
+3. Dimulai dengan awal dan diakhiri dengan akhir. 
+4. Harus memiliki input dan output. 
+5. Menggunakan penghubung atau flow direction symbol untuk instruksi yang 
+terpotong. 
+
+--- PAGE 22 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 21 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+2.9.2.   Struktur Penulisan Flowchart 
+Struktur penulisan: 
+• Start :  
+Berisi instruksi untuk persiapan memulai program sebelum menangani 
+pemecahan masalah. 
+• Read :  
+Berisi instruksi untuk membaca data untuk sebagai input program. 
+• Process :  
+Berisi kegiatan pengolahan yang berkaitan dengan pemecahan masalah 
+sesuaidengan data yang dinput. 
+• Write :  
+Berisi instruksi untuk merekam untuk menampilkan hasil kegiatan process 
+sebagai output program. 
+• End :  
+Mengakhiri kegiatan pengolahan program.
+ 
+ 
+Flowchart memiliki 3 jenis struktur penulisan, yaitu diantaranya: 
+• Struktur sequence/sederhana 
+Merupakan flowchart yang alurnya mengalir secara berurutan dari atas ke 
+bawah atau dengan kata lain tidak adanya percabangan atau perulangan. 
+ 
+• Struktur branching 
+Merupakan flowchart dengan struktur percabangan yang digunakan untuk 
+menyeleksi kondisi dan menentukan pilihan proses selanjutnya.  
+ 
+
+--- PAGE 23 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 22 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+ 
+ 
+• Struktur looping 
+Merupakan flowchart dengan struktur perulangan yang digunakan untuk 
+mengulangi langkah-langkah sebelumnya sampai suatu kondisi terpenuhi. 
+ 
+2.9.3.  Simbol dan Notasi Flowchart 
+Dipakai sebagai alat Bantu menggambarkan proses di dalam program. Dan dibagi 
+menjadi tiga kelompok: 
+Flow Direction Symbols ♦ 
+Dipakai untuk menggabungkan antara symbol yang satu dengan symbol lainnya  
+Symbol Connector (Simbol untuk keluar/masuk prosedur atau 
+proses dalam lembar/halaman yang sama). 
+Processing symbols ♦ 
+Menunjukkan jenis operasi pengolahan dalam suatu prosedur 
+
+--- PAGE 24 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 23 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Symbol Process (Simbol yang menunjukkan pengolahan yang 
+dilakukan oleh komputer). 
+Symbol 
+Decision 
+(Simbol 
+untuk 
+kondisi 
+yang 
+akan  
+menghasilkan beberapa kemungkinan jawaban/aksi. Biasanya 
+digunakan pada percabangan ataupun perulangan). 
+Symbol Predefined Process (Simbol untuk mempersiapkan 
+penyimpanan yang akan digunakan sebagai tempat pengolahan 
+di dalam storage). 
+Symbol Terminal (Simbol untuk permulaan atau akhir dari 
+suatu program).  
+ 
+Input-output symbols ♦ 
+Menyatakan jenis peralatan yang digunakan sebagai media input atau output. 
+Symbol input-output (Symbol yang menyatakan proses input 
+dan output tanpa tergantung dengan jenis peralatannya). 
+Symbol dokumen (Symbol yang menyatakan input berasal dari  
+dokumen dalam bentuk kertas atau output dicetak di kertas). 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 25 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 24 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+III. PROGRAM  
+• Program Input Output 
+#include<stdio.h> 
+#include<windows.h>                                       
+int main(){ 
+ 
+char nama[50]; 
+ 
+int nim; 
+ 
+system("color 1A"); 
+ 
+puts("Biodata Mahasiswa"); 
+ 
+printf("Masukan Nama : "); 
+ 
+scanf("%s",&nama);                                     
+ 
+printf("Masukan NIM : "); 
+ 
+scanf("%i",&nim); 
+ 
+return 0; 
+} 
+ 
+ 
+ 
+ 
+• 
+Program pendeklarasian fungsi  
+ 
+#include <stdio.h> 
+int fungsi(int panjang, int lebar) {                
+  int hasil;            
+  hasil = panjang * lebar; 
+  printf("Luas = %d \n",hasil); 
+} 
+int main(){ 
+int a=3; 
+int b=4; 
+fungsi(a,b); 
+  return 0; 
+} 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 26 ---
+  DASAR LOGIKA ALGORITMA DAN PEMROGRAMAN BAHASA C | 25 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+IV. TUGAS AKHIR 
+1. Jelaskan apa yang terjadi pada program jika tidak terdapat #include! 
+2. Jelaskan perbedaan operator ‘&’ dengan ‘&&”! 
+3. Jelaskan hasil outputan program dibawah ini,mengapa output variabel Y dan Z berbeda, 
+sedangkan nilai variabelnya sama? 
+#include<stdio.h> 
+int main() 
+{ 
+ 
+int y=4,z=4; 
+ 
+   printf("Nilai Y =%d",y++); 
+ 
+printf("\nNilai Y = %d",y); 
+ 
+printf("\n\nNilai Z = %d",++z); 
+ 
+printf("\nNilai Z = %d",z); 
+ 
+return 0; 
+} 
+4. Sebutkan beberapa simbol flowchart yang sering digunakan pada program algoritma & 
+pemrograman! 
+5. Tentukan simbol yang digunakan untuk melengkapi flowchart di bawah ini (total 6 
+simbol)? 
+6. Buatlah flowchart dari program kreasi yang anda buat! 
+ 
+ 
+
+--- PAGE 27 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 26 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+MODUL II 
+STRUKTUR KONTROL DALAM BAHASA C 
+I. 
+TUJUAN 
+1. Praktikan dapat membuat dan memahami percabangan dengan : struktur if, if else, dan 
+switch case. 
+2. Praktikan dapat membuat dan memahami perulangan dengan : struktur while, do while, 
+for. 
+3. Praktikan dapat membuat dan memahami peloncatan dengan : struktur label dan goto, 
+continue, serta break. 
+II. TEORI 
+2.1. Percabangan 
+Percabangan adalah kondisi atau syarat yang harus dipenuhi, yang kemudian akan 
+memilih perintah apa yang akan dilakukan jika syarat tersebut terpenuhi. Percabangan 
+dapat kita temui sehari-hari, yaitu dalam memutuskan atau memilih sesuatu yang akan 
+kita lakukan. Contohnya ialah dalam memilih baju, pakaian atau minuman. Begitu juga 
+halnya dalam membuat sebuah program saat kita dihadapi banyak pilihan dalam 
+menyelesaikannya kita diharuskan membuat pernyataan- pernyataan dan menyeleksi 
+pernyataan tersebut apakah pilihan kita benar atau salah sehingga memudahkan kita 
+menyelesai masalah dengan sebuah program. 
+2.1.1. Percabangan if 
+Percabangan if merupakan bentuk pernyataan yang paling sederhana karena 
+hanya memiliki satu cabang dengan persyaratannya sendiri. Ketika syaratnya 
+terpenuhi maka akan menjalankan cabang tersebut. Pada percabangan if ini 
+pemeriksaan kondisi akan berakhir jika ternyata kondisi yang diperiksa salah atau 
+perintah ini tidak akan mengerjakan apa-apa. Pada if ini hanya untuk satu kondisi, 
+strukturnya yaitu : 
+if(kondisi) 
+{ 
+pernyataan atau statement; 
+} 
+Contoh programnya yaitu : 
+#include <stdio.h>  
+int main() 
+{ 
+    int N;  
+    scanf("%d", &N); 
+    if(N>0) 
+
+--- PAGE 28 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 27 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+    { 
+        printf("N adalah Bilangan Positif"); 
+    }    
+} 
+ 
+Penjelasannya : 
+Jika ekspresi kondisional di dalam tanda kurung benar, maka statemen atau 
+grup statemen di bawahnya akan dieksekusi, sebaliknya jika ekspresi 
+kondisionalnya salah maka statemen/grup statemen di bawahnya tidak akan 
+dieksekusi (fungsi if tidak menghasilkan apa-apa). Ekpresi kondisional adalah 
+ekspresi yang menjadi dasar bagi pernyataan yang berkondisi (selau dipakai pada 
+fungsi if), yang memberikan nilai benar atau salah. 
+ 
+2.1.2. Percabangan if – else 
+Percabangan if else sebenarnya pengembangan dari percabangan if. Disini 
+kedua cabang, yaitu syarat dipenuhi dan syarat tidak dipenuhi, masing-masing 
+memiliki perintah yang harus dijalankan. 
+Contoh programnya yaitu : 
+#include <stdio.h>  
+int main() 
+{ 
+    int N; 
+    printf("Masukkan Bilangan Bulat : ");  
+    scanf("%d", &N); 
+    if(N>0){ 
+        printf( "N adalah Bilangan Positif" );  
+    }  
+    else { 
+        printf(" N bukan Bilangan Positif ");  
+    } 
+} 
+ 
+2.1.3. Percabangan if - else if 
+Percabangan if else-if merupakan percabangan yang memiliki lebih dari dua 
+kondisi. 
+Contoh programnya yaitu : 
+#include <stdio.h>  
+int main() 
+{ 
+    int N; 
+    printf("Masukkan Bilangan : ");  
+    scanf("%d", &N); 
+
+--- PAGE 29 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 28 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+    if( N >=100 ){ 
+        printf(" N adalah Bilangan Ratusan ");  
+    }  
+    else if ( N >= 10 ){ 
+        printf( "N adalah Bilangan puluhan" );  
+    }  
+    else if ( N >= 0 ){ 
+        printf( "N adalah Bilangan satuan" );  
+    } 
+    else { 
+        printf( "N adalah Bilangan Negatif" );   
+    } 
+} 
+ 
+Percabangan if else-if bisa memiliki 2, 3 atau lebih kondisi tergantung dari 
+program yang ingin dibuat seperti apa. Sebagai catatan, percabangan if else-if ini 
+tidak akan menjalankan program pada kondisi yang ada di bawahnya ketika 
+kondisi di atasnya sudah memenuhi syarat. Contohnya ketika  if( N >=100 ) 
+dengan nilai N yang melebihi 100 seperti N =101, maka kondisi yang ada di 
+bawahnya tidak akan diperiksa dan hanya menjalankan program pada kondisi if( 
+N >=100 ), dengan kata lain program yang ada di bawah kondisi if( N >=100 ) 
+tidak akan dijalankan. 
+ 
+2.1.4. Percabangan switch case  
+Pada switch ini kita bisa lebih efektif untuk pemrograman yang menggunakan 
+banyak kondisi karena strukturnya simple hanya menggunakan case. Untuk 
+penggunaan nilai range dalam switch menggunakan "spasi", contohnya "case 1 :" 
+#tanpa tanda petik. Terakhir apabila akan menggunakan karakter harus 
+menambahkan kutip 1, contohnya " case 'A' :"  
+Contoh programnya yaitu : 
+#include <stdio.h> 
+int main(){ 
+    char nilai; 
+    printf("Input Nilai Anda (A - C) : "); 
+    scanf("%c",&nilai); 
+    switch (nilai){ 
+        case 'A': 
+            printf("Pertahankan !\n"); 
+            break; 
+        case 'B': 
+            printf("Harus Lebih Baik Lagi\n"); 
+            break; 
+        case 'C': 
+
+--- PAGE 30 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 29 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+            printf("Perbanyak Belajar\n"); 
+            break; 
+        default : 
+            printf("Maaf Format Nilai Tidak Sesuai\n"); 
+    } 
+    return 0; 
+} 
+Nb : Percabangan ini dapat diaplikasikan dalam suatu kasus yang membutuhkan 
+beberapa pemilihan atau kondisi dalam satu percabangan dan biasa disebut sebagai 
+“percabangan bersarang”. Contohnya ialah penentuan harga diskon berdasarkan 
+kategori pembeli yang memiliki member dan tidak. 
+ 
+2.2. Perulangan 
+Perulangan (looping) adalah suatu pernyataan yang berfungsi untuk mengulang proses 
+sesuai dengan yang diinginkan. Banyaknya perhitungan atau pekerjaan berulang sampai 
+sebuah kondisi yang tercapai, membuat perulangan menjadi bagian penting dalam 
+pemrograman karena dengan adanya perulangan, pembuat program tidak perlu menulis 
+kode program sebanyak perulangan yang diinginkan. perulangan mempunyai beberapa 
+bagian yang harus dipenuhi yaitu: 
+• Inisialisasi adalah menetapkan nilai awal variabel sebelum memulai perulangan. 
+• Kondisi adalah syarat yang dicek setiap iterasi; ketika terpenuhi (false), perulangan 
+berhenti. 
+• Step adalah perubahan nilai variabel di akhir tiap iterasi (misal i++ atau i--) agar 
+mendekati kondisi berhenti. 
+ 
+2.2.1. Perulangan while 
+Perulangan while merupakan struktur perulangan dimana kondisinya diperiksa 
+sebelum statemen, dan akan terus berjalan selama kondisi yang dihasilkan dalam 
+perulangan tersebut masih bernilai true (benar). 
+Contoh Kode Program while: 
+#include <stdio.h>  
+int main()  
+{ 
+    int angka = 1;          // Inisialisasi variabel angka dengan 1 
+    while (angka <= 10) { 
+    printf("%d\n", angka);      // Mencetak nilai angka 
+    angka++;            // Menambah nilai angka dengan 1 
+    } 
+    return 0; 
+} 
+
+--- PAGE 31 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 30 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+2.2.2. Perulangan do while 
+Perulangan do while yaitu struktur perulangan yang dimana kondisi di periksa 
+setelah statemen. Jadi penulisan kondisi berada di akhir perulangan sedangkan 
+pada perulangan while kondisinya dituliskan di awal perulangan. 
+Contoh Kode Program do while: 
+#include<stdio.h>  
+int main (){ 
+    int angka=1; 
+    do{ 
+        printf("%d\n", angka); 
+        angka++; 
+    } 
+    while (angka<=10); 
+    return 0; 
+} 
+ 
+2.2.3. Perulangan for 
+Perulangan for merupakan stuktur perulangan dimana jumlah perulangan 
+ditentukan dalam struktur. Jadi dalam struktur berisi nilai awal, kondisi, dan 
+langkah perulangan. Struktur penulisannya sebagai berikut : 
+for (inisialisasi; syarat; step) 
+Contoh Kode Program for: 
+#include <stdio.h> 
+int main()  
+{ 
+    for (int angka = 1; angka <= 10; angka++) {  
+    printf("%d\n", angka); 
+    } 
+} 
+Nb : Perulaangan ini dapat diaplikasikan dalam suatu kasus yang membutuhkan 
+beberapa perulangan lainnya dalam satu perulangan dan biasa disebut sebagai 
+“perulangan bersarang”. Contohnya ialah membuat suatu segitiga dengan simbol 
+bintang. 
+ 
+2.3. Peloncatan 
+Statemen peloncatan merupakan statemen yang digunakan untuk memaksa program 
+agar meloncat atau menuju ke statemen-statemen tertentu yang kita inginkan. Dalam 
+Bahasa C terdapat sebuah statemen yang sering digunakan untuk melakukan hal ini, yaitu 
+statemen goto, break, continue. Berikut ini penjelasan dari masing- masing statemen 
+prosedur tersebut. 
+
+--- PAGE 32 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 31 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+1. Label dan statemen goto 
+Untuk menggunakan statemen goto, sebelumnya kita harus mendefinisikan sebuah 
+label dengan menggunakan kata kunci label. Disini, label akan berperan sebagai baris 
+yang akan dituju. Dengan kata lain, statemen goto akan memindahkan program 
+secara langsung ke lokasi yang ditandai oleh label yang telah didefinisikan. 
+Contoh Kode Program goto: 
+#include <stdio.h> 
+int main() { 
+    int i = 0; 
+start: 
+    printf("i = %d\n", i); 
+    i++; 
+    if (i < 3) 
+        goto start; 
+    return 0; 
+} 
+ 
+2. Prosedur break 
+Prosedur ini digunakan untuk meloncat dari proses perulangan dan switch. Artinya, 
+prosedur break akan memaksa program untuk menghentikan perulangan atau keluar 
+dari blok switch sepenuhnya dan akan langsung menuju ke statemen selanjutnya 
+yang terdapat dibawah blok perulangan maupun percabangan (jika ada). 
+Contoh Kode Program break: 
+#include <stdio.h> 
+int main() { 
+    for (int i = 0; i < 5; i++) { 
+        if (i == 3) 
+            break; 
+        printf("i = %d\n", i); 
+    } 
+    printf("Loop selesai\n"); 
+    return 0; 
+} 
+ 
+3. Prosedur continue 
+Prosedur ini merupakan kebalikan dari prosedur break, yaitu berguna untuk 
+menghentikan iterasi saat ini dalam perulangan dan melanjutkan ke iterasi 
+berikutnya. Pada umumnya prosedur ini digunakan dalam kasus dimana kondisi 
+perulangannya selalu bernilai true. 
+ 
+Contoh Kode Program continue: 
+
+--- PAGE 33 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 32 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+#include <stdio.h> 
+int main() { 
+    for (int i = 0; i < 5; i++) { 
+        if (i == 2) 
+            continue; 
+        printf("i = %d\n", i); 
+    } 
+    return 0; 
+} 
+Dengan contoh program di atas, alur eksekusi masing-masing peloncatan menjadi jelas: 
+• goto dapat membawa program kembali ke label manapun dalam fungsi. 
+• break hanya memutus (keluar) satu level loop atau switch. 
+• continue hanya melewatkan sisa badan loop saat itu dan melanjutkan iterasi berikutnya. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 34 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 33 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+III. PROGRAM  
+#include <stdio.h>  
+int main() { 
+    int pilihan;  
+    printf("Pilihan menu:\n"); 
+    printf("1. Cetak Hello World\n");  
+    printf("2. Perulangan dengan continue\n");  
+    printf("3. Perulangan dengan break\n");  
+    printf("4. Keluar\n"); 
+    menu: 
+    printf("Masukkan pilihan Anda (1-4): ");  
+    scanf("%d", &pilihan); 
+    switch (pilihan) {  
+        case 1: 
+            printf("Hello, World!\n");  
+            goto menu; 
+
+--- PAGE 35 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 34 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+        case 2: 
+            printf("Menggunakan continue dalam perulangan:\n");  
+            for (int i = 1; i <= 5; i++) { 
+                if (i == 3) { 
+                    continue; // Melewati iterasi ke-3 
+                } 
+            printf("%d ", i); 
+            } 
+            printf("\n");  
+            goto menu; 
+        case 3: 
+            printf("Menggunakan break dalam perulangan:\n");  
+            for (int i = 1; i <= 5; i++) { 
+                if (i == 4) { 
+                break; // Menghentikan perulangan saat i == 4 
+                } 
+            printf("%d ", i); 
+            } 
+            printf("\n");  
+            goto menu; 
+ 
+        case 4: 
+            printf("Terima kasih! Program selesai.\n");  
+            break; 
+        default: 
+            printf("Pilihan tidak valid. Silakan masukkan pilihan yang benar (1-4).\n");  
+            goto menu; 
+        } 
+    return 0; 
+} 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 36 ---
+  STRUKTUR KONTROL DALAM BAHASA C | 35 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+IV. TUGAS AKHIR 
+1. Jelaskan perbedaan dan kesamaan pada struktur perulangan do while dan for? 
+2. Jelaskan apa yang dimaksud dengan infinite loop dengan uncounted loop ! 
+3. Sebutkan perbedaan antara infinite loop dengan uncounted loop ! 
+4. Buatlah sebuah program yang dapat melakukan perulangan ! 
+5. Apa kegunaan peloncatan break pada percabangan switch case ? Apa yang terjadi apabila 
+kita tidak menggunakan peloncatan break pada percabangan switch case ? 
+6. Pada no 4, ubahlah struktur penulisan perulangannya menjadi: 
+while → for 
+for → do while 
+do while → while 
+7. Flowchart percabangan translate to program 
+ 
+ 
+ 
+
+--- PAGE 37 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 36 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+MODUL III 
+ARRAY, STRUCT, dan OPERASI FILE 
+I. 
+TUJUAN 
+1. Memahami pendeklarasian dan cara penggunaan array, struct, dan operasi file. 
+2. Memahami penerapan array, struct, dan operasi file dalam kehidupan sehari-hari. 
+II. TEORI 
+2.1. Array 
+Array merupkan struktur data ataupun sekumpulan lokasi penyimpanan data yang 
+memiliki tippe data dan variabel yang sama.  Array disimpan secara berurutan sehingga 
+kita dapat menggunakan inndeks untuk mengakses elemen yang berurutan tersebut. 
+Elemen sendiri merupakan nilai yang berada di dalam array ({}) yang dipisahkan oleh 
+tanda koma dan berurutan, sedangkan indeks sendirii merupakan bilangan bulat yang 
+menujukka posisi suatu elemen didalam array agar dapat diakses. Didalam bahasa c 
+indeks dimulai dari 0 yang mewakili indeks pertama dan seterusnya.  Dilihat dari 
+dimensinya, array terbagi menjadi array dimensi satu, dimensi dua dan array multi 
+dimensi 
+2.1.1. Array Dimensi Satu 
+Array dimensi satu adalah array yang hanya memiliki 1 indeks saja dimana 
+bentuknya merepresentasikan bentuk kolom syntax:  
+tipe_data Nama_array [jumlah_kolom]; 
+Contoh : 
+➢ Array dengan tipe data integer 
+int Nilai [5] = {1,2,3,4,5};   
+Nilai[0] Nilai[1] Nilai[2] Nilai[3] Nilai[4] 
+1 
+2 
+3 
+4 
+5 
+ 
+➢ String sebagai karakter 
+String dalam bahasa c tidak memiliki tipe data bawaan, tetapi 
+diimplementasikan sebagai array karakter yang diakhiri karakter null (‘\0’), 
+karakter null sangat penting dalam string di bahasa c karenakan menandakan 
+akhir string 
+Contoh :  
+char nama[5] = “JOSE” 
+J O S E \0 
+ 
+
+--- PAGE 38 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 37 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+CATATAN : JOSE hanya terdiri dari 4 karakter, namun indeksnya dilebihkan 
+untuk karakter null 
+2.1.2. Array Dimensi Dua 
+Array dimesi 2 adalah array yang memiliki dua indeks yang merepresentasikan 
+matriks atau tabel yang terdapat baris dan coloumn dengan syntax: 
+tipe_data Nama_array [jumlah_baris] [jumlah_kolom]; 
+Contoh : 
+➢ Array dimensi 2 dengan tipe data integer 
+int Matriks [2][3] = { 
+             {1,2,3}, 
+             {4,5,6},    
+}; 
+Matriks[0][0] Matriks[0][1] Matriks[0][2] 
+1 
+2 
+3 
+Matriks[1][0] Matriks[1][1] Matriks[1][2] 
+4 
+5 
+6 
+ 
+➢ Array dimensi 2 dengan tipe data karakter 
+char nama[3][6] = {“JOSE”, “BILLY”, “JENI”}; 
+0 
+1 
+2 
+0 1 2 3 4 5 0 1 2 3 4 5 0 
+1 2 3 4 
+5 
+J O S E 
+ 
+\0 B I 
+L L Y \0 J E N I 
+ 
+\0 
+ 
+2.1.3. Array Multi Dimensi 
+Array multi dimensi adalah array yang memiliki indeks lebih dari dua, dengan 
+syntax: 
+tipe_data Nama_array  [ukuran 3] [ukuran 2] [ukuran 1]; 
+Contoh : 
+➢ Array multi dimensi dengan tipe data integer 
+int X [2][3][3] = { 
+                     {{1,2,3},{4,5,6},{7,8,9}}, 
+                     {{9,8,7},{6,5,4},{3,2,1}} 
+                   }; 
+ 
+ 
+ 
+
+--- PAGE 39 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 38 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+X [0][0][0] X [0][0][1] X [0][0][2] 
+ 1 
+2 
+3 
+X[0][1][0] X [0][1][1] X [0][1][2] 
+4 
+5 
+6 
+X[0][2][0] X [0][2][1] X [0][2][2] 
+7 
+8 
+9 
+ 
+➢ Array multi dimensi dengan tipe data karakter 
+char nama [2][3][6] = { 
+                         {“JOSE”, “BILLY”, “JENI”}, 
+                         {“RAKY”, “RYAN”, “RAFI”} 
+                       }; 
+ 
+0 
+0 
+1 
+2 
+0 1 2 3 4 5 0 1 2 3 4 5 0 1 2 3 4 
+5 
+J O S E 
+ 
+\0 B I 
+L L Y \0 J E N I 
+ 
+\0 
+ 
+1 
+0 
+1 
+2 
+0 1 2 3 4 5 0 1 2 3 4 5 0 1 2 3 4 
+5 
+R A K Y 
+ 
+\0 F A Q O D \0 R A F 
+I 
+ 
+\0 
+ 
+2.2. STRUCT 
+Struct adalah struktur data yang dapat menyimpan beberapa variabel yang memiliki 
+tipe data yang berbeda digabung dalam suatu Struct. struct dapat dipakai untuk 
+menghimpun sejumlah data dengan tipe yang berbeda-beda. Data yang diletakkan dalam 
+sebuah struct adalah data yang terkait. Struct sangat berguna untuk mengelola data yang 
+kompleks dan merepresentasikan objek dunia nyata. Misalnya data mengenai Nama, 
+NIM,  dan  IPK  seorang  mahasiswa.  Ketiga  data  ini  mempunyai  tipe  data  yang  be
+rbeda tetapi masih berhubungan yaitu data akademik seorang mahasiswa.  
+struct Mahasiswa { //pendefinisian struct    
+char nama[100];    
+int nim;    
+float ipk; }; 
+X [1][0][0] X [1][0][1] X [1][0][2] 
+9 
+8 
+7 
+X [1][1][0] X [1][1][1] X [1][1][2] 
+6 
+5 
+4 
+X [1][2][0] X [1][2][1] X [1][2][2] 
+3 
+2 
+1 
+
+--- PAGE 40 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 39 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Pada contoh di atas, tipe stuct Mahasiswa terdiri atas data nama, nim, dan ipk yang 
+secara berturut-turut bertipe char [100], int, dan float. dalam hal ini nama, nim, dan ipk 
+disebut sebagai elemen struct atau field. 
+ 
+Setelah suatu tipe struct didefinisikan, tipe tersebut dapat dipakai untuk 
+mendeklarasikan suatu variable. Format penulisannya sebagai berikut: 
+struct Mahasiswa mhs[20]; 
+nama 
+nim 
+ipk 
+  
+ 
+ 
+ 
+ 
+ 
+Untuk mengakses elemen atau field dari sebuah struct, dapat menggunakan operator 
+titik (‘.’). Dengan format penulisan sebagai berikut: 
+variable_struct • nama_field 
+ 
+Contoh struct mengenai data Nama, NIM, dan IPK seorang mahasiswa : 
+#include <stdio.h> 
+#include <windows.h> 
+struct Mahasiswa { //pendefinisian struct 
+    char nama[100]; 
+    int nim; 
+    float ipk; 
+}; 
+int main (){ 
+    struct Mahasiswa mhs[20]; //pendeklarasian variabel struct 
+    int banyak; 
+    printf("Berapa banyak mahasiswa yang ingin didata : "); 
+    scanf("%d", &banyak); 
+ 
+    for (int x=1; x<=banyak; x++){ 
+        fflush(stdin); 
+        printf("\nMahasiswa ke %d\n", x); 
+        //mengisi nilai ke struct 
+        printf(“Nama\t:”); 
+        scanf("%[^\n]", &mhs[x].nama); 
+        printf("NIM\t: ");  
+        scanf("%d", &mhs[x].nim);  
+        printf("IPK\t: ");  
+        scanf("%f", &mhs[x].ipk); 
+    } 
+Variabel mhs 
+
+--- PAGE 41 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 40 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+    puts("");  
+    system("pause"); 
+    puts(""); 
+    puts("Data Mahasiswa :"); 
+    for (int x=1; x<=banyak; x++){ 
+        printf("\nMahasiswa ke %d\n", x); 
+        //mencetak isi struct 
+        printf("Nama\t: %s\n", mhs[x].nama);  
+        printf("NIM\t: %d\n", mhs[x].nim);  
+        printf("IPK\t: %.2f\n", mhs[x].ipk); 
+        } 
+    return 0; 
+} 
+ 
+2.3. Operasi FILE 
+Dalam Bahasa C, kita dapat menyimpan data kedalam sebuah file. Untuk dapat 
+menggunakan operasi file kita harus membuat sebuah file pointer dengan menggunakan 
+instruksi FILE *Nama_Pointer.  
+Pointer adalah penunjuk langsung ke lokasi memori tempat data tertentu disimpan. 
+Pointer sangat penting dalam operasi file karena mereka memberikan cara yang efisien 
+dan fleksibel untuk mengakses dan mengelola data file. Pointer selalu diawali dengan 
+tanda bintang (*) di depannya yang dinamakan simbol Asterisk. 
+ 
+Dalam proses operasi file, file yang ingin diakses dan diolah harus diletakkan di 
+satu folder yang sama dengan program, sama halnya ketika membuat file baru melalui 
+program, maka file yang dibuat akan disimpan secara otomatis di folder yang sama 
+dengan program tersebut. 
+2.3.1. Macam-Macam Operasi File 
+Macam-macam jenis operasi file yang umum digunakan yaitu: 
+1. "r" 
+: Membuka file yang harus sudah ada untuk dibaca. 
+2. "w" 
+: Membuka file baru untuk ditulis (overwrite).  
+3. "a" 
+: Membuka file untuk ditambahkan isinya.  
+4. "r+" 
+: Membuka file yang harus sudah ada untuk dibaca dan ditulis. 
+5. "w+" : Membuka file baru untuk ditulis (overwrite) dan dibaca.  
+6. "a+" : Membuka file untuk dibaca dan ditambahkan isinya. 
+Jika dilakukan proses penulisan terlebih dahulu kemudian pembacaan dalam satu  
+program, 
+Jenis Operasi 
+Jika File Ada 
+Jika File Tidak Ada 
+
+--- PAGE 42 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 41 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+r+ 
+Dapat menulis dengan 
+mengganti (overwrite)  data dari 
+awal 
+Menggembalikan nilai NULL 
+w+ 
+Dapat menulis dan membaca 
+dengan overwrite seluruh data 
+Membuat file baru 
+a+ 
+Dapat menulis tanpa overwrite 
+data 
+Membuat file baru 
+Jika dilakukan proses pembacaan terlebih dahulu kemudian penulisan dalam 
+satu     program, 
+Jenis Operasi 
+Jika File Ada 
+Jika File Tidak Ada 
+r+ 
+Dapat membaca dan menulis 
+setelah EOF 
+Menggembalikan nilai NULL 
+w+ 
+Tidak dapat membaca tetapi 
+dapat menulis 
+Tidak dapat membaca tetapi 
+dapat menulis dengan membuat 
+file baru 
+a+ 
+Dapat membaca dan menulis 
+tanpa overwrite 
+Tidak dapat membaca namun 
+dapat menulis 
+ 
+2.3.2. Membuka dan Menutup File 
+Setelah kita membuat file pointer, file tersebut belum dapat dialokasikan karena 
+kita belum mengaktifkan atau membuka file. Langkah awal untuk dapat 
+mengoperasikan file setelah deklarasi adalah membuka file tersebut dengan 
+perintah sebagai berikut : 
+fopen=(“Nama_File.txt”,”Jenis_Operasi”); 
+ket : 
+- Nama_File.txt 
+Nama file dapat diketik sesuai keinginan kita dengan diakhiri (.txt) yang 
+mengindikasikan bahwa file tesebut adalah file text 
+- Jenis_Operasi 
+Jenis operasi disini tergantung tujuan kita membuka file, jika ingin membaca 
+maka isi dengan (“r”). 
+Setelah file dibuka dengan fopen, kita harus menutup file untuk memastikan 
+
+--- PAGE 43 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 42 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+bahwa semua data yang tertulis ke file disimpan dengan benar. Perintah untuk 
+menutup file adalah sebagai berikut:  
+fclose(Nama_Pointer); 
+ 
+Fungsi rewind dalam bahasa C digunakan untuk mengatur kursor kembali ke 
+posisi awal file. Ini adalah fungsi yang berguna saat Anda ingin mulai membaca 
+file dari awal setelah melakukan operasi lain seperti penulisan atau pembacaan.  
+rewind(Nama_Pointer); 
+ 
+2.3.3. Menulis File pada Operasi File 
+Untuk dapat menulis file, kita dapat menggunakan perintah sebagai berikut: 
+a. fprintf 
+Fungsi fprintf adalah salah satu fungsi dalam bahasa pemrograman C yang 
+digunakan untuk menulis data ke dalam file. Format penggunaannya mirip 
+seperti printf, namun output-nya ditujukan ke file, bukan ke layar. 
+memungkinkan untuk menulis teks biasa, nilai variabel, penentu format ke file 
+tetapi tidak otomatis diakhiri dengan perpindahan baris. Instruksi sebagai 
+berikut: 
+fprintf(Nama_Pointer,”Format”, Nama_Variable); 
+b. fputs 
+fputs memungkinkan untuk menulis string ke file tanpa melakukan format 
+tambahan. Ini berguna ketika Anda hanya perlu menulis teks apa adanya. 
+Berbeda dengan puts, fputs tidak secara otomatis menambahkan karakter 
+newline ('\n') di akhir string. Instruksinya  sebagai berikut: 
+fputs(“string”,Nama_Pointer); 
+c. putc 
+putc memungkinkan untuk menulis satu karakter ke file. Fungsi ini berguna 
+ketika Anda ingin menulis karakter demi karakter. Instruksinya sebagai 
+berikut:  
+putc(’Karakter’,Nama_Pointer); 
+ 
+Contoh Program menulis file kedalam suatu file text pada operasi file : 
+#include<stdio.h>  
+#include<string.h> 
+int main(){ 
+    FILE *tulis=fopen("Tulis.txt","w"); 
+    char kalimat[1000]; 
+    int n=0,jumlah;  
+    printf("Masukkan data :");  
+
+--- PAGE 44 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 43 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+    gets(kalimat); 
+    //menulis kedalam file dengan fprintf 
+    fprintf(tulis,"%s",kalimat); 
+    //menulis kedalam file dengan fputs 
+    fputs(kalimat,tulis); 
+    //menulis kedalam file dengan putc 
+    jumlah=strlen(kalimat);  
+    while(n!=jumlah){ 
+        putc(kalimat[n],tulis);  
+        n++; 
+    } 
+    fclose(tulis);  
+    return 0; 
+} 
+ 
+2.3.4. Membaca File pada Operasi File 
+Untuk dapat membaca data yang telah dimasukkan ke dalam file, 
+kita dapat menggunakan perintah sebagai berikut : 
+a. fscanf 
+Fungsi fscanf adalah fungsi dalam bahasa C yang digunakan untuk membaca 
+data dari file dengan format tertentu. Fungsinya mirip dengan scanf, namun 
+sumber input-nya berasal dari file, bukan dari keyboard.. Fungsi fscanf 
+memungkinkan untuk membaca data dari file dengan format tertentu. Cara 
+kerja fscanf adalah mengcopy data dalam file ke sebuah variable, oleh karena 
+itu variable yang kita gunakan harus sesuai dengan jenis data yang ingin dibaca. 
+fscanf membaca data hanya sampai spasi pertama. Instruksinya sebagai 
+berikut:  
+fscanf(Nama_Pointer,”format_tipe_data”, &Nama_variable); 
+b. getc 
+Berbeda dengan scanf yang dapat membaca data sebagai satu kesatuan hingga 
+spasi pertama, getc membaca satu karakter dari file. Instruksinya sebagai 
+berikut:  
+getc(Nama_Pointer); 
+c. fgets 
+fgets merupakan fungsi untuk membaca string. String yang dibaca hanya 
+sebatas satu baris atau sesuai jumlah nilai buffer yang diberikan. Instruksinya 
+sebagai berikut : 
+fgets(Nama_Variable,Nilai_Buffer,Nama_Pointer); 
+buffer adalah ruang sementara di memori yang digunakan untuk menyimpan 
+data sementara sebelum diproses lebih lanjut. 
+
+--- PAGE 45 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 44 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Dalam membaca data, terdapat sebuah kondisi yang menandakan bahwa file 
+tersebut telah berakhir atau ketika melakukan proses pembacaan apabila gagal 
+akan   mengembalikan sebuah nilai berupa EOF (End Of File). 
+Contoh Program membaca suatu file teks kedalam program pada operasi file : 
+#include<stdio.h> 
+int main(){ 
+    FILE *baca=fopen("Tulis.txt","r"); 
+    char kalimat[1000],kar; 
+    if(baca==NULL){  
+        printf("Gagal Brooo :(\n"); 
+    } 
+    //membaca data dalam file dengan fscanf 
+    while(fscanf(baca,"%s",kalimat)!=EOF){  
+        printf("%s",kalimat); 
+    } 
+    //membaca data dalam file dengan fgets 
+    while(fgets(kalimat,sizeof(kalimat),baca)){  
+        printf("%s",kalimat); 
+    } 
+    //membaca data dalam file dengan getc 
+    while((kar = getc(baca))!=EOF){ 
+        printf("%c",kar); 
+    } 
+    fclose(baca); 
+    return 0; 
+} 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 46 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 45 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+III. PROGRAM 
+ 
+#include <stdio.h> 
+#include <windows.h> 
+struct Mahasiswa { 
+    char nama[100]; 
+    int nim; 
+    float ipk; 
+}; 
+int main (){ 
+    struct Mahasiswa mhs[20]; 
+    FILE *data = fopen("Data Mahasiswa.txt", "w"); 
+    char kalimat[1000]; 
+    int banyak; 
+    printf("Berapa banyak mahasiswa yang ingin didata : "); 
+    scanf("%d", &banyak); 
+     
+    for (int x=1; x<=banyak; x++){ 
+        fflush(stdin); 
+        printf("\nMahasiswa ke %d\n", x); 
+        printf("Nama\t: "); 
+        scanf("%[^\n]", &mhs[x].nama); 
+
+--- PAGE 47 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 46 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+        printf("NIM\t: "); 
+        scanf("%d", &mhs[x].nim); 
+        printf("IPK\t: "); 
+        scanf("%f", &mhs[x].ipk); 
+         
+        fprintf(data, "Mahasiswa ke %d\n", x); 
+        fprintf(data, "Nama\t: %s\n", mhs[x].nama); 
+        fprintf(data, "NIM\t: %d\n", mhs[x].nim); 
+        fprintf(data, "IPK\t: %.2f\n\n", mhs[x].ipk); 
+    } 
+    puts("Data Mahasiswa Telah Tersimpan"); 
+    fclose(data); 
+    puts(""); 
+    system("pause"); 
+    system("cls"); 
+    data = fopen("Data Mahasiswa.txt", "r"); 
+    puts("Data Mahasiswa :"); 
+    while(fgets(kalimat, sizeof(kalimat), data)){ 
+        printf("%s", kalimat); 
+    }  
+    fclose(data); 
+    return 0; 
+} 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 48 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 47 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+IV. TUGAS AKHIR 
+1. Jelaskan secara singkat penggunaan array dimensi satu, dimensi dua, dan multi dimensi 
+dan contoh penerapan alam kehidupan sehari hari! 
+2. Jelaskan secara rinci bagaimana fungsi rewind() bekerja dalam operasi file di C, dan 
+kapan sebaiknya digunakan! 
+3. Jelaskan bagaimana pointer digunakan dalam operasi file di bahasa C, dan mengapa 
+pointer itu penting untuk mengatur memori saat program bekerja dengan file? 
+4. Jelaskan bagaimana cara membaca file dalam mode r+, dan apa yang akan terjadi jika file 
+tersebut kosong atau tidak ada? Berikan contoh kode untuk kasus ini. 
+5. Buatlah program dalam C yang membaca data dari file dan menampilkan setiap karakter 
+satu per satu sampai mencapai EOF (End Of File)! 
+ 
+ 
+
+--- PAGE 49 ---
+  ARRAY, STRUCT, dan OPERASI FILE | 48 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+1.  
+ 
+ 
+ 
+
+--- PAGE 50 ---
+  PENGENALAN DASAR BAHASA PYTHON | 49 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+MODUL IV 
+ PENGENALAN DASAR BAHASA PYTHON 
+I. 
+TUJUAN 
+1. Praktikan dapat membuat dan memahami struktur dari penulisan Bahasa Python 
+2. Praktikan dapat membuat dan memahami Bahasa Python disertai dengan Flowchart 
+II. TEORI 
+2.1. Pendahuluan Python 
+Python adalah bahasa pemrograman tingkat tinggi yang dirancang untuk kemudahan 
+penggunaan dan pembacaan kode-kodenya. Python dikenal karena sintaksnya yang 
+sederhana, mudah dipahami, dan mendukung banyak paradigma pemrograman, seperti 
+pemrograman berorientasi objek, fungsional, dan imperatif. Python dapat digunakan 
+untuk berbagai keperluan pengembangan perangkat lunak dan dapat berjalan di berbagai 
+platform sistem operasi. 
+Perbandingan Code Python 
+Pada praktikum ini, kita sudah mempelajari bahasa pemrograman C. Kode berikut 
+mengilustrasikan perbedaan sintaksis antara bahasa C dengan bahasa Python 
+Bahasa C 
+Python 
+#include<stdio.h> 
+int main(){ 
+    printf("HALLO SEMUA"); 
+    return 0; 
+} 
+ 
+print("HALLO SEMUA") 
+ 
+Dapat kita lihat format penulisan pada python jauh lebih sederhana dibandingkan pada 
+bahasa C yang memiliki aturan format penulisan yang kompleks 
+2.2. Variabel 
+Pengertian Variabel pada bahasa Python sama halnya dengan bahasa C tetapi terdapat 
+perbedaan pada pembuatan variabelnya, dimana dalam python sangat sederhana. 
+Terdapat beberapa ketentuan dalam mendeklarasikan variable pada python antara lain 
+sebagai berikut : 
+• Variabel tidak perlu dideklarasikan mempunyai tipe data tertentu 
+• Jenis data dalam variabel dapat berubah-ubah 
+• Penulisan variabel harus diawali dengan huruf, dan untuk karakter selanjutnya bisa 
+berupa huruf atau angka 
+• Penulisan variabel tidak boleh dipisah oleh <spasi> 
+• Untuk variabel terdiri dari 2 suku kata, dapat dipisah dengan simbol underscore ( _ ) 
+
+--- PAGE 51 ---
+  PENGENALAN DASAR BAHASA PYTHON | 50 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Format penulisan variable  
+Nama_variabel = <nilai> 
+variabel_string = " Format untuk string "  
+variabel_angka =  10 
+variabel_float = 30.22 
+2.3. Tipe Data 
+Pengertian Tipe Data pada bahasa Python sama halnya dengan bahasa C tetapi terdapat 
+perbedaan yaitu, pada bahasa C kita perlu mendeklarasikan jenis tipe data nya secara 
+spesifik sedangkan pada python kita hanya perlu mengubah ketentuan pada nilai datanya 
+saja dan secara otomatis python dapat mengenali jenis tipe data yang tersimpan pada 
+variabel tersebut.  Berikut beberapa tipe data pada python antara lain : 
+• Number ( integer dan float) 
+Tipe 
+data 
+Number 
+merepresentasikan 
+nilai-nilai 
+berupa 
+angka. 
+Python 
+menggolongkan beberapa tipe data umum seperti, Integer (bilangan bulat) dan 
+Floating-point (bilangan desimal) ke dalam tipe data Number. Contoh : 
+Usia = 28 
+Berat_badan = 45.15 
+• String 
+Tipe data yang memungkinkan kita menyimpan data berupa sebuah karakter maupun 
+string (kumpulan karakter). Penulisan tipe data ini perlu diaper tanda petik satu ( ‘    ‘ ), 
+petik dua ( “    ”) dan petik tiga (“””    ”””) untuk kalimat multiple line. Tanda petik ini 
+menandakan bahwa tipe data yang disimpan pada suatu variable berjenis string. 
+Contoh : 
+JenisKelamin = ‘P’ 
+Nama 
+= “Soekarno Hatta” 
+Alamat 
+= “”” Jalan Melati No 52 
+     Jakarta Selatan “”” 
+• Boolean 
+Tipe data boolean adalah tipe data yang hanya memiliki dua nilai yaitu True dan False 
+atau 0 dan 1. Penulisan True dan False, huruf pertamanya harus kapital dan tanpa tanda 
+petik. Contoh : 
+Lampu_menyala 
+= 1 
+Lampu_mati 
+ 
+= 0 
+ 
+ 
+
+--- PAGE 52 ---
+  PENGENALAN DASAR BAHASA PYTHON | 51 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Berikut perbandingan pendeklarasian Tipe data pada bahasa C dan python. 
+Bahasa C 
+Python 
+char Nama[20] = "Soekarno Hatta"; 
+int Usia = 55; 
+float berat = 45.5; 
+Nama = "Soekarno Hatta" 
+Usia = 55 
+Berat = 45.5 
+ 
+Meskipun Python telah otomatis mendeteksi tipe data yang tersimpan dalam variabel, 
+tapi ada kalanya kita perlu melakukan konversi tipe data. Contoh : 
+Bilangan_pertama 
+= 15 
+Bilangan_kedua 
+= 4 
+Hasil    = float (Bilangan_pertama)/ float(Bilangan_kedua) 
+Perintah float tersebut mengubah tipe data yang awalnya berupa integer menjadi data 
+bertipe float. Hal ini dilakukan agar hasil pembagian dari angka tersebut dapat 
+menampilkan nilai dibelakang koma. Berikut beberapa fungsi untuk mengubah jenis tipe 
+data : 
+1. int() untuk mengubah menjadi integer 
+2. long() untuk mengubah menjadi integer panjang 
+3. float() untuk mengubah menjadi float 
+4. bool() untuk mengubah menjadi boolean 
+5. chr() untuk mengubah menjadi karakter 
+6. str() untuk mengubah menjadi string. 
+ 
+2.4. Operator 
+Operator adalah simbol atau karakter khusus yang digunakan untuk melakukan operasi 
+pada operand atau nilai. Operator digunakan untuk melakukan berbagai tindakan seperti 
+perhitungan matematika, perbandingan, dan manipulasi data. Operatar dalam bahasa 
+python dapat dikelompokkan sebagai berikut : 
+2.4.1. Operator Aritmatika 
+Operator Aritmatika merupakan operator yang bisasa digunakan untuk melakukan 
+suatu perhitungan matematika sederhana seperti penjumlahan, perkalian, 
+pembagian dan lain lain. 
+ 
+
+--- PAGE 53 ---
+  PENGENALAN DASAR BAHASA PYTHON | 52 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+ 
+2.4.2. Operator Perbandingan 
+Operator ini digunakan untuk membandingkan dua buah nilai. Operator ini juga 
+dikenal dengan operator relasi dan sering digunakan untuk membuat sebuah 
+logika atau kondisi. 
+Operator 
+Deskripsi 
+Contoh 
+Hasil 
+>= 
+Lebih besar atau sama 
+dengan 
+5 >= 10 
+FALSE 
+<= 
+Lebih kecil atau sama 
+dengan 
+5 <= 10 
+TRUE 
+!= 
+Tidak sama dengan 
+5 != 10 
+TRUE 
+== 
+Sama dengan 
+5 == 5 
+TRUE 
+> 
+Lebih besar 
+5 > 3 
+TRUE 
+ 
+2.4.3. Operator Logika 
+Operator logika adalah operator yang berkaitan dengan operasi logika, seperti : 
+konjungsi (dan), dan disjungsi (atau), negasi (ingkaran). operator logika 
+digunakan untuk membandingkan logika hasil dari operator-operator hubungan. 
+ 
+ 
+ 
+ 
+Operator 
+Deskripsi 
+Contoh 
+Hasil 
+* 
+Perkalian 
+5*6 
+30 
+/ 
+Pembagian 
+30/5 
+6 
+% 
+Modulus 
+(sisa pembagian) 
+15%4 
+3 
++ 
+Penjumlahan 
+5 + 5 
+10 
+- 
+Pengurangan 
+10-7 
+3 
+** 
+Pemangkatan 
+10 ** 2 
+100 
+
+--- PAGE 54 ---
+  PENGENALAN DASAR BAHASA PYTHON | 53 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Operator 
+Deskripsi 
+Contoh 
+Hasil 
+ 
+ 
+Logika and 
+Hanya Akan 
+bernilai True 
+apabila kedua 
+kondisi bernilai 
+benar 
+ 
+ 
+ 
+(5 <= 10) and  
+(5 == 5) 
+ 
+ 
+TRUE 
+ 
+ 
+Logika or 
+Akan bernilai True 
+apabila salah satu 
+kondisi bernilai 
+benar 
+ 
+ 
+(5 <= 10) or  
+(5 == 7) 
+ 
+ 
+TRUE 
+Logika not 
+membalikan nilai 
+sebenarnya 
+not (5 == 5) 
+FALSE 
+ 
+2.5. Menginput/Memasukkan Data 
+Python sudah menyediakan fungsi “input ()” untuk mengambil inputan dari keyboard. 
+Namun fungsi input ini secara default akan membaca data yang telah diinputkan dalam 
+format karakter, sehingga jika ingin menginputkan data berupa bilangan kita memerlukan 
+fungsi int () untuk mengubah tipe data karakter menjadi bilangan. Contoh  program : 
+Nama = input ("Siapa Namamu :    ") 
+Usia = int( input ( "Berapa Usiamu  :   ")) 
+ 
+Dimana data yang kita inputkan dari keyboard akan disimpan pada variable Nama dan 
+Usia. Dapat kita lihat terdapat perbedaan antara bahasa C dan Python. 
+ 
+ 
+2.6. Menampilkan Data 
+Untuk menampilkan kalimat maupun nilai data pada variable ke layar menu output 
+kita dapat menggunakan fungsi print dengan format : 
+print ( “statement yang ingin ditampilkan” , nama_variabel) 
+ 
+Bahasa C 
+Python 
+int main() { 
+   int usia; 
+   printf("Masukkan Usiamu : ");  
+   scanf ("%d", &usia); 
+} 
+Usia = int(input("Masukkan Usiamu:")) 
+
+--- PAGE 55 ---
+  PENGENALAN DASAR BAHASA PYTHON | 54 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+contoh: 
+print( “HALLO SEMUA” ) 
+Jika kita ingin menampilkan data yang disimpan pada variable maka : 
+ usia = 28 
+print( “Usia saya adalah ”, usia) 
+Jika kita ingin memanggil variabel agar dapat ditampilkan ditengah-tengah statemen yang 
+ingin ditampilkan maka dapat menggunakan format: 
+print(f ”luas segitiga siku-siku adalah: {nama_variabel} m^2”) 
+Namun untuk tipe data string cukup berbeda karena membutuhkan symbol + untuk 
+menampilkan data yang tersimpan pada variable. Contoh : 
+# semisal terdapat 5 tipe data string yang ingin kita gabungkan. 
+salutation = "Dr."  
+first_name = "Prisha"  
+middle_name = "Jai"  
+last_name = "Agarwal" 
+suffix = "Ph.D." 
+print(salutation + " " + first_name + " " + middle_name + " " + last_name + ", " + suffix) 
+Maka output yang dihasilkan akan menampilkan kalimat Dr. Prisha Jai Agarwal, Ph.D. 
+dimana tanda “ “ digunakan untuk memberikan spasi pada kalimat yang kita gabungkan. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 56 ---
+  PENGENALAN DASAR BAHASA PYTHON | 55 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+III. PROGRAM  
+ 
+print("==============================") 
+print("       Pertukaran Bilangan    ") 
+print("==============================") 
+ 
+L = int(input("Masukkan bilangan L: ")) 
+A = int(input("Masukkan bilangan A: ")) 
+P = int(input("Masukkan bilangan P: ")) 
+ 
+L, A, P = A, P, L 
+ 
+print("\nSetelah pertukaran:") 
+print("Bilangan L sekarang:", L) 
+print("Bilangan A sekarang:", A) 
+print("Bilangan P sekarang:", P) 
+ 
+hasil = L * P 
+print("\nHasil perkalian antara L dan P setelah ditukar adalah:", hasil) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 57 ---
+  PENGENALAN DASAR BAHASA PYTHON | 56 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+IV. TUGAS AKHIR 
+1. Buatlah contoh program python beserta dengan flowchartnya! 
+2. Apa saja library yang ada pada bahasa pemrograman Python? 
+3. Apa yang terjadi jika kita menginput bilangan negative pada program diatas? 
+4. Buatlah contoh program sederhana dengan menggabungkan (concatenate) string dalam 
+Python! 
+5. Apa perbedaan SyntaxError dan TypeError dalam Python? 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 58 ---
+  PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON | 57 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+MODUL V 
+PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON 
+I. 
+TUJUAN 
+1. Membuat dan memahami proses perulangan dengan struktur bahasa Python. 
+2. Membuat dan memahami proses percabangan dengan struktur bahasa Python. 
+II. TEORI 
+2.1. Percabangan 
+Pengertian Percabangan pada bahasa Python sama halnya dengan bahasa C tetapi 
+terdapat perbedaan pada struktur penulisannya. Secara garis besar struktur penulisannya 
+ialah sebagai berikut : 
+• Terdapat tanda titik dua (:) untuk memulai blok kode yang mengelompokkan statement 
+dalam percabangan. 
+• Statement pada kelompok percabangan harus diberi jarak, dengan menggunakan tab 
+pada keyboard untuk memberikan jarak yang sama, teratur dan sejajar untuk 
+mengindikasikan bahwa seluruh statement masih dalam satu kelompok percabangan 
+yang sama. 
+• Kondisinya tidak perlu diberi tanda kurung “()”. 
+Berdasarkan banyaknya pilihan, struktur percabangan pada python terbagi menjadi 3 
+yaitu sebagai berikut : 
+2.1.1. Percabangan if 
+Percabangan if merupakan bentuk percabangan yang paling sederhana karena 
+hanya memiliki satu cabang dengan persyaratannya sendiri. Ketika syaratnya 
+terpenuhi maka akan menjalankan cabang tersebut. Pada percabangan if ini 
+pemeriksaan kondisi akan berakhir jika ternyata kondisi yang diperiksa salah atau 
+perintah ini tidak akan mengerjakan apa-apa. Struktur penulisan percabangan 
+pada python sebagai berikut : 
+if kondisi : 
+<statement> 
+Pada bagian kondisi biasanya kita menggunakan operator perbandingan untuk 
+membandingkan input dengan syarat apakah sesuai atau tidak. 
+Contoh program percabangan if : 
+Nilai   = 80 
+if Nilai >=70  : 
+    print( "Nilai akhir anda adalah : ", Nilai)       
+    print( "Selamat Anda Lulus ") 
+print( "statement ini tidak masuk dalam percabangan") 
+Satu Blok 
+
+--- PAGE 59 ---
+  PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON | 58 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+2.1.2. Percabangan if – else 
+Percabangan if else sebenarnya pengembangan dari pernyataan if, Percabangan 
+if else digunakan saat terdapat dua pilihan keputusan. Dimana ketika kondisi 
+percabangan  pertama tidak terpenuhi, maka secara otomatis program akan 
+langsung menjalankan perintah yang terdapat pada percabangan else.  
+Contoh program percabangan if else : 
+Nilai   = 80 
+if Nilai >=70  : 
+    print( "Nilai akhir anda adalah : ", Nilai) 
+    print( "Selamat Anda Lulus " ) 
+else    : 
+    print( "Nilai akhir anda adalah : ", Nilai) 
+    print( "Anda Harus Remedial " ) 
+ 
+2.1.3. Percabangan if - elif 
+Percabagan if elif merupakan percabangan yang memiliki lebih dari dua 
+kondisi. Dimana kondisi percabangan akan diperiksa secara berurutan dari atas ke 
+bawah, apabila percabangan pertama kondisinya tidak terpenuhi, maka akan 
+memeriksa kondisi percabangan selanjutnya. 
+Contoh program percabangan if elif.  
+nilai = float(input("Masukkan nilai Anda: ")) 
+if nilai >= 90: 
+    grade = "A" 
+elif nilai >= 80: 
+    grade = "B" 
+elif nilai >= 70: 
+    grade = "C" 
+elif nilai >= 60: 
+    grade = "D" 
+else: 
+    grade = "E" 
+print(f"Grade Anda adalah: {grade}") 
+ 
+2.2. Perulangan 
+Secara garis besar perulangan dibagi menjadi 2 jenis, yaitu counted loop merupakan 
+jenis perulangan yang banyak perulangannya sudah ditentukan dengan jelas seperti 
+perulangan for dan uncounted loop merupakan jenis perulangan yang mana kita tidak tahu 
+seberapa banyak iterasi yang akan dilakukan sebelumnya. Biasanya digunakan ketika kita 
+ingin mengulangi tindakan selama kondisi tertentu masih benar (True). 
+ 
+ 
+
+--- PAGE 60 ---
+  PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON | 59 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+2.2.1. Perulangan for 
+Perulangan for merupakan stuktur kontrol perulangan yang mana jumlah 
+perulangan ditentukan dalam struktur. Jadi dalam struktur berisi nilai awal, 
+kondisi, dan step. Struktur penulisan perulangan for sebagai berikut : 
+for variabel in range (nilai_awal, kondisi, step) : 
+  
+<statement> 
+pada perulangan for tersebut terdapat 3 bagian struktur. Fungsi range() dapat 
+menggunakan hingga tiga parameter. Peran dari tiga kemungkinan parameter 
+rentang (x,y,z) adalah: 
+x = Mulai - Memulai posisi indeks rentang 
+• Posisi indeks default adalah 0. 
+▪ Posisi indeks awal termasuk dalam rentang tersebut. 
+▪ Contoh sintaksis: rentang(2, y, z) atau rentang(x+3, y, z) 
+y = Stop - Mengakhiri rentang posisi indeks 
+• Tidak ada posisi indeks default. Harus menyertakan posisi indeks akhir 
+dalam parameter range(). 
+• Contoh sintaksis: range(y) 
+• Iterasi akan terus berjalan selama i < stop 
+• Nilai posisi indeks akhir tidak termasuk dalam rentang tersebut. Misalnya 
+indeks akhir bernilai 10 maka perulangan akan berhenti ketika indeks 
+bernilai 9. Untuk memasukkan nomor indeks akhir, gunakan ekspresi: y+1 
+(indeks + 1) 
+• Contoh sintaksis: range (x, y+1, z), Alternatifnya, jika y = 10, Anda dapat 
+menulis: range(x, 11, z) 
+z = Step - Nilai penambahan ( increment ) 
+• increment default adalah +1 (jika tidak disertakan), tetapi kamu bisa pakai 
+nilai negatif untuk menghitung mundur. 
+• Nilai default dapat diganti dengan step positif ataupun step negatif. 
+Contoh program perulangan for  
+indeks = 10 
+for a in range(1, indeks + 1, 1) : 
+    print("statement ini mengulang 10 kali") 
+print("statement ini tidak termasuk perulangan") 
+ 
+ 
+ 
+
+--- PAGE 61 ---
+  PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON | 60 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+2.2.2. Perulangan while 
+Perulangan while adalah stuktur kontrol perulangan yang mana jumlah 
+perulangan tidak ditentukan dalam struktur. Perulangan ini akan terus berlanjut 
+selama kondisi yang diberikan pada awal perulangan adalah benar, dan akan 
+berhenti ketika kondisi tersebut menjadi salah (False). Struktur penulisan 
+perulangan for sebagai berikut : 
+while kondisi: 
+    <statement> 
+Contoh program perulangan while : 
+indeks = 10         #banyaknya perulangan yang diinginkan 
+x = 1               #kondisi awal 
+while x<=indeks : 
+    print("statement ini akan mengulang 10 kali") 
+    x +=1           #increment 
+print("statement ini tidak termasuk perulangan") 
+2.3. Deklarasi Fungsi 
+Deklarasi fungsi dalam Python adalah proses mendefinisikan fungsi dengan 
+memberikan nama fungsi, parameter (jika ada), dan statement yang akan dieksekusi 
+ketika fungsi tersebut dipanggil. Fungsi adalah blok kode yang dapat digunakan kembali 
+untuk menjalankan tugas tertentu ketika dipanggil. Deklarasi fungsi adalah langkah 
+pertama dalam membuat fungsi yang dapat digunakan dalam program. Berikut struktur 
+pendeklarasian fungsi : 
+def nama_fungsi (parameter1, parameter2) : 
+ 
+<statement> 
+  <statement> 
+  return nilai 
+• def adalah kata kunci untuk membuat fungsi. 
+• nama_fungsi adalah identifier yang Anda pilih (ikut aturan penamaan Python). 
+• (parameter1, parameter2, …) adalah input opsional yang diteruskan ke fungsi. 
+• Blok kode di dalam fungsi adalah barisan instruksi yang dijalankan saat fungsi 
+dipanggil. 
+• return adalah mengembalikan nilai (jika dibutuhkan). 
+Contoh pendeklarasian fungsi : 
+def luas_segitiga(alas,tinggi): 
+    hasil = 1/2*alas*tinggi 
+    return print(hasil) 
+#pendeklarasian fungsi 
+luas_segitiga(10,5) 
+
+--- PAGE 62 ---
+  PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON | 61 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+III. PROGRAM  
+Case 1: 
+Fato membuat program yang dapat menampilkan menu untuk mendata beberapa keperluannya 
+dalam tugas-tugas kuliah, dimana Ia membuat program sederhana. Seperti, dibawah ini. 
+- flowchart : 
+ 
+- source code : 
+def tampilkan_menu(): 
+    print("\nMenu Pilihan:") 
+    print("1. Tambah Data") 
+    print("2. Lihat Data") 
+    print("3. Hapus Data") 
+    print("4. Keluar") 
+# Inisialisasi variabel untuk menyimpan data 
+data = [] 
+# Perulangan untuk menampilkan menu dan menangani input pengguna 
+while True: 
+    tampilkan_menu() 
+    pilihan = input("Masukkan pilihan Anda (1-4): ") 
+    if pilihan == '1': 
+        item = input("Masukkan data yang ingin ditambahkan: ") 
+        data.append(item) 
+        print(f"'{item}' telah ditambahkan.") 
+    elif pilihan == '2': 
+
+--- PAGE 63 ---
+  PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON | 62 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+        if data: 
+            print("\nData yang tersimpan:") 
+            for i, item in enumerate(data, 1): 
+                print(f"{i}. {item}") 
+        else: 
+            print("\nTidak ada data yang tersimpan.") 
+    elif pilihan == '3': 
+        if data: 
+            print("\nData yang tersimpan:") 
+            for i, item in enumerate(data, 1): 
+                print(f"{i}. {item}") 
+            hapus = int(input("Masukkan nomor data yang ingin dihapus: ")) 
+            if 1 <= hapus <= len(data): 
+                removed_item = data.pop(hapus - 1) 
+                print(f"'{removed_item}' telah dihapus.") 
+            else: 
+                print("Nomor tidak valid.") 
+        else: 
+            print("\nTidak ada data yang dapat dihapus.") 
+    elif pilihan == '4': 
+        print("Terima kasih! Program selesai.") 
+        break 
+    else: 
+        print("Pilihan tidak valid. Silakan pilih angka antara 1 hingga 4.") 
+Case 2: 
+Ari mau membuat program yang dapat menghitung debit air menggunakan bahasa Python. 
+Dengan, rumus (debit = volume / waktu). Kemudian ada beberapa indikator ketika debit air 
+diatas 50, debit air sangat tinggi. Ketika, dibawah 50 debit air sedang. Dan, debit dibawah 20 
+debit air rendah. Maka, bagaimana bentuk programnya? 
+- flowchart : 
+ 
+
+--- PAGE 64 ---
+  PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON | 63 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+- source code : 
+volume=float(input("Masukkan volume air (dalam liter): ")) 
+waktu=float(input("Masukkan waktu yang diperlukan (dalam detik): ")) 
+debit = volume / waktu 
+print(f"Debit air: {debit} liter/detik") 
+if debit > 50: 
+    print("Debit air sangat tinggi.") 
+elif 20 <= debit <= 50: 
+    print("Debit air sedang.") 
+elif 5 <= debit < 20: 
+    print("Debit air rendah.") 
+else: 
+    print("Debit air sangat rendah.") 
+Case 3: 
+Berikut adalah contoh program Python sederhana menggunakan perulangan yang 
+memungkinkan pengguna untuk membeli buah. Program ini akan meminta pengguna 
+memasukkan nama buah dan jumlahnya, kemudian menghitung total harga berdasarkan daftar 
+harga yang telah ditentukan. 
+- flowchart : 
+ 
+
+--- PAGE 65 ---
+  PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON | 64 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+- source code : 
+# Daftar harga buah per kilogram 
+harga_buah = { 
+    'apel': 20000, 
+    'jeruk': 15000, 
+    'mangga': 25000, 
+    'pisang': 10000 
+} 
+total_belanja = 0 
+print("Selamat datang di toko buah kami!") 
+print("Daftar buah yang tersedia: apel, jeruk, mangga, pisang") 
+# Memulai perulangan pembelian 
+while True: 
+    nama_buah = input("\nMasukkan nama buah yang ingin dibeli (atau 'y' 
+untuk keluar): ").lower() 
+    if nama_buah == 'y': 
+        break 
+    if nama_buah in harga_buah: 
+        jumlah_kg = float(input(f"Masukkan jumlah {nama_buah} yang ingin 
+dibeli (dalam kg): ")) 
+        total_harga = harga_buah[nama_buah] * jumlah_kg 
+        total_belanja += total_harga 
+        print(f"Anda membeli {jumlah_kg} kg {nama_buah} dengan total harga 
+Rp {total_harga}") 
+    else: 
+        print("Buah tidak tersedia. Silakan pilih buah yang ada di daftar.") 
+# Tampilkan total belanja 
+print(f"\nTotal belanja Anda: Rp {total_belanja}") 
+print("Terima kasih telah berbelanja di toko kami!") 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 66 ---
+  PERCABANGAN DAN PERULANGAN PADA BAHASA PYTHON | 65 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+IV. TUGAS AKHIR 
+1. Mengapa penting untuk mendeklarasikan fungsi dalam pemrograman Python, dan apa 
+manfaatnya? 
+2. Jelaskan 3 bagian struktur pada perulangan for dari program Bahasa Python! 
+3. Jelaskan bagaimana cara kerja dari program case 1 pada bagian ("for i, item in 
+enumerate(data, 1):")! 
+4. Pada program case 2, mengapa menggunakan percabangan if elif? Apakah bisa 
+menggunakan percabangan lain? Jelaskan! 
+5. Pada program case 3 mengapa menggunakan While True dan apakah bisa diganti 
+menggunakan yang lain? 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 67 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 66 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+MODUL VI 
+LIST, DICTIONARY, DAN OPERASI FILE 
+I. 
+TUJUAN 
+1. Membuat dan memahami struktur List, Dictionary, dan penulisan Operasi File 
+2. Memahami cara penggunaan List, dan dictionary dalam pengaplikasiannya dalam operasi 
+file 
+II. TEORI 
+2.1. List 
+List adalah tipe data yang digunakan untuk menyimpan elemen yang diurutkan. List 
+sering disebut juga array pada bahasa pemrograman lain. Sebuah list dapat dibuat dengan 
+menggunakan tanda kurung siku [ ]. Setiap Anggota pada list dipisahkan oleh tanda koma 
+(,). List bersifat mutable, mutable artinya nilainya dapat diubah secara langsung. Adapun 
+beberapa sifat list antara lain sebagai berikut : 
+• Komponen penyusunnya bisa diganti.  
+• Komponen penyusunya dapat dibaca dan dimanipulasi secara langsung. 
+• Komponen penyusunnya bisa ditambah.  
+• Komponen penyusunnya dapat diambil dengan menunjukkan indeksnya atau dengan 
+notasi slice. 
+• Komponen penyusun sebuah list dapat juga berupa list yang lain (nested List) . 
+• Sama seperti array pada bahasa C, pada list indeks nya dimulai dari 0 
+Contoh pendeklarasian List : 
+nilaiUjian = [80,73,90,85,78,88,92,76,95,89] 
+namaMahasiswa = ["Andi", "Budi", "Cici", "Dodi", "Eka", "Fani", 
+"Gina", "Hadi", "Ika", "Joko"] 
+nilaiCampuran = ["Python",20, 3.44,True] 
+nestedList = [[80,23,11],True,["Javascript","Python"]] 
+print(nilaiUjian[1])  # Output: 73 
+print(namaMahasiswa[0])  # Output: Andi 
+print(nilaiCampuran[2])  # Output: 3.44  
+ 
+ 
+ 
+print(nestedList[2][1])  # Output: Python 
+Nama 
+Fungsi 
+Cara Deklarasi 
+Penjelasan 
+Insert 
+alist.insert(i,item) Menyisipkan atau menambahkan item ke dalam list 
+pada posisi ke-i 
+Pop 
+alist.pop() 
+Menghapus & mengembalikan item terakhir dari 
+dalam list 
+Pop 
+alist.pop(i) 
+Menghapus dan mengembalikan item ke-i dari 
+dalam list 
+
+--- PAGE 68 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 67 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Sort 
+alist.sort() 
+Mengubah suatu list agar terurut 
+Reverse 
+alist.reverse() 
+Mengubah suatu list dalam urutan terbalik 
+Delete 
+del alist[i] 
+Menghapus item pada posisi ke-i 
+Index  
+alist.index(item) 
+Mengembalikan index dari kemunculan pertama 
+dari item 
+Count 
+alist.count(item) 
+ 
+Menghitung jumlah kehadiran dari item.  
+Remove 
+alist.remove(item) 
+ 
+Menghapus item yang ditulis  
+Contoh Penggunaan :  
+#membuat list 
+myList = [1,2,3,4,5]  
+print("List Awal : ", myList) 
+#menambahkan elemen ke list 
+myList.insert(len(myList), 6) #menambahkan elemen 6 di akhir list 
+myList.insert(1, 0) #menambahkan elemen 0 di index ke-1 
+#menggabungkan dua list 
+secondList = [7,8,9] 
+my_list = myList + secondList  
+print("List Setelah Penambahan : ", my_list) 
+#mengakses elemen list 
+element = my_list[2] #mengakses elemen pada index ke-2 
+print("Elemen pada index ke-2 : ", element)  
+#menghitung jumlah kemunculan elemen 2 
+count= my_list.count(2) 
+print("Jumlah kemunculan elemen 2 : ", count) 
+#mencari index dari elemen 3 
+index = my_list.index(3)  
+print("Index dari elemen 3 : ", index) 
+#menghapus elemen 4 
+my_list.remove(4) 
+print("List Setelah Penghapusan Elemen 4 : ", my_list) 
+#menyalingkan list 
+list_copy = my_list.copy() 
+print("Salinan List : ", list_copy) 
+#mengurutkan list 
+my_list.sort()  
+print("List Setelah Pengurutan : ", my_list) 
+#membalikkan urutan list 
+my_list.reverse() 
+print("List Setelah Pembalikan : ", my_list) 
+#menghapus semua elemen dari list 
+my_list.clear() 
+print("List Setelah Penghapusan Semua Elemen : ", my_list) 
+ 
+2.2. Dictionary 
+Dictionary/dict adalah tipe data yang digunakan untuk menyimpan data dalam 
+bentuk pasangan kunci-nilai (key-value pairs).Dictionary diwakili dengan tanda kurung 
+
+--- PAGE 69 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 68 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+kurawal { }, dan pasangan kunci-nilai dipisahkan oleh titik dua ( : ). Setiap pasangan 
+kunci-nilai dipisahkan oleh koma. Dictionary sangat berguna ketika Anda ingin 
+mengakses data dengan menggunakan kunci daripada indeks numerik. 
+Dictionary bersifat mutable, artinya mereka dapat dimodifikasi dengan 
+menambahkan, menghapus, dan mengganti elemen dalam dictionary, mirip dengan list. 
+Manipulasi terhadap dictionary dilakukan dengan mengakses nilai melalui key-nya atau 
+dengan menambahkan pasangan key-value berikutnya. Mirip dengan mengaksesan 
+sequence, tetapi tidak menggunakan index, melainkan harus menggunakan key. 
+Contoh Penulisan Dictionary :  
+myDictionary = { 
+   key1: value1, #value dengan key isi tunggal 
+   key2: [ value2 , value3 ] #value dengan key isi list 
+} 
+Contoh Program Dictionary  
+:  
+mahasiswa = { 
+    "nama" : "Naufal", 
+    "umur" : 20, 
+    "mata_kuliah" : ["Kalkulus", "Fisika", "Kimia"] 
+} 
+print(mahasiswa["nama"])  # Output: Naufal 
+Terdapat juga fungsi fungsi yang dapat digunakan untuk mengubah atau memanipulasi 
+nilai nilai yang terdapat pada list, antara lain sebagai berikut : 
+Nama 
+Fungsi 
+Cara Deklarasi 
+Penjelasan 
+Keys 
+adict.keys() 
+Mengambil semua key pada dict  
+Values 
+adict.values() 
+Mengambil semua value pada dict  
+Items 
+adict.items() 
+Mengambil semua pasangan (key-value) pada dict  
+get 
+adict.get(key) 
+Mengambil value berdasarkan key pada dict 
+get 
+adict.get(key, 
+alt) 
+Mengambil value berdasarkan key pada dict. apabila tidak 
+ada, akan mengambil ‘alt’ 
+Contoh Penggunaannya :  
+#membuat dictionary 
+mahasiswa = { 
+    "nama" : "Naufal", 
+    "umur" : 20, 
+    "mata_kuliah" : ["Kalkulus", "Fisika", "Kimia"] 
+} 
+print("Dictionary awal : ",mahasiswa) 
+#mengakses nilai berdasarkan key 
+nama = mahasiswa["nama"] 
+print("Nama : ", nama) 
+
+--- PAGE 70 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 69 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+#mengakses nilai berdasarkan key dengan get dengan nilai default 
+kelamin = mahasiswa.get("kelamin", "Tidak Diketahui") 
+print("Kelamin : ", kelamin) 
+#menambahkan elemen ke dictionary 
+mahasiswa["kelamin"] = "Laki-laki" 
+print("Dictionary setelah penambahan elemen : ", mahasiswa) 
+#mengubah nilai pada key tertentu 
+mahasiswa["umur"] = 20 
+print("Dictionary setelah pengubahan umur : ", mahasiswa) 
+#menghapus elemen berdasarkan key 
+del mahasiswa["mata_kuliah"] 
+print("Dictionary setelah penghapusan mata_kuliah : ", mahasiswa) 
+#menggunakan if untuk memeriksa apakah key ada dalam dictionary 
+if "nama" in mahasiswa: 
+    print("Nama ada dalam dictionary") 
+else: 
+    print("Nama tidak ada dalam dictionary")     
+#menggunakan operator len untuk menghitung jumlah elemen dalam dictionary 
+jumlahElemen = len(mahasiswa) 
+print("Jumlah elemen dalam dictionary : ", jumlahElemen) 
+#Menggunakan metode keys() untuk mendapatkan semua key dalam dictionary 
+daftarKey = mahasiswa.keys() 
+print("Daftar key dalam dictionary : ", daftarKey) 
+#menggunakan metode values() untuk mendapatkan semua nilai dalam 
+dictionary 
+daftarNilai = mahasiswa.values() 
+print("Daftar nilai dalam dictionary : ", daftarNilai) 
+#menggunakan metode items() untuk mendapatkan semua pasangan key-value 
+dalam dictionary 
+daftarPasangan = mahasiswa.items() 
+print("Daftar pasangan key-value dalam dictionary : ", daftarPasangan) 
+#menggunakan loop untuk mengakses semua key dan nilai dalam dictionary 
+for key, value in mahasiswa.items(): 
+print(f"{key}: {value}") 
+ 
+2.3. Operasi File 
+Operasi file di Python adalah proses saat program Python berinteraksi dengan file di 
+komputer, seperti membuka file, membaca isi file, menulis data ke file, atau 
+menambahkan isi ke file. 
+Dengan operasi file, kita bisa: 
+a. Mengambil data dari file (misalnya: membaca catatan, log, data pengguna) 
+b. Menyimpan data hasil program agar tidak hilang saat program selesai 
+c. Memodifikasi isi file secara otomatis lewat kode 
+2.3.1. Struktur Dasar Operasi File 
+Struktur dasar untuk menuliskan operasi file pada Python adalah sebagai berikut : 
+ 
+
+--- PAGE 71 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 70 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+with open("nama file","method") as variabelFile: 
+    code Block 
+Struktur operasi file pada Python tidak memerlukan penutup file seperti pada 
+bahasa C. sebagai gantinya, perintah operasi file haruslah berada pada kode blok 
+dari statement with . 
+ 
+2.3.2. Macam - macam Operasi File 
+Macam-macam jenis operasi file yang umum digunakan yaitu: 
+1. “r” 
+: Membuka file yang harus sudah ada untuk dibaca. 
+2. “w” 
+: Membuka file baru untuk ditulis (overwrite). 
+3. “a”  
+: Membuka file untuk ditambahkan isinya. 
+4. “r+” 
+: Membuka file yang harus sudah ada untuk dibaca dan ditulis. 
+5. “w+” : Membuka file baru untuk ditulis (overwrite) dan dibaca. 
+6. “a+” 
+: Membuka file untuk dibaca dan ditambahkan isinya. 
+Jika dilakukan proses penulisan terlebih dahulu kemudian pembacaan dalam satu  
+program, 
+Jenis Operasi 
+Jika File Ada 
+Jika File Tidak Ada 
+r+ 
+Dapat menulis dengan mengganti 
+(overwrite)  data dari awal 
+Error 
+w+ 
+Dapat menulis dan membaca 
+dengan overwrite seluruh data 
+Membuat file baru 
+a+ 
+Dapat menulis tanpa overwrite 
+data 
+Membuat file baru 
+Jika dilakukan proses pembacaan terlebih dahulu kemudian penulisan dalam satu    
+program, 
+Jenis Operasi 
+Jika File Ada 
+Jika File Tidak Ada 
+r+ 
+Dapat membaca dan menulis 
+setelah EOF 
+Error 
+w+ 
+Tidak dapat membaca tetapi 
+dapat menulis 
+Tidak dapat membaca tetapi dapat 
+menulis dengan membuat file baru 
+
+--- PAGE 72 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 71 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+a+ 
+Dapat membaca dan menulis 
+tanpa overwrite 
+Tidak dapat membaca namun 
+dapat menulis 
+ 
+Python tidak memiliki fungsi rewind() bawaan seperti dalam bahasa C. Namun, 
+dapat mencapai perilaku yang sama dengan menggunakan metode fungsi seek(0) 
+pada objek file untuk mengatur kursor kembali ke posisi awal file.  
+variabelFile.seek(0) 
+ 
+2.3.3. Menulis isi File pada Operasi File 
+Pada Operasi file terdapat beberapa teknik manipulasi isi pada suatu file , sebagai 
+berikut :  
+1. Write 
+fungsi write berfungsi untuk menuliskan suatu data ke dalam file. Dituliskan 
+sebagai berikut :  
+Contoh Penulisan 
+Implementasi 
+variabel.write(data) with open("nama.txt","w") as file: 
+    file.write("Kelass King") 
+OUTPUT PADA FILE 
+Kelass King 
+2. Writelines 
+berfungsi seperti ‘write’, namun digunakan untuk menulis banyak string ke file 
+dari kumpulan data seperti list. Dituliskan sebagai berikut :  
+Contoh Penulisan 
+Implementasi 
+variabel.writelines(list) 
+ 
+listData = ["Javascript", "Ruby","PHP"] 
+with open("nama.txt","w") as file: 
+    file.writelines(listData) 
+OUTPUT PADA FILE 
+JavascriptRubyPHP 
+ 
+ 
+ 
+2.3.4. Membaca isi File pada Operasi File 
+Pada operasi file juga terdapat cara untuk membaca isi didalam file, tentunya 
+dengan menggunakan beberapa fungsi sebagai berikut :  
+Misal, ada file bernama “mahasiswa.txt” file tersebut berisikan :  
+Sewagati 
+Halliday 
+Academia 
+
+--- PAGE 73 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 72 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Maka : 
+1. Read 
+Digunakan untuk membaca seluruh isi file sebagai satu string. Dituliskan 
+sebagai berikut : 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+2. Readline 
+Digunakan untuk membaca satu baris dari file setiap kali dipanggil. Dituliskan 
+sebagai berikut : 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+3. Readlines 
+Digunakan untuk membaca seluruh isi file, lalu mengembalikannya dalam 
+bentuk list di mana setiap elemen list merupakan satu baris teks dari file. 
+Dituliskan sebagai berikut : 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Contoh Penulisan 
+Implementasi 
+variabel.read() 
+ 
+with open("mahasiswa.txt","r") as file2: 
+    isiFile = file2.read() 
+    print(isiFile) 
+OUTPUT PADA PROGRAM 
+Sewagati 
+Halliday 
+Academia 
+Contoh Penulisan 
+Implementasi 
+variabel.readline() 
+ 
+with open("mahasiswa.txt","r") as file2: 
+    isiFile = file2.readline() 
+    isiFile2= file2.readline() 
+    print(isiFile) 
+    print(isiFile2) 
+OUTPUT PADA PROGRAM 
+Sewagati 
+Halliday 
+Contoh Penulisan 
+Implementasi 
+variabel.readlines() 
+ 
+with open("mahasiswa.txt","r") as file2: 
+    isiFile = file2.readlines() 
+    print(isiFile) 
+OUTPUT PADA PROGRAM 
+['Sewagati\n', 'Halliday\n', 'Academia'] 
+
+--- PAGE 74 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 73 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Contoh Implementasi dari Operasi File adalah sebagai berikut :  
+def tambah_catatan(nama_file): 
+    print("\n--- Tambah Catatan Baru ---") 
+    catatan = input("Masukkan catatan Anda: ") 
+    with open(nama_file, "a") as f: 
+        f.write(catatan + "\n") 
+    print(f"Catatan berhasil ditambahkan ke '{nama_file}'.") 
+def baca_catatan(nama_file): 
+    print("\n--- Semua Catatan ---") 
+    with open(nama_file, "r") as f: 
+        isi_file = f.read() 
+        if isi_file: 
+            print(isi_file) 
+        else: 
+            print("Belum ada catatan dalam file.") 
+def main(): 
+    nama_file_catatan = "catatan_tanpa_error.txt" 
+    while True: 
+        print("\n--- Menu Aplikasi Pencatat ---") 
+        print("1. Tambah Catatan") 
+        print("2. Baca Catatan") 
+        print("3. Keluar") 
+        pilihan = input("Pilih opsi (1/2/3): ") 
+        if pilihan == '1': 
+            tambah_catatan(nama_file_catatan) 
+        elif pilihan == '2': 
+            baca_catatan(nama_file_catatan) 
+        elif pilihan == '3': 
+            print("Terima kasih.") 
+            break 
+        else: 
+            print("Pilihan tidak valid. Silakan coba lagi.") 
+if __name__ == "__main__": 
+main() 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 75 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 74 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+III. PROGRAM  
+Study Case 1 - List : 
+Kita akan membuat program untuk mengelola daftar tugas (to-do list) yang memungkinkan 
+pengguna untuk menambahkan, menampilkan, dan menyelesaikan tugas. 
+- flowchart : 
+ 
+- source code :  
+#inisialisasi List tugas 
+toDoList = [] 
+#fungsi untuk menampilkan daftar tugas 
+def tampilkanTugas(): 
+  if not toDoList: 
+    print("daftar tugas kosong") 
+  else: 
+    print("Daftar Tugas:") 
+    for i, tugas in enumerate(toDoList, start=1): 
+      print(f"{i}. {tugas}") 
+#fungsi untuk menambahkan tugas ke daftar 
+def tambahTugas(): 
+  tugas = input("Masukkan tugas yang ingin ditambahkan: ") 
+  toDoList.insert(len(toDoList), tugas) 
+  print(f"Tugas '{tugas}' telah ditambahkan ke daftar.") 
+#fungsi untuk menyelesaikan tugas 
+def selesaikanTugas(): 
+  tampilkanTugas() 
+  if toDoList: 
+    indeks = int(input("Pilih nomor tugas yang telah selesai :")) 
+    if 1<= indeks <= len(toDoList): 
+      tugasSelesai = toDoList[indeks-1] 
+
+--- PAGE 76 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 75 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+      del toDoList[indeks - 1] 
+      print(f"Tugas '{tugasSelesai}' telah diselesaikan dan dihapus.") 
+    else : 
+      print("Nomor tugas tidak valid.") 
+  else: 
+    print("Tugas Kosong") 
+def main(): 
+  while True: 
+    print("\nMenu:") 
+    print("1. Tampilkan Daftar Tugas") 
+    print("2. Tambah Tugas") 
+    print("3. Selesaikan Tugas") 
+    print("4. Keluar") 
+    pilihan = input("Pilih menu (1-4): ") 
+    if pilihan == '1': 
+      tampilkanTugas() 
+    elif pilihan == '2': 
+      tambahTugas() 
+    elif pilihan == '3': 
+      selesaikanTugas() 
+    elif pilihan == '4': 
+      print("Terima kasih telah menggunakan aplikasi To-Do List!") 
+      break 
+    else: 
+      print("Pilihan tidak valid, silakan coba lagi.") 
+if __name__ == "__main__": 
+  main() 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 77 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 76 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Study Case 2 – Dictionary : 
+Contoh studi kasus sederhana yang melibatkan penggunaan Dictionary dalam Python untuk 
+mengelola peminjaman buku : 
+- flowchart : 
+ 
+- source code : 
+#inisialisasi dictionary untuk melacak buku yang dipinjam 
+bukuDipinjam = {} 
+#dictionary buku dengan genre 
+buku = { 
+    "Buku 1": "Fiksi", 
+    "Buku 2": "Non-Fiksi", 
+    "Buku 3": "Fiksi", 
+    "Buku 4": "Non-Fiksi", 
+    "Buku 5": "Fantasi" 
+} 
+#Fungsi untuk meminjam buku 
+def pinjamBuku(mahasiswa, judulBuku): 
+    if judulBuku in bukuDipinjam: 
+        print(f"{judulBuku} sudah dipinjam oleh 
+{bukuDipinjam[judulBuku]['Mahasiswa']}") 
+    else: 
+        if buku.get(judulBuku): 
+            genre = buku[judulBuku] 
+            bukuDipinjam[judulBuku] = {"Mahasiswa": mahasiswa, "Genre": 
+genre} 
+
+--- PAGE 78 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 77 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+            print(f"{mahasiswa} telah meminjam {judulBuku} (Genre : 
+{genre})") 
+        else: 
+            print(f"{judulBuku} tidak ada dalam perpustakaan.") 
+#Fungsi untuk mengembalikan buku 
+def kembalikanBuku(judulBuku): 
+    if judulBuku in bukuDipinjam: 
+        mahasiswa = bukuDipinjam[judulBuku]["Mahasiswa"] 
+        del bukuDipinjam[judulBuku] 
+        print(f"{judulBuku} berhasil dikembalikan oleh {mahasiswa}.") 
+    else: 
+        print(f"{judulBuku} tidak sedang dipinjam.") 
+#Menampilkan daftar buku yang sedang dipinjam 
+def daftarBukuDipinjam(): 
+    if bukuDipinjam: 
+        print("Buku yang sedang dipinjam:") 
+        for judul, info in bukuDipinjam.items(): 
+            mahasiswa = info["Mahasiswa"] 
+            genre = info["Genre"] 
+            print(f"{judul} dipinjam oleh {mahasiswa} (Genre: {genre})") 
+    else: 
+        print("Tidak ada buku yang sedang dipinjam saat ini.") 
+#Main Program 
+while True: 
+    print("\nMenu Perpustakaan:") 
+    print("1. Pinjam Buku") 
+    print("2. Kembalikan Buku") 
+    print("3. Daftar Buku Dipinjam") 
+    print("4. Keluar") 
+    pilihan = input("Pilih menu (1-4): ") 
+    if pilihan == "1": 
+        mahasiswa = input("Masukkan nama mahasiswa: ") 
+        judulBuku = input("Masukkan judul buku yang ingin dipinjam: ") 
+        pinjamBuku(mahasiswa, judulBuku) 
+    elif pilihan == "2": 
+        judulBuku = input("Masukkan judul buku yang ingin dikembalikan: ") 
+        kembalikanBuku(judulBuku) 
+    elif pilihan == "3": 
+        daftarBukuDipinjam() 
+    elif pilihan == "4": 
+        print("Terima kasih telah menggunakan perpustakaan!") 
+        break 
+    else: 
+        print("Pilihan tidak valid, silakan coba lagi.") 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 79 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 78 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+Study Case 3 – Operasi File : 
+Pada Study case kali ini, kita akan membuat program untuk pendataan mahasiswa dengan 
+menggunakan operasi file. 
+- flowchart : 
+ 
+- source code : 
+#fungsi input data 
+def inputData(): 
+    mhs_list = [] 
+    banyak = int(input("Berapa banyak mahasiswa yang ingin didata: ")) 
+    for i in range(banyak): 
+        print(f"\nMahasiswa ke {i+1}") 
+        nama = input("Nama\t: ") 
+        nim = int(input("NIM\t: ")) 
+        ipk = float(input("IPK\t: ")) 
+        mhs = { 
+            "nama": nama, 
+            "nim": nim, 
+            "ipk": ipk 
+        } 
+        mhs_list.insert(i, mhs) 
+    with open("Data Mahasiswa.txt", "w") as file: 
+        for i, mhs in enumerate(mhs_list): 
+            file.write(f"Mahasiswa ke {i+1}\n") 
+            file.write(f"Nama\t: {mhs['nama']}\n") 
+            file.write(f"NIM\t: {mhs['nim']}\n") 
+            file.write(f"IPK\t: {mhs['ipk']:.2f}\n\n") 
+    print("\nData Mahasiswa Telah Tersimpan!\n") 
+#fungsi untuk membaca data 
+def bacaData(): 
+    print("Data Mahasiswa:\n") 
+    with open("Data Mahasiswa.txt", "r") as file: 
+        while True: 
+            baris = file.readline() #seperti EOF 
+
+--- PAGE 80 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 79 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+            if not baris: 
+                break 
+            print(baris)   
+#Fungsi main  
+def main(): 
+    inputData() 
+    input("Tekan ENTER untuk melihat data...") 
+    print("="*40) 
+    bacaData() 
+    input("\nTekan ENTER untuk Selesai...") 
+if __name__ == "__main__": 
+    main() 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGE 81 ---
+  LIST, DICTIONARY, DAN OPERASI FILE | 80 
+ 
+MODUL PRAKTIKUM ALGORITMA DAN PEMROGRAMAN 
+ 
+IV. TUGAS AKHIR 
+1. Pada  studycase – 1 tentang list : 
+def tambahTugas(): 
+tugas = input("Masukkan tugas yang ingin ditambahkan: ") 
+toDoList.insert(len(toDoList), tugas) 
+print(f"Tugas '{tugas}' telah ditambahkan ke daftar.") 
+Terdapat fungsi len(toDoList), apa makna nya didalam fungsi insert ? 
+2. Sebutkan cara memanipulasi atau mengubah isi dari suatu dictionary ! 
+3. Apakah key pada dictionary boleh dalam bentuk list ? jelaskan ! 
+4. Diberikan list sebagai berikut :  
+dataList = ["Naufal","Senku", 4 , 3.1 ,"Aa","aa", True] 
+lakukanlah pengurutan data dengan fungsi sort(). Apa yang terjadi ? jelaskan ! 
+5. Perhatikan kode berikut : 
+with open("Data.txt", "r") as data: 
+        while True: 
+            jumlah = data.readline()  
+            if not jumlah: 
+                break 
+            print(jumlah)   
+Apa tujuan dari penggunaan” while True“ dan “if not baris: break“ pada kode di 
+atas?  
+6. Apa perbedaan antara fungsi writeline() dengan fungsi write()? 
+ 

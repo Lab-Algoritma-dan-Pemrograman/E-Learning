@@ -1,4 +1,7 @@
 import { supabase } from '../lib/supabase';
+import { useStore } from '../store/useStore';
+import { calculateLevel } from './progressService';
+import { calculateStreak } from './streakService';
 
 export interface GameQuestion {
   id: string;
@@ -73,7 +76,9 @@ export const saveGameHistory = async (
 
     const now = new Date().toISOString();
 
-    // 1. Record in game_history
+    // 1. Record in game_history FIRST
+    //    (trigger check_user_xp_level menghitung XP riil dari game_history,
+    //     jadi record ini HARUS ada sebelum UPDATE users.xp)
     const { error: historyErr } = await supabase
       .from('game_history')
       .insert([{
@@ -85,23 +90,41 @@ export const saveGameHistory = async (
 
     if (historyErr) throw historyErr;
 
-    // 2. Fetch current user XP and increment it
-    const { data: userProfile } = await supabase
+    // 2. Use current store XP (avoids race condition with DB stale reads)
+    const currentUser = useStore.getState().user;
+    const currentXp = (currentUser && currentUser.nim === userId) ? (currentUser.xp || 0) : 0;
+    const oldLevel = (currentUser && currentUser.nim === userId) ? (currentUser.level || 1) : 1;
+    const newXp = currentXp + history.xpEarned;
+    const newLevel = calculateLevel(newXp);
+    const { newStreak } = currentUser 
+      ? calculateStreak(currentUser.lastActive, currentUser.streak) 
+      : { newStreak: 1 };
+    
+    // 3. Update user XP & streak (trigger can now see the new game_history record)
+    const { error: userErr } = await supabase
       .from('users')
-      .select('xp')
-      .eq('nim', userId)
-      .single();
+      .update({
+        xp: newXp,
+        level: newLevel,
+        streak: newStreak,
+        last_active: now
+      })
+      .eq('nim', userId);
 
-    if (userProfile) {
-      const { error: userErr } = await supabase
-        .from('users')
-        .update({
-          xp: userProfile.xp + history.xpEarned,
-          last_active: now
-        })
-        .eq('nim', userId);
+    if (userErr) throw userErr;
 
-      if (userErr) throw userErr;
+    // Optimistically update the local store so XP/level displays immediately
+    if (currentUser && currentUser.nim === userId) {
+      useStore.getState().setUser({ 
+        ...currentUser, 
+        xp: newXp, 
+        level: newLevel, 
+        streak: newStreak,
+        lastActive: now 
+      });
+      if (newLevel > oldLevel) {
+        useStore.getState().setLevelUpNotification(newLevel);
+      }
     }
 
     console.log(`✅ Game result saved: +${history.xpEarned} XP for ${userId}`);

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Level } from '../data/curriculum';
+import { Level, curriculum as defaultCurriculum } from '../data/curriculum';
 import { Achievement } from '../services/achievementService';
 
 export interface UserProfile {
@@ -14,13 +14,14 @@ export interface UserProfile {
   streak: number;
   lastActive: string;
   createdAt: string;
-  role?: 'admin' | 'kordas' | 'asisten' | 'praktikan';
+  role?: 'admin' | 'kordas' | 'asisten' | 'praktikan'; // default: 'praktikan' (set by SupabaseProvider)
   division?: string;
   levelAccessOverrides?: Record<string, 'auto' | 'unlocked' | 'locked'>;
   assessmentAccess?: Record<string, boolean>;
+  studyTime?: number; // study time tracked in seconds
 }
 
-type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin' | 'assessments' | 'monitoring' | 'bank_soal';
+type Page = 'dashboard' | 'lesson' | 'playground' | 'leaderboard' | 'courses' | 'profile' | 'admin' | 'monitoring' | 'auditlog' | 'terminal-demo';
 
 interface AppState {
   user: UserProfile | null;
@@ -39,14 +40,23 @@ interface AppState {
   setPyodideWorker: (worker: Worker | null) => void;
   isPyodideLoading: boolean;
   setIsPyodideLoading: (loading: boolean) => void;
+  cWorker: any;
+  setCWorker: (worker: any) => void;
+  isCLoading: boolean;
+  setIsCLoading: (loading: boolean) => void;
   unlockedAchievement: Achievement | null;
   setUnlockedAchievement: (achievement: Achievement | null) => void;
+  achievementQueue: Achievement[];
+  pushAchievement: (achievement: Achievement) => void;
+  shiftAchievement: () => void;
+  levelUpNotification: number | null;
+  setLevelUpNotification: (level: number | null) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
-  curriculum: [],
+  curriculum: defaultCurriculum,
   setCurriculum: (curriculum) => set({ curriculum }),
   currentLessonId: null,
   setCurrentLessonId: (id) => set({ currentLessonId: id }),
@@ -60,6 +70,27 @@ export const useStore = create<AppState>((set) => ({
   setPyodideWorker: (worker) => set({ pyodideWorker: worker }),
   isPyodideLoading: true,
   setIsPyodideLoading: (loading) => set({ isPyodideLoading: loading }),
+  cWorker: null,
+  setCWorker: (worker) => set({ cWorker: worker }),
+  isCLoading: true,
+  setIsCLoading: (loading) => set({ isCLoading: loading }),
   unlockedAchievement: null,
   setUnlockedAchievement: (achievement) => set({ unlockedAchievement: achievement }),
+  achievementQueue: [],
+  pushAchievement: (achievement) => set((state) => {
+    const newQueue = [...state.achievementQueue, achievement];
+    return {
+      achievementQueue: newQueue,
+      unlockedAchievement: state.unlockedAchievement || achievement
+    };
+  }),
+  shiftAchievement: () => set((state) => {
+    const nextQueue = state.achievementQueue.slice(1);
+    return {
+      achievementQueue: nextQueue,
+      unlockedAchievement: nextQueue.length > 0 ? nextQueue[0] : null
+    };
+  }),
+  levelUpNotification: null,
+  setLevelUpNotification: (level) => set({ levelUpNotification: level }),
 }));
