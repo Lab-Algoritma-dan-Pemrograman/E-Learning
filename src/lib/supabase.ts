@@ -39,14 +39,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
  */
 export const setSupabaseSession = (token: string) => {
   if (!token) return;
-  
-  // Set module-level token (picked up by the custom fetch wrapper above)
-  _currentToken = token;
-  
-  // Set Realtime channels authorization
-  if (supabase.realtime) {
-    supabase.realtime.setAuth(token);
-  }
+
+  // JANGAN pakai token backend sebagai Authorization PostgREST: token itu
+  // ditandatangani JWT_SECRET backend, sedangkan PostgREST memverifikasi
+  // dengan legacy secret Supabase -> PGRST301 "None of the keys was able to
+  // decode the JWT" pada SEMUA request. Biarkan anon key yang dipakai;
+  // keamanan dijaga column-level grant (password_hash dkk tidak di-grant).
+  // ponytail: kolom gamifikasi bisa ditulis siapa saja yang punya anon key.
+  // Kalau itu jadi masalah, pindahkan write ke server pakai service_role.
 };
 
 // Auto-initialize on load if token exists in session storage
