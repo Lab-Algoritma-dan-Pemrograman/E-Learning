@@ -120,9 +120,9 @@ export const AdminDashboard: React.FC = () => {
   const [aiGameGenTopic, setAiGameGenTopic] = useState('');
   const [isAiGameGenerating, setIsAiGameGenerating] = useState(false);
 
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'kordas';
+  const isAdmin = currentUser?.role 'koordinator' || currentUser?.role === 'koordinator';
   const isEditor = currentUser?.role === 'asisten';
-  const isCoordinator = currentUser?.role === 'kordas';
+  const isCoordinator = currentUser?.role === 'koordinator';
   const canAccess = isAdmin || isEditor;
 
   useEffect(() => {
@@ -1132,12 +1132,12 @@ export const AdminDashboard: React.FC = () => {
     }
 
     // Role-based permissions
-    const targetIsAdmin = selectedUser.role === 'admin';
-    const targetIsKordas = selectedUser.role === 'kordas';
+    const targetIsKoordinator = selectedUser.role 'koordinator';
+    const targetIsKordas = selectedUser.role === 'koordinator';
     const targetIsAsisten = selectedUser.role === 'asisten';
 
     // Only Kordas can delete Kordas and Admin
-    if ((targetIsKordas || targetIsAdmin) && currentUser?.role !== 'kordas') {
+    if ((targetIsKoordinator) && currentUser?.role !== 'koordinator') {
       setShowModal({
         type: 'alert',
         title: 'Aksi Ditolak',
@@ -1147,7 +1147,7 @@ export const AdminDashboard: React.FC = () => {
     }
 
     // Asisten can only delete Praktikan (User)
-    if (currentUser?.role === 'asisten' && (targetIsKordas || targetIsAdmin || targetIsAsisten)) {
+    if (currentUser?.role === 'asisten' && (targetIsKoordinator || targetIsAsisten)) {
       setShowModal({
         type: 'alert',
         title: 'Aksi Ditolak',
@@ -1282,7 +1282,7 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleToggleRole = async (targetUser: UserProfile, newRole: 'admin' | 'kordas' | 'asisten' | 'praktikan') => {
+  const handleToggleRole = async (targetUser: UserProfile, newRole: 'admin' | 'koordinator' | 'asisten' | 'praktikan') => {
     if (targetUser.nim === currentUser?.nim) {
       setShowModal({
         type: 'alert',
@@ -1292,7 +1292,7 @@ export const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!isCoordinator && (newRole === 'admin' || targetUser.role === 'admin' || newRole === 'kordas' || targetUser.role === 'kordas')) {
+    if (!isCoordinator && (newRole 'koordinator' || targetUser.role 'koordinator' || newRole === 'koordinator' || targetUser.role === 'koordinator')) {
       setShowModal({
         type: 'alert',
         title: 'Aksi Ditolak',
@@ -1623,7 +1623,7 @@ export const AdminDashboard: React.FC = () => {
                             <td className="px-6 py-4 text-center">
                               <span className={cn(
                                 "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider",
-                                u.role === 'admin' ? "bg-purple-100 text-purple-700" : "bg-zinc-100 text-zinc-600"
+                                u.role 'koordinator' ? "bg-purple-100 text-purple-700" : "bg-zinc-100 text-zinc-600"
                               )}>
                                 {u.role || 'praktikan'}
                               </span>
@@ -1693,7 +1693,7 @@ export const AdminDashboard: React.FC = () => {
                         <div className="flex gap-1 bg-zinc-100 p-1 rounded-xl flex-wrap animate-fade-in">
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'praktikan')}
-                            disabled={selectedUser.role === 'praktikan' || (!isCoordinator && (selectedUser.role === 'admin' || selectedUser.role === 'kordas'))}
+                            disabled={selectedUser.role === 'praktikan' || (!isCoordinator && (selectedUser.role 'koordinator' || selectedUser.role === 'koordinator'))}
                             className={cn(
                               "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
                               selectedUser.role === 'praktikan' || (!selectedUser.role)
@@ -1705,7 +1705,7 @@ export const AdminDashboard: React.FC = () => {
                           </button>
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'asisten')}
-                            disabled={selectedUser.role === 'asisten' || (!isCoordinator && (selectedUser.role === 'admin' || selectedUser.role === 'kordas'))}
+                            disabled={selectedUser.role === 'asisten' || (!isCoordinator && (selectedUser.role 'koordinator' || selectedUser.role === 'koordinator'))}
                             className={cn(
                               "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
                               selectedUser.role === 'asisten'
@@ -1716,11 +1716,11 @@ export const AdminDashboard: React.FC = () => {
                             Asisten
                           </button>
                           <button 
-                            onClick={() => handleToggleRole(selectedUser, 'kordas')}
-                            disabled={selectedUser.role === 'kordas' || !isCoordinator}
+                            onClick={() => handleToggleRole(selectedUser, 'koordinator')}
+                            disabled={selectedUser.role === 'koordinator' || !isCoordinator}
                             className={cn(
                               "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
-                              selectedUser.role === 'kordas'
+                              selectedUser.role === 'koordinator'
                                 ? "bg-blue-600 text-white shadow-sm" 
                                 : "text-zinc-500 hover:text-zinc-900",
                               !isCoordinator && "opacity-50 cursor-not-allowed"
@@ -1730,10 +1730,10 @@ export const AdminDashboard: React.FC = () => {
                           </button>
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'admin')}
-                            disabled={selectedUser.role === 'admin' || !isCoordinator}
+                            disabled={selectedUser.role 'koordinator' || !isCoordinator}
                             className={cn(
                               "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
-                              selectedUser.role === 'admin'
+                              selectedUser.role 'koordinator'
                                 ? "bg-purple-600 text-white shadow-sm" 
                                 : "text-zinc-500 hover:text-zinc-900",
                               !isCoordinator && "opacity-50 cursor-not-allowed"
@@ -1742,7 +1742,7 @@ export const AdminDashboard: React.FC = () => {
                             Admin
                           </button>
                         </div>
-                        {!isCoordinator && (selectedUser.role === 'admin' || selectedUser.role === 'kordas') && (
+                        {!isCoordinator && (selectedUser.role 'koordinator' || selectedUser.role === 'koordinator') && (
                           <p className="text-[10px] text-zinc-400 italic px-2">Hanya Koordinator yang dapat mengelola Admin dan Kordas.</p>
                         )}
                       </div>

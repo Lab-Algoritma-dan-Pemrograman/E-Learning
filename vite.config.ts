@@ -59,7 +59,7 @@ const apiDevServer = (env: Record<string, string>) => ({
 
             const rawRole = tokenPayload.user_role || tokenPayload.role;
             let appRole = rawRole || 'praktikan';
-            if (appRole === 'koordinator') appRole = 'kordas';
+            // koordinator stays koordinator
             if (appRole === 'authenticated' || appRole === 'anon' || appRole === 'user') appRole = 'praktikan';
 
             let returnedToken = token;
@@ -141,7 +141,7 @@ const apiDevServer = (env: Record<string, string>) => ({
             // Normalisasi role
             const rawRole = tokenPayload.user_role || tokenPayload.role;
             let appRole = rawRole || 'praktikan';
-            if (appRole === 'koordinator') appRole = 'kordas';
+            // koordinator stays koordinator
             if (appRole === 'authenticated' || appRole === 'anon' || appRole === 'user') appRole = 'praktikan';
 
             // Sign ulang dengan Supabase secret

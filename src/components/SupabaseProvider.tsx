@@ -62,11 +62,11 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const payload = result.payload;
       
-      // Normalize and map 'koordinator' role from Web Utama to 'kordas' in E-Learning
+      // Normalize and map 'koordinator' role from Web Utama to 'koordinator' in E-Learning
       const rawRole = (payload as any).role;
-      let mappedRole: 'admin' | 'kordas' | 'asisten' | 'praktikan' = 'praktikan';
-      if (rawRole === 'admin') mappedRole = 'admin';
-      else if (rawRole === 'kordas' || rawRole === 'koordinator') mappedRole = 'kordas';
+      let mappedRole: 'admin' | 'koordinator' | 'asisten' | 'praktikan' = 'praktikan';
+      
+      else if (rawRole === 'koordinator' || rawRole === 'koordinator') mappedRole = 'koordinator';
       else if (rawRole === 'asisten') mappedRole = 'asisten';
       payload.role = mappedRole;
 
@@ -369,7 +369,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           .select('*')
           .order('sort_order');
 
-        const isStaff = userRole === 'admin' || userRole === 'kordas' || userRole === 'asisten';
+        const isStaff = userRole === 'admin' || userRole === 'koordinator' || userRole === 'asisten';
         const lessonsTable = isStaff ? 'lessons' : 'student_lessons';
 
         const { data: lessonsData } = await supabase

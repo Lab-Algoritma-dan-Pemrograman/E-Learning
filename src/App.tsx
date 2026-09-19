@@ -48,9 +48,9 @@ function AppContent() {
         case 'leaderboard': return <Leaderboard />;
         case 'courses': return <CourseExplorer />;
         case 'profile': return <Profile />;
-        case 'admin': return (['admin', 'kordas'].includes(user?.role || '')) ? <AdminDashboard /> : <Dashboard />;
-        case 'monitoring': return (['admin', 'kordas', 'asisten'].includes(user?.role || '')) ? <StudentMonitoring /> : <Dashboard />;
-        case 'auditlog': return (['admin', 'kordas'].includes(user?.role || '')) ? <AuditLogPage /> : <Dashboard />;
+        case 'admin': return (['koordinator'].includes(user?.role || '')) ? <AdminDashboard /> : <Dashboard />;
+        case 'monitoring': return (['koordinator', 'asisten'].includes(user?.role || '')) ? <StudentMonitoring /> : <Dashboard />;
+        case 'auditlog': return (['koordinator'].includes(user?.role || '')) ? <AuditLogPage /> : <Dashboard />;
         case 'terminal-demo': return <TerminalDemo />;
 
         default: return <Dashboard />;

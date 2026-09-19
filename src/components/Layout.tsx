@@ -56,7 +56,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 
 
-  const isAdminOrKordas = user?.role === 'admin' || user?.role === 'kordas';
+  const isAdminOrKordas = user?.role === 'koordinator';
   const isStaff = isAdminOrKordas || user?.role === 'asisten';
 
   const handleLogout = async () => {
