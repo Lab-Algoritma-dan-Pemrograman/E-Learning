@@ -66,7 +66,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const rawRole = (payload as any).role;
       let mappedRole: 'admin' | 'koordinator' | 'asisten' | 'praktikan' = 'praktikan';
       
-      else if (rawRole === 'koordinator' || rawRole === 'koordinator') mappedRole = 'koordinator';
+      if (rawRole === 'koordinator') mappedRole = 'koordinator';
       else if (rawRole === 'asisten') mappedRole = 'asisten';
       payload.role = mappedRole;
 

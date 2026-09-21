@@ -272,7 +272,11 @@ const apiDevServer = (env: Record<string, string>) => ({
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    plugins: [react(), tailwindcss(), apiDevServer(env), VitePWA({
+    // PWA dimatikan sementara (ENABLE_PWA=true untuk nyalakan lagi):
+    // vite-plugin-pwa 1.x tidak kompatibel dengan Vite 6 ("source phase
+    // import must be external") sehingga build gagal total dan tidak ada
+    // deploy yang jalan. Tombol fix butuh deploy, jadi PWA dikorbankan dulu.
+    plugins: [react(), tailwindcss(), apiDevServer(env), ...(process.env.ENABLE_PWA === 'true' ? [VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       workbox: {
@@ -291,7 +295,7 @@ export default defineConfig(({mode}) => {
           }
         ]
       }
-    })],
+    })] : [])],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || ''),
     },
@@ -305,8 +309,15 @@ export default defineConfig(({mode}) => {
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâ€”file watching is disabled to prevent flickering during agent edits.
+      // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
+    },
+    build: {
+      // Matikan modulepreload polyfill: vite-plugin-pwa 1.x gagal bundle
+      // "vite/modulepreload-polyfill" di Vite 6 (error: source phase import
+      // must be external). Tanpa polyfill, build lolos dan deploy jalan —
+      // browser modern sudah support modulepreload native.
+      modulePreload: { polyfill: false },
     },
     worker: {
       format: 'es',
