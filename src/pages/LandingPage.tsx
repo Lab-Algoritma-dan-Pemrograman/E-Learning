@@ -10,7 +10,12 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 
-const WEB_UTAMA_URL = import.meta.env.VITE_WEB_UTAMA_URL || '#';
+const RAW_WEB_UTAMA = import.meta.env.VITE_WEB_UTAMA_URL || '';
+// Sisa konfigurasi lama (web-lab-ap.vercel.app) sudah tidak dipakai —
+// paksa ke algohub.web.id agar tombol "Mulai Sekarang" tidak nyasar.
+const WEB_UTAMA_URL = !RAW_WEB_UTAMA || RAW_WEB_UTAMA === '#' || RAW_WEB_UTAMA.includes('web-lab-ap')
+  ? 'https://algohub.web.id'
+  : RAW_WEB_UTAMA;
 
 const DEMO_SCRIPTS = {
   python: [
