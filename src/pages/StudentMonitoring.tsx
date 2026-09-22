@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useProgress } from '../store/useProgress';
 import { resetUserProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { monitoringService } from '../services/monitoringService';
+import { normalizeRole } from '../services/tokenService';
 import { 
   Search, RefreshCw, ChevronDown, ChevronRight, Trash2, Edit3, RotateCcw, 
   CheckCircle2, Lock, X, Save, AlertTriangle, Users, BookOpen, Clock, 
@@ -43,8 +44,9 @@ export const StudentMonitoring: React.FC = () => {
   const [onlineNims, setOnlineNims] = useState<Set<string>>(new Set());
   const [sessionHeartbeats, setSessionHeartbeats] = useState<Record<string, string>>({});
 
-  const isReadOnly = user?.role === 'asisten';
-  const canManage = ['admin', 'kordas'].includes(user?.role || '');
+  const userRole = normalizeRole(user?.role);
+  const isReadOnly = userRole === 'asisten';
+  const canManage = ['admin', 'kordas'].includes(userRole);
 
   const totalLessons = curriculum.reduce((acc, l) => acc + (l.modules?.reduce((m, mod) => m + (mod.lessons?.length || 0), 0) || 0), 0);
 

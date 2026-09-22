@@ -71,11 +71,13 @@ export default async function handler(req: any, res: any) {
       return res.redirect(302, '/?error=missing_fields');
     }
 
-    // Normalize role
-    const rawRole = p.user_role || p.role || 'praktikan';
-    let appRole: string = rawRole;
-    if (appRole === 'koordinator') appRole = 'kordas';
-    if (['authenticated', 'anon', 'user'].includes(appRole)) appRole = 'praktikan';
+    // Normalize role (kosakata lokal E-Learning)
+    const rawRole = String(p.user_role || p.role || 'praktikan').toLowerCase().trim();
+    let appRole: string = 'praktikan';
+    if (['admin'].includes(rawRole)) appRole = 'admin';
+    else if (['kordas', 'koordinator', 'korda', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) appRole = 'kordas';
+    else if (['asisten', 'assistant', 'laboran'].includes(rawRole)) appRole = 'asisten';
+    else appRole = 'praktikan';
 
     // Sign ulang dengan Supabase JWT secret
     let signedToken = token;

@@ -1,16 +1,15 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit, ExternalLink, RotateCcw, Sparkles } from 'lucide-react';
+import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit, LogIn, RotateCcw, Sparkles } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { CodeEditor } from '../components/CodeEditor';
 import { useCodeRunner, CodeLanguage } from '../hooks/useCodeRunner';
 import { parseOutputWithImages } from '../utils/parseOutputWithImages';
-import { PlotDisplay } from '../components/PlotDisplay';
-import { Terminal as XTerm } from '@xterm/xterm';
-import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 
-const WEB_UTAMA_URL = import.meta.env.VITE_WEB_UTAMA_URL || '#';
+// Demo IDE (Monaco + xterm) di-lazy: sebelumnya ikut terunduh saat landing dibuka.
+// Sekarang landing awal ringan; editor + terminal baru diunduh saat section demo dirender.
+const CodeEditor = lazy(() => import('../components/CodeEditor').then((m) => ({ default: m.CodeEditor })));
+const PlotDisplay = lazy(() => import('../components/PlotDisplay').then((m) => ({ default: m.PlotDisplay })));
 
 const DEMO_SCRIPTS = {
   python: [
@@ -69,10 +68,10 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
   const [mobileInputValue, setMobileInputValue] = useState('');
 
-  // xterm.js refs
+  // xterm.js refs (tipe any agar modul xterm hanya dimuat saat demo dirender)
   const termContainerRef = useRef<HTMLDivElement>(null);
-  const xtermRef = useRef<XTerm | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
+  const xtermRef = useRef<any | null>(null);
+  const fitAddonRef = useRef<any | null>(null);
 
   // Interactive input state (for Python RUN_INTERACTIVE)
   const inputBufferRef = useRef('');
@@ -85,11 +84,21 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const cLastOutputLenRef = useRef(0);
   const cStdinOffsetsRef = useRef<number[]>([]);
 
-  // Init xterm.js terminal
+  // Init xterm.js terminal (dynamic import agar tidak ikut bundle awal landing)
   useEffect(() => {
     if (!termContainerRef.current || xtermRef.current) return;
+    let cancelled = false;
+    let term: any = null;
+    let resizeObserver: ResizeObserver | null = null;
 
-    const term = new XTerm({
+    (async () => {
+      const [{ Terminal }, { FitAddon }] = await Promise.all([
+        import('@xterm/xterm'),
+        import('@xterm/addon-fit'),
+      ]);
+      if (cancelled || !termContainerRef.current || xtermRef.current) return;
+
+      term = new Terminal({
       theme: {
         background: '#09090b',
         foreground: '#e4e4e7',
@@ -165,12 +174,14 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     // Welcoming text
     term.writeln('\x1b[2mKetik kode di editor atas, lalu klik "Jalankan" untuk menguji!\x1b[0m');
 
-    const resizeObserver = new ResizeObserver(() => fitAddon.fit());
-    resizeObserver.observe(termContainerRef.current);
+    resizeObserver = new ResizeObserver(() => fitAddon.fit());
+    if (termContainerRef.current) resizeObserver.observe(termContainerRef.current);
+    })();
 
     return () => {
-      resizeObserver.disconnect();
-      term.dispose();
+      cancelled = true;
+      resizeObserver?.disconnect();
+      term?.dispose();
       xtermRef.current = null;
     };
   }, [pyodideWorker]);
@@ -442,20 +453,14 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     }
   };
 
-  const handleGoToWebUtama = () => {
-    if (WEB_UTAMA_URL && WEB_UTAMA_URL !== '#') {
-      window.location.href = WEB_UTAMA_URL;
-    }
-  };
-
-  const handleDevLogin = (role: 'admin' | 'praktikan') => {
+  const handleDevLogin = (role: 'kordas' | 'praktikan') => {
     const mockUser = {
-      nim: role === 'admin' ? '123456789' : '202211083',
-      nama: role === 'admin' ? 'Developer Admin (Kordas)' : 'Developer Praktikan',
+      nim: role === 'kordas' ? '123456789' : '202211083',
+      nama: role === 'kordas' ? 'Developer Koordinator' : 'Developer Mahasiswa',
       kelas: 'DEV-X',
       role: role,
-      xp: role === 'admin' ? 9999 : 120,
-      level: role === 'admin' ? 10 : 1,
+      xp: role === 'kordas' ? 9999 : 120,
+      level: role === 'kordas' ? 10 : 1,
       streak: 3,
       lastActive: new Date().toISOString(),
       createdAt: new Date().toISOString(),
@@ -485,10 +490,10 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           <span className="text-maroon font-black tracking-tight ml-1">E-Learning</span>
         </div>
         <button 
-          onClick={handleGoToWebUtama}
+          onClick={onStart}
           className="bg-maroon hover:bg-maroon-light text-white px-8 py-3.5 rounded-2xl font-black transition-all active:scale-95 shadow-bubbly-maroon active:translate-y-[6px] active:shadow-none btn-bubbly flex items-center gap-2 text-sm cursor-pointer"
         >
-          <ExternalLink size={16} />
+          <LogIn size={16} />
           Mulai Sekarang
         </button>
       </nav>
@@ -523,7 +528,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 
           <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
             <button 
-              onClick={handleGoToWebUtama}
+              onClick={onStart}
               className="group w-full sm:w-auto bg-gradient-to-r from-maroon to-maroon-light hover:from-maroon-light hover:to-rose-700 text-white px-10 py-5 rounded-2xl font-black text-lg transition-all shadow-[0_8px_30px_rgb(138,21,56,0.2)] hover:shadow-[0_8px_35px_rgb(138,21,56,0.35)] hover:-translate-y-0.5 active:translate-y-1 flex items-center justify-center gap-3 cursor-pointer"
             >
               Let's Go!
@@ -551,7 +556,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               <div>
                 <h4 className="font-black text-sm uppercase tracking-wide mb-1 text-dark">Gimana caranya masuk?</h4>
                 <p className="text-zinc-550 text-xs leading-relaxed font-semibold">
-                  Login via <span className="font-bold text-dark">Web Utama</span> pakai NIM kamu, trus klik tombol <span className="font-bold text-maroon">E-Learning</span>. Gampang kan?
+                  Masuk pakai NIM dan password akun portal praktikum kamu, langsung di halaman ini. Gampang kan?
                 </p>
               </div>
             </div>
@@ -562,16 +567,16 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               <p className="text-xs font-black text-maroon/50 uppercase tracking-widest">🧪 Developer Quick Access (Local Only)</p>
               <div className="flex flex-wrap gap-3">
                 <button
-                  onClick={() => handleDevLogin('admin')}
+                  onClick={() => handleDevLogin('kordas')}
                   className="px-4 py-2 bg-zinc-950 text-white text-xs font-bold rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-1.5 cursor-pointer"
                 >
-                  Masuk sebagai Admin
+                  Masuk sebagai Koordinator
                 </button>
                 <button
                   onClick={() => handleDevLogin('praktikan')}
                   className="px-4 py-2 bg-white hover:bg-zinc-55 text-zinc-900 text-xs font-bold rounded-xl transition-all active:scale-95 border border-zinc-200 flex items-center gap-1.5 cursor-pointer"
                 >
-                  Masuk sebagai Praktikan
+                  Masuk sebagai Mahasiswa
                 </button>
               </div>
             </div>
@@ -685,14 +690,16 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 
             {/* Editor Area (Left 2 cols) */}
             <div className="lg:col-span-2 h-[380px] overflow-hidden rounded-2xl border border-white/5 shadow-2xl relative z-10">
-              <CodeEditor 
-                code={code} 
-                onChange={(val) => setCode(val || '')} 
-                onRun={handleRun}
-                isLoading={isRunning}
-                language={language}
-                onReset={handleReset}
-              />
+              <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-zinc-500">Memuat editor...</div>}>
+                <CodeEditor
+                  code={code}
+                  onChange={(val) => setCode(val || '')}
+                  onRun={handleRun}
+                  isLoading={isRunning}
+                  language={language}
+                  onReset={handleReset}
+                />
+              </Suspense>
             </div>
 
             {/* Terminal Area (Right 1 col) */}
@@ -715,7 +722,9 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               {/* Matplotlib plot display on LandingPage */}
               {plotImages.length > 0 && (
                 <div className="p-3 border-t border-white/10 bg-zinc-950 max-h-[300px] overflow-y-auto custom-scrollbar">
-                  <PlotDisplay images={plotImages} />
+                  <Suspense fallback={<div className="text-xs text-zinc-500">Memuat gambar...</div>}>
+                    <PlotDisplay images={plotImages} />
+                  </Suspense>
                 </div>
               )}
               
@@ -849,7 +858,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             Buruan masuk dan tunjukin skill kamu. Ratusan tantangan seru udah nungguin buat kamu taklukin!
           </p>
           <button 
-            onClick={handleGoToWebUtama}
+            onClick={onStart}
             className="bg-white hover:bg-maroon-bg text-dark hover:text-maroon px-16 py-6 rounded-[2rem] font-black text-xl hover:scale-105 active:scale-95 transition-all duration-350 relative z-10 shadow-2xl shadow-maroon/10 flex items-center gap-3 mx-auto cursor-pointer"
           >
             Mulai Sekarang!

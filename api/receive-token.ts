@@ -56,12 +56,12 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // Normalize role
+    // Normalize role (kosakata lokal E-Learning)
     const rawRole = String(p.user_role || p.role || 'praktikan').toLowerCase().trim();
     let appRole: string = 'praktikan';
-    if (['admin', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) {
+    if (['admin'].includes(rawRole)) {
       appRole = 'admin';
-    } else if (['kordas', 'koordinator', 'korda'].includes(rawRole)) {
+    } else if (['kordas', 'koordinator', 'korda', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) {
       appRole = 'kordas';
     } else if (['asisten', 'assistant', 'laboran'].includes(rawRole)) {
       appRole = 'asisten';

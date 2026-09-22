@@ -14,12 +14,19 @@
       "dest": "/pyodide.worker.js"
     },
     {
-      "src": "/api/(.*)",
+      "src": "/api/(login|verify|receive-token)",
       "dest": "/api/$1"
     },
     {
+      "src": "/api/(.*)",
+      "dest": "https://api.algohub.web.id/api/$1"
+    },
+    {
       "src": "/",
-      "methods": ["POST", "OPTIONS"],
+      "methods": [
+        "POST",
+        "OPTIONS"
+      ],
       "dest": "/api/index"
     },
     {
@@ -50,7 +57,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://*.firebaseapp.com https://*.googleapis.com https://*.supabase.co wss://*.supabase.co https://wandbox.org https://ce.judge0.com https://web-lab-ap.vercel.app; frame-src 'self' https://*.firebaseapp.com https://web-lab-ap.vercel.app;"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://*.firebaseapp.com https://*.googleapis.com https://*.supabase.co wss://*.supabase.co https://wandbox.org https://ce.judge0.com https://algohub.web.id; frame-src 'self' https://*.firebaseapp.com https://algohub.web.id;"
         },
         {
           "key": "X-Content-Type-Options",
