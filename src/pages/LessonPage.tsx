@@ -234,8 +234,9 @@ export const LessonPage: React.FC = () => {
 
 
   const handleRun = async () => {
+    const testCasesList = Array.isArray(lesson.testCases) ? lesson.testCases : [];
     // Collect stdin from the first test case that has an input field
-    const firstInput = lesson.testCases?.find(tc => tc.input)?.input || undefined;
+    const firstInput = testCasesList.find(tc => tc && tc.input)?.input || undefined;
     const result = await runCode(code, firstInput);
     setOutput(result.output);
     setError(result.error);
@@ -244,8 +245,9 @@ export const LessonPage: React.FC = () => {
     if (result.error) return;
 
     // Static code validation (non-AI)
-    if (lesson.validationRules && lesson.validationRules.length > 0) {
+    if (lesson.validationRules && Array.isArray(lesson.validationRules) && lesson.validationRules.length > 0) {
       for (const rule of lesson.validationRules) {
+        if (!rule || !rule.pattern) continue;
         try {
           // Bersihkan komentar dan string literal (bila dikonfigurasi) dari kode siswa
           const cleanCode = preprocessCode(code, lessonLanguage, {
@@ -274,7 +276,7 @@ export const LessonPage: React.FC = () => {
     }
 
     // Validate test cases — re-run with each test case's stdin if inputs differ
-    const inputsNeeded = lesson.testCases.filter(tc => tc.input);
+    const inputsNeeded = testCasesList.filter(tc => tc && tc.input);
     let allPassed = true;
 
     // Use clean text (stripped of __IMAGE_DATA__ base64 plot strings) for test case output comparison
@@ -282,15 +284,18 @@ export const LessonPage: React.FC = () => {
 
     if (inputsNeeded.length <= 1) {
       // Single or no stdin — use the first run's output
-      allPassed = lesson.testCases.every(tc => {
-        return normalizeOutput(cleanOutputForValidation) === normalizeOutput(tc.expectedOutput);
-      });
+      allPassed = testCasesList.length > 0
+        ? testCasesList.every(tc => {
+            return normalizeOutput(cleanOutputForValidation) === normalizeOutput(tc?.expectedOutput || '');
+          })
+        : true;
     } else {
       // Multiple test cases with different stdin — run each separately
-      for (const tc of lesson.testCases) {
+      for (const tc of testCasesList) {
+        if (!tc) continue;
         const tcResult = tc.input ? await runCode(code, tc.input) : result;
         const cleanTcOutput = parseOutputWithImages(tcResult.output).cleanText;
-        if (tcResult.error || normalizeOutput(cleanTcOutput) !== normalizeOutput(tc.expectedOutput)) {
+        if (tcResult.error || normalizeOutput(cleanTcOutput) !== normalizeOutput(tc.expectedOutput || '')) {
           allPassed = false;
           if (tcResult.error) setError(tcResult.error);
           break;
@@ -848,18 +853,30 @@ export const LessonPage: React.FC = () => {
               exit={{ opacity: 0, x: -20 }}
               className="max-w-2xl mx-auto"
             >
-              <Quiz 
-                lessonId={lesson.id}
-                question={lesson.quiz.question}
-                options={lesson.quiz.options}
-                correctAnswer={lesson.quiz.correctAnswer}
-                onComplete={async (correct) => {
-                  if (correct && !quizXpGranted && !completedLessons.includes(lesson.id)) {
-                    setQuizXpGranted(true);
-                  }
-                  if (correct) setTimeout(() => setStep('code'), 1500);
-                }}
-              />
+              {lesson.quiz ? (
+                <Quiz 
+                  lessonId={lesson.id}
+                  question={lesson.quiz.question || ''}
+                  options={Array.isArray(lesson.quiz.options) ? lesson.quiz.options : []}
+                  correctAnswer={lesson.quiz.correctAnswer}
+                  onComplete={async (correct) => {
+                    if (correct && !quizXpGranted && !completedLessons.includes(lesson.id)) {
+                      setQuizXpGranted(true);
+                    }
+                    if (correct) setTimeout(() => setStep('code'), 1500);
+                  }}
+                />
+              ) : (
+                <div className="bg-white border border-zinc-200 rounded-3xl p-8 text-center space-y-4">
+                  <p className="text-zinc-600 font-medium">Tidak ada kuis untuk pelajaran ini.</p>
+                  <button
+                    onClick={() => setStep('code')}
+                    className="px-6 py-3 bg-zinc-900 text-white font-bold rounded-2xl hover:bg-zinc-800 transition-all"
+                  >
+                    Lanjut ke Latihan
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -876,17 +893,17 @@ export const LessonPage: React.FC = () => {
                 <div className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm">
                   <h3 className="font-bold text-lg mb-4">Tugas Anda</h3>
                   <div className="space-y-4 mb-4">
-                    {lesson.testCases.map((tc, idx) => (
+                    {(Array.isArray(lesson.testCases) ? lesson.testCases : []).map((tc, idx) => (
                       <div key={idx} className="flex items-start gap-3 text-zinc-600">
                         <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-rose-700 shrink-0" />
                         <div className="flex-1 min-w-0">
-                          {/<\/?[a-z][\s\S]*>/i.test(tc.description || '') ? (
+                          {/<\/?[a-z][\s\S]*>/i.test(tc?.description || '') ? (
                             <RichTextRenderer 
                               content={tc.description} 
                               className="prose-sm max-w-none text-zinc-600 prose-p:text-zinc-600 prose-p:my-0 prose-ul:my-0 prose-ol:my-0" 
                             />
                           ) : (
-                            <p className="text-sm text-zinc-600 my-0">{tc.description}</p>
+                            <p className="text-sm text-zinc-600 my-0">{tc?.description || ''}</p>
                           )}
                         </div>
                       </div>
@@ -910,10 +927,10 @@ export const LessonPage: React.FC = () => {
                         className="overflow-hidden space-y-3"
                       >
                         <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800 italic">
-                          {/<\/?[a-z][\s\S]*>/i.test(lesson.hint) ? (
+                          {/<\/?[a-z][\s\S]*>/i.test(lesson.hint || '') ? (
                             <RichTextRenderer content={lesson.hint} className="prose-p:text-amber-800 prose-p:italic text-sm" />
                           ) : (
-                            lesson.hint
+                            lesson.hint || 'Tidak ada petunjuk.'
                           )}
                         </div>
                       </motion.div>
@@ -921,7 +938,7 @@ export const LessonPage: React.FC = () => {
                   </AnimatePresence>
 
                   {/* Expected Outputs Terminal */}
-                  {lesson.testCases && lesson.testCases.length > 0 && (
+                  {Array.isArray(lesson.testCases) && lesson.testCases.length > 0 && (
                     <div className="mt-4 border border-zinc-700 rounded-xl overflow-hidden shadow-lg">
                       {/* Terminal Header */}
                       <div className="bg-zinc-800 px-4 py-2 flex items-center justify-between border-b border-zinc-700">
@@ -942,11 +959,11 @@ export const LessonPage: React.FC = () => {
                             {lesson.testCases.length > 1 && (
                               <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Kasus Uji #{idx + 1}</div>
                             )}
-                            {tc.input && (
+                            {tc?.input && (
                               <div className="text-zinc-400">Input: <span className="text-emerald-400">{tc.input}</span></div>
                             )}
                             <pre className="text-zinc-100 whitespace-pre-wrap font-mono select-all">
-                              {tc.expectedOutput}
+                              {tc?.expectedOutput || ''}
                             </pre>
                           </div>
                         ))}
@@ -973,11 +990,11 @@ export const LessonPage: React.FC = () => {
                   />
                 </div>
                 {/* Show test case input hint if lesson uses stdin */}
-                {lesson.testCases?.some(tc => tc.input) && (
+                {Array.isArray(lesson.testCases) && lesson.testCases.some(tc => tc?.input) && (
                   <div className="flex items-center gap-2 shrink-0">
                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">Input Uji</label>
                     <div className="flex-1 text-sm bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 font-mono text-zinc-600">
-                      {lesson.testCases.filter(tc => tc.input).map((tc, i) => (
+                      {lesson.testCases.filter(tc => tc && tc.input).map((tc, i) => (
                         <span key={i} className="inline-block">
                           {i > 0 && <span className="text-zinc-300 mx-1">•</span>}
                           <span className="bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded font-mono text-xs">{tc.input}</span>

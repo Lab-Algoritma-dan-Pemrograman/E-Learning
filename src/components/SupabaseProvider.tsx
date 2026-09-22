@@ -387,21 +387,52 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const levelModules = (modulesData || [])
             .filter(m => m.level_id === level.id)
             .map(mod => {
+              const parseJson = (val: any, fallback: any) => {
+                if (val === null || val === undefined) return fallback;
+                if (typeof val === 'object') return val;
+                if (typeof val === 'string') {
+                  try {
+                    const parsed = JSON.parse(val);
+                    return (parsed !== null && parsed !== undefined) ? parsed : fallback;
+                  } catch {
+                    return fallback;
+                  }
+                }
+                return fallback;
+              };
+
               const modLessons = (lessonsData || [])
                 .filter(l => l.module_id === mod.id)
-                .map(les => ({
-                  id: les.id,
-                  title: les.title,
-                  explanation: les.explanation,
-                  codeExample: les.code_example,
-                  initialCode: les.initial_code,
-                  solution: les.solution,
-                  hint: les.hint,
-                  quiz: les.quiz,
-                  testCases: les.test_cases,
-                  validationRules: les.validation_rules,
-                  xpReward: les.xp_reward ?? 60
-                }));
+                .map(les => {
+                  const rawQuiz = parseJson(les.quiz, null);
+                  const quiz = (rawQuiz && typeof rawQuiz === 'object' && (rawQuiz.question || (Array.isArray(rawQuiz.options) && rawQuiz.options.length > 0))) ? {
+                    question: rawQuiz.question || '',
+                    options: Array.isArray(rawQuiz.options) ? rawQuiz.options : [],
+                    correctAnswer: typeof rawQuiz.correctAnswer === 'number' ? rawQuiz.correctAnswer : (typeof rawQuiz.correct_answer === 'number' ? rawQuiz.correct_answer : 0)
+                  } : null;
+                  const rawTestCases = parseJson(les.test_cases, []);
+                  const testCases = (Array.isArray(rawTestCases) ? rawTestCases : []).map((tc: any) => ({
+                    expectedOutput: tc.expectedOutput ?? tc.expected_output ?? '',
+                    description: tc.description ?? '',
+                    input: tc.input
+                  }));
+                  const rawValidation = parseJson(les.validation_rules, []);
+                  const validationRules = Array.isArray(rawValidation) ? rawValidation : [];
+
+                  return {
+                    id: les.id,
+                    title: les.title,
+                    explanation: les.explanation,
+                    codeExample: les.code_example,
+                    initialCode: les.initial_code,
+                    solution: les.solution,
+                    hint: les.hint,
+                    quiz,
+                    testCases,
+                    validationRules,
+                    xpReward: les.xp_reward ?? 60
+                  };
+                });
               return {
                 id: mod.id,
                 title: mod.title,
