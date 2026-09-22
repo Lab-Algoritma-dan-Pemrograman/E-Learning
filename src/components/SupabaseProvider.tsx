@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { supabase, setSupabaseSession } from '../lib/supabase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
-import { initializeFromToken, TokenPayload, startPostMessageListener } from '../services/tokenService';
+import { initializeFromToken, TokenPayload, startPostMessageListener, normalizeRole } from '../services/tokenService';
 import { calculateStreak } from '../services/streakService';
 import { Loader2 } from 'lucide-react';
 

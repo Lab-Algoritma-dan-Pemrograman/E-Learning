@@ -19,6 +19,7 @@ import { GameQuestion, getGameQuestions, addGameQuestion, updateGameQuestion, de
 import { PlaygroundExample, getPlaygroundExamples, addPlaygroundExample, updatePlaygroundExample, deletePlaygroundExample } from '../services/playgroundService';
 import { Achievement, getAchievements } from '../services/achievementService';
 import initialAchievements from '../data/achievements.json';
+import { normalizeRole } from '../services/tokenService';
 
 interface LessonProgress {
   lessonId: string;
@@ -120,9 +121,10 @@ export const AdminDashboard: React.FC = () => {
   const [aiGameGenTopic, setAiGameGenTopic] = useState('');
   const [isAiGameGenerating, setIsAiGameGenerating] = useState(false);
 
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'kordas' || currentUser?.role === 'koordinator';
-  const isEditor = currentUser?.role === 'asisten';
-  const isCoordinator = currentUser?.role === 'admin' || currentUser?.role === 'kordas' || currentUser?.role === 'koordinator';
+  const userRole = normalizeRole(currentUser?.role);
+  const isAdmin = userRole === 'admin' || userRole === 'kordas';
+  const isEditor = userRole === 'asisten';
+  const isCoordinator = userRole === 'admin' || userRole === 'kordas';
   const canAccess = isAdmin || isEditor;
 
   useEffect(() => {
