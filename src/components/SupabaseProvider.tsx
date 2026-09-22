@@ -62,12 +62,16 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const payload = result.payload;
       
-      // Normalize and map 'koordinator' role from Web Utama to 'kordas' in E-Learning
-      const rawRole = (payload as any).role;
+      // Normalize and map role from Web Utama to E-Learning role
+      const rawRole = String((payload as any).role || 'praktikan').toLowerCase().trim();
       let mappedRole: 'admin' | 'kordas' | 'asisten' | 'praktikan' = 'praktikan';
-      if (rawRole === 'admin') mappedRole = 'admin';
-      else if (rawRole === 'kordas' || rawRole === 'koordinator') mappedRole = 'kordas';
-      else if (rawRole === 'asisten') mappedRole = 'asisten';
+      if (['admin', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) {
+        mappedRole = 'admin';
+      } else if (['kordas', 'koordinator', 'korda'].includes(rawRole)) {
+        mappedRole = 'kordas';
+      } else if (['asisten', 'assistant', 'laboran'].includes(rawRole)) {
+        mappedRole = 'asisten';
+      }
       payload.role = mappedRole;
 
       const savedToken = sessionStorage.getItem('elearning_token') || '';

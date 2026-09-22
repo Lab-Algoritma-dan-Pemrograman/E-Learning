@@ -59,15 +59,20 @@ export default async function handler(req: any, res: any) {
     }
 
     // ── Normalize role ─────────────────────────────────────────────────────
-    const rawRole = (tokenPayload as any).user_role
-                 || (tokenPayload as any).role
-                 || 'praktikan';
+    const rawRole = String(
+      (tokenPayload as any).user_role || (tokenPayload as any).role || 'praktikan'
+    ).toLowerCase().trim();
 
-    let appRole: string = rawRole;
-    if (appRole === 'koordinator') appRole = 'kordas';
-    if (appRole === 'authenticated' || appRole === 'anon') appRole = 'praktikan';
-    // Map 'user' role dari Web Utama ke 'praktikan'
-    if (appRole === 'user') appRole = 'praktikan';
+    let appRole: string = 'praktikan';
+    if (['admin', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) {
+      appRole = 'admin';
+    } else if (['kordas', 'koordinator', 'korda'].includes(rawRole)) {
+      appRole = 'kordas';
+    } else if (['asisten', 'assistant', 'laboran'].includes(rawRole)) {
+      appRole = 'asisten';
+    } else {
+      appRole = 'praktikan';
+    }
 
     // ── Sign ulang dengan Supabase JWT secret ──────────────────────────────
     let returnedToken = token;

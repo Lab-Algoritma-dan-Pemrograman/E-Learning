@@ -57,10 +57,17 @@ export default async function handler(req: any, res: any) {
     }
 
     // Normalize role
-    const rawRole = p.user_role || p.role || 'praktikan';
-    let appRole: string = rawRole;
-    if (appRole === 'koordinator') appRole = 'kordas';
-    if (['authenticated', 'anon', 'user'].includes(appRole)) appRole = 'praktikan';
+    const rawRole = String(p.user_role || p.role || 'praktikan').toLowerCase().trim();
+    let appRole: string = 'praktikan';
+    if (['admin', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) {
+      appRole = 'admin';
+    } else if (['kordas', 'koordinator', 'korda'].includes(rawRole)) {
+      appRole = 'kordas';
+    } else if (['asisten', 'assistant', 'laboran'].includes(rawRole)) {
+      appRole = 'asisten';
+    } else {
+      appRole = 'praktikan';
+    }
 
     // Sign ulang dengan Supabase JWT secret
     let signedToken = token;

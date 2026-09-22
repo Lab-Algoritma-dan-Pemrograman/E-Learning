@@ -73,27 +73,30 @@ CREATE POLICY "Staf bisa menghapus profil praktikan" ON public.users
 CREATE OR REPLACE FUNCTION public.check_user_updates()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Jika yang melakukan update bukan admin/kordas (asisten & praktikan)
-    IF public.auth_role() NOT IN ('admin', 'kordas') THEN
-        
-        -- A. Mencegah eskalasi/perubahan peran (role)
-        IF NEW.role IS DISTINCT FROM OLD.role THEN
-            -- Hanya perbolehkan sinkronisasi role jika NEW.role sama dengan klaim JWT terautentikasi (auth_role)
-            IF NEW.role IS DISTINCT FROM public.auth_role() THEN
-                RAISE EXCEPTION 'Akses Ditolak: Anda tidak diperbolehkan mengubah peran (role) Anda sendiri!';
-            END IF;
-        END IF;
+    -- Lewati pengecekan jika dijalankan oleh admin, kordas, superuser, atau dari SQL Editor
+    IF current_user IN ('postgres', 'supabase_admin') 
+       OR current_setting('request.jwt.claims', true) IS NULL 
+       OR current_setting('request.jwt.claims', true) = ''
+       OR public.auth_role() IN ('admin', 'kordas', 'service_role') THEN
+        RETURN NEW;
+    END IF;
 
-        -- B. Mencegah manipulasi level access overrides
-        IF NEW.level_access_overrides IS DISTINCT FROM OLD.level_access_overrides THEN
-            RAISE EXCEPTION 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengubah level_access_overrides!';
+    -- A. Mencegah eskalasi/perubahan peran (role) oleh mahasiswa (praktikan) atau asisten
+    IF NEW.role IS DISTINCT FROM OLD.role THEN
+        -- Hanya perbolehkan sinkronisasi role jika NEW.role sama dengan klaim JWT terautentikasi (auth_role)
+        IF NEW.role IS DISTINCT FROM public.auth_role() THEN
+            RAISE EXCEPTION 'Akses Ditolak: Anda tidak diperbolehkan mengubah peran (role) Anda sendiri!';
         END IF;
+    END IF;
 
-        -- C. Mencegah manipulasi hak akses asesmen (jika ada)
-        IF NEW.assessment_access IS DISTINCT FROM OLD.assessment_access THEN
-            RAISE EXCEPTION 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengubah assessment_access!';
-        END IF;
-        
+    -- B. Mencegah manipulasi level access overrides
+    IF NEW.level_access_overrides IS DISTINCT FROM OLD.level_access_overrides THEN
+        RAISE EXCEPTION 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengubah level_access_overrides!';
+    END IF;
+
+    -- C. Mencegah manipulasi hak akses asesmen (jika ada)
+    IF NEW.assessment_access IS DISTINCT FROM OLD.assessment_access THEN
+        RAISE EXCEPTION 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengubah assessment_access!';
     END IF;
 
     RETURN NEW;
