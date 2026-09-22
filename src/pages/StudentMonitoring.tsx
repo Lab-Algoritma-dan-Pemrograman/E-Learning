@@ -278,7 +278,7 @@ export const StudentMonitoring: React.FC = () => {
 
   const totalStudyTimeSeconds = students.reduce((sum, s) => sum + (s.study_time || 0), 0);
 
-  if (!['admin', 'kordas', 'asisten'].includes(user?.role || '')) {
+  if (!['admin', 'kordas', 'asisten'].includes(userRole)) {
     return (
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">

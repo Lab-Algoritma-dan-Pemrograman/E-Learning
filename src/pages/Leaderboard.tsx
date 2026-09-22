@@ -4,6 +4,7 @@ import { Trophy, Medal, ArrowUp, ArrowDown, Minus, Loader2, User, RotateCcw } fr
 import { cn } from '../lib/utils';
 import { getLeaderboard, getUserRank, getLeaderboardFilters } from '../services/leaderboardService';
 import { UserProfile, useStore } from '../store/useStore';
+import { normalizeRole } from '../services/tokenService';
 
 export const Leaderboard: React.FC = () => {
   const { user } = useStore();
@@ -11,8 +12,9 @@ export const Leaderboard: React.FC = () => {
   const [userRank, setUserRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isStudent = user?.role === 'praktikan';
-  const isStaff = ['admin', 'kordas', 'asisten'].includes(user?.role || '');
+  const userRole = normalizeRole(user?.role);
+  const isStudent = userRole === 'praktikan';
+  const isStaff = ['admin', 'kordas', 'asisten'].includes(userRole);
 
   // Filter state for staff users
   const [filterKelas, setFilterKelas] = useState<string>('');

@@ -95,8 +95,8 @@ export function startPostMessageListener(
 export function normalizeRole(role: string | null | undefined): 'admin' | 'kordas' | 'asisten' | 'praktikan' {
   if (!role) return 'praktikan';
   const clean = String(role).toLowerCase().trim();
-  if (clean === 'admin') return 'admin';
-  if (['kordas', 'koordinator', 'korda', 'coordinator', 'superadmin', 'super_admin', 'administrator', 'super admin'].includes(clean)) return 'kordas';
+  if (['admin', 'superadmin', 'super_admin', 'administrator', 'super admin'].includes(clean)) return 'admin';
+  if (['kordas', 'koordinator', 'korda', 'coordinator'].includes(clean)) return 'kordas';
   if (['asisten', 'assistant', 'laboran', 'ast'].includes(clean)) return 'asisten';
   return 'praktikan';
 }

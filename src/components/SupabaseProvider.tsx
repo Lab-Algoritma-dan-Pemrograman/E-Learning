@@ -63,16 +63,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const payload = result.payload;
       
       // Normalize and map role from Web Utama to E-Learning role
-      const rawRole = String((payload as any).role || 'praktikan').toLowerCase().trim();
-      let mappedRole: 'admin' | 'kordas' | 'asisten' | 'praktikan' = 'praktikan';
-      if (['admin'].includes(rawRole)) {
-        mappedRole = 'admin';
-      } else if (['kordas', 'koordinator', 'korda', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) {
-        mappedRole = 'kordas';
-      } else if (['asisten', 'assistant', 'laboran'].includes(rawRole)) {
-        mappedRole = 'asisten';
-      }
-      payload.role = mappedRole;
+      payload.role = normalizeRole(payload.role);
 
       const savedToken = sessionStorage.getItem('elearning_token') || '';
 
@@ -99,7 +90,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           .from('users')
           .select('*')
           .eq('nim', nim)
-          .single();
+          .maybeSingle();
 
         let profileData: UserProfile;
 
@@ -128,13 +119,16 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             level_access_overrides: {}
           };
 
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert([newProfile]);
+          try {
+            const { error: insertError } = await supabase
+              .from('users')
+              .insert([newProfile]);
 
-          if (insertError) {
-            console.error("Failed to insert profile in Supabase:", insertError);
-            throw new Error(insertError.message);
+            if (insertError) {
+              console.warn("Notice: Failed to insert profile in Supabase (might already exist or RLS):", insertError.message);
+            }
+          } catch (e) {
+            console.warn("Insert profile caught:", e);
           }
 
           // Map snake_case database schema to camelCase UserProfile store schema
@@ -149,31 +143,32 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             streak: newProfile.streak,
             lastActive: newProfile.last_active,
             createdAt: newProfile.created_at,
-            role: newProfile.role as any,
+            role: (payload.role || newProfile.role) as any,
             assessmentAccess: newProfile.assessment_access as any,
             levelAccessOverrides: newProfile.level_access_overrides as any,
             studyTime: newProfile.study_time || 0
           };
-          console.log("New profile created successfully in Supabase");
+          console.log("Profile initialized for session with role:", profileData.role);
         } else {
           console.log("Profile found in Supabase, loading data...");
           
           // Calculate streak based on last_active before overwriting it
           const { newStreak } = calculateStreak(userProfile.last_active, userProfile.streak);
+          const effectiveRole = payload.role || normalizeRole(userProfile.role) || 'praktikan';
 
           // Map snake_case to camelCase
           profileData = {
             nim: userProfile.nim,
-            nama: userProfile.nama,
-            kelas: userProfile.kelas,
+            nama: payload.nama || userProfile.nama,
+            kelas: payload.kelas || userProfile.kelas,
             jurusan: userProfile.jurusan || (payload as any).jurusan || null,
-            email: userProfile.email,
+            email: userProfile.email || payload.email || null,
             xp: userProfile.xp,
             level: userProfile.level,
             streak: newStreak,
             lastActive: userProfile.last_active,
             createdAt: userProfile.created_at,
-            role: userProfile.role as any,
+            role: effectiveRole as any,
             assessmentAccess: userProfile.assessment_access as any,
             levelAccessOverrides: userProfile.level_access_overrides || {},
             studyTime: userProfile.study_time || 0
@@ -184,7 +179,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             last_active: new Date().toISOString(),
             streak: newStreak
           };
-          const hasRoleChange = payload.role && profileData.role !== payload.role;
+          const hasRoleChange = payload.role && normalizeRole(userProfile.role) !== payload.role;
           const hasJurusanChange = (payload as any).jurusan && profileData.jurusan !== (payload as any).jurusan;
           
           if (profileData.nama !== payload.nama) updates.nama = payload.nama;
@@ -192,16 +187,20 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (hasRoleChange) updates.role = payload.role;
           if (hasJurusanChange) updates.jurusan = (payload as any).jurusan;
 
-          await supabase
-            .from('users')
-            .update(updates)
-            .eq('nim', nim);
+          try {
+            await supabase
+              .from('users')
+              .update(updates)
+              .eq('nim', nim);
+          } catch (updateErr) {
+            console.warn("Could not sync user updates to Supabase (RLS or trigger):", updateErr);
+          }
 
           profileData.lastActive = updates.last_active;
           profileData.streak = newStreak;
           profileData.nama = payload.nama;
           profileData.kelas = payload.kelas;
-          if (payload.role) profileData.role = payload.role as any;
+          profileData.role = effectiveRole as any;
           if ((payload as any).jurusan) profileData.jurusan = (payload as any).jurusan;
 
           // Check for streak milestones (e.g., streak-3, streak-7)
@@ -243,6 +242,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const currentUser = useStore.getState().user;
             const oldLevel = currentUser?.level || 1;
             const newLevel = updated.level || 1;
+            const effectiveRole = currentUser?.role && ['admin', 'kordas', 'asisten'].includes(currentUser.role)
+              ? currentUser.role
+              : (updated.role ? normalizeRole(updated.role) : (payload.role || 'praktikan'));
             
             setStoreUser({
               nim: updated.nim,
@@ -255,7 +257,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               streak: updated.streak,
               lastActive: updated.last_active,
               createdAt: updated.created_at,
-              role: updated.role,
+              role: effectiveRole,
               assessmentAccess: updated.assessment_access,
               levelAccessOverrides: updated.level_access_overrides || {},
               studyTime: updated.study_time || 0
@@ -318,7 +320,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           streak: 0,
           lastActive: new Date().toISOString(),
           createdAt: new Date().toISOString(),
-          role: 'praktikan',
+          role: payload.role || 'praktikan',
           assessmentAccess: {
             pre_test: false,
             post_test: false,

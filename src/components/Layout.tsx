@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import { Menu, X, BookOpen, LayoutDashboard, Terminal, Trophy, LogOut, ShieldCheck, Users, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
-import { clearToken } from '../services/tokenService';
+import { clearToken, normalizeRole } from '../services/tokenService';
 import { AchievementPopup } from './AchievementPopup';
 import { LevelUpPopup } from './LevelUpPopup';
 import { supabase } from '../lib/supabase';
@@ -56,8 +56,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 
 
-  const isAdminOrKordas = user?.role === 'admin' || user?.role === 'kordas' || user?.role === 'koordinator';
-  const isStaff = isAdminOrKordas || user?.role === 'asisten';
+  const userRole = normalizeRole(user?.role);
+  const isAdminOrKordas = userRole === 'admin' || userRole === 'kordas';
+  const isStaff = isAdminOrKordas || userRole === 'asisten';
 
   const handleLogout = async () => {
     try {
