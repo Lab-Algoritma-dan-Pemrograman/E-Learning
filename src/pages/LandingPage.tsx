@@ -1,14 +1,15 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit, LogIn, RotateCcw, Sparkles } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { CodeEditor } from '../components/CodeEditor';
 import { useCodeRunner, CodeLanguage } from '../hooks/useCodeRunner';
 import { parseOutputWithImages } from '../utils/parseOutputWithImages';
-import { PlotDisplay } from '../components/PlotDisplay';
-import { Terminal as XTerm } from '@xterm/xterm';
-import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
+
+// Demo IDE (Monaco + xterm) di-lazy: sebelumnya ikut terunduh saat landing dibuka.
+// Sekarang landing awal ringan; editor + terminal baru diunduh saat section demo dirender.
+const CodeEditor = lazy(() => import('../components/CodeEditor').then((m) => ({ default: m.CodeEditor })));
+const PlotDisplay = lazy(() => import('../components/PlotDisplay').then((m) => ({ default: m.PlotDisplay })));
 
 const DEMO_SCRIPTS = {
   python: [
@@ -67,10 +68,10 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const [isWaitingForInput, setIsWaitingForInput] = useState(false);
   const [mobileInputValue, setMobileInputValue] = useState('');
 
-  // xterm.js refs
+  // xterm.js refs (tipe any agar modul xterm hanya dimuat saat demo dirender)
   const termContainerRef = useRef<HTMLDivElement>(null);
-  const xtermRef = useRef<XTerm | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
+  const xtermRef = useRef<any | null>(null);
+  const fitAddonRef = useRef<any | null>(null);
 
   // Interactive input state (for Python RUN_INTERACTIVE)
   const inputBufferRef = useRef('');
@@ -83,11 +84,21 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const cLastOutputLenRef = useRef(0);
   const cStdinOffsetsRef = useRef<number[]>([]);
 
-  // Init xterm.js terminal
+  // Init xterm.js terminal (dynamic import agar tidak ikut bundle awal landing)
   useEffect(() => {
     if (!termContainerRef.current || xtermRef.current) return;
+    let cancelled = false;
+    let term: any = null;
+    let resizeObserver: ResizeObserver | null = null;
 
-    const term = new XTerm({
+    (async () => {
+      const [{ Terminal }, { FitAddon }] = await Promise.all([
+        import('@xterm/xterm'),
+        import('@xterm/addon-fit'),
+      ]);
+      if (cancelled || !termContainerRef.current || xtermRef.current) return;
+
+      term = new Terminal({
       theme: {
         background: '#09090b',
         foreground: '#e4e4e7',
@@ -163,12 +174,14 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     // Welcoming text
     term.writeln('\x1b[2mKetik kode di editor atas, lalu klik "Jalankan" untuk menguji!\x1b[0m');
 
-    const resizeObserver = new ResizeObserver(() => fitAddon.fit());
-    resizeObserver.observe(termContainerRef.current);
+    resizeObserver = new ResizeObserver(() => fitAddon.fit());
+    if (termContainerRef.current) resizeObserver.observe(termContainerRef.current);
+    })();
 
     return () => {
-      resizeObserver.disconnect();
-      term.dispose();
+      cancelled = true;
+      resizeObserver?.disconnect();
+      term?.dispose();
       xtermRef.current = null;
     };
   }, [pyodideWorker]);
@@ -677,14 +690,16 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 
             {/* Editor Area (Left 2 cols) */}
             <div className="lg:col-span-2 h-[380px] overflow-hidden rounded-2xl border border-white/5 shadow-2xl relative z-10">
-              <CodeEditor 
-                code={code} 
-                onChange={(val) => setCode(val || '')} 
-                onRun={handleRun}
-                isLoading={isRunning}
-                language={language}
-                onReset={handleReset}
-              />
+              <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-zinc-500">Memuat editor...</div>}>
+                <CodeEditor
+                  code={code}
+                  onChange={(val) => setCode(val || '')}
+                  onRun={handleRun}
+                  isLoading={isRunning}
+                  language={language}
+                  onReset={handleReset}
+                />
+              </Suspense>
             </div>
 
             {/* Terminal Area (Right 1 col) */}
@@ -707,7 +722,9 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               {/* Matplotlib plot display on LandingPage */}
               {plotImages.length > 0 && (
                 <div className="p-3 border-t border-white/10 bg-zinc-950 max-h-[300px] overflow-y-auto custom-scrollbar">
-                  <PlotDisplay images={plotImages} />
+                  <Suspense fallback={<div className="text-xs text-zinc-500">Memuat gambar...</div>}>
+                    <PlotDisplay images={plotImages} />
+                  </Suspense>
                 </div>
               )}
               

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { SupabaseProvider } from './components/SupabaseProvider';
 import { PyodideInitializer } from './components/PyodideInitializer';
 import { ClangInitializer } from './components/ClangInitializer';
@@ -11,16 +11,19 @@ import { useStore } from './store/useStore';
 import { secureLog, secureError } from './lib/securityUtils';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
-import { Dashboard } from './pages/Dashboard';
-import { LessonPage } from './pages/LessonPage';
-import { Playground } from './pages/Playground';
-import { Leaderboard } from './pages/Leaderboard';
-import { CourseExplorer } from './pages/CourseExplorer';
-import { Profile } from './pages/Profile';
-import { AdminDashboard } from './pages/AdminDashboard';
-import { StudentMonitoring } from './pages/StudentMonitoring';
-import { AuditLogPage } from './pages/AuditLogPage';
-import { TerminalDemo } from './pages/TerminalDemo';
+
+// Halaman dalam (butuh login) di-lazy agar bundle awal landing tetap kecil.
+// Sebelumnya semua halaman ikut terunduh saat buka landing -> 3 MB sekaligus.
+const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
+const LessonPage = lazy(() => import('./pages/LessonPage').then((m) => ({ default: m.LessonPage })));
+const Playground = lazy(() => import('./pages/Playground').then((m) => ({ default: m.Playground })));
+const Leaderboard = lazy(() => import('./pages/Leaderboard').then((m) => ({ default: m.Leaderboard })));
+const CourseExplorer = lazy(() => import('./pages/CourseExplorer').then((m) => ({ default: m.CourseExplorer })));
+const Profile = lazy(() => import('./pages/Profile').then((m) => ({ default: m.Profile })));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
+const StudentMonitoring = lazy(() => import('./pages/StudentMonitoring').then((m) => ({ default: m.StudentMonitoring })));
+const AuditLogPage = lazy(() => import('./pages/AuditLogPage').then((m) => ({ default: m.AuditLogPage })));
+const TerminalDemo = lazy(() => import('./pages/TerminalDemo').then((m) => ({ default: m.TerminalDemo })));
 
 
 // Kosakata role kanonis = backend Go: koordinator | asisten | mahasiswa.
@@ -71,6 +74,8 @@ function AppContent() {
     }
   };
 
+  const content = renderPage();
+
   return (
     <div onClick={(e) => {
       const target = e.target as HTMLElement;
@@ -89,7 +94,9 @@ function AppContent() {
 
       }
     }}>
-      {renderPage()}
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-zinc-500">Memuat halaman...</div>}>
+        {content}
+      </Suspense>
     </div>
   );
 }
@@ -97,11 +104,23 @@ function AppContent() {
 export default function App() {
   return (
     <SupabaseProvider>
-      <PyodideInitializer />
-      <ClangInitializer />
+      <AppWithWorkers />
+    </SupabaseProvider>
+  );
+}
+
+// Worker compiler (Pyodide/Clang) hanya dinyalakan SETELAH login.
+// Sebelumnya jalan sejak landing dibuka -> rebutan CPU/bandwidth
+// padahal pengunjung belum tentu menekan "Jalankan".
+function AppWithWorkers() {
+  const { user } = useStore();
+  return (
+    <>
+      {user && <PyodideInitializer />}
+      {user && <ClangInitializer />}
       <div className="relative min-h-screen">
         <AppContent />
       </div>
-    </SupabaseProvider>
+    </>
   );
 }
