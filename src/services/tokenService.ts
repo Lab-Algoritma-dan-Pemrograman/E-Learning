@@ -5,7 +5,7 @@ export interface TokenPayload {
   nama: string;
   kelas: string;
   jurusan?: string;
-  role?: 'admin' | 'kordas' | 'asisten' | 'praktikan';
+  role?: 'admin' | 'kordas' | 'koordinator' | 'asisten' | 'praktikan' | 'mahasiswa';
   email?: string;
   exp?: number;
   iat?: number;
@@ -59,10 +59,8 @@ export function startPostMessageListener(
   onToken: (result: VerifyResult) => void
 ): () => void {
   const handler = async (event: MessageEvent) => {
-    // Validasi origin — hanya terima dari Web Utama.
-    // algohub.web.id selalu diizinkan (env lama masih menunjuk web-lab-ap).
+    // Validasi origin — hanya terima dari Web Utama (algohub.web.id) + localhost dev.
     const allowedOrigins = [
-      import.meta.env.VITE_WEB_UTAMA_URL,
       'https://algohub.web.id',
       'http://localhost:3000',
       'http://localhost:5173',

@@ -58,16 +58,17 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // ── Normalize role ─────────────────────────────────────────────────────
+    // ── Normalize role (kosakata backend Go = kosakata elearning) ──────────
     const rawRole = (tokenPayload as any).user_role
                  || (tokenPayload as any).role
-                 || 'praktikan';
+                 || 'mahasiswa';
 
     let appRole: string = rawRole;
-    if (appRole === 'koordinator') appRole = 'kordas';
-    if (appRole === 'authenticated' || appRole === 'anon') appRole = 'praktikan';
-    // Map 'user' role dari Web Utama ke 'praktikan'
-    if (appRole === 'user') appRole = 'praktikan';
+    // Alias lama → kanonis: kordas/admin = koordinator, praktikan/user = mahasiswa
+    if (appRole === 'kordas' || appRole === 'admin') appRole = 'koordinator';
+    if (appRole === 'authenticated' || appRole === 'anon') appRole = 'mahasiswa';
+    // Map 'user' role dari Web Utama ke 'mahasiswa'
+    if (appRole === 'user' || appRole === 'praktikan') appRole = 'mahasiswa';
 
     // ── Sign ulang dengan Supabase JWT secret ──────────────────────────────
     let returnedToken = token;

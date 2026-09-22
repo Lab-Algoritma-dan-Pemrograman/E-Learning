@@ -10,6 +10,7 @@ import { ClangInitializer } from './components/ClangInitializer';
 import { useStore } from './store/useStore';
 import { secureLog, secureError } from './lib/securityUtils';
 import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
 import { Dashboard } from './pages/Dashboard';
 import { LessonPage } from './pages/LessonPage';
 import { Playground } from './pages/Playground';
@@ -22,18 +23,27 @@ import { AuditLogPage } from './pages/AuditLogPage';
 import { TerminalDemo } from './pages/TerminalDemo';
 
 
+// Kosakata role kanonis = backend Go: koordinator | asisten | mahasiswa.
+// Alias lama (admin, kordas, praktikan) tetap diterima supaya sesi/token lama tidak terkunci.
+const ADMIN_ROLES = ['koordinator', 'kordas', 'admin'];
+const STAFF_ROLES = ['koordinator', 'kordas', 'admin', 'asisten'];
+
+
 function AppContent() {
   const { user, page, setPage } = useStore();
-
-  secureLog("AppContent Render:", { hasUser: !!user, page });
+  const [showLogin, setShowLogin] = useState(false);
 
   // If user just logged in, ensure we are on dashboard
   const handleStart = () => {
-    secureLog("handleStart called, setting page to dashboard");
-    setPage('dashboard');
+    secureLog("handleStart called, showing LoginPage");
+    setShowLogin(true);
   };
 
   if (!user) {
+    if (showLogin) {
+      secureLog("No user found, showing LoginPage");
+      return <LoginPage onBack={() => setShowLogin(false)} />;
+    }
     secureLog("No user found, showing LandingPage");
     return <LandingPage onStart={handleStart} />;
   }
@@ -48,9 +58,9 @@ function AppContent() {
         case 'leaderboard': return <Leaderboard />;
         case 'courses': return <CourseExplorer />;
         case 'profile': return <Profile />;
-        case 'admin': return (['koordinator'].includes(user?.role || '')) ? <AdminDashboard /> : <Dashboard />;
-        case 'monitoring': return (['koordinator', 'asisten'].includes(user?.role || '')) ? <StudentMonitoring /> : <Dashboard />;
-        case 'auditlog': return (['koordinator'].includes(user?.role || '')) ? <AuditLogPage /> : <Dashboard />;
+        case 'admin': return (ADMIN_ROLES.includes(user?.role || '')) ? <AdminDashboard /> : <Dashboard />;
+        case 'monitoring': return (STAFF_ROLES.includes(user?.role || '')) ? <StudentMonitoring /> : <Dashboard />;
+        case 'auditlog': return (ADMIN_ROLES.includes(user?.role || '')) ? <AuditLogPage /> : <Dashboard />;
         case 'terminal-demo': return <TerminalDemo />;
 
         default: return <Dashboard />;
@@ -95,4 +105,3 @@ export default function App() {
     </SupabaseProvider>
   );
 }
-

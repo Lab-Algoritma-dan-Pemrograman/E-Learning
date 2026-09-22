@@ -176,6 +176,86 @@ const apiDevServer = (env: Record<string, string>) => ({
         return;
       }
 
+      // 2b. Intercept /api/login — proxy login backend Go + sign Supabase (mirror api/login.ts)
+      if (req.url && req.url.startsWith('/api/login') && (req.method === 'POST' || req.method === 'OPTIONS')) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        if (req.method === 'OPTIONS') {
+          res.writeHead(200);
+          res.end();
+          return;
+        }
+        let body = '';
+        req.on('data', (chunk: any) => { body += chunk; });
+        req.on('end', async () => {
+          try {
+            const parsed = JSON.parse(body || '{}');
+            const identifier = (parsed.identifier || '').trim();
+            const password = parsed.password || '';
+            if (!identifier || !password) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'NIM/email dan password wajib diisi.' }));
+              return;
+            }
+            const rawBase = env.BACKEND_API_URL || env.VITE_API_URL || 'https://api.algohub.web.id/api';
+            const base = rawBase.replace(/\/+$/, '');
+            const loginRes = await fetch(`${base}/auth/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ identifier, password }),
+            });
+            const loginJson: any = await loginRes.json().catch(() => null);
+            if (!loginRes.ok || !loginJson?.success || !loginJson?.data?.token) {
+              const status = loginRes.status === 404 ? 404 : loginRes.status === 401 ? 401 : 400;
+              const msg = loginRes.status === 404
+                ? 'Akun tidak ditemukan. Pastikan NIM sudah terdaftar.'
+                : loginRes.status === 401
+                  ? 'NIM atau password salah.'
+                  : loginJson?.message || 'Login gagal. Coba lagi.';
+              res.writeHead(status, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: msg }));
+              return;
+            }
+            const backendToken: string = loginJson.data.token;
+            const u = loginJson.data.user || {};
+            const nim: string = u.nim || identifier;
+            const nama: string = u.nama || nim;
+            const kelas: string = u.nama_kelas || '';
+            let appRole: string = u.role || 'mahasiswa';
+            if (appRole === 'kordas' || appRole === 'admin') appRole = 'koordinator';
+            if (['authenticated', 'anon', 'user', 'praktikan'].includes(appRole)) appRole = 'mahasiswa';
+            let signedToken = backendToken;
+            const devSupabaseSecret = env.SUPABASE_JWT_SECRET;
+            if (devSupabaseSecret) {
+              const secret = new TextEncoder().encode(devSupabaseSecret.trim());
+              signedToken = await new SignJWT({
+                nim, nama, kelas, jurusan: null, email: null,
+                role: 'authenticated',
+                user_role: appRole,
+                iss: 'supabase', sub: nim, aud: 'authenticated',
+              })
+                .setProtectedHeader({ alg: 'HS256' })
+                .setIssuedAt()
+                .setExpirationTime('1d')
+                .sign(secret);
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              payload: { nim, nama, kelas, jurusan: null, email: null, role: appRole },
+              token: signedToken,
+              backendToken,
+              user: { nim, nama, kelas, role: appRole, nama_kelas: u.nama_kelas || null, shift: u.shift ?? null },
+            }));
+          } catch (error: any) {
+            console.error('[dev /api/login] Error:', error.message);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Terjadi kesalahan server. Coba lagi.' }));
+          }
+        });
+        return;
+      }
+
       // 3. Intercept /api/validate-quiz
       if (req.url && req.url.startsWith('/api/validate-quiz') && req.method === 'POST') {
         let body = '';

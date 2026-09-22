@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit, ExternalLink, RotateCcw, Sparkles } from 'lucide-react';
+import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, BrainCircuit, LogIn, RotateCcw, Sparkles } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { CodeEditor } from '../components/CodeEditor';
 import { useCodeRunner, CodeLanguage } from '../hooks/useCodeRunner';
@@ -9,13 +9,6 @@ import { PlotDisplay } from '../components/PlotDisplay';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
-
-const RAW_WEB_UTAMA = import.meta.env.VITE_WEB_UTAMA_URL || '';
-// Sisa konfigurasi lama (web-lab-ap.vercel.app) sudah tidak dipakai —
-// paksa ke algohub.web.id agar tombol "Mulai Sekarang" tidak nyasar.
-const WEB_UTAMA_URL = !RAW_WEB_UTAMA || RAW_WEB_UTAMA === '#' || RAW_WEB_UTAMA.includes('web-lab-ap')
-  ? 'https://algohub.web.id'
-  : RAW_WEB_UTAMA;
 
 const DEMO_SCRIPTS = {
   python: [
@@ -447,20 +440,14 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     }
   };
 
-  const handleGoToWebUtama = () => {
-    if (WEB_UTAMA_URL && WEB_UTAMA_URL !== '#') {
-      window.location.href = WEB_UTAMA_URL;
-    }
-  };
-
-  const handleDevLogin = (role: 'admin' | 'praktikan') => {
+  const handleDevLogin = (role: 'koordinator' | 'mahasiswa') => {
     const mockUser = {
-      nim: role === 'admin' ? '123456789' : '202211083',
-      nama: role === 'admin' ? 'Developer Admin (Kordas)' : 'Developer Praktikan',
+      nim: role === 'koordinator' ? '123456789' : '202211083',
+      nama: role === 'koordinator' ? 'Developer Koordinator' : 'Developer Mahasiswa',
       kelas: 'DEV-X',
       role: role,
-      xp: role === 'admin' ? 9999 : 120,
-      level: role === 'admin' ? 10 : 1,
+      xp: role === 'koordinator' ? 9999 : 120,
+      level: role === 'koordinator' ? 10 : 1,
       streak: 3,
       lastActive: new Date().toISOString(),
       createdAt: new Date().toISOString(),
@@ -490,10 +477,10 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           <span className="text-maroon font-black tracking-tight ml-1">E-Learning</span>
         </div>
         <button 
-          onClick={handleGoToWebUtama}
+          onClick={onStart}
           className="bg-maroon hover:bg-maroon-light text-white px-8 py-3.5 rounded-2xl font-black transition-all active:scale-95 shadow-bubbly-maroon active:translate-y-[6px] active:shadow-none btn-bubbly flex items-center gap-2 text-sm cursor-pointer"
         >
-          <ExternalLink size={16} />
+          <LogIn size={16} />
           Mulai Sekarang
         </button>
       </nav>
@@ -528,7 +515,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
 
           <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
             <button 
-              onClick={handleGoToWebUtama}
+              onClick={onStart}
               className="group w-full sm:w-auto bg-gradient-to-r from-maroon to-maroon-light hover:from-maroon-light hover:to-rose-700 text-white px-10 py-5 rounded-2xl font-black text-lg transition-all shadow-[0_8px_30px_rgb(138,21,56,0.2)] hover:shadow-[0_8px_35px_rgb(138,21,56,0.35)] hover:-translate-y-0.5 active:translate-y-1 flex items-center justify-center gap-3 cursor-pointer"
             >
               Let's Go!
@@ -556,7 +543,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               <div>
                 <h4 className="font-black text-sm uppercase tracking-wide mb-1 text-dark">Gimana caranya masuk?</h4>
                 <p className="text-zinc-550 text-xs leading-relaxed font-semibold">
-                  Login via <span className="font-bold text-dark">Web Utama</span> pakai NIM kamu, trus klik tombol <span className="font-bold text-maroon">E-Learning</span>. Gampang kan?
+                  Masuk pakai NIM dan password akun portal praktikum kamu, langsung di halaman ini. Gampang kan?
                 </p>
               </div>
             </div>
@@ -567,16 +554,16 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               <p className="text-xs font-black text-maroon/50 uppercase tracking-widest">🧪 Developer Quick Access (Local Only)</p>
               <div className="flex flex-wrap gap-3">
                 <button
-                  onClick={() => handleDevLogin('admin')}
+                  onClick={() => handleDevLogin('koordinator')}
                   className="px-4 py-2 bg-zinc-950 text-white text-xs font-bold rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-1.5 cursor-pointer"
                 >
-                  Masuk sebagai Admin
+                  Masuk sebagai Koordinator
                 </button>
                 <button
-                  onClick={() => handleDevLogin('praktikan')}
+                  onClick={() => handleDevLogin('mahasiswa')}
                   className="px-4 py-2 bg-white hover:bg-zinc-55 text-zinc-900 text-xs font-bold rounded-xl transition-all active:scale-95 border border-zinc-200 flex items-center gap-1.5 cursor-pointer"
                 >
-                  Masuk sebagai Praktikan
+                  Masuk sebagai Mahasiswa
                 </button>
               </div>
             </div>
@@ -854,7 +841,7 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             Buruan masuk dan tunjukin skill kamu. Ratusan tantangan seru udah nungguin buat kamu taklukin!
           </p>
           <button 
-            onClick={handleGoToWebUtama}
+            onClick={onStart}
             className="bg-white hover:bg-maroon-bg text-dark hover:text-maroon px-16 py-6 rounded-[2rem] font-black text-xl hover:scale-105 active:scale-95 transition-all duration-350 relative z-10 shadow-2xl shadow-maroon/10 flex items-center gap-3 mx-auto cursor-pointer"
           >
             Mulai Sekarang!

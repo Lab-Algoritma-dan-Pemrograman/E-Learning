@@ -14,6 +14,10 @@
       "dest": "/pyodide.worker.js"
     },
     {
+      "src": "/api/(login|verify|receive-token)",
+      "dest": "/api/$1"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "https://api.algohub.web.id/api/$1"
     },
