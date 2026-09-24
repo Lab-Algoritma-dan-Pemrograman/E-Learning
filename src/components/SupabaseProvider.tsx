@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { supabase, setSupabaseSession } from '../lib/supabase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
-import { initializeFromToken, TokenPayload, startPostMessageListener, normalizeRole } from '../services/tokenService';
+import { initializeFromToken, TokenPayload, startPostMessageListener, normalizeRole, resolveElearningRole } from '../services/tokenService';
 import { calculateStreak } from '../services/streakService';
 import { Loader2 } from 'lucide-react';
 
@@ -154,7 +154,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           
           // Calculate streak based on last_active before overwriting it
           const { newStreak } = calculateStreak(userProfile.last_active, userProfile.streak);
-          const effectiveRole = payload.role || normalizeRole(userProfile.role) || 'praktikan';
+          // elearning_role (milik E-Learning) meng-override role kanonik:
+          // asisten ber-flag admin tetap 'asisten' di kolom bersama.
+          const effectiveRole = (resolveElearningRole(userProfile.role, (userProfile as any).elearning_role) || payload.role || 'praktikan');
 
           // Map snake_case to camelCase
           profileData = {
@@ -244,7 +246,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const newLevel = updated.level || 1;
             const effectiveRole = currentUser?.role && ['admin', 'kordas', 'asisten'].includes(currentUser.role)
               ? currentUser.role
-              : (updated.role ? normalizeRole(updated.role) : (payload.role || 'praktikan'));
+              : resolveElearningRole(updated.role, (updated as any).elearning_role);
             
             setStoreUser({
               nim: updated.nim,

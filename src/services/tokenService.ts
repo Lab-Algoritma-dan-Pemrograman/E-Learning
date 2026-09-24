@@ -59,8 +59,9 @@ export function startPostMessageListener(
   onToken: (result: VerifyResult) => void
 ): () => void {
   const handler = async (event: MessageEvent) => {
-    // Validasi origin — hanya terima dari Web Utama (algohub.web.id) + localhost dev.
+    // Validasi origin — hanya terima dari Web Utama (siakad.algohub.web.id / algohub.web.id) + localhost dev.
     const allowedOrigins = [
+      'https://siakad.algohub.web.id',
       'https://algohub.web.id',
       'http://localhost:3000',
       'http://localhost:5173',
@@ -99,6 +100,37 @@ export function normalizeRole(role: string | null | undefined): 'admin' | 'korda
   if (['kordas', 'koordinator', 'korda', 'coordinator'].includes(clean)) return 'kordas';
   if (['asisten', 'assistant', 'laboran', 'ast'].includes(clean)) return 'asisten';
   return 'praktikan';
+}
+
+/**
+ * Petakan role UI E-Learning ke nilai kanonik yang aman disimpan di kolom
+ * bersama `users.role`. Nilai harus valid untuk SEMUA app yang membaca kolom
+ * itu: Praktikum hanya mengenal mahasiswa/asisten/koordinator — nilai lain
+ * (mis. 'admin') membuat user ditolak guard di sana.
+ *   admin     -> koordinator  (admin E-Learning setara kordas di kanonik)
+ *   kordas    -> koordinator
+ *   praktikan -> mahasiswa
+ *   asisten   -> asisten
+ */
+export function toCanonicalRole(uiRole: string | null | undefined): 'mahasiswa' | 'asisten' | 'koordinator' {
+  const r = normalizeRole(uiRole);
+  if (r === 'admin' || r === 'kordas') return 'koordinator';
+  if (r === 'asisten') return 'asisten';
+  return 'mahasiswa';
+}
+
+/**
+ * Role efektif E-Learning. Kolom bersama users.role menyimpan nilai kanonik
+ * (mahasiswa/asisten/koordinator) agar Praktikum tidak menolak user; flag
+ * 'admin' disimpan terpisah di users.elearning_role (milik E-Learning saja).
+ * Hierarki E-Learning: kordas > admin > asisten > praktikan.
+ */
+export function resolveElearningRole(
+  role: string | null | undefined,
+  elearningRole: string | null | undefined
+): 'admin' | 'kordas' | 'asisten' | 'praktikan' {
+  if (String(elearningRole || '').toLowerCase().trim() === 'admin') return 'admin';
+  return normalizeRole(role);
 }
 
 export function getTokenFromUrl(): string | null {
