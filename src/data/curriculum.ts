@@ -1,51 +1,7 @@
-export interface Quiz {
-  question: string;
-  options: string[];
-  correctAnswer: number;
-}
+import { Level } from '../types';
 
-export interface TestCase {
-  description: string;
-  expectedOutput: string;
-  input?: string;
-}
-
-export interface ValidationRule {
-  pattern?: string;
-  message: string;
-  type?: 'regex' | 'forbidden' | string;
-  shouldExist?: boolean;
-  flags?: string;
-  stripStrings?: boolean;
-}
-
-export interface Lesson {
-  id: string;
-  title: string;
-  explanation: string;
-  codeExample: string;
-  initialCode: string;
-  solution: string;
-  hint: string;
-  quiz?: Quiz;
-  testCases?: TestCase[];
-  validationRules?: ValidationRule[];
-}
-
-export interface Module {
-  id: string;
-  title: string;
-  lessons: Lesson[];
-}
-
-export interface Level {
-  id: string;
-  title: string;
-  description: string;
-  accessMode?: 'auto' | 'unlocked' | 'locked';
-  locked?: boolean;
-  modules: Module[];
-}
+// Re-export supaya import lama dari '../data/curriculum' tetap jalan.
+export type { Level, Module, Lesson, Quiz, TestCase, ValidationRule } from '../types';
 
 export const curriculum: Level[] = [
   {
@@ -3507,8 +3463,8 @@ export const curriculum: Level[] = [
   },
   {
     "id": "py-level-6",
-    "title": "LIST, TUPLE, DICTIONARY, DAN OPERASI FILE",
-    "description": "Mempelajari data structure terurut & tidak terurut (List, Tuple, Dictionary) serta teknik manipulasi file I/O di Python.",
+    "title": "STRUKTUR DATA PYTHON: LIST DAN DICTIONARY",
+    "description": "Mempelajari struktur data terurut (List) dan pemetaan kunci-nilai (Dictionary) secara mendalam beserta seluruh method manipulasinya di Python.",
     "accessMode": "auto",
     "locked": false,
     "modules": [
@@ -3518,204 +3474,318 @@ export const curriculum: Level[] = [
         "lessons": [
           {
             "id": "py-level-6-m1-l1",
-            "title": "Konsep List dan Sifat Mutable",
-            "explanation": "<div class=\"space-y-4\">\n      <ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li>*List<strong> adalah struktur data bawaan Python yang menyimpan </strong>kumpulan elemen terurut<strong>, ditulis dengan tanda kurung siku <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[...]</code> dan elemen dipisahkan koma: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">daftar = [10, 20, 30]</code>. Berbeda dengan array di C yang harus bertipe sama dan ukurannya tetap, list Python bisa berisi </strong>elemen bertipe campuran<strong> (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1, \"dua\", 3.0, True]</code>) dan </strong>ukurannya dinamis** — bisa bertambah atau berkurang setelah dibuat.</li>\n</ul>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Sifat paling penting dari list adalah <strong>mutable</strong> — elemen-elemennya <strong>bisa diubah, ditambah, atau dihapus</strong> setelah list dibuat, berbeda dengan string yang immutable. Mengakses dan mengubah elemen menggunakan indeks (mulai dari <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0</code>, mendukung indeks negatif seperti string): <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">daftar[0] = 99</code>. List juga mendukung <strong>slicing</strong> seperti string: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">daftar[1:3]</code>.</p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>buah = [&quot;Apel&quot;, &quot;Jeruk&quot;, &quot;Mangga&quot;]\n\nprint(buah[0])        # Akses elemen pertama\nprint(buah[-1])       # Akses elemen terakhir\nbuah[1] = &quot;Anggur&quot;     # Mengubah elemen (mutable!)\nprint(buah)\nprint(len(buah))      # Jumlah elemen\nprint(buah[0:2])      # Slicing</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Apel\nMangga\n[&#039;Apel&#039;, &#039;Anggur&#039;, &#039;Mangga&#039;]\n3\n[&#039;Apel&#039;, &#039;Anggur&#039;]</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            "codeExample": "buah = [\"Apel\", \"Jeruk\", \"Mangga\"]\n\nprint(buah[0])        # Akses elemen pertama\nprint(buah[-1])       # Akses elemen terakhir\nbuah[1] = \"Anggur\"     # Mengubah elemen (mutable!)\nprint(buah)\nprint(len(buah))      # Jumlah elemen\nprint(buah[0:2])      # Slicing",
-            "initialCode": "nilai = [70, 85, 90, 60]\nnilai[__] __ 95\n\nprint(\"__\", nilai)\nprint(\"__\", nilai[__])",
-            "solution": "nilai = [70, 85, 90, 60]\nnilai[1] = 95\n\nprint(\"List:\", nilai)\nprint(\"Elemen terakhir:\", nilai[-1])",
-            "hint": "1. Lengkapi statement untuk mengubah elemen pada indeks 1\n   (elemen kedua) menjadi 95, menggunakan tanda kurung siku\n   dan operator assignment =.\n\n2. Lengkapi print() pertama: tampilkan teks \"List:\" dan\n   seluruh isi variabel nilai.\n\n3. Lengkapi print() kedua: tampilkan teks \"Elemen terakhir:\"\n   dan elemen terakhir dari nilai menggunakan indeks negatif -1.",
+            "title": "Konsep List, Sifat Mutable, dan Indexing",
+            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\"><strong>Struktur data</strong> adalah cara mengorganisir dan menyimpan data di memori komputer agar dapat diakses serta dimanipulasi secara efisien.</p>\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\"><strong>List</strong> adalah tipe data terurut (<em>ordered sequence</em>) di Python yang fungsinya mirip dengan array pada bahasa pemrograman lain. List dideklarasikan menggunakan tanda kurung siku <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[ ]</code> dengan setiap anggota dipisahkan oleh tanda koma (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">,</code>).</p>\n      \n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">List bersifat <strong>mutable</strong> (nilainya dapat diubah, ditambah, atau dihapus secara langsung). Karakteristik utama List meliputi:</p>\n      \n      <div class=\"my-4 overflow-x-auto\">\n        <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n          <thead>\n            <tr>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Karakteristik List</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Penjelasan</th>\n            </tr>\n          </thead>\n          <tbody>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">Mutable</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Elemen penyusunnya bisa diganti, ditambah, dan dihapus kapan saja.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">Indexing (Mulai dari 0)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Elemen pertama berada pada indeks 0, kedua di indeks 1, dan indeks negatif (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">-1</code>) untuk elemen terakhir.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">Slicing</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengambil potongan elemen dengan notasi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">list[start:end]</code>.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">Tipe Data Campuran</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Dapat menyimpan berbagai tipe data sekaligus (integer, float, string, boolean).</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">Nested List</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">List dapat berisi list lain di dalamnya (list bersarang).</td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Pendeklarasian & Pengaksesan List:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>nilaiUjian = [80, 73, 90, 85, 78, 88, 92, 76, 95, 89]\nnamaMahasiswa = [\"Faqod\", \"Lisa\", \"Jev\", \"Rafi\", \"Valdo\", \"Ibin\"]\nnilaiCampuran = [\"Python\", 20, 3.44, True]\nnestedList = [[80, 23, 11], True, [\"Javascript\", \"Python\"]]\n\nprint(nilaiUjian[1])        # Output: 73\nprint(namaMahasiswa[0])     # Output: Faqod\nprint(nilaiCampuran[2])     # Output: 3.44\nprint(nestedList[2][1])     # Output: Python</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">73\nFaqod\n3.44\nPython</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            "codeExample": "nilaiUjian = [80, 73, 90, 85, 78, 88, 92, 76, 95, 89]\nnamaMahasiswa = [\"Faqod\", \"Lisa\", \"Jev\", \"Rafi\", \"Valdo\", \"Ibin\"]\nnilaiCampuran = [\"Python\", 20, 3.44, True]\nnestedList = [[80, 23, 11], True, [\"Javascript\", \"Python\"]]\n\nprint(nilaiUjian[1])\nprint(namaMahasiswa[0])\nprint(nilaiCampuran[2])\nprint(nestedList[2][1])",
+            "initialCode": "# Buatlah list dataMahasiswa yang berisi data: \"Faqod\", 20, 3.75, True\ndataMahasiswa = [\"Faqod\", 20, 3.75, True]\n\n# 1. Cetak nama (elemen pada index 0)\nprint(dataMahasiswa[__])\n\n# 2. Cetak IPK (elemen pada index 2)\nprint(dataMahasiswa[__])",
+            "solution": "dataMahasiswa = [\"Faqod\", 20, 3.75, True]\nprint(dataMahasiswa[0])\nprint(dataMahasiswa[2])",
+            "hint": "1. Elemen pertama pada list memiliki indeks 0: dataMahasiswa[0].\n2. Elemen ketiga (3.75) memiliki indeks 2: dataMahasiswa[2].",
             "quiz": {
+              "question": "Mengapa List dalam Python disebut sebagai tipe data yang bersifat mutable?",
               "options": [
-                "List tidak bisa diubah setelah dibuat",
-                "List hanya bisa berisi angka",
-                "Elemen-elemen list bisa diubah, ditambah, atau dihapus setelah dibuat",
-                "List memiliki ukuran tetap seperti array di C"
+                "Karena elemen di dalam List dapat diubah, ditambah, atau dihapus secara langsung",
+                "Karena List hanya bisa menampung data bertipe string",
+                "Karena ukuran List bersifat statis dan tetap setelah dideklarasikan",
+                "Karena indeks elemen List selalu diawali dari angka 1"
               ],
-              "question": "Apa arti sifat **mutable** pada list di Python?",
-              "correctAnswer": 2
-            },
-            "testCases": [
-              {
-                "description": "<span>Buat list <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">nilai = [70, 85, 90, 60]</code>. Ubah elemen kedua (indeks 1) menjadi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">95</code>, lalu tampilkan list tersebut dan elemen terakhirnya.</span>",
-                "expectedOutput": "List: [70, 95, 90, 60]\nElemen terakhir: 60\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Ubah elemen indeks 1 dengan: nilai[1] = 95",
-                "pattern": "^nilai\\s*\\[\\s*1\\s*\\]\\s*=\\s*95\\s*$",
-                "shouldExist": true
-              },
-              {
-                "message": "Tampilkan dengan: print(\"List:\", nilai)",
-                "pattern": "print\\s*\\(\\s*[\"']List:[\"']\\s*,\\s*nilai\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Tampilkan elemen terakhir dengan: print(\"Elemen terakhir:\", nilai[-1])",
-                "pattern": "print\\s*\\(\\s*[\"']Elemen terakhir:[\"']\\s*,\\s*nilai\\s*\\[\\s*-1\\s*\\]\\s*\\)",
-                "shouldExist": true
-              }
-            ]
-          },
-          {
-            "id": "py-level-6-m1-l2",
-            "title": "Fungsi List (insert, pop, sort, delete, dll)",
-            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Python menyediakan banyak <strong>method</strong> bawaan untuk memanipulasi list. <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">append(x)</code> menambahkan elemen <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x</code> ke <strong>akhir</strong> list. <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">insert(i, x)</code> menyisipkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x</code> pada <strong>posisi indeks <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">i</code></strong>, menggeser elemen lainnya. <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">pop(i)</code> menghapus dan <strong>mengembalikan</strong> elemen pada indeks <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">i</code> (default: elemen terakhir jika <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">i</code> tidak diberikan). <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">remove(x)</code> menghapus <strong>kemunculan pertama</strong> dari nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x</code> (bukan berdasarkan indeks). <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">sort()</code> mengurutkan list secara langsung (in-place), dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">reverse()</code> membalik urutan list.</p>\n\n  <div class=\"my-4 overflow-x-auto\">\n    <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n      <thead>\n        <tr><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Method</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Fungsi</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Contoh</th></tr>\n      </thead>\n      <tbody>\n        <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">append(x)</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Tambah di akhir</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,2].append(3)</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,2,3]</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">insert(i, x)</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Sisipkan di indeks i</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,3].insert(1,2)</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,2,3]</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">pop(i)</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Hapus & kembalikan elemen i</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,2,3].pop()</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">3</code>, list jadi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,2]</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">remove(x)</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Hapus nilai x pertama</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,2,2].remove(2)</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,2]</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">sort()</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Urutkan ascending</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[3,1,2].sort()</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,2,3]</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">reverse()</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Balik urutan</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1,2,3].reverse()</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[3,2,1]</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">del list[i]</code></td><td class=\"border border-zinc-200 px-3 py-1.5\">Hapus elemen indeks i</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">del [1,2,3][0]</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[2,3]</code></td></tr>\n      </tbody>\n    </table>\n  </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>angka = [3, 1, 4, 1, 5]\n\nangka.append(9)      # [3, 1, 4, 1, 5, 9]\nangka.insert(0, 0)   # [0, 3, 1, 4, 1, 5, 9]\nangka.remove(1)      # menghapus angka 1 pertama -&gt; [0, 3, 4, 1, 5, 9]\nhapus = angka.pop()  # hapus elemen terakhir (9), simpan ke variabel\n\nangka.sort()         # urutkan ascending\n\nprint(&quot;List akhir:&quot;, angka)\nprint(&quot;Elemen yang di-pop:&quot;, hapus)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">List akhir: [0, 1, 3, 4, 5]\nElemen yang di-pop: 9</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            "codeExample": "angka = [3, 1, 4, 1, 5]\n\nangka.append(9)      # [3, 1, 4, 1, 5, 9]\nangka.insert(0, 0)   # [0, 3, 1, 4, 1, 5, 9]\nangka.remove(1)      # menghapus angka 1 pertama -> [0, 3, 4, 1, 5, 9]\nhapus = angka.pop()  # hapus elemen terakhir (9), simpan ke variabel\n\nangka.sort()         # urutkan ascending\n\nprint(\"List akhir:\", angka)\nprint(\"Elemen yang di-pop:\", hapus)",
-            "initialCode": "tugas = [\"Mandi\", \"Sarapan\", \"Belajar\"]\ntugas.__(\"__\")\ntugas.__(__, \"__\")\nprint(tugas)",
-            "solution": "tugas = [\"Mandi\", \"Sarapan\", \"Belajar\"]\ntugas.append(\"Olahraga\")\ntugas.insert(0, \"Bangun\")\nprint(tugas)",
-            "hint": "1. Lengkapi pemanggilan method append() pada variabel tugas\n   dengan argumen \"Olahraga\" — ini menambahkan elemen di\n   AKHIR list.\n\n2. Lengkapi pemanggilan method insert() pada variabel tugas\n   dengan dua argumen: posisi indeks 0, dan nilai \"Bangun\"\n   — ini menyisipkan elemen di posisi PALING AWAL.\n\n3. print(tugas) di baris terakhir sudah benar — jangan diubah.",
-            "quiz": {
-              "options": [
-                "remove(x) menghapus berdasarkan nilai, pop(i) menghapus berdasarkan indeks dan mengembalikan elemennya",
-                "remove(x) dan pop(i) melakukan hal yang sama",
-                "pop(i) hanya bisa menghapus elemen pertama",
-                "remove(x) mengembalikan elemen yang dihapus, pop(i) tidak"
-              ],
-              "question": "Apa perbedaan antara remove(x) dan pop(i) pada list Python?",
               "correctAnswer": 0
             },
             "testCases": [
               {
-                "description": "<span>Buat list <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">tugas = [\"Mandi\", \"Sarapan\", \"Belajar\"]</code>. Tambahkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"Olahraga\"</code> di akhir dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">append()</code>, sisipkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">\"Bangun\"</code> di posisi paling awal dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">insert()</code>, lalu tampilkan list akhirnya.</span>",
-                "expectedOutput": "['Bangun', 'Mandi', 'Sarapan', 'Belajar', 'Olahraga']\n"
+                "description": "Cetak elemen nama pada index 0 dan IPK pada index 2",
+                "expectedOutput": "Faqod\n3.75\n"
               }
             ],
             "validationRules": [
               {
-                "message": "Tambahkan di akhir dengan: tugas.append(\"Olahraga\")",
-                "pattern": "^tugas\\.append\\s*\\(\\s*[\"']Olahraga[\"']\\s*\\)\\s*$",
+                "message": "Akses elemen index 0 menggunakan dataMahasiswa[0]",
+                "pattern": "dataMahasiswa\\[0\\]",
                 "shouldExist": true
               },
               {
-                "message": "Sisipkan di posisi awal dengan: tugas.insert(0, \"Bangun\")",
-                "pattern": "^tugas\\.insert\\s*\\(\\s*0\\s*,\\s*[\"']Bangun[\"']\\s*\\)\\s*$",
-                "shouldExist": true
-              },
-              {
-                "message": "Urutan harus: append(\"Olahraga\") dahulu, lalu insert(0, \"Bangun\")",
-                "pattern": "tugas\\.append\\s*\\(\\s*[\"']Olahraga[\"']\\s*\\)[\\s\\S]*tugas\\.insert\\s*\\(\\s*0\\s*,\\s*[\"']Bangun[\"']\\s*\\)",
+                "message": "Akses elemen index 2 menggunakan dataMahasiswa[2]",
+                "pattern": "dataMahasiswa\\[2\\]",
                 "shouldExist": true
               }
-            ]
+            ],
+            "xpReward": 60
+          },
+          {
+            "id": "py-level-6-m1-l2",
+            "title": "Menambah Elemen List (append, insert, dan Penggabungan)",
+            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Python menyediakan beberapa cara efektif untuk menambahkan elemen baru ke dalam sebuah List:</p>\n\n      <div class=\"my-4 overflow-x-auto\">\n        <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n          <thead>\n            <tr>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Metode Penambahan</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Sintaks</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Perilaku</th>\n            </tr>\n          </thead>\n          <tbody>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">append</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">alist.append(item)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menambahkan satu item ke posisi paling akhir dari list.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">insert</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">alist.insert(i, item)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menyisipkan item pada posisi indeks ke-<code class=\"bg-zinc-100 px-1 py-0.5 rounded text-rose-700 font-mono\">i</code>, menggeser elemen setelahnya ke kanan.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">Penggabungan (+)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">list1 + list2</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menggabungkan dua list menjadi satu list baru.</td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Penambahan Elemen:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>myList = [1, 2, 3, 4, 5]\nprint(\"List Awal : \", myList)\n\n# Menambahkan elemen di akhir dengan insert(len) atau append\nmyList.insert(len(myList), 6)   # menambah angka 6 di akhir\nmyList.insert(1, 0)             # menyisipkan angka 0 di indeks ke-1\n\n# Menggabungkan dua list\nsecondList = [7, 8, 9]\nmy_list = myList + secondList\nprint(\"List Setelah Penambahan : \", my_list)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">List Awal :  [1, 2, 3, 4, 5]\nList Setelah Penambahan :  [1, 0, 2, 3, 4, 5, 6, 7, 8, 9]</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            "codeExample": "myList = [1, 2, 3, 4, 5]\nprint(\"List Awal :\", myList)\n\nmyList.insert(len(myList), 6)\nmyList.insert(1, 0)\n\nsecondList = [7, 8, 9]\nmy_list = myList + secondList\nprint(\"List Setelah Penambahan :\", my_list)",
+            "initialCode": "angka = [10, 20, 30, 40, 50]\n\n# 1. Tambahkan angka 60 di posisi paling akhir menggunakan append()\nangka.______(60)\n\n# 2. Sisipkan angka 15 pada indeks ke-1 menggunakan insert()\nangka.______(1, 15)\n\n# 3. Cetak isi list setelah penambahan\nprint(angka)",
+            "solution": "angka = [10, 20, 30, 40, 50]\nangka.append(60)\nangka.insert(1, 15)\nprint(angka)",
+            "hint": "1. Gunakan method append: angka.append(60).\n2. Gunakan method insert dengan indeks 1: angka.insert(1, 15).",
+            "quiz": {
+              "question": "Perbedaan utama antara method append() dan insert() pada List adalah:",
+              "options": [
+                "append() selalu menambahkan ke akhir list, sedangkan insert() bisa menyisipkan pada indeks tertentu",
+                "append() menghapus elemen lama, sedangkan insert() tidak",
+                "insert() hanya bisa digunakan untuk angka",
+                "append() memerlukan 2 argumen"
+              ],
+              "correctAnswer": 0
+            },
+            "testCases": [
+              {
+                "description": "Tambahkan elemen menggunakan append dan insert",
+                "expectedOutput": "[10, 15, 20, 30, 40, 50, 60]\n"
+              }
+            ],
+            "validationRules": [
+              {
+                "message": "Gunakan method append(60)",
+                "pattern": "angka\\.append\\(\\s*60\\s*\\)",
+                "shouldExist": true
+              },
+              {
+                "message": "Gunakan method insert(1, 15)",
+                "pattern": "angka\\.insert\\(\\s*1\\s*,\\s*15\\s*\\)",
+                "shouldExist": true
+              }
+            ],
+            "xpReward": 60
+          },
+          {
+            "id": "py-level-6-m1-l3",
+            "title": "Menghapus Elemen List (pop, remove, del)",
+            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Untuk menghapus elemen dari dalam list, Python menyediakan method dan statement dengan karakteristik berikut:</p>\n\n      <div class=\"my-4 overflow-x-auto\">\n        <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n          <thead>\n            <tr>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Nama Fungsi / Method</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Cara Deklarasi</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Penjelasan</th>\n            </tr>\n          </thead>\n          <tbody>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">pop()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">alist.pop()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menghapus dan mengembalikan item <strong>terakhir</strong> dari dalam list.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">pop(i)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">alist.pop(i)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menghapus dan mengembalikan item pada indeks ke-<code class=\"bg-zinc-100 px-1 py-0.5 rounded text-rose-700 font-mono\">i</code>.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">remove()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">alist.remove(item)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menghapus kemunculan <strong>pertama</strong> item berdasarkan nilai (value-nya).</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">del</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">del alist[i]</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Statement untuk menghapus item pada posisi indeks ke-<code class=\"bg-zinc-100 px-1 py-0.5 rounded text-rose-700 font-mono\">i</code> tanpa mengembalikan nilai.</td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Penghapusan Elemen:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>buah = [\"Apel\", \"Mangga\", \"Jeruk\", \"Pisang\", \"Jeruk\"]\n\nterakhir = buah.pop()         # menghapus \"Jeruk\" paling akhir\nbuah.remove(\"Mangga\")         # menghapus item \"Mangga\"\ndel buah[0]                   # menghapus elemen indeks 0 (\"Apel\")\n\nprint(\"Sisa List :\", buah)\nprint(\"Item Dihapus :\", terakhir)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Sisa List : ['Jeruk', 'Pisang']\nItem Dihapus : Jeruk</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            "codeExample": "buah = [\"Apel\", \"Mangga\", \"Jeruk\", \"Pisang\", \"Jeruk\"]\n\nterakhir = buah.pop()\nbuah.remove(\"Mangga\")\ndel buah[0]\n\nprint(\"Sisa List :\", buah)\nprint(\"Item Dihapus :\", terakhir)",
+            "initialCode": "hewan = [\"Kucing\", \"Anjing\", \"Burung\", \"Ikan\", \"Kelinci\"]\n\n# 1. Hapus elemen terakhir (\"Kelinci\") menggunakan pop() dan simpan di variabel item_terakhir\nitem_terakhir = hewan.______\n\n# 2. Hapus elemen dengan nilai \"Anjing\" menggunakan remove()\nhewan.______(\"Anjing\")\n\n# 3. Cetak sisa list hewan dan item yang dihapus\nprint(hewan)\nprint(item_terakhir)",
+            "solution": "hewan = [\"Kucing\", \"Anjing\", \"Burung\", \"Ikan\", \"Kelinci\"]\nitem_terakhir = hewan.pop()\nhewan.remove(\"Anjing\")\nprint(hewan)\nprint(item_terakhir)",
+            "hint": "1. Gunakan hewan.pop() tanpa argumen untuk menghapus item terakhir.\n2. Gunakan hewan.remove(\"Anjing\") untuk menghapus item berdasarkan nilainya.",
+            "quiz": {
+              "question": "Method manakah yang menghapus item berdasarkan nilainya secara langsung (bukan berdasarkan indeks)?",
+              "options": [
+                "alist.remove(item)",
+                "alist.pop()",
+                "del alist[i]",
+                "alist.index(item)"
+              ],
+              "correctAnswer": 0
+            },
+            "testCases": [
+              {
+                "description": "Hapus elemen dengan pop dan remove",
+                "expectedOutput": "['Kucing', 'Burung', 'Ikan']\nKelinci\n"
+              }
+            ],
+            "validationRules": [
+              {
+                "message": "Gunakan method pop()",
+                "pattern": "hewan\\.pop\\(\\)",
+                "shouldExist": true
+              },
+              {
+                "message": "Gunakan method remove('Anjing')",
+                "pattern": "hewan\\.remove\\([\"']Anjing[\"']\\)",
+                "shouldExist": true
+              }
+            ],
+            "xpReward": 60
+          },
+          {
+            "id": "py-level-6-m1-l4",
+            "title": "Pencarian dan Pengurutan List (sort, reverse, index, count)",
+            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Untuk menganalisis dan mengatur data di dalam List, Python menyediakan fungsi pengurutan dan pencarian:</p>\n\n      <div class=\"my-4 overflow-x-auto\">\n        <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n          <thead>\n            <tr>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Nama Fungsi / Method</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Cara Deklarasi</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Penjelasan</th>\n            </tr>\n          </thead>\n          <tbody>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">sort</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">alist.sort()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengubah urutan elemen list agar terurut secara ascending (dari kecil ke besar).</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">reverse</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">alist.reverse()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Membalikkan urutan elemen di dalam list.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">index</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">alist.index(item)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengembalikan posisi indeks kemunculan pertama dari item yang dicari.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">count</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">alist.count(item)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menghitung jumlah kehadiran / frekuensi kemunculan item di dalam list.</td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Pengurutan & Pencarian:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>nilai = [85, 70, 95, 70, 60, 70]\n\n# Menghitung frekuensi kemunculan nilai 70\nprint(\"Jumlah nilai 70 :\", nilai.count(70))\n\n# Mencari indeks nilai 95\nprint(\"Indeks nilai 95 :\", nilai.index(95))\n\n# Mengurutkan list\nnilai.sort()\nprint(\"List Terurut :\", nilai)\n\n# Membalik urutan list\nnilai.reverse()\nprint(\"List Terbalik :\", nilai)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Jumlah nilai 70 : 3\nIndeks nilai 95 : 2\nList Terurut : [60, 70, 70, 70, 85, 95]\nList Terbalik : [95, 85, 70, 70, 70, 60]</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            "codeExample": "nilai = [85, 70, 95, 70, 60, 70]\n\nprint(\"Jumlah nilai 70 :\", nilai.count(70))\nprint(\"Indeks nilai 95 :\", nilai.index(95))\n\nnilai.sort()\nprint(\"List Terurut :\", nilai)\n\nnilai.reverse()\nprint(\"List Terbalik :\", nilai)",
+            "initialCode": "angka = [50, 20, 80, 20, 10, 20]\n\n# 1. Hitung berapa kali angka 20 muncul menggunakan count()\nprint(\"Jumlah 20:\", angka.______(20))\n\n# 2. Urutkan angka dari terkecil ke terbesar menggunakan sort()\nangka.______\n\n# 3. Cetak list setelah diurutkan\nprint(angka)",
+            "solution": "angka = [50, 20, 80, 20, 10, 20]\nprint(\"Jumlah 20:\", angka.count(20))\nangka.sort()\nprint(angka)",
+            "hint": "1. Gunakan angka.count(20) untuk menghitung kemunculan.\n2. Panggil angka.sort() untuk mengurutkan list.",
+            "quiz": {
+              "question": "Method manakah yang digunakan untuk menghitung berapa kali suatu elemen muncul di dalam list?",
+              "options": [
+                "alist.count(item)",
+                "alist.index(item)",
+                "alist.sort()",
+                "len(alist)"
+              ],
+              "correctAnswer": 0
+            },
+            "testCases": [
+              {
+                "description": "Hitung kemunculan angka 20 dan urutkan list",
+                "expectedOutput": "Jumlah 20: 3\n[10, 20, 20, 20, 50, 80]\n"
+              }
+            ],
+            "validationRules": [
+              {
+                "message": "Gunakan method count(20)",
+                "pattern": "angka\\.count\\(\\s*20\\s*\\)",
+                "shouldExist": true
+              },
+              {
+                "message": "Gunakan method sort()",
+                "pattern": "angka\\.sort\\(\\)",
+                "shouldExist": true
+              }
+            ],
+            "xpReward": 60
           }
         ]
       },
       {
         "id": "py-level-6-m2",
-        "title": "Tuple",
+        "title": "Dictionary",
         "lessons": [
           {
             "id": "py-level-6-m2-l1",
-            "title": "Konsep Tuple dan Sifat Immutable",
-            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\"><strong>Tuple</strong> adalah struktur data bawaan Python yang digunakan untuk menyimpan kumpulan elemen terurut, mirip seperti List. Namun, perbedaan paling mendasar adalah <strong>Tuple bersifat immutable</strong> (tidak dapat diubah, ditambah, atau dihapus elemennya setelah dibuat).</p>\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Tuple ditulis menggunakan kurung biasa <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(...)</code> dan elemennya dipisahkan koma. Akses elemen dilakukan menggunakan indeks seperti pada List <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">tup[0]</code>.</p>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n    <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Membuat Tuple\ntitik = (10, 20, 30)\n\nprint(\"Koordinat:\", titik)\nprint(\"Nilai X:\", titik[0])\nprint(\"Nilai Z:\", titik[-1])\n\n# Sifat immutable:\n# titik[0] = 99  # Error! TypeError: 'tuple' object does not support item assignment</code></pre>\n  </div>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n    <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n      <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n        <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n      </div>\n      <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n        <span class=\"text-zinc-500\">$ python program.py</span>\n        <span class=\"block mt-1 text-zinc-100\">Koordinat: (10, 20, 30)\nNilai X: 10\nNilai Z: 30</span>\n      </div>\n    </div>\n  </div>\n</div>",
-            "codeExample": "titik = (10, 20, 30)\n\nprint(\"Koordinat:\", titik)\nprint(\"Nilai X:\", titik[0])\nprint(\"Nilai Z:\", titik[-1])",
-            "initialCode": "data_sensor = (24.5, 60.0, 1013.25)\n\n# TODO: Lengkapi pengaksesan indeks Tuple\nsuhu = data_sensor[__]\nkelembaban = data_sensor[__]\n\nprint(\"Suhu:\", suhu)\nprint(\"Kelembaban:\", kelembaban)",
-            "solution": "data_sensor = (24.5, 60.0, 1013.25)\n\nsuhu = data_sensor[0]\nkelembaban = data_sensor[1]\n\nprint(\"Suhu:\", suhu)\nprint(\"Kelembaban:\", kelembaban)",
-            "hint": "1. Isi rumpang pertama pada data_sensor[__] dengan indeks 0 untuk mengambil elemen pertama (suhu 24.5).\n2. Isi rumpang kedua pada data_sensor[__] dengan indeks 1 untuk mengambil elemen kedua (kelembaban 60.0).",
+            "title": "Konsep Dictionary dan Key-Value Pairs",
+            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\"><strong>Dictionary</strong> adalah tipe data pemetaan (<em>mapping type</em>) di Python yang digunakan untuk menyimpan data dalam bentuk pasangan kunci-nilai (<strong>key-value pairs</strong>).</p>\n      \n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Dictionary diwakili dengan tanda kurung kurawal <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">{ }</code>. Pasangan kunci dan nilai dipisahkan oleh tanda titik dua (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">:</code>), dan antar pasangan dipisahkan oleh tanda koma (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">,</code>).</p>\n      \n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Sama seperti list, Dictionary bersifat <strong>mutable</strong> (bisa dimodifikasi dengan menambah, menghapus, atau mengganti nilai berdasarkan kuncinya). Manipulasi terhadap nilai dictionary dilakukan dengan mengakses nilainya melalui <em>key</em> penandanya.</p>\n\n      <div class=\"my-4 overflow-x-auto\">\n        <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n          <thead>\n            <tr>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Komponen</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Fungsi / Sifat</th>\n            </tr>\n          </thead>\n          <tbody>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">Key (Kunci)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Penanda unik, tidak boleh duplikat, dan bertipe data immutable (biasanya string atau integer).</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">Value (Nilai)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Data aktual yang disimpan, dapat berupa tipe apa saja (angka, string, list, dictionary lain).</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">Akses Nilai</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menggunakan kurung siku dengan nama key: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">adict[key]</code>.</td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Dictionary:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Membuat dictionary\nmahasiswa = {\n    \"nama\": \"Naufal\",\n    \"umur\": 20,\n    \"mata_kuliah\": [\"Kalkulus\", \"Fisika\", \"Kimia\"]\n}\n\nprint(\"Dictionary awal : \", mahasiswa)\n\n# Mengakses nilai berdasarkan key\nnama = mahasiswa[\"nama\"]\nprint(\"Nama : \", nama)\nprint(\"Mata Kuliah ke-1 : \", mahasiswa[\"mata_kuliah\"][0])</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Dictionary awal :  {'nama': 'Naufal', 'umur': 20, 'mata_kuliah': ['Kalkulus', 'Fisika', 'Kimia']}\nNama :  Naufal\nMata Kuliah ke-1 :  Kalkulus</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            "codeExample": "mahasiswa = {\n    \"nama\": \"Naufal\",\n    \"umur\": 20,\n    \"mata_kuliah\": [\"Kalkulus\", \"Fisika\", \"Kimia\"]\n}\nprint(\"Dictionary awal :\", mahasiswa)\nnama = mahasiswa[\"nama\"]\nprint(\"Nama :\", nama)\nprint(\"Mata Kuliah ke-1 :\", mahasiswa[\"mata_kuliah\"][0])",
+            "initialCode": "# Buat dictionary data_siswa berisi data:\n# \"nama\": \"Naufal\", \"umur\": 20, \"jurusan\": \"Teknik Informatika\"\ndata_siswa = {\n    \"nama\": \"Naufal\",\n    \"umur\": 20,\n    \"jurusan\": \"Teknik Informatika\"\n}\n\n# 1. Cetak nilai dari key \"nama\"\nprint(\"Nama:\", data_siswa[__])\n\n# 2. Cetak nilai dari key \"jurusan\"\nprint(\"Jurusan:\", data_siswa[__])",
+            "solution": "data_siswa = {\n    \"nama\": \"Naufal\",\n    \"umur\": 20,\n    \"jurusan\": \"Teknik Informatika\"\n}\nprint(\"Nama:\", data_siswa[\"nama\"])\nprint(\"Jurusan:\", data_siswa[\"jurusan\"])",
+            "hint": "1. Tuliskan nama key dalam tanda petik di dalam kurung siku: data_siswa[\"nama\"].\n2. Lakukan hal yang sama untuk key jurusan: data_siswa[\"jurusan\"].",
             "quiz": {
+              "question": "Simbol apakah yang digunakan untuk mendefinisikan Dictionary dalam Python?",
               "options": [
-                "Tuple menggunakan [...] dan elemennya bisa diubah",
-                "Tuple menggunakan (...) dan elemennya bersifat immutable (tidak bisa diubah)",
-                "Tuple hanya bisa menyimpan tipe data integer",
-                "Tuple secara otomatis diurutkan secara ascending"
+                "Kurung siku [ ]",
+                "Kurung kurawal { }",
+                "Kurung bulat ( )",
+                "Kurung sudut < >"
               ],
-              "question": "Apa perbedaan utama antara Tuple dan List di Python?",
               "correctAnswer": 1
             },
             "testCases": [
               {
-                "description": "<span>Akses elemen <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">data_sensor = (24.5, 60.0, 1013.25)</code> pada indeks <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">0</code> untuk variabel <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">suhu</code> dan indeks <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">1</code> untuk variabel <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">kelembaban</code>.</span>",
-                "expectedOutput": "Suhu: 24.5\nKelembaban: 60.0\n"
+                "description": "Cetak nilai nama dan jurusan dari dictionary data_siswa",
+                "expectedOutput": "Nama: Naufal\nJurusan: Teknik Informatika\n"
               }
             ],
             "validationRules": [
               {
-                "message": "Ambil suhu dengan: suhu = data_sensor[0]",
-                "pattern": "^suhu\\s*=\\s*data_sensor\\s*\\[\\s*0\\s*\\]\\s*$",
+                "message": "Akses key 'nama' dengan data_siswa[\"nama\"]",
+                "pattern": "data_siswa\\[[\"']nama[\"']\\]",
                 "shouldExist": true
               },
               {
-                "message": "Ambil kelembaban dengan: kelembaban = data_sensor[1]",
-                "pattern": "^kelembaban\\s*=\\s*data_sensor\\s*\\[\\s*1\\s*\\]\\s*$",
+                "message": "Akses key 'jurusan' dengan data_siswa[\"jurusan\"]",
+                "pattern": "data_siswa\\[[\"']jurusan[\"']\\]",
                 "shouldExist": true
               }
-            ]
+            ],
+            "xpReward": 60
           },
           {
             "id": "py-level-6-m2-l2",
-            "title": "Tuple Unpacking dan Multiple Return Values",
-            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Python memiliki fitur istimewa bernama <strong>Tuple Unpacking</strong>, di mana elemen-elemen Tuple dapat langsung diuraikan (di-assign) ke beberapa variabel secara sekaligus.</p>\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Selain itu, ketika sebuah fungsi mengembalikan beberapa nilai dipisahkan koma (<code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">return a, b</code>), Python sebenarnya membungkus nilai-nilai tersebut ke dalam sebuah Tuple secara implisit!</p>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n    <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code># Tuple Unpacking\nx, y, z = (10, 20, 30)\n\n# Function Multiple Return Values\ndef hitung_lingkaran(r):\n    luas = 3.14 * r * r\n    keliling = 2 * 3.14 * r\n    return luas, keliling  # Mengembalikan tuple (luas, keliling)\n\nl, k = hitung_lingkaran(7)\nprint(\"Luas:\", l)\nprint(\"Keliling:\", k)</code></pre>\n  </div>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n    <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n      <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n        <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n      </div>\n      <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n        <span class=\"text-zinc-500\">$ python program.py</span>\n        <span class=\"block mt-1 text-zinc-100\">Luas: 153.86\nKeliling: 43.96</span>\n      </div>\n    </div>\n  </div>\n</div>",
-            "codeExample": "def hitung_lingkaran(r):\n    luas = 3.14 * r * r\n    keliling = 2 * 3.14 * r\n    return luas, keliling\n\nl, k = hitung_lingkaran(7)\nprint(\"Luas:\", l)\nprint(\"Keliling:\", k)",
-            "initialCode": "def hitung_persegi_panjang(panjang, lebar):\n    luas = panjang * lebar\n    keliling = 2 * (panjang + lebar)\n    return ____, ____\n\n# TODO: Unpack hasil return fungsi ke variabel l dan k\nl, k = hitung_persegi_panjang(10, 5)\n\nprint(\"Luas:\", l)\nprint(\"Keliling:\", k)",
-            "solution": "def hitung_persegi_panjang(panjang, lebar):\n    luas = panjang * lebar\n    keliling = 2 * (panjang + lebar)\n    return luas, keliling\n\nl, k = hitung_persegi_panjang(10, 5)\n\nprint(\"Luas:\", l)\nprint(\"Keliling:\", k)",
-            "hint": "Lengkapi baris return fungsi dengan return luas, keliling secara berurutan dipisahkan tanda koma.",
+            "title": "Membaca Kunci, Nilai, dan Pasangan (keys, values, items)",
+            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Python menyediakan tiga method penting untuk memeriksa seluruh isi data di dalam Dictionary:</p>\n\n      <div class=\"my-4 overflow-x-auto\">\n        <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n          <thead>\n            <tr>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Nama Method</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Cara Deklarasi</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Penjelasan</th>\n            </tr>\n          </thead>\n          <tbody>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">keys()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">adict.keys()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengambil semua key (kunci) yang ada pada dictionary.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">values()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">adict.values()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengambil semua value (nilai) yang ada pada dictionary.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">items()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">adict.items()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengambil semua pasangan (key, value) sebagai objek view pasangan tuple.</td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan keys, values, dan items:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>mahasiswa = {\n    \"nama\": \"Naufal\",\n    \"umur\": 20,\n    \"mata_kuliah\": [\"Kalkulus\", \"Fisika\", \"Kimia\"]\n}\n\n# Mengonversi view dictionary ke bentuk list\nprint(\"Daftar Kunci :\", list(mahasiswa.keys()))\nprint(\"Daftar Nilai :\", list(mahasiswa.values()))\n\n# Looping pasangan key dan value menggunakan items()\nfor k, v in mahasiswa.items():\n    print(f\"{k} -> {v}\")</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Daftar Kunci : ['nama', 'umur', 'mata_kuliah']\nDaftar Nilai : ['Naufal', 20, ['Kalkulus', 'Fisika', 'Kimia']]\nnama -> Naufal\numur -> 20\nmata_kuliah -> ['Kalkulus', 'Fisika', 'Kimia']</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            "codeExample": "mahasiswa = {\n    \"nama\": \"Naufal\",\n    \"umur\": 20,\n    \"mata_kuliah\": [\"Kalkulus\", \"Fisika\", \"Kimia\"]\n}\nprint(\"Daftar Kunci :\", list(mahasiswa.keys()))\nprint(\"Daftar Nilai :\", list(mahasiswa.values()))",
+            "initialCode": "biodata = {\n    \"nama\": \"Naufal\",\n    \"kota\": \"Jakarta\",\n    \"pekerjaan\": \"Programmer\"\n}\n\n# 1. Ambil semua kunci sebagai list menggunakan list(biodata.keys())\ndaftar_kunci = list(biodata.______)\n\n# 2. Ambil semua nilai sebagai list menggunakan list(biodata.values())\ndaftar_nilai = list(biodata.______)\n\n# 3. Cetak daftar kunci dan daftar nilai\nprint(daftar_kunci)\nprint(daftar_nilai)",
+            "solution": "biodata = {\n    \"nama\": \"Naufal\",\n    \"kota\": \"Jakarta\",\n    \"pekerjaan\": \"Programmer\"\n}\ndaftar_kunci = list(biodata.keys())\ndaftar_nilai = list(biodata.values())\nprint(daftar_kunci)\nprint(daftar_nilai)",
+            "hint": "1. Panggil method biodata.keys() untuk mengambil kunci.\n2. Panggil method biodata.values() untuk mengambil nilai.",
             "quiz": {
+              "question": "Method Dictionary manakah yang digunakan untuk mengiterasi pasangan (key, value) secara bersamaan?",
               "options": [
-                "Nilai-nilai tersebut secara otomatis dibungkus menjadi sebuah Tuple",
-                "Akan terjadi SyntaxError karena fungsi hanya boleh return satu nilai",
-                "Nilai pertama akan diabaikan dan hanya nilai terakhir yang dikembalikan",
-                "Secara otomatis dikonversi menjadi sebuah List"
+                "adict.items()",
+                "adict.keys()",
+                "adict.values()",
+                "adict.get()"
               ],
-              "question": "Apa yang sebenarnya terjadi di Python saat sebuah fungsi memiliki statement 'return a, b'?",
               "correctAnswer": 0
             },
             "testCases": [
               {
-                "description": "<span>Lengkapi fungsi <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">hitung_persegi_panjang</code> agar mengembalikan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">return luas, keliling</code>, lalu unpack ke variabel <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">l, k</code>.</span>",
-                "expectedOutput": "Luas: 50\nKeliling: 30\n"
+                "description": "Ambil daftar kunci dan nilai dari dictionary biodata",
+                "expectedOutput": "['nama', 'kota', 'pekerjaan']\n['Naufal', 'Jakarta', 'Programmer']\n"
               }
             ],
             "validationRules": [
               {
-                "message": "Fungsi harus return luas, keliling dengan: return luas, keliling",
-                "pattern": "return\\s+luas\\s*,\\s*keliling",
+                "message": "Gunakan method keys()",
+                "pattern": "biodata\\.keys\\(\\)",
                 "shouldExist": true
               },
               {
-                "message": "Unpack hasil fungsi dengan: l, k = hitung_persegi_panjang(10, 5)",
-                "pattern": "l\\s*,\\s*k\\s*=\\s*hitung_persegi_panjang\\s*\\(\\s*10\\s*,\\s*5\\s*\\)",
+                "message": "Gunakan method values()",
+                "pattern": "biodata\\.values\\(\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "xpReward": 60
           },
           {
             "id": "py-level-6-m2-l3",
-            "title": "Method Tuple dan Konversi Tipe Data",
-            "explanation": "<div class=\"space-y-4\">\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Meskipun bersifat <strong>immutable</strong>, Tuple menyediakan method pencarian bawaan serta fungsi pendukung untuk manipulasi data:</p>\n\n  <div class=\"my-4 overflow-x-auto\">\n    <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n      <thead>\n        <tr>\n          <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Method / Fungsi</th>\n          <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Deskripsi Fungsi</th>\n          <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Contoh Penggunaan</th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">count(x)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Menghitung frekuensi kemunculan nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x</code> di dalam Tuple.</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(1, 2, 2, 3).count(2)</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">2</code></td>\n        </tr>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">index(x)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Mengembalikan posisi indeks pertama kali nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">x</code> ditemukan.</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(\"a\", \"b\", \"c\").index(\"b\")</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">1</code></td>\n        </tr>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">list(tup)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Mengonversi Tuple menjadi List agar elemennya dapat diubah (mutable).</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">list((1, 2))</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">[1, 2]</code></td>\n        </tr>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">tuple(lst)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Mengonversi List kembali menjadi Tuple (immutable).</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">tuple([1, 2])</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">(1, 2)</code></td>\n        </tr>\n        <tr>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">len(tup)</code></td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\">Menghitung total jumlah elemen di dalam Tuple.</td>\n          <td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">len((10, 20, 30))</code> → <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">3</code></td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n\n  <p class=\"mb-4 text-zinc-700 leading-relaxed\">Untuk mengubah isi Tuple yang sudah dibuat, trik yang biasa dilakukan adalah mengonversinya terlebih dahulu ke List dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">list(tup)</code>, melakukan perubahan (misalnya <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">append()</code>), lalu mengembalikannya menjadi Tuple dengan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">tuple(lst)</code>.</p>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n    <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>angka = (5, 10, 15, 10, 20, 10)\n\nprint(\"Jumlah 10:\", angka.count(10))\nprint(\"Posisi 15:\", angka.index(15))\n\n# Konversi Tuple -> List -> Tuple\nlst = list(angka)\nlst.append(99)\ntuple_baru = tuple(lst)\nprint(\"Tuple Baru:\", tuple_baru)</code></pre>\n  </div>\n\n  <div class=\"my-4 not-prose\">\n    <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n    <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n      <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n        <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n        <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n      </div>\n      <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n        <span class=\"text-zinc-500\">$ python program.py</span>\n        <span class=\"block mt-1 text-zinc-100\">Jumlah 10: 3\nPosisi 15: 2\nTuple Baru: (5, 10, 15, 10, 20, 10, 99)</span>\n      </div>\n    </div>\n  </div>\n</div>",
-            "codeExample": "angka = (5, 10, 15, 10, 20, 10)\n\nprint(\"Jumlah 10:\", angka.count(10))\nprint(\"Posisi 15:\", angka.index(15))",
-            "initialCode": "nilai_ujian = (80, 90, 80, 75, 80, 95)\n\n# TODO: Hitung kemunculan angka 80 dan cari posisi angka 95\njumlah_80 = nilai_ujian.____(80)\nposisi_95 = nilai_ujian.____(95)\n\nprint(\"Jumlah angka 80:\", jumlah_80)\nprint(\"Posisi angka 95:\", posisi_95)",
-            "solution": "nilai_ujian = (80, 90, 80, 75, 80, 95)\n\njumlah_80 = nilai_ujian.count(80)\nposisi_95 = nilai_ujian.index(95)\n\nprint(\"Jumlah angka 80:\", jumlah_80)\nprint(\"Posisi angka 95:\", posisi_95)",
-            "hint": "1. Gunakan method count(80) untuk menghitung kemunculan angka 80.\n2. Gunakan method index(95) untuk mencari indeks pertama dari angka 95.",
+            "title": "Akses Nilai Aman dan Fallback Default (get)",
+            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Ketika mengakses nilai dengan kurung siku <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">adict[key]</code>, program akan langsung crash dan menghasilkan error <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">KeyError</code> jika key yang dicari tidak ditemukan.</p>\n      \n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Untuk mencegah error tersebut, Python menyediakan method <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">.get()</code> yang lebih aman:</p>\n\n      <div class=\"my-4 overflow-x-auto\">\n        <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n          <thead>\n            <tr>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Bentuk Pemanggilan</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Perilaku Jika Key Ditemukan</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Perilaku Jika Key Tidak Ada</th>\n            </tr>\n          </thead>\n          <tbody>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">adict.get(key)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengembalikan value dari key tersebut.</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengembalikan <code class=\"bg-zinc-100 px-1 py-0.5 rounded text-rose-700 font-mono\">None</code> (tidak melempar error).</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono text-rose-700 font-bold\">adict.get(key, alt)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengembalikan value dari key tersebut.</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Mengembalikan nilai default <code class=\"bg-zinc-100 px-1 py-0.5 rounded text-rose-700 font-mono\">alt</code> pengganti.</td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Method get():</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>mahasiswa = {\n    \"nama\": \"Naufal\",\n    \"umur\": 20\n}\n\n# Akses aman\nprint(\"Nama   :\", mahasiswa.get(\"nama\"))\nprint(\"Alamat :\", mahasiswa.get(\"alamat\"))                 # Output: None\nprint(\"Status :\", mahasiswa.get(\"status\", \"Mahasiswa Aktif\")) # Output: Mahasiswa Aktif</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Nama   : Naufal\nAlamat : None\nStatus : Mahasiswa Aktif</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            "codeExample": "mahasiswa = {\n    \"nama\": \"Naufal\",\n    \"umur\": 20\n}\nprint(\"Nama   :\", mahasiswa.get(\"nama\"))\nprint(\"Alamat :\", mahasiswa.get(\"alamat\"))\nprint(\"Status :\", mahasiswa.get(\"status\", \"Mahasiswa Aktif\"))",
+            "initialCode": "produk = {\n    \"nama\": \"Laptop\",\n    \"harga\": 8500000,\n    \"stok\": 12\n}\n\n# 1. Ambil nilai harga menggunakan get(\"harga\")\nprint(\"Harga:\", produk.get(\"harga\"))\n\n# 2. Ambil nilai diskon dengan nilai default 0 jika key tidak ditemukan\nprint(\"Diskon:\", produk.get(______, ______))\n\n# 3. Ambil nilai garansi dengan nilai default \"1 Tahun\" jika key tidak ada\nprint(\"Garansi:\", produk.get(______, ______))",
+            "solution": "produk = {\n    \"nama\": \"Laptop\",\n    \"harga\": 8500000,\n    \"stok\": 12\n}\nprint(\"Harga:\", produk.get(\"harga\"))\nprint(\"Diskon:\", produk.get(\"diskon\", 0))\nprint(\"Garansi:\", produk.get(\"garansi\", \"1 Tahun\"))",
+            "hint": "1. Gunakan produk.get(\"diskon\", 0) untuk mengisi parameter key dan nilai default alt.\n2. Gunakan produk.get(\"garansi\", \"1 Tahun\") untuk fallback garansi.",
             "quiz": {
+              "question": "Apa keuntungan utama menggunakan method get(key, alt) dibandingkan adict[key]?",
               "options": [
-                "count() menghitung frekuensi kemunculan, index() mencari posisi indeks pertama",
-                "index() menghitung frekuensi kemunculan, count() mencari posisi indeks",
-                "Keduanya menghitung jumlah elemen",
-                "Keduanya mengurutkan isi Tuple"
+                "Mencegah error KeyError saat key tidak ditemukan dan mengembalikan nilai default alt",
+                "Otomatis menambahkan key baru ke dalam dictionary",
+                "Mengurutkan seluruh isi dictionary secara otomatis",
+                "Menghapus key setelah nilainya dibaca"
               ],
-              "question": "Manakah perbedaan fungsi method count() dan index() pada Tuple?",
               "correctAnswer": 0
             },
             "testCases": [
               {
-                "description": "<span>Gunakan method <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">count(80)</code> dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">index(95)</code> pada <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">nilai_ujian</code>.</span>",
-                "expectedOutput": "Jumlah angka 80: 3\nPosisi angka 95: 5\n"
+                "description": "Gunakan get dengan fallback nilai default",
+                "expectedOutput": "Harga: 8500000\nDiskon: 0\nGaransi: 1 Tahun\n"
               }
             ],
             "validationRules": [
               {
-                "message": "Panggil method count(80) dengan: jumlah_80 = nilai_ujian.count(80)",
-                "pattern": "jumlah_80\\s*=\\s*nilai_ujian\\.count\\s*\\(\\s*80\\s*\\)",
+                "message": "Gunakan get('diskon', 0)",
+                "pattern": "produk\\.get\\([\"']diskon[\"']\\s*,\\s*0\\)",
                 "shouldExist": true
               },
               {
-                "message": "Panggil method index(95) dengan: posisi_95 = nilai_ujian.index(95)",
-                "pattern": "posisi_95\\s*=\\s*nilai_ujian\\.index\\s*\\(\\s*95\\s*\\)",
+                "message": "Gunakan get('garansi', '1 Tahun')",
+                "pattern": "produk\\.get\\([\"']garansi[\"']\\s*,\\s*[\"']1 Tahun[\"']\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "xpReward": 60
+          },
+          {
+            "id": "py-level-6-m2-l4",
+            "title": "Memodifikasi dan Menghapus Data Dictionary (update, pop, del)",
+            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Sebagai tipe data yang bersifat mutable, kita dapat mengubah, menambahkan data baru, maupun menghapus key-value pair yang ada pada Dictionary:</p>\n\n      <div class=\"my-4 overflow-x-auto\">\n        <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n          <thead>\n            <tr>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Aksi</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Sintaks</th>\n              <th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Penjelasan</th>\n            </tr>\n          </thead>\n          <tbody>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">Tambah / Ubah Key</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">adict[key] = value</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Jika key sudah ada nilainya diperbarui; jika belum ada, key baru akan ditambahkan.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">update()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">adict.update({...})</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menambahkan atau memperbarui beberapa pasangan key-value sekaligus.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">pop()</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">adict.pop(key)</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Menghapus key tertentu dan mengembalikan value yang dihapus.</td>\n            </tr>\n            <tr>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-semibold\">del</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5 font-mono\">del adict[key]</td>\n              <td class=\"border border-zinc-200 px-3 py-1.5\">Statement untuk menghapus key beserta nilainya secara langsung.</td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Modifikasi & Penghapusan:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>profil = {\"nama\": \"Naufal\", \"umur\": 20}\n\n# Menambah key baru\nprofil[\"jurusan\"] = \"Informatika\"\n\n# Mengubah nilai yang ada\nprofil[\"umur\"] = 21\n\n# Menghapus key menggunakan pop()\numur_lama = profil.pop(\"umur\")\n\nprint(\"Profil Akhir :\", profil)\nprint(\"Umur Dihapus :\", umur_lama)</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal — workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ python program.py</span>\n            <span class=\"block mt-1 text-zinc-100\">Profil Akhir : {'nama': 'Naufal', 'jurusan': 'Informatika'}\nUmur Dihapus : 21</span>\n          </div>\n        </div>\n      </div>\n    </div>",
+            "codeExample": "profil = {\"nama\": \"Naufal\", \"umur\": 20}\n\nprofil[\"jurusan\"] = \"Informatika\"\nprofil[\"umur\"] = 21\n\numur_lama = profil.pop(\"umur\")\n\nprint(\"Profil Akhir :\", profil)\nprint(\"Umur Dihapus :\", umur_lama)",
+            "initialCode": "data_akun = {\n    \"username\": \"user123\",\n    \"role\": \"guest\",\n    \"is_active\": False\n}\n\n# 1. Ubah nilai key \"role\" menjadi \"admin\"\ndata_akun[\"role\"] = \"______\"\n\n# 2. Tambahkan key baru \"level\" dengan nilai 1\ndata_akun[\"______\"] = 1\n\n# 3. Hapus key \"is_active\" menggunakan pop()\ndata_akun.pop(\"______\")\n\n# 4. Cetak dictionary akhir\nprint(data_akun)",
+            "solution": "data_akun = {\n    \"username\": \"user123\",\n    \"role\": \"guest\",\n    \"is_active\": False\n}\ndata_akun[\"role\"] = \"admin\"\ndata_akun[\"level\"] = 1\ndata_akun.pop(\"is_active\")\nprint(data_akun)",
+            "hint": "1. Ubah nilai role: data_akun[\"role\"] = \"admin\".\n2. Tambahkan key level: data_akun[\"level\"] = 1.\n3. Hapus key is_active: data_akun.pop(\"is_active\").",
+            "quiz": {
+              "question": "Apa yang terjadi jika kita melakukan assignment adict[key] = value pada key yang belum pernah ada sebelumnya?",
+              "options": [
+                "Pasangan key-value baru akan otomatis ditambahkan ke dalam dictionary",
+                "Program akan menghasilkan KeyError",
+                "Nilai tidak akan tersimpan",
+                "Dictionary akan terhapus"
+              ],
+              "correctAnswer": 0
+            },
+            "testCases": [
+              {
+                "description": "Modifikasi, tambah, dan hapus key pada dictionary data_akun",
+                "expectedOutput": "{'username': 'user123', 'role': 'admin', 'level': 1}\n"
+              }
+            ],
+            "validationRules": [
+              {
+                "message": "Ubah role menjadi admin: data_akun['role'] = 'admin'",
+                "pattern": "data_akun\\[[\"']role[\"']\\]\\s*=\\s*[\"']admin[\"']",
+                "shouldExist": true
+              },
+              {
+                "message": "Tambahkan level: data_akun['level'] = 1",
+                "pattern": "data_akun\\[[\"']level[\"']\\]\\s*=\\s*1",
+                "shouldExist": true
+              },
+              {
+                "message": "Hapus is_active: data_akun.pop('is_active')",
+                "pattern": "data_akun\\.pop\\([\"']is_active[\"']\\)",
+                "shouldExist": true
+              }
+            ],
+            "xpReward": 60
           }
         ]
       },
