@@ -66,7 +66,7 @@ export const StudentMonitoring: React.FC = () => {
       
       (sessionData || []).forEach(s => {
         const u = s.users as any;
-        if (s.nim && s.last_heartbeat && u?.role === 'praktikan') {
+        if (s.nim && s.last_heartbeat && (u?.role === 'praktikan' || u?.role === 'mahasiswa')) {
           heartbeats[s.nim] = s.last_heartbeat;
           nims.add(s.nim);
         }
@@ -79,7 +79,7 @@ export const StudentMonitoring: React.FC = () => {
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('role', 'praktikan');
+        .eq('role', 'mahasiswa');
       
       if (!error && data) {
         setStudents(data);
@@ -134,7 +134,7 @@ export const StudentMonitoring: React.FC = () => {
         
         (sessionData || []).forEach(s => {
           const u = s.users as any;
-          if (s.nim && s.last_heartbeat && u?.role === 'praktikan') {
+          if (s.nim && s.last_heartbeat && (u?.role === 'praktikan' || u?.role === 'mahasiswa')) {
             heartbeats[s.nim] = s.last_heartbeat;
             nims.add(s.nim);
           }
