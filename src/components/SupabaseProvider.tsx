@@ -93,7 +93,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         const { data: userProfile, error: fetchError } = await supabase
           .from('users')
-          .select('*')
+          .select('id,nim,nama,kelas,jurusan,email,role,xp,level,streak,study_time,last_active,created_at,assessment_access,level_access_overrides,tersembunyi,is_aktif,kelas_id,shift,divisi,kelompok,gelombang')
           .eq('nim', nim)
           .single();
 

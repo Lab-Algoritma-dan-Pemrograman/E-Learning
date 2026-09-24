@@ -35,18 +35,32 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 /**
  * Update the authorization token for all Supabase requests (REST + Realtime).
- * Mapped to the student's JWT token for Row Level Security (RLS).
+ *
+ * Hanya token yang di-sign dengan Supabase JWT secret (role=authenticated,
+ * diterbitkan /api/login, /api/verify, /api/receive-token) yang dipakai
+ * sebagai Authorization PostgREST — sehingga RLS role `authenticated` berlaku.
+ * Token backend lain (JWT_SECRET internal) TIDAK dipakai: PostgREST tidak bisa
+ * memverifikasinya (PGRST301) dan semua request akan gagal.
  */
 export const setSupabaseSession = (token: string) => {
   if (!token) return;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return;
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(b64));
+    if (payload && payload.role === 'authenticated') {
+      _currentToken = token;
+    }
+    // Selain itu: biarkan anon key yang dipakai (guest / token backend).
+  } catch {
+    /* token bukan JWT valid — abaikan, tetap anon */
+  }
+};
 
-  // JANGAN pakai token backend sebagai Authorization PostgREST: token itu
-  // ditandatangani JWT_SECRET backend, sedangkan PostgREST memverifikasi
-  // dengan legacy secret Supabase -> PGRST301 "None of the keys was able to
-  // decode the JWT" pada SEMUA request. Biarkan anon key yang dipakai;
-  // keamanan dijaga column-level grant (password_hash dkk tidak di-grant).
-  // ponytail: kolom gamifikasi bisa ditulis siapa saja yang punya anon key.
-  // Kalau itu jadi masalah, pindahkan write ke server pakai service_role.
+/** Hapus token custom (logout) — kembali ke anon key. */
+export const clearSupabaseSession = () => {
+  _currentToken = null;
 };
 
 // Auto-initialize on load if token exists in session storage
