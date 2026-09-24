@@ -156,7 +156,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const { newStreak } = calculateStreak(userProfile.last_active, userProfile.streak);
           // elearning_role (milik E-Learning) meng-override role kanonik:
           // asisten ber-flag admin tetap 'asisten' di kolom bersama.
-          const effectiveRole = (resolveElearningRole(userProfile.role, (userProfile as any).elearning_role) || payload.role || 'praktikan');
+          const resolvedRole = resolveElearningRole(userProfile.role, (userProfile as any).elearning_role);
+          const effectiveRole = resolvedRole !== 'praktikan' ? resolvedRole : (payload.role || 'praktikan');
 
           // Map snake_case to camelCase
           profileData = {
@@ -181,7 +182,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             last_active: new Date().toISOString(),
             streak: newStreak
           };
-          const hasRoleChange = payload.role && normalizeRole(userProfile.role) !== payload.role;
+          // Jangan tulis balik role dari token jika flag elearning_role
+          // menghasilkan role lebih tinggi — token membawa role kanonik.
+          const hasRoleChange = payload.role && resolvedRole === 'praktikan' && normalizeRole(userProfile.role) !== payload.role;
           const hasJurusanChange = (payload as any).jurusan && profileData.jurusan !== (payload as any).jurusan;
           
           if (profileData.nama !== payload.nama) updates.nama = payload.nama;
@@ -244,9 +247,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const currentUser = useStore.getState().user;
             const oldLevel = currentUser?.level || 1;
             const newLevel = updated.level || 1;
-            const effectiveRole = currentUser?.role && ['admin', 'kordas', 'asisten'].includes(currentUser.role)
-              ? currentUser.role
-              : resolveElearningRole(updated.role, (updated as any).elearning_role);
+            const effectiveRole = resolveElearningRole(updated.role, (updated as any).elearning_role);
             
             setStoreUser({
               nim: updated.nim,
