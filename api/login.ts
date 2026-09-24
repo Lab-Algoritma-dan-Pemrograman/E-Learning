@@ -12,6 +12,7 @@
 
 import { SignJWT } from 'jose';
 import { detectSupabaseSecret } from './auth.js';
+import { applyCors } from './_cors.js';
 
 function backendBase(): string {
   const raw =
@@ -35,11 +36,8 @@ function mapRole(backendRole: string): string {
 }
 
 export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  // HIGH-05: whitelist origin (bukan lagi `*`).
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
@@ -69,12 +67,12 @@ export default async function handler(req: any, res: any) {
 
     if (!loginRes.ok || !loginJson?.success || !loginJson?.data?.token) {
       const status = loginRes.status === 404 ? 404 : loginRes.status === 401 ? 401 : 400;
+      // MEDIUM-01: pesan generik — jangan bedakan "akun tidak ditemukan" vs
+      // "password salah" (mencegah enumerasi NIM/email yang valid).
       const msg =
-        loginRes.status === 404
-          ? 'Akun tidak ditemukan. Pastikan NIM sudah terdaftar.'
-          : loginRes.status === 401
-            ? 'NIM atau password salah.'
-            : loginJson?.message || 'Login gagal. Coba lagi.';
+        loginRes.status === 404 || loginRes.status === 401
+          ? 'NIM/email atau password salah.'
+          : loginJson?.message || 'Login gagal. Coba lagi.';
       return res.status(status).json({ error: msg });
     }
 
