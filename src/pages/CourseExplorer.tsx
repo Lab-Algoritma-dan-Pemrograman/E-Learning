@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
+import { getLevelLanguage } from '../utils/levelLanguage';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -170,7 +171,7 @@ export const CourseExplorer: React.FC = () => {
 
         <div className="space-y-16">
           {curriculum.map((level, lIdx) => {
-            const isLangC = level.id.startsWith('c-');
+            const isLangC = getLevelLanguage(level, lIdx) === 'c';
             const isLocked = isModuleLocked(lIdx, 0);
             
             const levelProgress = getLevelProgress(level);

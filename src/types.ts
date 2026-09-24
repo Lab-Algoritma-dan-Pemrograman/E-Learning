@@ -19,6 +19,11 @@ export interface ValidationRule {
   stripStrings?: boolean;
 }
 
+export interface FlowchartSymbol {
+  shape: 'terminator' | 'process' | 'io' | 'decision' | 'connector' | 'predefined';
+  label: string;
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -31,6 +36,14 @@ export interface Lesson {
   testCases?: TestCase[];
   validationRules?: ValidationRule[];
   xpReward?: number;
+  /**
+   * 'flowchart' = latihan berupa puzzle susun simbol flowchart (drag & drop)
+   * dari kode sederhana. Konvensi data:
+   *  - initialCode : kode C sederhana yang divisualkan (read-only)
+   *  - solution    : JSON string FlowchartSymbol[] urutan BENAR atas->bawah
+   *  - testCases[0].description : instruksi tugas
+   */
+  exerciseType?: 'code' | 'flowchart';
 }
 
 export interface Module {

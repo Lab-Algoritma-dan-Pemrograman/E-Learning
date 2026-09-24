@@ -6,6 +6,7 @@ import { useProgress } from '../store/useProgress';
 import { resetUserProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { monitoringService } from '../services/monitoringService';
 import { normalizeRole } from '../services/tokenService';
+import { getLevelLanguage } from '../utils/levelLanguage';
 import { 
   Search, RefreshCw, ChevronDown, ChevronRight, Trash2, Edit3, RotateCcw, 
   CheckCircle2, Lock, X, Save, AlertTriangle, Users, BookOpen, Clock, 
@@ -563,7 +564,7 @@ export const StudentMonitoring: React.FC = () => {
                         {curriculum.map((level, idx) => {
                           const lp = getLevelProgress(s.nim, idx);
                           const lvlPct = lp.total > 0 ? Math.round((lp.completed / lp.total) * 100) : 0;
-                          const isLevelC = level.id.startsWith('c-');
+                          const isLevelC = getLevelLanguage(level, idx) === 'c';
                           return (
                             <div key={level.id} className="bg-white p-4 rounded-2xl border border-zinc-200/60 shadow-sm flex flex-col justify-between">
                               <div className="flex items-center justify-between mb-2">

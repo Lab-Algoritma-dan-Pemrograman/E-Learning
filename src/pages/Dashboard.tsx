@@ -13,6 +13,7 @@ import gameQuestions from '../data/gameQuestions.json';
 import { AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { normalizeRole } from '../services/tokenService';
+import { getLevelLanguage } from '../utils/levelLanguage';
 
 interface RecentActivity {
   lessonId: string;
@@ -247,8 +248,11 @@ export const Dashboard: React.FC = () => {
 
   const progressPercentage = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
-  const cLevels = curriculum.filter(l => l.id.startsWith('c-'));
-  const pyLevels = curriculum.filter(l => l.id.startsWith('p-'));
+  // Bahasa level ditentukan dari judul level, bukan prefix ID: setelah level
+  // di-rename ke `level-1..level-6`, prefix 'c-'/'p-' tidak ada lagi sehingga
+  // filter lama mengembalikan 0 level dan beranda tampak hampa.
+  const cLevels = curriculum.filter((l, i) => getLevelLanguage(l, i) === 'c');
+  const pyLevels = curriculum.filter((l, i) => getLevelLanguage(l, i) === 'python');
 
   const calculateLangProgress = (levels: any[]) => {
     const total = levels.reduce((acc, level, i) => {

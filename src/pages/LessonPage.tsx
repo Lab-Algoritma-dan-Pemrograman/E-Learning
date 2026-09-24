@@ -17,7 +17,9 @@ import { cn } from '../lib/utils';
 import { useCodeRunner, detectLanguage, CodeLanguage } from '../hooks/useCodeRunner';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { parseOutputWithImages } from '../utils/parseOutputWithImages';
+import { getLevelLanguage } from '../utils/levelLanguage';
 import { PlotDisplay } from '../components/PlotDisplay';
+import { FlowchartPuzzle } from '../components/FlowchartPuzzle';
 
 /**
  * Normalize output for flexible comparison:
@@ -187,7 +189,7 @@ export const LessonPage: React.FC = () => {
     if (sampleCode.trim().length > 0) {
       return detectLanguage(sampleCode);
     }
-    return currentLevel?.id.startsWith('c-') ? 'c' : 'python';
+    return getLevelLanguage(currentLevel, currentLevelIdx);
   })();
   
   const { runCode, isLoading, error: runnerError } = useCodeRunner(lessonLanguage);
@@ -231,6 +233,7 @@ export const LessonPage: React.FC = () => {
 
   const isLessonDone = completedLessons.includes(lesson.id);
   const isQuizPassed = isLessonDone || quizXpGranted;
+  const isFlowchart = (lesson as any).exerciseType === 'flowchart';
 
 
   const handleRun = async () => {
@@ -974,21 +977,42 @@ export const LessonPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-4 h-auto lg:h-full">
-                <div className="h-[400px] lg:h-full lg:flex-1">
-                  <CodeEditor 
-                    code={code} 
-                    onChange={(val) => {
-                      setCode(val || '');
-                      setIsCorrect(null);
-                    }} 
-                    onRun={handleRun}
-                    onReset={() => {
-                      setShowResetConfirm(true);
-                    }}
-                    isLoading={isLoading}
-                    language={lessonLanguage}
-                  />
-                </div>
+                {isFlowchart ? (
+                  /* Latihan puzzle flowchart: susun simbol dari kode sederhana */
+                  <div className="h-[520px] lg:h-full lg:flex-1 bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm overflow-y-auto custom-scrollbar">
+                    <FlowchartPuzzle
+                      code={lesson.initialCode || lesson.codeExample || ''}
+                      solutionJson={lesson.solution || '[]'}
+                      distractors={(lesson as any).flowchartDistractors || []}
+                      disabled={isLessonDone}
+                      onResult={(correct) => {
+                        setIsCorrect(correct);
+                        if (correct) {
+                          playCodeCorrectSound();
+                          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#9f1239', '#e11d48', '#fb7185'] });
+                        } else {
+                          playCodeWrongSound();
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-[400px] lg:h-full lg:flex-1">
+                    <CodeEditor 
+                      code={code} 
+                      onChange={(val) => {
+                        setCode(val || '');
+                        setIsCorrect(null);
+                      }} 
+                      onRun={handleRun}
+                      onReset={() => {
+                        setShowResetConfirm(true);
+                      }}
+                      isLoading={isLoading}
+                      language={lessonLanguage}
+                    />
+                  </div>
+                )}
                 {/* Show test case input hint if lesson uses stdin */}
                 {Array.isArray(lesson.testCases) && lesson.testCases.some(tc => tc?.input) && (
                   <div className="flex items-center gap-2 shrink-0">
@@ -1003,6 +1027,7 @@ export const LessonPage: React.FC = () => {
                     </div>
                   </div>
                 )}
+                {!isFlowchart && (
                 <div className="h-40 bg-zinc-950 rounded-2xl border border-zinc-800 p-4 font-mono text-sm flex flex-col shadow-inner">
                   <div className="flex items-center justify-between mb-2 text-zinc-500 text-xs uppercase tracking-widest font-bold">
                     <div className="flex items-center gap-1.5">
@@ -1033,6 +1058,7 @@ export const LessonPage: React.FC = () => {
                     )}
                   </div>
                 </div>
+                )}
                 {/* Selesaikan Pelajaran — posisi asli di kolom kanan */}
                 <button
                   disabled={!isCorrect || !isQuizPassed || isCompleting}
