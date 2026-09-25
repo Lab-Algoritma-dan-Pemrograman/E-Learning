@@ -41,7 +41,10 @@ export const Quiz: React.FC<QuizProps> = ({
   const handleSubmit = async () => {
     if (selected === null) return;
 
-    if (typeof propCorrectAnswer === 'number' && propCorrectAnswer !== -1 && propCorrectAnswer !== undefined) {
+    // Jalur lokal hanya bila kunci memang tersedia (staf membaca tabel `lessons`).
+    // Untuk non-staf, view `student_lessons` membuang correctAnswer sehingga
+    // nilainya undefined -> wajib divalidasi ke API, bukan dinilai di klien.
+    if (typeof propCorrectAnswer === 'number' && propCorrectAnswer >= 0) {
       const isCorrect = selected === propCorrectAnswer;
       setCorrectAnswerIndex(propCorrectAnswer);
       setIsSubmitted(true);

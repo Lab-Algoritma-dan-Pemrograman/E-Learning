@@ -411,7 +411,13 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                   const quiz = (rawQuiz && typeof rawQuiz === 'object' && (rawQuiz.question || (Array.isArray(rawQuiz.options) && rawQuiz.options.length > 0))) ? {
                     question: rawQuiz.question || '',
                     options: Array.isArray(rawQuiz.options) ? rawQuiz.options : [],
-                    correctAnswer: typeof rawQuiz.correctAnswer === 'number' ? rawQuiz.correctAnswer : (typeof rawQuiz.correct_answer === 'number' ? rawQuiz.correct_answer : 0)
+                    // PENTING: view `student_lessons` (dipakai non-staf) sengaja membuang
+                    // correctAnswer. Jangan pernah jatuh ke 0 — itu membuat opsi pertama
+                    // jadi "kunci" palsu dan jawaban benar dinilai salah.
+                    // undefined = belum diketahui -> Quiz.tsx memvalidasi lewat API.
+                    correctAnswer: typeof rawQuiz.correctAnswer === 'number'
+                      ? rawQuiz.correctAnswer
+                      : (typeof rawQuiz.correct_answer === 'number' ? rawQuiz.correct_answer : undefined)
                   } : null;
                   const rawTestCases = parseJson(les.test_cases, []);
                   const testCases = (Array.isArray(rawTestCases) ? rawTestCases : []).map((tc: any) => ({
