@@ -34,19 +34,56 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 /**
+ * Decode payload JWT TANPA verifikasi. Cukup sebagai penjaga: yang menentukan
+ * sah/tidaknya token adalah PostgREST, bukan klien ini.
+ */
+const jwtPayload = (token: string): Record<string, any> | null => {
+  try {
+    const part = token.split('.')[1];
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(decodeURIComponent(escape(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4)))));
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Update the authorization token for all Supabase requests (REST + Realtime).
  * Mapped to the student's JWT token for Row Level Security (RLS).
+ *
+ * HANYA token yang ditandatangani Supabase JWT secret yang boleh dipakai.
+ * Token dari backend Go ditandatangani JWT_SECRET backend, sedangkan PostgREST
+ * memverifikasi dengan legacy secret Supabase -> PGRST301 "None of the keys was
+ * able to decode the JWT" pada SEMUA request. Dulu itu yang membuat injeksi
+ * token dimatikan; sekarang cukup disaring di sini: token non-Supabase
+ * diabaikan sehingga anon key tetap dipakai seperti sebelumnya.
  */
 export const setSupabaseSession = (token: string) => {
-  if (!token) return;
+  if (!token) {
+    _currentToken = null;
+    return;
+  }
 
-  // JANGAN pakai token backend sebagai Authorization PostgREST: token itu
-  // ditandatangani JWT_SECRET backend, sedangkan PostgREST memverifikasi
-  // dengan legacy secret Supabase -> PGRST301 "None of the keys was able to
-  // decode the JWT" pada SEMUA request. Biarkan anon key yang dipakai;
-  // keamanan dijaga column-level grant (password_hash dkk tidak di-grant).
-  // ponytail: kolom gamifikasi bisa ditulis siapa saja yang punya anon key.
-  // Kalau itu jadi masalah, pindahkan write ke server pakai service_role.
+  const payload = jwtPayload(token);
+
+  if (!payload || payload.iss !== 'supabase' || payload.role !== 'authenticated') {
+    console.warn('[supabase] Token bukan token Supabase (iss/role tidak cocok) - request tetap memakai anon key.');
+    _currentToken = null;
+    return;
+  }
+
+  if (typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now()) {
+    console.warn('[supabase] Token sudah kedaluwarsa - request tetap memakai anon key.');
+    _currentToken = null;
+    return;
+  }
+
+  _currentToken = token;
+};
+
+/** Lepas token (dipakai saat logout) supaya request kembali memakai anon key. */
+export const clearSupabaseSession = () => {
+  _currentToken = null;
 };
 
 // Auto-initialize on load if token exists in session storage

@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 import { clearToken, normalizeRole } from '../services/tokenService';
 import { AchievementPopup } from './AchievementPopup';
 import { LevelUpPopup } from './LevelUpPopup';
-import { supabase } from '../lib/supabase';
+import { supabase, clearSupabaseSession } from '../lib/supabase';
 import { calculateStreak } from '../services/streakService';
 
 
@@ -73,6 +73,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       }
       sessionStorage.removeItem('logged_in_audit_logged');
       clearToken();
+      clearSupabaseSession();   // request berikutnya kembali memakai anon key
       window.location.reload();
     } catch (error) {
       console.error('Logout failed:', error);
