@@ -202,34 +202,9 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\nint main() {\n    __ inisial = __;\n    printf(\"Inisial saya: __\\n\", inisial);\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\nint main() {\n    char inisial = 'A';\n    printf(\"Inisial saya: %c\\n\", inisial);\n    return 0;\n}",
             "hint": "1. Lengkapi tipe data variabel \"inisial\" (sesuai topik pelajaran ini).\n\n2. Lengkapi nilai inisial menggunakan tanda petik tunggal '...'\n   (bukan petik ganda), isi dengan satu huruf kapital pilihanmu.\n\n3. Pada printf(), lengkapi format specifier yang sesuai untuk\n   menampilkan sebuah karakter tunggal.",
-            "quiz": {
-              "options": [
-                "char huruf = \"A\";",
-                "char huruf = 'A';",
-                "char huruf = A;",
-                "char huruf = (A);"
-              ],
-              "question": "Manakah cara penulisan nilai yang **benar** untuk menginisialisasi variabel char dalam bahasa C?",
-              "correctAnswer": 1
-            },
-            "testCases": [
-              {
-                "description": "<span>Deklarasikan variabel <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">char</code> bernama <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">inisial</code> dengan nilai huruf pertama namamu, lalu tampilkan menggunakan format specifier yang tepat.</span>",
-                "expectedOutput": "Inisial saya: A\n(Ganti `A` dengan inisial pilihanmu)\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Deklarasikan dengan tipe char dan nilai petik tunggal: char inisial = 'A';",
-                "pattern": "char\\s+inisial\\s*=\\s*'[A-Za-z]'\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Gunakan format specifier %c: printf(\"Inisial saya: %c\\n\", inisial);",
-                "pattern": "printf\\s*\\(\\s*\"Inisial saya:\\s*%c\\\\n\"\\s*,\\s*inisial\\s*\\)",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Manakah cara penulisan nilai yang **benar** untuk menginisialisasi variabel char dalam bahasa C?","options":["char huruf = \"A\";","char huruf = 'A';","char huruf = A;","char huruf = (A);"],"correctAnswer":1},
+            "testCases": [{"expectedOutput":"Inisial saya: A\n","description":"<span>Deklarasikan variabel <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">char</code> bernama <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">inisial</code> dengan nilai huruf pertama namamu, lalu tampilkan menggunakan format specifier yang tepat.</span>"}],
+            "validationRules": [{"message":"Deklarasikan dengan tipe char dan nilai petik tunggal: char inisial = 'A';","pattern":"char\\s+inisial\\s*=\\s*'[A-Za-z]'\\s*;","shouldExist":true},{"message":"Gunakan format specifier %c: printf(\"Inisial saya: %c\\n\", inisial);","pattern":"printf\\s*\\(\\s*\"Inisial saya:\\s*%c\\\\n\"\\s*,\\s*inisial\\s*\\)","shouldExist":true}]
           },
           {
             "id": "c-level-1-m2-l2",
@@ -607,45 +582,9 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\nint main() {\n    int a, b, hasil;\n    printf(\"Masukkan angka pertama: \");\n    scanf(\"__\", &__);\n    printf(\"Masukkan angka kedua: \");\n    scanf(\"__\", &__);\n    hasil = __ + __;\n    printf(\"Hasil: __\\n\", hasil);\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\nint main() {\n    int a, b, hasil;\n    printf(\"Masukkan angka pertama: \");\n    scanf(\"%d\", &a);\n    printf(\"Masukkan angka kedua: \");\n    scanf(\"%d\", &b);\n    hasil = a + b;\n    printf(\"Hasil: %d\\n\", hasil);\n    return 0;\n}",
             "hint": "1. Lengkapi format specifier pada scanf() pertama untuk membaca\n   bilangan bulat ke variabel \"a\". Jangan lupa tanda & sebelum\n   nama variabel.\n\n2. Lengkapi format specifier pada scanf() kedua untuk membaca\n   bilangan bulat ke variabel \"b\". Jangan lupa tanda & sebelum\n   nama variabel.\n\n3. Lengkapi rumus penjumlahan untuk variabel \"hasil\" menggunakan\n   operator penjumlahan antara variabel a dan b.\n\n4. Lengkapi format specifier pada printf() terakhir untuk\n   menampilkan nilai bertipe int.",
-            "quiz": {
-              "options": [
-                "Untuk menghitung nilai variabel secara otomatis",
-                "Untuk memberikan alamat memori variabel agar scanf() bisa menyimpan nilai ke sana",
-                "Untuk mengosongkan nilai variabel sebelum diisi",
-                "Untuk menampilkan nilai variabel setelah diinput"
-              ],
-              "question": "Mengapa tanda & diperlukan sebelum nama variabel di dalam scanf()?",
-              "correctAnswer": 1
-            },
-            "testCases": [
-              {
-                "input": "15\n27",
-                "description": "<span>Buat program yang meminta pengguna memasukkan dua bilangan bulat, lalu tampilkan hasil penjumlahannya.</span>",
-                "expectedOutput": "Masukkan angka pertama: 15\nMasukkan angka kedua: 27\nHasil: 42\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "scanf() pertama harus: scanf(\"%d\", &a);",
-                "pattern": "scanf\\s*\\(\\s*\"%d\"\\s*,\\s*&a\\s*\\)\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "scanf() kedua harus: scanf(\"%d\", &b);",
-                "pattern": "scanf\\s*\\(\\s*\"%d\"\\s*,\\s*&b\\s*\\)\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Hitung hasil dengan: hasil = a + b;",
-                "pattern": "hasil\\s*=\\s*a\\s*\\+\\s*b\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Tampilkan hasil dengan: printf(\"Hasil: %d\\n\", hasil);",
-                "pattern": "printf\\s*\\(\\s*\"Hasil:\\s*%d\\\\n\"\\s*,\\s*hasil\\s*\\)\\s*;",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Mengapa tanda & diperlukan sebelum nama variabel di dalam scanf()?","options":["Untuk menghitung nilai variabel secara otomatis","Untuk memberikan alamat memori variabel agar scanf() bisa menyimpan nilai ke sana","Untuk mengosongkan nilai variabel sebelum diisi","Untuk menampilkan nilai variabel setelah diinput"],"correctAnswer":1},
+            "testCases": [{"expectedOutput":"Masukkan angka pertama: Masukkan angka kedua: Hasil: 42\n","description":"<span>Buat program yang meminta pengguna memasukkan dua bilangan bulat, lalu tampilkan hasil penjumlahannya.</span>","input":"15\n27"}],
+            "validationRules": [{"message":"scanf() pertama harus: scanf(\"%d\", &a);","pattern":"scanf\\s*\\(\\s*\"%d\"\\s*,\\s*&a\\s*\\)\\s*;","shouldExist":true},{"message":"scanf() kedua harus: scanf(\"%d\", &b);","pattern":"scanf\\s*\\(\\s*\"%d\"\\s*,\\s*&b\\s*\\)\\s*;","shouldExist":true},{"message":"Hitung hasil dengan: hasil = a + b;","pattern":"hasil\\s*=\\s*a\\s*\\+\\s*b\\s*;","shouldExist":true},{"message":"Tampilkan hasil dengan: printf(\"Hasil: %d\\n\", hasil);","pattern":"printf\\s*\\(\\s*\"Hasil:\\s*%d\\\\n\"\\s*,\\s*hasil\\s*\\)\\s*;","shouldExist":true}]
           },
           {
             "id": "c-level-1-m4-l2",
@@ -655,35 +594,9 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\nint main() {\n    int karakter;\n    printf(\"Masukkan satu karakter: \");\n    karakter = __();\n    printf(\"Karakter: __, ASCII: __\\n\", karakter, karakter);\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\nint main() {\n    int karakter;\n    printf(\"Masukkan satu karakter: \");\n    karakter = getchar();\n    printf(\"Karakter: %c, ASCII: %d\\n\", karakter, karakter);\n    return 0;\n}",
             "hint": "1. Lengkapi pemanggilan fungsi untuk membaca satu karakter dari\n   input dan simpan ke variabel \"karakter\" (fungsi ini dibahas\n   pada judul pelajaran ini).\n\n2. Lengkapi format specifier pertama pada printf() untuk\n   menampilkan variabel karakter sebagai sebuah huruf/simbol.\n\n3. Lengkapi format specifier kedua pada printf() untuk menampilkan\n   variabel karakter yang SAMA sebagai kode ASCII (angka).",
-            "quiz": {
-              "options": [
-                "char",
-                "void",
-                "int",
-                "string"
-              ],
-              "question": "Apa tipe data yang dikembalikan oleh fungsi getchar()?",
-              "correctAnswer": 2
-            },
-            "testCases": [
-              {
-                "input": "A",
-                "description": "<span>Buat program yang membaca satu karakter menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">getchar()</code>, lalu tampilkan karakter tersebut beserta kode ASCII-nya.</span>",
-                "expectedOutput": "Masukkan satu karakter: A\nKarakter: A, ASCII: 65\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Baca karakter dengan: karakter = getchar();",
-                "pattern": "karakter\\s*=\\s*getchar\\s*\\(\\s*\\)\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Gunakan: printf(\"Karakter: %c, ASCII: %d\\n\", karakter, karakter);",
-                "pattern": "printf\\s*\\(\\s*\"Karakter:\\s*%c,\\s*ASCII:\\s*%d\\\\n\"\\s*,\\s*karakter\\s*,\\s*karakter\\s*\\)",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Apa tipe data yang dikembalikan oleh fungsi getchar()?","options":["char","void","int","string"],"correctAnswer":2},
+            "testCases": [{"expectedOutput":"Masukkan satu karakter: Karakter: A, ASCII: 65\n","description":"<span>Buat program yang membaca satu karakter menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">getchar()</code>, lalu tampilkan karakter tersebut beserta kode ASCII-nya.</span>","input":"A"}],
+            "validationRules": [{"message":"Baca karakter dengan: karakter = getchar();","pattern":"karakter\\s*=\\s*getchar\\s*\\(\\s*\\)\\s*;","shouldExist":true},{"message":"Gunakan: printf(\"Karakter: %c, ASCII: %d\\n\", karakter, karakter);","pattern":"printf\\s*\\(\\s*\"Karakter:\\s*%c,\\s*ASCII:\\s*%d\\\\n\"\\s*,\\s*karakter\\s*,\\s*karakter\\s*\\)","shouldExist":true}]
           },
           {
             "id": "c-level-1-m4-l3",
@@ -1234,35 +1147,9 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\nint main() {\n    int a, b;\n    printf(\"Masukkan bilangan pertama: \");\n    scanf(\"%d\", &a);\n    printf(\"Masukkan bilangan kedua: \");\n    scanf(\"%d\", &b);\n    printf(\"Hasil bagi: %d\\n\", a __ b);\n    printf(\"Sisa bagi: %d\\n\", a __ b);\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\nint main() {\n    int a, b;\n    printf(\"Masukkan bilangan pertama: \");\n    scanf(\"%d\", &a);\n    printf(\"Masukkan bilangan kedua: \");\n    scanf(\"%d\", &b);\n    printf(\"Hasil bagi: %d\\n\", a / b);\n    printf(\"Sisa bagi: %d\\n\", a % b);\n    return 0;\n}",
             "hint": "1. Pada printf() pertama setelah scanf(), lengkapi ekspresi\n   untuk menghitung hasil bagi integer antara a dan b\n   (gunakan operator pembagian biasa).\n\n2. Pada printf() kedua, lengkapi ekspresi untuk menghitung\n   sisa pembagian antara a dan b (gunakan operator modulus).",
-            "quiz": {
-              "options": [
-                "3.4",
-                "3",
-                "2",
-                "5"
-              ],
-              "question": "Apa hasil dari ekspresi 17 % 5 dalam bahasa C?",
-              "correctAnswer": 2
-            },
-            "testCases": [
-              {
-                "input": "23 dan 4",
-                "description": "<span>Buat program yang membaca dua bilangan bulat dari pengguna, lalu menampilkan hasil bagi (integer) dan sisa bagi (modulus) dari kedua bilangan tersebut.</span>",
-                "expectedOutput": "Masukkan bilangan pertama: 23\nMasukkan bilangan kedua: 4\nHasil bagi: 5\nSisa bagi: 3\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Hitung hasil bagi dengan operator /: printf(\"Hasil bagi: %d\\n\", a / b);",
-                "pattern": "printf\\s*\\(\\s*\"Hasil bagi:\\s*%d\\\\n\"\\s*,\\s*a\\s*/\\s*b\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Hitung sisa bagi dengan operator %: printf(\"Sisa bagi: %d\\n\", a % b);",
-                "pattern": "printf\\s*\\(\\s*\"Sisa bagi:\\s*%d\\\\n\"\\s*,\\s*a\\s*%\\s*b\\s*\\)",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Apa hasil dari ekspresi 17 % 5 dalam bahasa C?","options":["3.4","3","2","5"],"correctAnswer":2},
+            "testCases": [{"expectedOutput":"Masukkan bilangan pertama: Masukkan bilangan kedua: Hasil bagi: 5\nSisa bagi: 3\n","description":"<span>Buat program yang membaca dua bilangan bulat dari pengguna, lalu menampilkan hasil bagi (integer) dan sisa bagi (modulus) dari kedua bilangan tersebut.</span>","input":"23\n4"}],
+            "validationRules": [{"message":"Hitung hasil bagi dengan operator /: printf(\"Hasil bagi: %d\\n\", a / b);","pattern":"printf\\s*\\(\\s*\"Hasil bagi:\\s*%d\\\\n\"\\s*,\\s*a\\s*/\\s*b\\s*\\)","shouldExist":true},{"message":"Hitung sisa bagi dengan operator %: printf(\"Sisa bagi: %d\\n\", a % b);","pattern":"printf\\s*\\(\\s*\"Sisa bagi:\\s*%d\\\\n\"\\s*,\\s*a\\s*%\\s*b\\s*\\)","shouldExist":true}]
           },
           {
             "id": "c-level-1-m8-l3",
@@ -1272,40 +1159,9 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\nint main() {\n    int a, b;\n    printf(\"Masukkan bilangan A: \");\n    scanf(\"%d\", &a);\n    printf(\"Masukkan bilangan B: \");\n    scanf(\"%d\", &b);\n    printf(\"A == B: %d\\n\", a __ b);\n    printf(\"A > B : %d\\n\", a __ b);\n    printf(\"A <= B: %d\\n\", a __ b);\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\nint main() {\n    int a, b;\n    printf(\"Masukkan bilangan A: \");\n    scanf(\"%d\", &a);\n    printf(\"Masukkan bilangan B: \");\n    scanf(\"%d\", &b);\n    printf(\"A == B: %d\\n\", a == b);\n    printf(\"A > B : %d\\n\", a > b);\n    printf(\"A <= B: %d\\n\", a <= b);\n    return 0;\n}",
             "hint": "1. Lengkapi ekspresi pada printf() pertama: bandingkan a dan b\n   menggunakan operator \"sama dengan\".\n\n2. Lengkapi ekspresi pada printf() kedua: bandingkan a dan b\n   menggunakan operator \"lebih besar dari\".\n\n3. Lengkapi ekspresi pada printf() ketiga: bandingkan a dan b\n   menggunakan operator \"lebih kecil atau sama dengan\".",
-            "quiz": {
-              "options": [
-                "1",
-                "0",
-                "10",
-                "Error kompilasi"
-              ],
-              "question": "Apa hasil dari ekspresi (10 != 10) dalam bahasa C?",
-              "correctAnswer": 1
-            },
-            "testCases": [
-              {
-                "input": "8 dan 8",
-                "description": "<span>Buat program yang membaca dua bilangan bulat, lalu menampilkan hasil perbandingan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">==</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&gt;</code>, dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&lt;=</code> antara kedua bilangan tersebut (dalam bentuk 0 atau 1).</span>",
-                "expectedOutput": "Masukkan bilangan A: 8\nMasukkan bilangan B: 8\nA == B: 1\nA > B : 0\nA <= B: 1\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Gunakan operator ==: printf(\"A == B: %d\\n\", a == b);",
-                "pattern": "printf\\s*\\(\\s*\"A == B:\\s*%d\\\\n\"\\s*,\\s*a\\s*==\\s*b\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Gunakan operator >: printf(\"A > B : %d\\n\", a > b);",
-                "pattern": "printf\\s*\\(\\s*\"A > B\\s*:\\s*%d\\\\n\"\\s*,\\s*a\\s*>\\s*b\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Gunakan operator <=: printf(\"A <= B: %d\\n\", a <= b);",
-                "pattern": "printf\\s*\\(\\s*\"A <= B:\\s*%d\\\\n\"\\s*,\\s*a\\s*<=\\s*b\\s*\\)",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Apa hasil dari ekspresi (10 != 10) dalam bahasa C?","options":["1","0","10","Error kompilasi"],"correctAnswer":1},
+            "testCases": [{"expectedOutput":"Masukkan bilangan A: Masukkan bilangan B: A == B: 1\nA > B : 0\nA <= B: 1\n","description":"<span>Buat program yang membaca dua bilangan bulat, lalu menampilkan hasil perbandingan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">==</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&gt;</code>, dan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&lt;=</code> antara kedua bilangan tersebut (dalam bentuk 0 atau 1).</span>","input":"8\n8"}],
+            "validationRules": [{"message":"Gunakan operator ==: printf(\"A == B: %d\\n\", a == b);","pattern":"printf\\s*\\(\\s*\"A == B:\\s*%d\\\\n\"\\s*,\\s*a\\s*==\\s*b\\s*\\)","shouldExist":true},{"message":"Gunakan operator >: printf(\"A > B : %d\\n\", a > b);","pattern":"printf\\s*\\(\\s*\"A > B\\s*:\\s*%d\\\\n\"\\s*,\\s*a\\s*>\\s*b\\s*\\)","shouldExist":true},{"message":"Gunakan operator <=: printf(\"A <= B: %d\\n\", a <= b);","pattern":"printf\\s*\\(\\s*\"A <= B:\\s*%d\\\\n\"\\s*,\\s*a\\s*<=\\s*b\\s*\\)","shouldExist":true}]
           },
           {
             "id": "c-level-1-m8-l4",
@@ -1315,41 +1171,10 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\nint main() {\n    int suhu;\n    printf(\"Masukkan suhu tubuh: \");\n    scanf(\"%d\", &suhu);\n    printf(\"Status normal: %d\\n\", (suhu __ 36) __ (suhu __ 37));\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\nint main() {\n    int suhu;\n    printf(\"Masukkan suhu tubuh: \");\n    scanf(\"%d\", &suhu);\n    printf(\"Status normal: %d\\n\", (suhu >= 36) && (suhu <= 37));\n    return 0;\n}",
             "hint": "1. Lengkapi kondisi pertama: periksa apakah suhu lebih besar\n   atau sama dengan 36.\n\n2. Lengkapi operator logika di antara kedua kondisi — gunakan\n   operator yang berarti \"DAN\" (kedua kondisi harus terpenuhi).\n\n3. Lengkapi kondisi kedua: periksa apakah suhu lebih kecil\n   atau sama dengan 37.",
-            "quiz": {
-              "options": [
-                "1",
-                "0",
-                "2",
-                "Error karena tidak boleh menggabungkan dua ekspresi"
-              ],
-              "question": "Berapa hasil dari ekspresi (5 > 3) && (2 > 4) dalam bahasa C?",
-              "correctAnswer": 1
-            },
-            "testCases": [
-              {
-                "input": "36",
-                "description": "<span>Buat program yang membaca nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int suhu</code> dan menampilkan apakah suhu tersebut berada dalam kategori \"Normal\" (antara 36 dan 37 derajat, inklusif) menggunakan operator logika AND.</span>",
-                "expectedOutput": "Masukkan suhu tubuh: 36\nStatus normal: 1\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Kondisi pertama harus: (suhu >= 36)",
-                "pattern": "\\(\\s*suhu\\s*>=\\s*36\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Gabungkan dengan operator AND: (suhu >= 36) && (suhu <= 37)",
-                "pattern": "\\(\\s*suhu\\s*>=\\s*36\\s*\\)\\s*&&\\s*\\(\\s*suhu\\s*<=\\s*37\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Kondisi kedua harus: (suhu <= 37)",
-                "pattern": "\\(\\s*suhu\\s*<=\\s*37\\s*\\)",
-                "shouldExist": true
-              }
-            ]
-          }
+            "quiz": {"question":"Berapa hasil dari ekspresi (5 > 3) && (2 > 4) dalam bahasa C?","options":["1","0","2","Error karena tidak boleh menggabungkan dua ekspresi"],"correctAnswer":1},
+            "testCases": [{"expectedOutput":"Masukkan suhu tubuh: Status normal: 1\n","description":"<span>Buat program yang membaca nilai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int suhu</code> dan menampilkan apakah suhu tersebut berada dalam kategori \"Normal\" (antara 36 dan 37 derajat, inklusif) menggunakan operator logika AND.</span>","input":"36"}],
+            "validationRules": [{"message":"Kondisi pertama harus: (suhu >= 36)","pattern":"\\(\\s*suhu\\s*>=\\s*36\\s*\\)","shouldExist":true},{"message":"Gabungkan dengan operator AND: (suhu >= 36) && (suhu <= 37)","pattern":"\\(\\s*suhu\\s*>=\\s*36\\s*\\)\\s*&&\\s*\\(\\s*suhu\\s*<=\\s*37\\s*\\)","shouldExist":true},{"message":"Kondisi kedua harus: (suhu <= 37)","pattern":"\\(\\s*suhu\\s*<=\\s*37\\s*\\)","shouldExist":true}]
+          },
         ]
       },
       {
@@ -1453,51 +1278,10 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\n/*\n * (Oval)         Start\n * (Jajargenjang) Input: total\n * (Diamond)      Decision: total >= 100000?\n *    Ya -> (Persegi) Proses: total_bayar = total * 0.9\n *          (Jajargenjang) Output: \"Anda mendapat diskon!\" dan total_bayar\n *    Tidak -> (Jajargenjang) Output: total_bayar = total\n * (Oval)         End\n */\nint main() {\n    int total;\n    printf(\"Masukkan total belanja: \");\n    scanf(\"%d\", &total);\n\n    if (total __ 100000) {\n        int total_bayar = total * __;\n        printf(\"__\\n\");\n        printf(\"Total bayar: %d\\n\", __);\n    } else {\n        printf(\"Total bayar: %d\\n\", __);\n    }\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\n/*\n * (Oval)         Start\n * (Jajargenjang) Input: total\n * (Diamond)      Decision: total >= 100000?\n *    Ya -> (Persegi) Proses: total_bayar = total * 0.9\n *          (Jajargenjang) Output: \"Anda mendapat diskon!\" dan total_bayar\n *    Tidak -> (Jajargenjang) Output: total_bayar = total\n * (Oval)         End\n */\nint main() {\n    int total;\n    printf(\"Masukkan total belanja: \");\n    scanf(\"%d\", &total);\n\n    if (total >= 100000) {\n        int total_bayar = total * 0.9;\n        printf(\"Anda mendapat diskon!\\n\");\n        printf(\"Total bayar: %d\\n\", total_bayar);\n    } else {\n        printf(\"Total bayar: %d\\n\", total);\n    }\n    return 0;\n}",
             "hint": "1. Lengkapi kondisi if (Decision/diamond) untuk memeriksa apakah\n   total belanja lebih besar atau sama dengan 100000.\n\n2. Pada blok if, lengkapi rumus perhitungan total_bayar setelah\n   diskon 10% — kalikan total dengan 0.9.\n\n3. Pada blok if, lengkapi printf() pertama untuk menampilkan\n   pesan \"Anda mendapat diskon!\".\n\n4. Pada blok if, lengkapi printf() kedua untuk menampilkan\n   total_bayar.\n\n5. Pada blok else, lengkapi printf() untuk menampilkan total\n   (tanpa potongan diskon) sebagai total_bayar.",
-            "quiz": {
-              "options": [
-                "Titik mulai dan selesai program",
-                "Operasi input atau output data",
-                "Percabangan kondisi",
-                "Proses perhitungan matematis"
-              ],
-              "question": "Simbol **jajaran genjang (parallelogram)** dalam flowchart digunakan untuk merepresentasikan...",
-              "correctAnswer": 1
-            },
-            "testCases": [
-              {
-                "input": "150000",
-                "description": "<span>Tulis komentar flowchart yang memetakan setiap simbol (oval, jajargenjang, persegi panjang, diamond) ke baris kode yang sesuai untuk program penghitung diskon, lalu lengkapi kodenya.</span>",
-                "expectedOutput": "Masukkan total belanja: 150000\nAnda mendapat diskon!\nTotal bayar: 135000\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Gunakan decision: if (total >= 100000)",
-                "pattern": "if\\s*\\(\\s*total\\s*>=\\s*100000\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Hitung diskon dengan: int total_bayar = total * 0.9;",
-                "pattern": "int\\s+total_bayar\\s*=\\s*total\\s*\\*\\s*0\\.9\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Tampilkan pesan diskon: printf(\"Anda mendapat diskon!\\n\");",
-                "pattern": "printf\\s*\\(\\s*\"Anda mendapat diskon!\\\\n\"\\s*\\)\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Pada blok if, tampilkan total_bayar: printf(\"Total bayar: %d\\n\", total_bayar);",
-                "pattern": "if\\s*\\([\\s\\S]*?printf\\s*\\(\\s*\"Total bayar:\\s*%d\\\\n\"\\s*,\\s*total_bayar\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Pada blok else, tampilkan total (bukan total_bayar): printf(\"Total bayar: %d\\n\", total);",
-                "pattern": "else\\s*\\{\\s*printf\\s*\\(\\s*\"Total bayar:\\s*%d\\\\n\"\\s*,\\s*total\\s*\\)\\s*;\\s*\\}",
-                "shouldExist": true
-              }
-            ]
-          }
+            "quiz": {"question":"Simbol **jajaran genjang (parallelogram)** dalam flowchart digunakan untuk merepresentasikan...","options":["Titik mulai dan selesai program","Operasi input atau output data","Percabangan kondisi","Proses perhitungan matematis"],"correctAnswer":1},
+            "testCases": [{"expectedOutput":"Masukkan total belanja: Anda mendapat diskon!\nTotal bayar: 135000\n","description":"<span>Tulis komentar flowchart yang memetakan setiap simbol (oval, jajargenjang, persegi panjang, diamond) ke baris kode yang sesuai untuk program penghitung diskon, lalu lengkapi kodenya.</span>","input":"150000"}],
+            "validationRules": [{"message":"Gunakan decision: if (total >= 100000)","pattern":"if\\s*\\(\\s*total\\s*>=\\s*100000\\s*\\)","shouldExist":true},{"message":"Hitung diskon dengan: int total_bayar = total * 0.9;","pattern":"int\\s+total_bayar\\s*=\\s*total\\s*\\*\\s*0\\.9\\s*;","shouldExist":true},{"message":"Tampilkan pesan diskon: printf(\"Anda mendapat diskon!\\n\");","pattern":"printf\\s*\\(\\s*\"Anda mendapat diskon!\\\\n\"\\s*\\)\\s*;","shouldExist":true},{"message":"Pada blok if, tampilkan total_bayar: printf(\"Total bayar: %d\\n\", total_bayar);","pattern":"if\\s*\\([\\s\\S]*?printf\\s*\\(\\s*\"Total bayar:\\s*%d\\\\n\"\\s*,\\s*total_bayar\\s*\\)","shouldExist":true},{"message":"Pada blok else, tampilkan total (bukan total_bayar): printf(\"Total bayar: %d\\n\", total);","pattern":"else\\s*\\{\\s*printf\\s*\\(\\s*\"Total bayar:\\s*%d\\\\n\"\\s*,\\s*total\\s*\\)\\s*;\\s*\\}","shouldExist":true}]
+          },
         ]
       }
     ]
@@ -1559,40 +1343,9 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\nint main() {\n    int angka;\n    printf(\"Masukkan angka: \");\n    scanf(\"%d\", &angka);\n    if (angka __ 0) {\n        printf(\"__\\n\");\n    } else {\n        printf(\"__\\n\");\n    }\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\nint main() {\n    int angka;\n    printf(\"Masukkan angka: \");\n    scanf(\"%d\", &angka);\n    if (angka > 0) {\n        printf(\"Angka positif\\n\");\n    } else {\n        printf(\"Angka negatif atau nol\\n\");\n    }\n    return 0;\n}",
             "hint": "1. Lengkapi kondisi if: periksa apakah angka lebih besar dari 0.\n\n2. Lengkapi isi blok if dengan printf() yang menampilkan\n   \"Angka positif\".\n\n3. Lengkapi isi blok else dengan printf() yang menampilkan\n   \"Angka negatif atau nol\" — perhatikan penulisan harus\n   PERSIS sama dengan output yang diharapkan.",
-            "quiz": {
-              "options": [
-                "Tidak ada",
-                "Tepat satu",
-                "Selalu kedua blok",
-                "Tergantung jumlah variabel"
-              ],
-              "question": "Dalam struktur if-else, berapa blok kode yang **pasti** dieksekusi (tidak lebih, tidak kurang)?",
-              "correctAnswer": 1
-            },
-            "testCases": [
-              {
-                "input": "-5",
-                "description": "<span>Buat program yang membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int angka</code> lalu menampilkan apakah angka tersebut <strong>positif</strong> atau <strong>negatif/nol</strong> menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">if-else</code>.</span>",
-                "expectedOutput": "Masukkan angka: -5\nAngka negatif atau nol\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Gunakan kondisi: if (angka > 0)",
-                "pattern": "if\\s*\\(\\s*angka\\s*>\\s*0\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Pada blok if, tampilkan: printf(\"Angka positif\\n\");",
-                "pattern": "if\\s*\\(\\s*angka\\s*>\\s*0\\s*\\)\\s*\\{\\s*printf\\s*\\(\\s*\"Angka positif\\\\n\"\\s*\\)\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Pada blok else, tampilkan: printf(\"Angka negatif atau nol\\n\");",
-                "pattern": "else\\s*\\{\\s*printf\\s*\\(\\s*\"Angka negatif atau nol\\\\n\"\\s*\\)\\s*;",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Dalam struktur if-else, berapa blok kode yang **pasti** dieksekusi (tidak lebih, tidak kurang)?","options":["Tidak ada","Tepat satu","Selalu kedua blok","Tergantung jumlah variabel"],"correctAnswer":1},
+            "testCases": [{"expectedOutput":"Masukkan angka: Angka negatif atau nol\n","description":"<span>Buat program yang membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int angka</code> lalu menampilkan apakah angka tersebut <strong>positif</strong> atau <strong>negatif/nol</strong> menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">if-else</code>.</span>","input":"-5"}],
+            "validationRules": [{"message":"Gunakan kondisi: if (angka > 0)","pattern":"if\\s*\\(\\s*angka\\s*>\\s*0\\s*\\)","shouldExist":true},{"message":"Pada blok if, tampilkan: printf(\"Angka positif\\n\");","pattern":"if\\s*\\(\\s*angka\\s*>\\s*0\\s*\\)\\s*\\{\\s*printf\\s*\\(\\s*\"Angka positif\\\\n\"\\s*\\)\\s*;","shouldExist":true},{"message":"Pada blok else, tampilkan: printf(\"Angka negatif atau nol\\n\");","pattern":"else\\s*\\{\\s*printf\\s*\\(\\s*\"Angka negatif atau nol\\\\n\"\\s*\\)\\s*;","shouldExist":true}]
           },
           {
             "id": "c-level-2-m1-l3",
@@ -1602,40 +1355,9 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\nint main() {\n    int bmi;\n    printf(\"Masukkan nilai BMI: \");\n    scanf(\"%d\", &bmi);\n    if (bmi __ 18) {\n        printf(\"Kategori: __\\n\");\n    } else if (bmi __ 25) {\n        printf(\"Kategori: __\\n\");\n    } else {\n        printf(\"Kategori: __\\n\");\n    }\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\nint main() {\n    int bmi;\n    printf(\"Masukkan nilai BMI: \");\n    scanf(\"%d\", &bmi);\n    if (bmi < 18) {\n        printf(\"Kategori: Kurus\\n\");\n    } else if (bmi <= 25) {\n        printf(\"Kategori: Normal\\n\");\n    } else {\n        printf(\"Kategori: Gemuk\\n\");\n    }\n    return 0;\n}",
             "hint": "1. Lengkapi kondisi if pertama: periksa apakah bmi kurang dari 18.\n   Lengkapi isi bloknya dengan printf() kategori \"Kurus\".\n\n2. Lengkapi kondisi else if: periksa apakah bmi kurang dari atau\n   sama dengan 25 (kondisi ini hanya dicek jika kondisi pertama\n   salah, sehingga otomatis berarti bmi >= 18).\n   Lengkapi isi bloknya dengan printf() kategori \"Normal\".\n\n3. Lengkapi blok else (tanpa kondisi tambahan, ini untuk kasus\n   bmi > 25) dengan printf() kategori \"Gemuk\".\n\nCatatan: ketiga printf() menggunakan format yang sama:\n\"Kategori: <nama_kategori>\\n\"",
-            "quiz": {
-              "options": [
-                "Semua else if setelahnya tetap dievaluasi",
-                "Program berhenti total",
-                "Blok yang sesuai dieksekusi, dan sisa else if/else diabaikan",
-                "Hanya blok else yang akan dieksekusi"
-              ],
-              "question": "Pada struktur if-else if-else, apa yang terjadi setelah salah satu kondisi else if terpenuhi (bernilai benar)?",
-              "correctAnswer": 2
-            },
-            "testCases": [
-              {
-                "input": "22",
-                "description": "<span>Buat program kategori BMI sederhana berdasarkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int bmi</code> (bilangan bulat): <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&lt; 18</code> → \"Kurus\", <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">18</code> sampai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">25</code> → \"Normal\", <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&gt; 25</code> → \"Gemuk\".</span>",
-                "expectedOutput": "Masukkan nilai BMI: 22\nKategori: Normal\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Kondisi pertama dan outputnya harus: if (bmi < 18) { printf(\"Kategori: Kurus\\n\");",
-                "pattern": "if\\s*\\(\\s*bmi\\s*<\\s*18\\s*\\)\\s*\\{\\s*printf\\s*\\(\\s*\"Kategori:\\s*Kurus\\\\n\"\\s*\\)\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Kondisi kedua dan outputnya harus: else if (bmi <= 25) { printf(\"Kategori: Normal\\n\");",
-                "pattern": "else\\s+if\\s*\\(\\s*bmi\\s*<=\\s*25\\s*\\)\\s*\\{\\s*printf\\s*\\(\\s*\"Kategori:\\s*Normal\\\\n\"\\s*\\)\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Blok else (tanpa kondisi) dan outputnya harus: else { printf(\"Kategori: Gemuk\\n\");",
-                "pattern": "else\\s*\\{\\s*printf\\s*\\(\\s*\"Kategori:\\s*Gemuk\\\\n\"\\s*\\)\\s*;",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Pada struktur if-else if-else, apa yang terjadi setelah salah satu kondisi else if terpenuhi (bernilai benar)?","options":["Semua else if setelahnya tetap dievaluasi","Program berhenti total","Blok yang sesuai dieksekusi, dan sisa else if/else diabaikan","Hanya blok else yang akan dieksekusi"],"correctAnswer":2},
+            "testCases": [{"expectedOutput":"Masukkan nilai BMI: Kategori: Normal\n","description":"<span>Buat program kategori BMI sederhana berdasarkan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int bmi</code> (bilangan bulat): <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&lt; 18</code> → \"Kurus\", <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">18</code> sampai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">25</code> → \"Normal\", <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&gt; 25</code> → \"Gemuk\".</span>","input":"22"}],
+            "validationRules": [{"message":"Kondisi pertama dan outputnya harus: if (bmi < 18) { printf(\"Kategori: Kurus\\n\");","pattern":"if\\s*\\(\\s*bmi\\s*<\\s*18\\s*\\)\\s*\\{\\s*printf\\s*\\(\\s*\"Kategori:\\s*Kurus\\\\n\"\\s*\\)\\s*;","shouldExist":true},{"message":"Kondisi kedua dan outputnya harus: else if (bmi <= 25) { printf(\"Kategori: Normal\\n\");","pattern":"else\\s+if\\s*\\(\\s*bmi\\s*<=\\s*25\\s*\\)\\s*\\{\\s*printf\\s*\\(\\s*\"Kategori:\\s*Normal\\\\n\"\\s*\\)\\s*;","shouldExist":true},{"message":"Blok else (tanpa kondisi) dan outputnya harus: else { printf(\"Kategori: Gemuk\\n\");","pattern":"else\\s*\\{\\s*printf\\s*\\(\\s*\"Kategori:\\s*Gemuk\\\\n\"\\s*\\)\\s*;","shouldExist":true}]
           },
           {
             "id": "c-level-2-m1-l4",
@@ -1645,56 +1367,10 @@ export const curriculum: Level[] = [
             "initialCode": "#include <stdio.h>\n\nint main() {\n    char pilihan;\n    printf(\"Masukkan operator (+,-,*,/): \");\n    scanf(\"%c\", &pilihan);\n    switch (__) {\n        case '__':\n            printf(\"Operasi: __\\n\");\n            __;\n        case '__':\n            printf(\"Operasi: __\\n\");\n            __;\n        case '__':\n            printf(\"Operasi: __\\n\");\n            __;\n        case '__':\n            printf(\"Operasi: __\\n\");\n            __;\n        default:\n            printf(\"__\\n\");\n    }\n    return 0;\n}",
             "solution": "#include <stdio.h>\n\nint main() {\n    char pilihan;\n    printf(\"Masukkan operator (+,-,*,/): \");\n    scanf(\"%c\", &pilihan);\n    switch (pilihan) {\n        case '+':\n            printf(\"Operasi: Penjumlahan\\n\");\n            break;\n        case '-':\n            printf(\"Operasi: Pengurangan\\n\");\n            break;\n        case '*':\n            printf(\"Operasi: Perkalian\\n\");\n            break;\n        case '/':\n            printf(\"Operasi: Pembagian\\n\");\n            break;\n        default:\n            printf(\"Operator tidak valid\\n\");\n    }\n    return 0;\n}",
             "hint": "1. Lengkapi pernyataan switch dengan variabel yang akan diperiksa.\n\n2. Lengkapi keempat label case dengan karakter operator yang sesuai:\n   '+', '-', '*', '/' (perhatikan tanda petik tunggal).\n\n3. Lengkapi isi setiap case dengan printf() nama operasi yang sesuai:\n   - '+' -> \"Operasi: Penjumlahan\"\n   - '-' -> \"Operasi: Pengurangan\"\n   - '*' -> \"Operasi: Perkalian\"\n   - '/' -> \"Operasi: Pembagian\"\n\n4. Lengkapi kata kunci yang harus ditulis SETELAH setiap printf()\n   pada keempat case agar tidak terjadi fall-through ke case\n   berikutnya.\n\n5. Lengkapi label default dengan printf() \"Operator tidak valid\".",
-            "quiz": {
-              "options": [
-                "Program akan berhenti secara paksa",
-                "Eksekusi akan \"jatuh tembus\" (fall-through) ke case berikutnya",
-                "Compiler akan menolak mengompilasi program",
-                "case tersebut akan diulang tanpa batas"
-              ],
-              "question": "Apa yang terjadi jika kata kunci break tidak ditulis di akhir sebuah case pada switch?",
-              "correctAnswer": 1
-            },
-            "testCases": [
-              {
-                "input": "*",
-                "description": "<span>Buat program <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">switch-case</code> yang membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">char pilihan</code> (operator: '+', '-', '*', '/') dan menampilkan nama operasi berdasarkan pilihan tersebut.</span>",
-                "expectedOutput": "Masukkan operator (+,-,*,/): *\nOperasi: Perkalian\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Gunakan: switch (pilihan) {",
-                "pattern": "switch\\s*\\(\\s*pilihan\\s*\\)\\s*\\{",
-                "shouldExist": true
-              },
-              {
-                "message": "case '+' harus: printf(\"Operasi: Penjumlahan\\n\"); break;",
-                "pattern": "case\\s*'\\+'\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operasi: Penjumlahan\\\\n\"\\s*\\)\\s*;\\s*\\n\\s*break\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "case '-' harus: printf(\"Operasi: Pengurangan\\n\"); break;",
-                "pattern": "case\\s*'-'\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operasi: Pengurangan\\\\n\"\\s*\\)\\s*;\\s*\\n\\s*break\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "case '*' harus: printf(\"Operasi: Perkalian\\n\"); break;",
-                "pattern": "case\\s*'\\*'\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operasi: Perkalian\\\\n\"\\s*\\)\\s*;\\s*\\n\\s*break\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "case '/' harus: printf(\"Operasi: Pembagian\\n\"); break;",
-                "pattern": "case\\s*'/'\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operasi: Pembagian\\\\n\"\\s*\\)\\s*;\\s*\\n\\s*break\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "default harus: printf(\"Operator tidak valid\\n\");",
-                "pattern": "default\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operator tidak valid\\\\n\"\\s*\\)\\s*;",
-                "shouldExist": true
-              }
-            ]
-          }
+            "quiz": {"question":"Apa yang terjadi jika kata kunci break tidak ditulis di akhir sebuah case pada switch?","options":["Program akan berhenti secara paksa","Eksekusi akan \"jatuh tembus\" (fall-through) ke case berikutnya","Compiler akan menolak mengompilasi program","case tersebut akan diulang tanpa batas"],"correctAnswer":1},
+            "testCases": [{"expectedOutput":"Masukkan operator (+,-,*,/): Operasi: Perkalian\n","description":"<span>Buat program <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">switch-case</code> yang membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">char pilihan</code> (operator: '+', '-', '*', '/') dan menampilkan nama operasi berdasarkan pilihan tersebut.</span>","input":"*"}],
+            "validationRules": [{"message":"Gunakan: switch (pilihan) {","pattern":"switch\\s*\\(\\s*pilihan\\s*\\)\\s*\\{","shouldExist":true},{"message":"case '+' harus: printf(\"Operasi: Penjumlahan\\n\"); break;","pattern":"case\\s*'\\+'\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operasi: Penjumlahan\\\\n\"\\s*\\)\\s*;\\s*\\n\\s*break\\s*;","shouldExist":true},{"message":"case '-' harus: printf(\"Operasi: Pengurangan\\n\"); break;","pattern":"case\\s*'-'\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operasi: Pengurangan\\\\n\"\\s*\\)\\s*;\\s*\\n\\s*break\\s*;","shouldExist":true},{"message":"case '*' harus: printf(\"Operasi: Perkalian\\n\"); break;","pattern":"case\\s*'\\*'\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operasi: Perkalian\\\\n\"\\s*\\)\\s*;\\s*\\n\\s*break\\s*;","shouldExist":true},{"message":"case '/' harus: printf(\"Operasi: Pembagian\\n\"); break;","pattern":"case\\s*'/'\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operasi: Pembagian\\\\n\"\\s*\\)\\s*;\\s*\\n\\s*break\\s*;","shouldExist":true},{"message":"default harus: printf(\"Operator tidak valid\\n\");","pattern":"default\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operator tidak valid\\\\n\"\\s*\\)\\s*;","shouldExist":true}]
+          },
         ]
       },
       {
@@ -2895,35 +2571,9 @@ export const curriculum: Level[] = [
             "initialCode": "nama_hewan = __(\"Masukkan nama hewan peliharaanmu: \")\nprint(\"Halo \" __ nama_hewan __ \", semoga harimu menyenangkan!\")",
             "solution": "nama_hewan = input(\"Masukkan nama hewan peliharaanmu: \")\nprint(\"Halo \" + nama_hewan + \", semoga harimu menyenangkan!\")",
             "hint": "1. Lengkapi pemanggilan input() dengan teks prompt\n   \"Masukkan nama hewan peliharaanmu: \", simpan hasilnya\n   ke variabel nama_hewan.\n\n2. Lengkapi print() untuk menampilkan sapaan: gabungkan teks\n   \"Halo \" dengan variabel nama_hewan, lalu gabungkan lagi\n   dengan teks \", semoga harimu menyenangkan!\" menggunakan\n   operator +.",
-            "quiz": {
-              "options": [
-                "int",
-                "float",
-                "str",
-                "bool"
-              ],
-              "question": "Apa tipe data yang **selalu** dikembalikan oleh fungsi input(), terlepas dari apa yang diketik pengguna?",
-              "correctAnswer": 2
-            },
-            "testCases": [
-              {
-                "input": "Milo",
-                "description": "<span>Buat program yang meminta pengguna memasukkan nama hewan peliharaan mereka, lalu menampilkan pesan sapaan kepada hewan tersebut.</span>",
-                "expectedOutput": "Masukkan nama hewan peliharaanmu: Milo\nHalo Milo, semoga harimu menyenangkan!\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Gunakan: nama_hewan = input(\"Masukkan nama hewan peliharaanmu: \")",
-                "pattern": "^nama_hewan\\s*=\\s*input\\s*\\(\\s*[\"']Masukkan nama hewan peliharaanmu: [\"']\\s*\\)\\s*$",
-                "shouldExist": true
-              },
-              {
-                "message": "Gabungkan dengan: print(\"Halo \" + nama_hewan + \", semoga harimu menyenangkan!\")",
-                "pattern": "print\\s*\\(\\s*[\"']Halo\\s*[\"']\\s*\\+\\s*nama_hewan\\s*\\+\\s*[\"'],\\s*semoga harimu menyenangkan![\"']\\s*\\)",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Apa tipe data yang **selalu** dikembalikan oleh fungsi input(), terlepas dari apa yang diketik pengguna?","options":["int","float","str","bool"],"correctAnswer":2},
+            "testCases": [{"expectedOutput":"Masukkan nama hewan peliharaanmu: Halo Milo, semoga harimu menyenangkan!\n","description":"<span>Buat program yang meminta pengguna memasukkan nama hewan peliharaan mereka, lalu menampilkan pesan sapaan kepada hewan tersebut.</span>","input":"Milo"}],
+            "validationRules": [{"message":"Gunakan: nama_hewan = input(\"Masukkan nama hewan peliharaanmu: \")","pattern":"^nama_hewan\\s*=\\s*input\\s*\\(\\s*[\"']Masukkan nama hewan peliharaanmu: [\"']\\s*\\)\\s*$","shouldExist":true},{"message":"Gabungkan dengan: print(\"Halo \" + nama_hewan + \", semoga harimu menyenangkan!\")","pattern":"print\\s*\\(\\s*[\"']Halo\\s*[\"']\\s*\\+\\s*nama_hewan\\s*\\+\\s*[\"'],\\s*semoga harimu menyenangkan![\"']\\s*\\)","shouldExist":true}]
           },
           {
             "id": "c-level-4-m5-l2",
@@ -2933,41 +2583,10 @@ export const curriculum: Level[] = [
             "initialCode": "angka1 = __(__(\"Masukkan angka pertama: \"))\nangka2 = __(__(\"Masukkan angka kedua: \"))\nprint(\"Hasil penjumlahan:\", angka1 __ angka2)",
             "solution": "angka1 = int(input(\"Masukkan angka pertama: \"))\nangka2 = int(input(\"Masukkan angka kedua: \"))\nprint(\"Hasil penjumlahan:\", angka1 + angka2)",
             "hint": "1. Lengkapi baris pertama: baca input dengan prompt\n   \"Masukkan angka pertama: \", konversi langsung ke int\n   menggunakan int(input(...)), simpan ke variabel angka1.\n\n2. Lengkapi baris kedua: baca input dengan prompt\n   \"Masukkan angka kedua: \", konversi langsung ke int,\n   simpan ke variabel angka2.\n\n3. Lengkapi print() untuk menampilkan teks \"Hasil penjumlahan:\"\n   dan hasil dari angka1 + angka2.",
-            "quiz": {
-              "options": [
-                "Hasilnya otomatis menjadi 0",
-                "Python akan menghasilkan error ValueError",
-                "Python akan mengabaikan input dan meminta input lagi secara otomatis",
-                "Hasilnya menjadi string \"abc\""
-              ],
-              "question": "Apa yang terjadi jika int(input(\"Masukkan angka: \")) dijalankan tetapi pengguna mengetik \"abc\"?",
-              "correctAnswer": 1
-            },
-            "testCases": [
-              {
-                "input": "12 dan 8",
-                "description": "<span>Buat program yang membaca dua angka dari pengguna (menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int(input(...))</code>), lalu menampilkan hasil penjumlahannya.</span>",
-                "expectedOutput": "Masukkan angka pertama: 12\nMasukkan angka kedua: 8\nHasil penjumlahan: 20\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Gunakan: angka1 = int(input(\"Masukkan angka pertama: \"))",
-                "pattern": "^angka1\\s*=\\s*int\\s*\\(\\s*input\\s*\\(\\s*[\"']Masukkan angka pertama: [\"']\\s*\\)\\s*\\)\\s*$",
-                "shouldExist": true
-              },
-              {
-                "message": "Gunakan: angka2 = int(input(\"Masukkan angka kedua: \"))",
-                "pattern": "^angka2\\s*=\\s*int\\s*\\(\\s*input\\s*\\(\\s*[\"']Masukkan angka kedua: [\"']\\s*\\)\\s*\\)\\s*$",
-                "shouldExist": true
-              },
-              {
-                "message": "Tampilkan dengan: print(\"Hasil penjumlahan:\", angka1 + angka2)",
-                "pattern": "print\\s*\\(\\s*[\"']Hasil penjumlahan:[\"']\\s*,\\s*angka1\\s*\\+\\s*angka2\\s*\\)",
-                "shouldExist": true
-              }
-            ]
-          }
+            "quiz": {"question":"Apa yang terjadi jika int(input(\"Masukkan angka: \")) dijalankan tetapi pengguna mengetik \"abc\"?","options":["Hasilnya otomatis menjadi 0","Python akan menghasilkan error ValueError","Python akan mengabaikan input dan meminta input lagi secara otomatis","Hasilnya menjadi string \"abc\""],"correctAnswer":1},
+            "testCases": [{"expectedOutput":"Masukkan angka pertama: Masukkan angka kedua: Hasil penjumlahan: 20\n","description":"<span>Buat program yang membaca dua angka dari pengguna (menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int(input(...))</code>), lalu menampilkan hasil penjumlahannya.</span>","input":"12\n8"}],
+            "validationRules": [{"message":"Gunakan: angka1 = int(input(\"Masukkan angka pertama: \"))","pattern":"^angka1\\s*=\\s*int\\s*\\(\\s*input\\s*\\(\\s*[\"']Masukkan angka pertama: [\"']\\s*\\)\\s*\\)\\s*$","shouldExist":true},{"message":"Gunakan: angka2 = int(input(\"Masukkan angka kedua: \"))","pattern":"^angka2\\s*=\\s*int\\s*\\(\\s*input\\s*\\(\\s*[\"']Masukkan angka kedua: [\"']\\s*\\)\\s*\\)\\s*$","shouldExist":true},{"message":"Tampilkan dengan: print(\"Hasil penjumlahan:\", angka1 + angka2)","pattern":"print\\s*\\(\\s*[\"']Hasil penjumlahan:[\"']\\s*,\\s*angka1\\s*\\+\\s*angka2\\s*\\)","shouldExist":true}]
+          },
         ]
       },
       {
@@ -3140,35 +2759,9 @@ export const curriculum: Level[] = [
             "initialCode": "kecepatan = int(input(\"Masukkan kecepatan (km/jam): \"))\nif kecepatan __ 80__\n    __(\"__\")",
             "solution": "kecepatan = int(input(\"Masukkan kecepatan (km/jam): \"))\nif kecepatan > 80:\n    print(\"Melebihi batas kecepatan!\")",
             "hint": "1. Lengkapi kondisi if: periksa apakah kecepatan lebih besar\n   dari 80, diakhiri dengan titik dua.\n\n2. Lengkapi baris di dalam blok if (berindentasi 4 spasi)\n   dengan print() yang menampilkan \"Melebihi batas kecepatan!\".",
-            "quiz": {
-              "options": [
-                "if (x > 5) { print(\"besar\") }",
-                "if x > 5: print(\"besar\") (pada baris yang sama) atau dengan blok terindentasi di bawahnya",
-                "if x > 5 then print(\"besar\")",
-                "if x > 5 do print(\"besar\") end"
-              ],
-              "question": "Manakah penulisan if yang **benar secara sintaks** di Python?",
-              "correctAnswer": 1
-            },
-            "testCases": [
-              {
-                "input": "95",
-                "description": "<span>Buat program yang membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int kecepatan</code> dari pengguna. Jika <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">kecepatan</code> lebih dari <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">80</code>, tampilkan \"Melebihi batas kecepatan!\".</span>",
-                "expectedOutput": "Masukkan kecepatan (km/jam): 95\nMelebihi batas kecepatan!\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Gunakan: if kecepatan > 80:",
-                "pattern": "^if\\s+kecepatan\\s*>\\s*80\\s*:\\s*$",
-                "shouldExist": true
-              },
-              {
-                "message": "Di dalam blok if (indentasi 4 spasi), tampilkan: print(\"Melebihi batas kecepatan!\")",
-                "pattern": "if\\s+kecepatan\\s*>\\s*80\\s*:\\s*\\n {4}print\\s*\\(\\s*[\"']Melebihi batas kecepatan![\"']\\s*\\)",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Manakah penulisan if yang **benar secara sintaks** di Python?","options":["if (x > 5) { print(\"besar\") }","if x > 5: print(\"besar\") (pada baris yang sama) atau dengan blok terindentasi di bawahnya","if x > 5 then print(\"besar\")","if x > 5 do print(\"besar\") end"],"correctAnswer":1},
+            "testCases": [{"expectedOutput":"Masukkan kecepatan (km/jam): Melebihi batas kecepatan!\n","description":"<span>Buat program yang membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int kecepatan</code> dari pengguna. Jika <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">kecepatan</code> lebih dari <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">80</code>, tampilkan \"Melebihi batas kecepatan!\".</span>","input":"95"}],
+            "validationRules": [{"message":"Gunakan: if kecepatan > 80:","pattern":"^if\\s+kecepatan\\s*>\\s*80\\s*:\\s*$","shouldExist":true},{"message":"Di dalam blok if (indentasi 4 spasi), tampilkan: print(\"Melebihi batas kecepatan!\")","pattern":"if\\s+kecepatan\\s*>\\s*80\\s*:\\s*\\n {4}print\\s*\\(\\s*[\"']Melebihi batas kecepatan![\"']\\s*\\)","shouldExist":true}]
           },
           {
             "id": "py-level-5-m1-l3",
@@ -3178,30 +2771,9 @@ export const curriculum: Level[] = [
             "initialCode": "angka = int(input(\"Masukkan angka: \"))\nhasil = \"__\" __ angka __ 0 __ \"__\"\nprint(\"Hasil:\", hasil)",
             "solution": "angka = int(input(\"Masukkan angka: \"))\nhasil = \"Positif\" if angka > 0 else \"Negatif atau Nol\"\nprint(\"Hasil:\", hasil)",
             "hint": "1. Lengkapi conditional expression (ternary): tulis nilai\n   \"Positif\" terlebih dahulu, lalu kata kunci if, lalu kondisi\n   (angka lebih besar dari 0), lalu kata kunci else, lalu\n   nilai \"Negatif atau Nol\". Simpan hasilnya ke variabel hasil.",
-            "quiz": {
-              "options": [
-                "\"positif\" if x > 0 else \"negatif\"",
-                "if x > 0 then \"positif\" else \"negatif\"",
-                "x > 0 ? \"positif\" : \"negatif\"",
-                "\"positif\" else \"negatif\" if x > 0"
-              ],
-              "question": "Bagaimana penulisan **conditional expression** (ternary) di Python yang setara dengan x > 0 ? \"positif\" : \"negatif\" di C?",
-              "correctAnswer": 0
-            },
-            "testCases": [
-              {
-                "input": "-7",
-                "description": "<span>Buat program yang membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int angka</code>, lalu menggunakan <strong>conditional expression</strong> untuk menentukan apakah angka tersebut \"Positif\" atau \"Negatif atau Nol\", dan tampilkan hasilnya.</span>",
-                "expectedOutput": "Masukkan angka: -7\nHasil: Negatif atau Nol\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Gunakan conditional expression: hasil = \"Positif\" if angka > 0 else \"Negatif atau Nol\"",
-                "pattern": "^hasil\\s*=\\s*[\"']Positif[\"']\\s+if\\s+angka\\s*>\\s*0\\s+else\\s+[\"']Negatif atau Nol[\"']\\s*$",
-                "shouldExist": true
-              }
-            ]
+            "quiz": {"question":"Bagaimana penulisan **conditional expression** (ternary) di Python yang setara dengan x > 0 ? \"positif\" : \"negatif\" di C?","options":["\"positif\" if x > 0 else \"negatif\"","if x > 0 then \"positif\" else \"negatif\"","x > 0 ? \"positif\" : \"negatif\"","\"positif\" else \"negatif\" if x > 0"],"correctAnswer":0},
+            "testCases": [{"expectedOutput":"Masukkan angka: Hasil: Negatif atau Nol\n","description":"<span>Buat program yang membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">int angka</code>, lalu menggunakan <strong>conditional expression</strong> untuk menentukan apakah angka tersebut \"Positif\" atau \"Negatif atau Nol\", dan tampilkan hasilnya.</span>","input":"-7"}],
+            "validationRules": [{"message":"Gunakan conditional expression: hasil = \"Positif\" if angka > 0 else \"Negatif atau Nol\"","pattern":"^hasil\\s*=\\s*[\"']Positif[\"']\\s+if\\s+angka\\s*>\\s*0\\s+else\\s+[\"']Negatif atau Nol[\"']\\s*$","shouldExist":true}]
           },
           {
             "id": "py-level-5-m1-l4",
@@ -3211,41 +2783,10 @@ export const curriculum: Level[] = [
             "initialCode": "bmi = float(input(\"Masukkan BMI: \"))\nif bmi __ 18.5__\n    kategori = \"__\"\n__ bmi __ 25__\n    kategori = \"__\"\n__:\n    kategori = \"__\"\n\nprint(\"Kategori:\", kategori)",
             "solution": "bmi = float(input(\"Masukkan BMI: \"))\nif bmi < 18.5:\n    kategori = \"Kurus\"\nelif bmi <= 25:\n    kategori = \"Normal\"\nelse:\n    kategori = \"Gemuk\"\n\nprint(\"Kategori:\", kategori)",
             "hint": "1. Lengkapi kondisi if pertama: periksa apakah bmi kurang dari\n   18.5, diakhiri titik dua. Isi blok (4 spasi): kategori = \"Kurus\".\n\n2. Lengkapi kondisi elif (kata kunci pengganti \"else if\" di\n   Python): periksa apakah bmi kurang dari atau sama dengan 25,\n   diakhiri titik dua. Isi blok (4 spasi): kategori = \"Normal\".\n\n3. Lengkapi blok else (tanpa kondisi tambahan), diakhiri titik\n   dua. Isi blok (4 spasi): kategori = \"Gemuk\".",
-            "quiz": {
-              "options": [
-                "elseif",
-                "else if",
-                "elif",
-                "elsif"
-              ],
-              "question": "Apa kata kunci yang digunakan Python sebagai pengganti else if pada bahasa C?",
-              "correctAnswer": 2
-            },
-            "testCases": [
-              {
-                "input": "22.5",
-                "description": "<span>Buat program kategori BMI: membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">float bmi</code>, lalu menentukan kategori: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&lt; 18.5</code> → \"Kurus\", <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">18.5</code> sampai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">25</code> → \"Normal\", <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&gt; 25</code> → \"Gemuk\", menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">if-elif-else</code>.</span>",
-                "expectedOutput": "Masukkan BMI: 22.5\nKategori: Normal\n"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Blok if harus: if bmi < 18.5:\\n    kategori = \"Kurus\"",
-                "pattern": "^if\\s+bmi\\s*<\\s*18\\.5\\s*:\\s*\\n {4}kategori\\s*=\\s*[\"']Kurus[\"']\\s*$",
-                "shouldExist": true
-              },
-              {
-                "message": "Blok elif harus: elif bmi <= 25:\\n    kategori = \"Normal\"",
-                "pattern": "^elif\\s+bmi\\s*<=\\s*25\\s*:\\s*\\n {4}kategori\\s*=\\s*[\"']Normal[\"']\\s*$",
-                "shouldExist": true
-              },
-              {
-                "message": "Blok else harus: else:\\n    kategori = \"Gemuk\"",
-                "pattern": "^else\\s*:\\s*\\n {4}kategori\\s*=\\s*[\"']Gemuk[\"']\\s*$",
-                "shouldExist": true
-              }
-            ]
-          }
+            "quiz": {"question":"Apa kata kunci yang digunakan Python sebagai pengganti else if pada bahasa C?","options":["elseif","else if","elif","elsif"],"correctAnswer":2},
+            "testCases": [{"expectedOutput":"Masukkan BMI: Kategori: Normal\n","description":"<span>Buat program kategori BMI: membaca <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">float bmi</code>, lalu menentukan kategori: <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&lt; 18.5</code> → \"Kurus\", <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">18.5</code> sampai <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">25</code> → \"Normal\", <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">&gt; 25</code> → \"Gemuk\", menggunakan <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">if-elif-else</code>.</span>","input":"22.5"}],
+            "validationRules": [{"message":"Blok if harus: if bmi < 18.5:\\n    kategori = \"Kurus\"","pattern":"^if\\s+bmi\\s*<\\s*18\\.5\\s*:\\s*\\n {4}kategori\\s*=\\s*[\"']Kurus[\"']\\s*$","shouldExist":true},{"message":"Blok elif harus: elif bmi <= 25:\\n    kategori = \"Normal\"","pattern":"^elif\\s+bmi\\s*<=\\s*25\\s*:\\s*\\n {4}kategori\\s*=\\s*[\"']Normal[\"']\\s*$","shouldExist":true},{"message":"Blok else harus: else:\\n    kategori = \"Gemuk\"","pattern":"^else\\s*:\\s*\\n {4}kategori\\s*=\\s*[\"']Gemuk[\"']\\s*$","shouldExist":true}]
+          },
         ]
       },
       {
