@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -27,6 +27,16 @@ export const Quiz: React.FC<QuizProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const correctAnswer = correctAnswerIndex !== null ? correctAnswerIndex : propCorrectAnswer;
+
+  // Reset state saat pindah lesson. Tanpa ini, jika komponen dipakai ulang
+  // (key sama), correctAnswerIndex lesson sebelumnya ikut terbawa dan jawaban
+  // siswa bisa dinilai salah padahal benar.
+  useEffect(() => {
+    setSelected(null);
+    setIsSubmitted(false);
+    setCorrectAnswerIndex(null);
+    setIsLoading(false);
+  }, [lessonId]);
 
   const handleSubmit = async () => {
     if (selected === null) return;
