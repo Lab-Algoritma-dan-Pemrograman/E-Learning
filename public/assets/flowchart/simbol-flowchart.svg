@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" role="img" aria-label="Simbol flowchart standar beserta namanya: terminator, proses, input-output, decision, connector, preparation, document, dan anak panah">
+  <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#18181b" text-anchor="middle">
+
+    <!-- Terminator -->
+    <rect x="30" y="40" width="140" height="44" rx="22" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="100" y="67">Start / End</text>
+    <text x="100" y="104" font-size="11" fill="#52525b">Terminator</text>
+    <text x="100" y="120" font-size="10" fill="#71717a">(mulai / selesai)</text>
+
+    <!-- Proses -->
+    <rect x="210" y="40" width="140" height="44" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="280" y="67">Proses</text>
+    <text x="280" y="104" font-size="11" fill="#52525b">Process</text>
+    <text x="280" y="120" font-size="10" fill="#71717a">(langkah / instruksi)</text>
+
+    <!-- Input/Output -->
+    <polygon points="390,40 490,40 510,84 410,84" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+    <text x="450" y="67">Input/Output</text>
+    <text x="450" y="104" font-size="11" fill="#52525b">Parallelogram</text>
+    <text x="450" y="120" font-size="10" fill="#71717a">(jajar genjang: baca / tulis)</text>
+
+    <!-- Decision -->
+    <polygon points="640,36 730,62 640,88 550,62" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5" transform="translate(0,4)"/>
+    <text x="640" y="70">Keputusan</text>
+    <text x="640" y="104" font-size="11" fill="#52525b">Decision</text>
+    <text x="640" y="120" font-size="10" fill="#71717a">(belah ketupat: kondisi)</text>
+
+    <!-- Connector -->
+    <circle cx="100" cy="196" r="26" fill="#f4f4f5" stroke="#52525b" stroke-width="1.5"/>
+    <text x="100" y="201">A</text>
+    <text x="100" y="246" font-size="11" fill="#52525b">Connector</text>
+    <text x="100" y="262" font-size="10" fill="#71717a">(lingkaran: penghubung)</text>
+
+    <!-- Preparation -->
+    <polygon points="210,172 338,172 350,188 338,204 210,204 198,188" fill="#fae8ff" stroke="#c026d3" stroke-width="1.5"/>
+    <text x="274" y="193">Persiapan</text>
+    <text x="274" y="246" font-size="11" fill="#52525b">Preparation</text>
+    <text x="274" y="262" font-size="10" fill="#71717a">(segienam: inisialisasi)</text>
+
+    <!-- Document -->
+    <path d="M400,172 L520,172 L520,196 Q460,214 400,196 Z" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="460" y="192">Dokumen</text>
+    <text x="460" y="246" font-size="11" fill="#52525b">Document</text>
+    <text x="460" y="262" font-size="10" fill="#71717a">(cetak / laporan)</text>
+
+    <!-- Anak panah -->
+    <line x1="574" y1="190" x2="700" y2="190" stroke="#3f3f46" stroke-width="2"/>
+    <polygon points="700,182 718,190 700,198" fill="#3f3f46"/>
+    <text x="640" y="246" font-size="11" fill="#52525b">Anak panah</text>
+    <text x="640" y="262" font-size="10" fill="#71717a">(alur proses)</text>
+
+    <!-- Keterangan -->
+    <text x="450" y="24" font-size="13" font-weight="700">Simbol Standar Flowchart</text>
+  </g>
+</svg>
