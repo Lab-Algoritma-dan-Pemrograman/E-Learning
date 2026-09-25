@@ -6,7 +6,7 @@ export const getLeaderboard = async (limitCount: number = 10, kelas?: string, ju
     let query = supabase
       .from('users')
       .select('nim, nama, kelas, jurusan, xp, level, streak')
-      .eq('role', 'praktikan');
+      .eq('role', 'mahasiswa');
 
     if (kelas) {
       query = query.eq('kelas', kelas);
@@ -52,7 +52,7 @@ export const getUserRank = async (xp: number, kelas?: string, jurusan?: string):
     let query = supabase
       .from('users')
       .select('nim', { count: 'exact', head: true })
-      .eq('role', 'praktikan')
+      .eq('role', 'mahasiswa')
       .gt('xp', xp);
 
     if (kelas) {
@@ -77,7 +77,7 @@ export const getLeaderboardFilters = async (): Promise<{ kelas: string[]; jurusa
     const { data, error } = await supabase
       .from('users')
       .select('kelas, jurusan')
-      .eq('role', 'praktikan');
+      .eq('role', 'mahasiswa');
 
     if (error) throw error;
 

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { supabase, setSupabaseSession } from '../lib/supabase';
 import { useStore, UserProfile } from '../store/useStore';
 import { useProgress } from '../store/useProgress';
-import { initializeFromToken, TokenPayload, startPostMessageListener } from '../services/tokenService';
+import { initializeFromToken, TokenPayload, startPostMessageListener, normalizeRole, resolveElearningRole } from '../services/tokenService';
 import { calculateStreak } from '../services/streakService';
 import { Loader2 } from 'lucide-react';
 
@@ -62,13 +62,8 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const payload = result.payload;
       
-      // Normalize and map 'koordinator' role from Web Utama to 'koordinator' in E-Learning
-      const rawRole = (payload as any).role;
-      let mappedRole: 'admin' | 'koordinator' | 'asisten' | 'praktikan' = 'praktikan';
-      
-      if (rawRole === 'koordinator') mappedRole = 'koordinator';
-      else if (rawRole === 'asisten') mappedRole = 'asisten';
-      payload.role = mappedRole;
+      // Normalize and map role from Web Utama to E-Learning role
+      payload.role = normalizeRole(payload.role);
 
       const savedToken = sessionStorage.getItem('elearning_token') || '';
 
@@ -95,7 +90,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           .from('users')
           .select('id,nim,nama,kelas,jurusan,email,role,xp,level,streak,study_time,last_active,created_at,assessment_access,level_access_overrides,tersembunyi,is_aktif,kelas_id,shift,divisi,kelompok,gelombang')
           .eq('nim', nim)
-          .single();
+          .maybeSingle();
 
         let profileData: UserProfile;
 
@@ -124,13 +119,16 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             level_access_overrides: {}
           };
 
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert([newProfile]);
+          try {
+            const { error: insertError } = await supabase
+              .from('users')
+              .insert([newProfile]);
 
-          if (insertError) {
-            console.error("Failed to insert profile in Supabase:", insertError);
-            throw new Error(insertError.message);
+            if (insertError) {
+              console.warn("Notice: Failed to insert profile in Supabase (might already exist or RLS):", insertError.message);
+            }
+          } catch (e) {
+            console.warn("Insert profile caught:", e);
           }
 
           // Map snake_case database schema to camelCase UserProfile store schema
@@ -145,31 +143,35 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             streak: newProfile.streak,
             lastActive: newProfile.last_active,
             createdAt: newProfile.created_at,
-            role: newProfile.role as any,
+            role: (payload.role || newProfile.role) as any,
             assessmentAccess: newProfile.assessment_access as any,
             levelAccessOverrides: newProfile.level_access_overrides as any,
             studyTime: newProfile.study_time || 0
           };
-          console.log("New profile created successfully in Supabase");
+          console.log("Profile initialized for session with role:", profileData.role);
         } else {
           console.log("Profile found in Supabase, loading data...");
           
           // Calculate streak based on last_active before overwriting it
           const { newStreak } = calculateStreak(userProfile.last_active, userProfile.streak);
+          // elearning_role (milik E-Learning) meng-override role kanonik:
+          // asisten ber-flag admin tetap 'asisten' di kolom bersama.
+          const resolvedRole = resolveElearningRole(userProfile.role, (userProfile as any).elearning_role);
+          const effectiveRole = resolvedRole !== 'praktikan' ? resolvedRole : (payload.role || 'praktikan');
 
           // Map snake_case to camelCase
           profileData = {
             nim: userProfile.nim,
-            nama: userProfile.nama,
-            kelas: userProfile.kelas,
+            nama: payload.nama || userProfile.nama,
+            kelas: payload.kelas || userProfile.kelas,
             jurusan: userProfile.jurusan || (payload as any).jurusan || null,
-            email: userProfile.email,
+            email: userProfile.email || payload.email || null,
             xp: userProfile.xp,
             level: userProfile.level,
             streak: newStreak,
             lastActive: userProfile.last_active,
             createdAt: userProfile.created_at,
-            role: userProfile.role as any,
+            role: effectiveRole as any,
             assessmentAccess: userProfile.assessment_access as any,
             levelAccessOverrides: userProfile.level_access_overrides || {},
             studyTime: userProfile.study_time || 0
@@ -180,7 +182,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             last_active: new Date().toISOString(),
             streak: newStreak
           };
-          const hasRoleChange = payload.role && profileData.role !== payload.role;
+          // Jangan tulis balik role dari token jika flag elearning_role
+          // menghasilkan role lebih tinggi — token membawa role kanonik.
+          const hasRoleChange = payload.role && resolvedRole === 'praktikan' && normalizeRole(userProfile.role) !== payload.role;
           const hasJurusanChange = (payload as any).jurusan && profileData.jurusan !== (payload as any).jurusan;
           
           if (profileData.nama !== payload.nama) updates.nama = payload.nama;
@@ -188,16 +192,20 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (hasRoleChange) updates.role = payload.role;
           if (hasJurusanChange) updates.jurusan = (payload as any).jurusan;
 
-          await supabase
-            .from('users')
-            .update(updates)
-            .eq('nim', nim);
+          try {
+            await supabase
+              .from('users')
+              .update(updates)
+              .eq('nim', nim);
+          } catch (updateErr) {
+            console.warn("Could not sync user updates to Supabase (RLS or trigger):", updateErr);
+          }
 
           profileData.lastActive = updates.last_active;
           profileData.streak = newStreak;
           profileData.nama = payload.nama;
           profileData.kelas = payload.kelas;
-          if (payload.role) profileData.role = payload.role as any;
+          profileData.role = effectiveRole as any;
           if ((payload as any).jurusan) profileData.jurusan = (payload as any).jurusan;
 
           // Check for streak milestones (e.g., streak-3, streak-7)
@@ -239,6 +247,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const currentUser = useStore.getState().user;
             const oldLevel = currentUser?.level || 1;
             const newLevel = updated.level || 1;
+            const effectiveRole = resolveElearningRole(updated.role, (updated as any).elearning_role);
             
             setStoreUser({
               nim: updated.nim,
@@ -251,7 +260,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               streak: updated.streak,
               lastActive: updated.last_active,
               createdAt: updated.created_at,
-              role: updated.role,
+              role: effectiveRole,
               assessmentAccess: updated.assessment_access,
               levelAccessOverrides: updated.level_access_overrides || {},
               studyTime: updated.study_time || 0
@@ -314,7 +323,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           streak: 0,
           lastActive: new Date().toISOString(),
           createdAt: new Date().toISOString(),
-          role: 'praktikan',
+          role: payload.role || 'praktikan',
           assessmentAccess: {
             pre_test: false,
             post_test: false,
@@ -369,7 +378,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           .select('*')
           .order('sort_order');
 
-        const isStaff = userRole === 'admin' || userRole === 'koordinator' || userRole === 'asisten';
+        const isStaff = userRole === 'admin' || userRole === 'kordas' || userRole === 'koordinator' || userRole === 'asisten';
         const lessonsTable = isStaff ? 'lessons' : 'student_lessons';
 
         const { data: lessonsData } = await supabase
@@ -381,21 +390,52 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const levelModules = (modulesData || [])
             .filter(m => m.level_id === level.id)
             .map(mod => {
+              const parseJson = (val: any, fallback: any) => {
+                if (val === null || val === undefined) return fallback;
+                if (typeof val === 'object') return val;
+                if (typeof val === 'string') {
+                  try {
+                    const parsed = JSON.parse(val);
+                    return (parsed !== null && parsed !== undefined) ? parsed : fallback;
+                  } catch {
+                    return fallback;
+                  }
+                }
+                return fallback;
+              };
+
               const modLessons = (lessonsData || [])
                 .filter(l => l.module_id === mod.id)
-                .map(les => ({
-                  id: les.id,
-                  title: les.title,
-                  explanation: les.explanation,
-                  codeExample: les.code_example,
-                  initialCode: les.initial_code,
-                  solution: les.solution,
-                  hint: les.hint,
-                  quiz: les.quiz,
-                  testCases: les.test_cases,
-                  validationRules: les.validation_rules,
-                  xpReward: les.xp_reward ?? 60
-                }));
+                .map(les => {
+                  const rawQuiz = parseJson(les.quiz, null);
+                  const quiz = (rawQuiz && typeof rawQuiz === 'object' && (rawQuiz.question || (Array.isArray(rawQuiz.options) && rawQuiz.options.length > 0))) ? {
+                    question: rawQuiz.question || '',
+                    options: Array.isArray(rawQuiz.options) ? rawQuiz.options : [],
+                    correctAnswer: typeof rawQuiz.correctAnswer === 'number' ? rawQuiz.correctAnswer : (typeof rawQuiz.correct_answer === 'number' ? rawQuiz.correct_answer : 0)
+                  } : null;
+                  const rawTestCases = parseJson(les.test_cases, []);
+                  const testCases = (Array.isArray(rawTestCases) ? rawTestCases : []).map((tc: any) => ({
+                    expectedOutput: tc.expectedOutput ?? tc.expected_output ?? '',
+                    description: tc.description ?? '',
+                    input: tc.input
+                  }));
+                  const rawValidation = parseJson(les.validation_rules, []);
+                  const validationRules = Array.isArray(rawValidation) ? rawValidation : [];
+
+                  return {
+                    id: les.id,
+                    title: les.title,
+                    explanation: les.explanation,
+                    codeExample: les.code_example,
+                    initialCode: les.initial_code,
+                    solution: les.solution,
+                    hint: les.hint,
+                    quiz,
+                    testCases,
+                    validationRules,
+                    xpReward: les.xp_reward ?? 60
+                  };
+                });
               return {
                 id: mod.id,
                 title: mod.title,

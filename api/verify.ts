@@ -54,17 +54,21 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // ── Normalize role (kosakata backend Go = kosakata elearning) ──────────
-    const rawRole = (tokenPayload as any).user_role
-                 || (tokenPayload as any).role
-                 || 'mahasiswa';
+    // ── Normalize role (kosakata lokal E-Learning) ──────────────────────────
+    const rawRole = String(
+      (tokenPayload as any).user_role || (tokenPayload as any).role || 'praktikan'
+    ).toLowerCase().trim();
 
-    let appRole: string = rawRole;
-    // Alias lama → kanonis: kordas/admin = koordinator, praktikan/user = mahasiswa
-    if (appRole === 'kordas' || appRole === 'admin') appRole = 'koordinator';
-    if (appRole === 'authenticated' || appRole === 'anon') appRole = 'mahasiswa';
-    // Map 'user' role dari Web Utama ke 'mahasiswa'
-    if (appRole === 'user' || appRole === 'praktikan') appRole = 'mahasiswa';
+    let appRole: string = 'praktikan';
+    if (['admin'].includes(rawRole)) {
+      appRole = 'admin';
+    } else if (['kordas', 'koordinator', 'korda', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) {
+      appRole = 'kordas';
+    } else if (['asisten', 'assistant', 'laboran'].includes(rawRole)) {
+      appRole = 'asisten';
+    } else {
+      appRole = 'praktikan';
+    }
 
     // ── Sign ulang dengan Supabase JWT secret ──────────────────────────────
     let returnedToken = token;

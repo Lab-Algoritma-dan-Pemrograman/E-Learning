@@ -10,8 +10,24 @@
 
 CREATE OR REPLACE FUNCTION public.auth_role() 
 RETURNS TEXT AS $$
-  -- Membaca dari claim 'user_role' (bukan 'role' yang berisi 'authenticated')
-  SELECT COALESCE(
+BEGIN
+  -- 1. Jika query dieksekusi langsung dari SQL Editor / superuser postgres
+  IF current_user IN ('postgres', 'supabase_admin') THEN
+    RETURN 'admin';
+  END IF;
+
+  -- 2. Jika tidak ada header request JWT (koneksi direct database / script backend)
+  IF current_setting('request.jwt.claims', true) IS NULL OR current_setting('request.jwt.claims', true) = '' THEN
+    RETURN 'admin';
+  END IF;
+
+  -- 3. Jika menggunakan Supabase service_role key
+  IF (current_setting('request.jwt.claims', true)::json->>'role') = 'service_role' THEN
+    RETURN 'admin';
+  END IF;
+
+  -- 4. Membaca klaim dari JWT pengguna web aplikasi
+  RETURN COALESCE(
     CASE 
       WHEN current_setting('request.jwt.claims', true)::json->>'user_role' = 'koordinator' THEN 'kordas'
       WHEN current_setting('request.jwt.claims', true)::json->>'user_role' = 'user' THEN 'praktikan'
@@ -19,4 +35,5 @@ RETURNS TEXT AS $$
     END,
     'praktikan'
   )::text;
-$$ LANGUAGE sql STABLE;
+END;
+$$ LANGUAGE plpgsql STABLE;

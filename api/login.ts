@@ -28,11 +28,12 @@ function backendBase(): string {
   return cleaned;
 }
 
-// Backend Go: mahasiswa | asisten | koordinator  ->  E-Learning memakai kosakata yang sama
 function mapRole(backendRole: string): string {
-  if (backendRole === 'asisten') return 'asisten';
-  if (backendRole === 'koordinator' || backendRole === 'kordas' || backendRole === 'admin') return 'koordinator';
-  return 'mahasiswa';
+  const r = (backendRole || '').toLowerCase().trim();
+  if (r === 'admin') return 'admin';
+  if (['koordinator', 'kordas', 'superadmin', 'super_admin', 'administrator', 'korda'].includes(r)) return 'kordas';
+  if (['asisten', 'assistant', 'laboran'].includes(r)) return 'asisten';
+  return 'praktikan';
 }
 
 export default async function handler(req: any, res: any) {

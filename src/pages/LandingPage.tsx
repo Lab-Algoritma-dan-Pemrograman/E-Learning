@@ -453,14 +453,14 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     }
   };
 
-  const handleDevLogin = (role: 'koordinator' | 'mahasiswa') => {
+  const handleDevLogin = (role: 'kordas' | 'praktikan') => {
     const mockUser = {
-      nim: role === 'koordinator' ? '123456789' : '202211083',
-      nama: role === 'koordinator' ? 'Developer Koordinator' : 'Developer Mahasiswa',
+      nim: role === 'kordas' ? '123456789' : '202211083',
+      nama: role === 'kordas' ? 'Developer Koordinator' : 'Developer Mahasiswa',
       kelas: 'DEV-X',
       role: role,
-      xp: role === 'koordinator' ? 9999 : 120,
-      level: role === 'koordinator' ? 10 : 1,
+      xp: role === 'kordas' ? 9999 : 120,
+      level: role === 'kordas' ? 10 : 1,
       streak: 3,
       lastActive: new Date().toISOString(),
       createdAt: new Date().toISOString(),
@@ -567,13 +567,13 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               <p className="text-xs font-black text-maroon/50 uppercase tracking-widest">🧪 Developer Quick Access (Local Only)</p>
               <div className="flex flex-wrap gap-3">
                 <button
-                  onClick={() => handleDevLogin('koordinator')}
+                  onClick={() => handleDevLogin('kordas')}
                   className="px-4 py-2 bg-zinc-950 text-white text-xs font-bold rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-1.5 cursor-pointer"
                 >
                   Masuk sebagai Koordinator
                 </button>
                 <button
-                  onClick={() => handleDevLogin('mahasiswa')}
+                  onClick={() => handleDevLogin('praktikan')}
                   className="px-4 py-2 bg-white hover:bg-zinc-55 text-zinc-900 text-xs font-bold rounded-xl transition-all active:scale-95 border border-zinc-200 flex items-center gap-1.5 cursor-pointer"
                 >
                   Masuk sebagai Mahasiswa

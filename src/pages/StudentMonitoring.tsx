@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase';
 import { useProgress } from '../store/useProgress';
 import { resetUserProgress, adjustUserXp, deleteUser } from '../services/progressService';
 import { monitoringService } from '../services/monitoringService';
+import { normalizeRole } from '../services/tokenService';
+import { getLevelLanguage } from '../utils/levelLanguage';
 import { 
   Search, RefreshCw, ChevronDown, ChevronRight, Trash2, Edit3, RotateCcw, 
   CheckCircle2, Lock, X, Save, AlertTriangle, Users, BookOpen, Clock, 
@@ -43,8 +45,9 @@ export const StudentMonitoring: React.FC = () => {
   const [onlineNims, setOnlineNims] = useState<Set<string>>(new Set());
   const [sessionHeartbeats, setSessionHeartbeats] = useState<Record<string, string>>({});
 
-  const isReadOnly = user?.role === 'asisten';
-  const canManage = ['admin', 'kordas'].includes(user?.role || '');
+  const userRole = normalizeRole(user?.role);
+  const isReadOnly = userRole === 'asisten';
+  const canManage = ['admin', 'kordas'].includes(userRole);
 
   const totalLessons = curriculum.reduce((acc, l) => acc + (l.modules?.reduce((m, mod) => m + (mod.lessons?.length || 0), 0) || 0), 0);
 
@@ -64,7 +67,7 @@ export const StudentMonitoring: React.FC = () => {
       
       (sessionData || []).forEach(s => {
         const u = s.users as any;
-        if (s.nim && s.last_heartbeat && u?.role === 'praktikan') {
+        if (s.nim && s.last_heartbeat && (u?.role === 'praktikan' || u?.role === 'mahasiswa')) {
           heartbeats[s.nim] = s.last_heartbeat;
           nims.add(s.nim);
         }
@@ -132,7 +135,7 @@ export const StudentMonitoring: React.FC = () => {
         
         (sessionData || []).forEach(s => {
           const u = s.users as any;
-          if (s.nim && s.last_heartbeat && u?.role === 'praktikan') {
+          if (s.nim && s.last_heartbeat && (u?.role === 'praktikan' || u?.role === 'mahasiswa')) {
             heartbeats[s.nim] = s.last_heartbeat;
             nims.add(s.nim);
           }
@@ -276,7 +279,7 @@ export const StudentMonitoring: React.FC = () => {
 
   const totalStudyTimeSeconds = students.reduce((sum, s) => sum + (s.study_time || 0), 0);
 
-  if (!['admin', 'kordas', 'asisten'].includes(user?.role || '')) {
+  if (!['admin', 'kordas', 'asisten'].includes(userRole)) {
     return (
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
@@ -561,7 +564,7 @@ export const StudentMonitoring: React.FC = () => {
                         {curriculum.map((level, idx) => {
                           const lp = getLevelProgress(s.nim, idx);
                           const lvlPct = lp.total > 0 ? Math.round((lp.completed / lp.total) * 100) : 0;
-                          const isLevelC = level.id.startsWith('c-');
+                          const isLevelC = getLevelLanguage(level, idx) === 'c';
                           return (
                             <div key={level.id} className="bg-white p-4 rounded-2xl border border-zinc-200/60 shadow-sm flex flex-col justify-between">
                               <div className="flex items-center justify-between mb-2">

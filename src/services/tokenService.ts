@@ -59,8 +59,9 @@ export function startPostMessageListener(
   onToken: (result: VerifyResult) => void
 ): () => void {
   const handler = async (event: MessageEvent) => {
-    // Validasi origin — hanya terima dari Web Utama (algohub.web.id) + localhost dev.
+    // Validasi origin — hanya terima dari Web Utama (siakad.algohub.web.id / algohub.web.id) + localhost dev.
     const allowedOrigins = [
+      'https://siakad.algohub.web.id',
       'https://algohub.web.id',
       'http://localhost:3000',
       'http://localhost:5173',
@@ -92,9 +93,49 @@ export function startPostMessageListener(
   return () => window.removeEventListener('message', handler);
 }
 
+export function normalizeRole(role: string | null | undefined): 'admin' | 'kordas' | 'asisten' | 'praktikan' {
+  if (!role) return 'praktikan';
+  const clean = String(role).toLowerCase().trim();
+  if (['admin', 'superadmin', 'super_admin', 'administrator', 'super admin'].includes(clean)) return 'admin';
+  if (['kordas', 'koordinator', 'korda', 'coordinator'].includes(clean)) return 'kordas';
+  if (['asisten', 'assistant', 'laboran', 'ast'].includes(clean)) return 'asisten';
+  return 'praktikan';
+}
+
+/**
+ * Petakan role UI E-Learning ke nilai kanonik yang aman disimpan di kolom
+ * bersama `users.role`. Nilai harus valid untuk SEMUA app yang membaca kolom
+ * itu: Praktikum hanya mengenal mahasiswa/asisten/koordinator — nilai lain
+ * (mis. 'admin') membuat user ditolak guard di sana.
+ *   admin     -> koordinator  (admin E-Learning setara kordas di kanonik)
+ *   kordas    -> koordinator
+ *   praktikan -> mahasiswa
+ *   asisten   -> asisten
+ */
+export function toCanonicalRole(uiRole: string | null | undefined): 'mahasiswa' | 'asisten' | 'koordinator' {
+  const r = normalizeRole(uiRole);
+  if (r === 'admin' || r === 'kordas') return 'koordinator';
+  if (r === 'asisten') return 'asisten';
+  return 'mahasiswa';
+}
+
+/**
+ * Role efektif E-Learning. Kolom bersama users.role menyimpan nilai kanonik
+ * (mahasiswa/asisten/koordinator) agar Praktikum tidak menolak user; flag
+ * 'admin' disimpan terpisah di users.elearning_role (milik E-Learning saja).
+ * Hierarki E-Learning: kordas > admin > asisten > praktikan.
+ */
+export function resolveElearningRole(
+  role: string | null | undefined,
+  elearningRole: string | null | undefined
+): 'admin' | 'kordas' | 'asisten' | 'praktikan' {
+  if (String(elearningRole || '').toLowerCase().trim() === 'admin') return 'admin';
+  return normalizeRole(role);
+}
+
 export function getTokenFromUrl(): string | null {
   const params = new URLSearchParams(window.location.search);
-  return params.get('token');
+  return params.get('token') || params.get('jwt') || params.get('access_token') || params.get('auth');
 }
 
 /**
@@ -132,45 +173,57 @@ export async function verifyToken(token: string): Promise<VerifyResult | null> {
       body: JSON.stringify({ token }),
     });
 
-    if (!response.ok) {
-      console.warn('Token verification failed on server');
-      return null;
-    }
+    if (response.ok) {
+      const data = await response.json();
+      const tokenPayload = data.payload as TokenPayload;
 
-    const data = await response.json();
-    const tokenPayload = data.payload as TokenPayload;
-
-    // 2. Validate required fields
-    if (!tokenPayload.nim || !tokenPayload.nama) {
-      console.warn('Token is missing required fields (nim, nama)');
-      return null;
-    }
-
-    return {
-      payload: tokenPayload,
-      firebaseToken: data.firebaseToken || null,
-      token: data.token || null
-    };
-  } catch (error) {
-    console.error('Token verification error:', error);
-    
-    // Fallback: If API is not available (dev mode without Vercel), 
-    // we can still decode to allow UI to function, but this is UNSAFE for production.
-    try {
-      const decoded = decodeJwt(token) as unknown as TokenPayload;
-      if (import.meta.env.DEV) {
-          console.warn('DEV MODE: Falling back to unsafe local decoding. Firebase Auth will NOT be active.');
-          return {
-            payload: decoded,
-            firebaseToken: null,
-          };
+      // 2. Validate required fields
+      if (tokenPayload.nim && tokenPayload.nama) {
+        tokenPayload.role = normalizeRole(tokenPayload.role);
+        return {
+          payload: tokenPayload,
+          firebaseToken: data.firebaseToken || null,
+          token: data.token || null
+        };
       }
-    } catch (e) {
-      return null;
     }
-    
-    return null;
+  } catch (error) {
+    console.error('Token verification API error:', error);
   }
+
+  // Fallback: decode directly (useful in dev mode or offline token decoding)
+  try {
+    const decoded = decodeJwt(token) as any;
+    if (decoded) {
+      const nim = decoded.nim || decoded.username || decoded.sub || '';
+      const nama = decoded.nama || decoded.full_name || decoded.name || '';
+      const kelas = decoded.kelas || decoded.class_code || '';
+      const jurusan = decoded.jurusan || decoded.major || undefined;
+      const email = decoded.email || undefined;
+      const role = normalizeRole(decoded.user_role || decoded.role);
+
+      if (nim && nama) {
+        return {
+          payload: {
+            nim,
+            nama,
+            kelas,
+            jurusan,
+            email,
+            role,
+            exp: decoded.exp,
+            iat: decoded.iat,
+          },
+          firebaseToken: null,
+          token,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('Fallback decode failed:', e);
+  }
+
+  return null;
 }
 
 

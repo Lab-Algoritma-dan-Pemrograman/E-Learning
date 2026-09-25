@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Level, curriculum as defaultCurriculum } from '../data/curriculum';
 import { Achievement } from '../services/achievementService';
 
-export type AppRole = 'koordinator' | 'asisten' | 'mahasiswa' | 'praktikan' | 'kordas' | 'admin';
+export type AppRole = 'admin' | 'kordas' | 'asisten' | 'praktikan' | 'koordinator' | 'mahasiswa';
 
 export interface UserProfile {
   nim: string;
@@ -16,7 +16,7 @@ export interface UserProfile {
   streak: number;
   lastActive: string;
   createdAt: string;
-  role?: AppRole; // default: 'mahasiswa' (set by SupabaseProvider)
+  role?: AppRole; // default: 'praktikan' (set by SupabaseProvider)
   division?: string;
   levelAccessOverrides?: Record<string, 'auto' | 'unlocked' | 'locked'>;
   assessmentAccess?: Record<string, boolean>;

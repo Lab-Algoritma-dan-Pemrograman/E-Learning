@@ -53,11 +53,18 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // Normalize role (kosakata backend Go = kosakata elearning)
-    const rawRole = p.user_role || p.role || 'mahasiswa';
-    let appRole: string = rawRole;
-    if (appRole === 'kordas' || appRole === 'admin') appRole = 'koordinator';
-    if (['authenticated', 'anon', 'user', 'praktikan'].includes(appRole)) appRole = 'mahasiswa';
+    // Normalize role (kosakata lokal E-Learning)
+    const rawRole = String(p.user_role || p.role || 'praktikan').toLowerCase().trim();
+    let appRole: string = 'praktikan';
+    if (['admin'].includes(rawRole)) {
+      appRole = 'admin';
+    } else if (['kordas', 'koordinator', 'korda', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) {
+      appRole = 'kordas';
+    } else if (['asisten', 'assistant', 'laboran'].includes(rawRole)) {
+      appRole = 'asisten';
+    } else {
+      appRole = 'praktikan';
+    }
 
     // Sign ulang dengan Supabase JWT secret
     let signedToken = token;

@@ -7,19 +7,20 @@ import { playQuizCorrectSound, playQuizWrongSound } from '../lib/soundEffects';
 
 interface QuizProps {
   lessonId: string;
-  question: string;
-  options: string[];
+  question?: string;
+  options?: string[];
   correctAnswer?: number;
   onComplete: (isCorrect: boolean) => void;
 }
 
 export const Quiz: React.FC<QuizProps> = ({ 
   lessonId, 
-  question, 
-  options, 
+  question = '', 
+  options = [], 
   correctAnswer: propCorrectAnswer, 
   onComplete 
 }) => {
+  const safeOptions = Array.isArray(options) ? options : [];
   const [selected, setSelected] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number | null>(null);
@@ -92,7 +93,7 @@ export const Quiz: React.FC<QuizProps> = ({
       </div>
 
       <div className="space-y-3">
-        {options.map((option, idx) => (
+        {safeOptions.map((option, idx) => (
           <button
             key={idx}
             disabled={isSubmitted}
@@ -143,7 +144,7 @@ export const Quiz: React.FC<QuizProps> = ({
             "p-4 rounded-2xl text-center font-bold",
             selected === correctAnswer ? "bg-rose-100 text-rose-900" : "bg-red-100 text-red-700"
           )}>
-            {selected === correctAnswer ? "Benar! Bagus sekali." : `Kurang tepat. Jawaban yang benar adalah: ${options[correctAnswer]}`}
+            {selected === correctAnswer ? "Benar! Bagus sekali." : `Kurang tepat. Jawaban yang benar adalah: ${typeof correctAnswer === 'number' ? safeOptions[correctAnswer] : ''}`}
           </div>
           
           {selected !== correctAnswer && (

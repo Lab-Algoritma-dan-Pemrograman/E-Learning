@@ -12,6 +12,8 @@ import { checkXpAchievements } from '../services/achievementService';
 import gameQuestions from '../data/gameQuestions.json';
 import { AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { normalizeRole } from '../services/tokenService';
+import { getLevelLanguage } from '../utils/levelLanguage';
 
 interface RecentActivity {
   lessonId: string;
@@ -31,7 +33,8 @@ export const Dashboard: React.FC = () => {
   });
   const [playsThisWeek, setPlaysThisWeek] = useState(0);
   const [isCheckingLimit, setIsCheckingLimit] = useState(false);
-  const isAdmin = user?.role === 'admin';
+  const userRole = normalizeRole(user?.role);
+  const isAdmin = userRole === 'admin';
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
   // Check XP achievements on page load (catches missed achievements from Bug Hunt, etc.)
@@ -245,8 +248,11 @@ export const Dashboard: React.FC = () => {
 
   const progressPercentage = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
-  const cLevels = curriculum.filter(l => l.id.startsWith('c-'));
-  const pyLevels = curriculum.filter(l => l.id.startsWith('p-'));
+  // Bahasa level ditentukan dari judul level, bukan prefix ID: setelah level
+  // di-rename ke `level-1..level-6`, prefix 'c-'/'p-' tidak ada lagi sehingga
+  // filter lama mengembalikan 0 level dan beranda tampak hampa.
+  const cLevels = curriculum.filter((l, i) => getLevelLanguage(l, i) === 'c');
+  const pyLevels = curriculum.filter((l, i) => getLevelLanguage(l, i) === 'python');
 
   const calculateLangProgress = (levels: any[]) => {
     const total = levels.reduce((acc, level, i) => {
@@ -269,7 +275,7 @@ export const Dashboard: React.FC = () => {
     <Layout>
       <div className="space-y-8">
         {/* Setup Banner for Admin/Kordas if DB is empty */}
-        {curriculum.length === 0 && (user?.role === 'admin' || user?.role === 'kordas') && (
+        {curriculum.length === 0 && (userRole === 'admin' || userRole === 'kordas') && (
           <div className="bg-rose-50 border-2 border-dashed border-rose-200 rounded-3xl p-8 text-center space-y-4">
             <div className="w-16 h-16 bg-rose-100 text-rose-700 rounded-2xl flex items-center justify-center mx-auto">
               <Zap size={32} />

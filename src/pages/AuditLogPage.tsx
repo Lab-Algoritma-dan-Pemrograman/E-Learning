@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore';
 import { monitoringService, ActivityLog } from '../services/monitoringService';
 import { Trash2, Search, Filter, RefreshCw, Download, Calendar, Clock, Shield, LogIn, LogOut, ChevronLeft, ChevronRight, X, Lock, BookOpen, RotateCcw, Zap } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { normalizeRole } from '../services/tokenService';
 
 const EVENT_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   login: { label: 'Login', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: <LogIn size={12} /> },
@@ -50,9 +51,10 @@ export const AuditLogPage: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const pageSize = 25;
-  const isAdmin = user?.role === 'admin';
+  const userRole = normalizeRole(user?.role);
+  const isAdmin = userRole === 'admin';
 
-  if (!['admin', 'kordas'].includes(user?.role || '')) {
+  if (!['admin', 'kordas'].includes(userRole)) {
     return (
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">

@@ -222,9 +222,11 @@ const apiDevServer = (env: Record<string, string>) => ({
             const nim: string = u.nim || identifier;
             const nama: string = u.nama || nim;
             const kelas: string = u.nama_kelas || '';
-            let appRole: string = u.role || 'mahasiswa';
-            if (appRole === 'kordas' || appRole === 'admin') appRole = 'koordinator';
-            if (['authenticated', 'anon', 'user', 'praktikan'].includes(appRole)) appRole = 'mahasiswa';
+            const rawRole = String(u.role || '').toLowerCase();
+            let appRole = 'praktikan';
+            if (rawRole === 'admin') appRole = 'admin';
+            else if (['kordas', 'koordinator', 'korda', 'superadmin', 'super_admin', 'administrator'].includes(rawRole)) appRole = 'kordas';
+            else if (['asisten', 'assistant', 'laboran'].includes(rawRole)) appRole = 'asisten';
             let signedToken = backendToken;
             const devSupabaseSecret = env.SUPABASE_JWT_SECRET;
             if (devSupabaseSecret) {

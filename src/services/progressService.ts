@@ -5,6 +5,7 @@ import { Level } from '../data/curriculum';
 import { Achievement, checkAndUnlockAchievements, checkXpAchievements } from './achievementService';
 import { useProgress } from '../store/useProgress';
 import { calculateStreak } from './streakService';
+import { normalizeRole } from './tokenService';
 
 // Dynamic leveling formula: level = floor(sqrt(xp / 50)) + 1
 export const calculateLevel = (xp: number): number => {
@@ -218,7 +219,8 @@ export const syncProgress = (userId: string, setCompletedLessons: (lessons: stri
 
 export const resetUserProgress = async (nim: string): Promise<void> => {
   const currentUser = useStore.getState().user;
-  const isStaff = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas' || currentUser.role === 'asisten');
+  const userRole = normalizeRole(currentUser?.role);
+  const isStaff = currentUser && ['admin', 'kordas', 'asisten'].includes(userRole);
   if (!isStaff) {
     throw new Error('Akses Ditolak: Hanya staf yang diperbolehkan mereset progres.');
   }
@@ -281,7 +283,8 @@ export const resetLevelProgress = async (
   curriculum: Level[]
 ): Promise<void> => {
   const currentUser = useStore.getState().user;
-  const isStaff = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas' || currentUser.role === 'asisten');
+  const userRole = normalizeRole(currentUser?.role);
+  const isStaff = currentUser && ['admin', 'kordas', 'asisten'].includes(userRole);
   if (!isStaff) {
     throw new Error('Akses Ditolak: Hanya staf yang diperbolehkan mereset progres level.');
   }
@@ -375,7 +378,8 @@ export const resetLessonProgress = async (
   lessonTitle: string
 ): Promise<void> => {
   const currentUser = useStore.getState().user;
-  const isStaff = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas' || currentUser.role === 'asisten');
+  const userRole = normalizeRole(currentUser?.role);
+  const isStaff = currentUser && ['admin', 'kordas', 'asisten'].includes(userRole);
   if (!isStaff) {
     throw new Error('Akses Ditolak: Hanya staf yang diperbolehkan mereset progres pelajaran.');
   }
@@ -441,7 +445,8 @@ export const resetLessonProgress = async (
 
 export const adjustUserXp = async (nim: string, newXp: number): Promise<void> => {
   const currentUser = useStore.getState().user;
-  const isAdminOrKordas = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas');
+  const userRole = normalizeRole(currentUser?.role);
+  const isAdminOrKordas = currentUser && ['admin', 'kordas'].includes(userRole);
   if (!isAdminOrKordas) {
     throw new Error('Akses Ditolak: Hanya Admin atau Kordas yang dapat menyesuaikan XP.');
   }
@@ -505,7 +510,8 @@ export const adjustUserXp = async (nim: string, newXp: number): Promise<void> =>
 
 export const deleteUser = async (nim: string): Promise<void> => {
   const currentUser = useStore.getState().user;
-  const isAdminOrKordas = currentUser && (currentUser.role === 'admin' || currentUser.role === 'kordas');
+  const userRole = normalizeRole(currentUser?.role);
+  const isAdminOrKordas = currentUser && ['admin', 'kordas'].includes(userRole);
   if (!isAdminOrKordas) {
     throw new Error('Akses Ditolak: Hanya Admin atau Kordas yang dapat menghapus pengguna.');
   }

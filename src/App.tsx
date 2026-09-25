@@ -26,15 +26,15 @@ const AuditLogPage = lazy(() => import('./pages/AuditLogPage').then((m) => ({ de
 const TerminalDemo = lazy(() => import('./pages/TerminalDemo').then((m) => ({ default: m.TerminalDemo })));
 
 
-// Kosakata role kanonis = backend Go: koordinator | asisten | mahasiswa.
-// Alias lama (admin, kordas, praktikan) tetap diterima supaya sesi/token lama tidak terkunci.
-const ADMIN_ROLES = ['koordinator', 'kordas', 'admin'];
-const STAFF_ROLES = ['koordinator', 'kordas', 'admin', 'asisten'];
-
+import { normalizeRole } from './services/tokenService';
 
 function AppContent() {
   const { user, page, setPage } = useStore();
   const [showLogin, setShowLogin] = useState(false);
+
+  const userRole = normalizeRole(user?.role);
+  const isAdminOrKordas = userRole === 'admin' || userRole === 'kordas';
+  const isStaff = isAdminOrKordas || userRole === 'asisten';
 
   // If user just logged in, ensure we are on dashboard
   const handleStart = () => {
@@ -52,7 +52,7 @@ function AppContent() {
   }
 
   const renderPage = () => {
-    secureLog("Rendering page:", page);
+    secureLog("Rendering page:", page, "userRole:", userRole);
     try {
       switch (page) {
         case 'dashboard': return <Dashboard />;
@@ -61,9 +61,9 @@ function AppContent() {
         case 'leaderboard': return <Leaderboard />;
         case 'courses': return <CourseExplorer />;
         case 'profile': return <Profile />;
-        case 'admin': return (ADMIN_ROLES.includes(user?.role || '')) ? <AdminDashboard /> : <Dashboard />;
-        case 'monitoring': return (STAFF_ROLES.includes(user?.role || '')) ? <StudentMonitoring /> : <Dashboard />;
-        case 'auditlog': return (ADMIN_ROLES.includes(user?.role || '')) ? <AuditLogPage /> : <Dashboard />;
+        case 'admin': return isAdminOrKordas ? <AdminDashboard /> : <Dashboard />;
+        case 'monitoring': return isStaff ? <StudentMonitoring /> : <Dashboard />;
+        case 'auditlog': return isAdminOrKordas ? <AuditLogPage /> : <Dashboard />;
         case 'terminal-demo': return <TerminalDemo />;
 
         default: return <Dashboard />;
