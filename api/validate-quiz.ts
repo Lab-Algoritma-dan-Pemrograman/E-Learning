@@ -54,8 +54,18 @@ export default async function handler(req: any, res: any) {
       return res.status(404).json({ error: 'Lesson not found' });
     }
 
-    const quiz = lesson.quiz as any;
-    if (!quiz || typeof quiz.correctAnswer === 'undefined') {
+    // Kolom `lessons.quiz` bertipe TEXT berisi JSON (bukan jsonb), jadi PostgREST
+    // mengembalikannya sebagai string. Tanpa JSON.parse, quiz.correctAnswer selalu
+    // undefined dan setiap kuis dianggap tidak terkonfigurasi.
+    let quiz: any = lesson.quiz as any;
+    if (typeof quiz === 'string') {
+      try {
+        quiz = JSON.parse(quiz);
+      } catch {
+        return res.status(500).json({ error: 'Data kuis rusak (bukan JSON yang valid)' });
+      }
+    }
+    if (!quiz || typeof quiz !== 'object' || typeof quiz.correctAnswer === 'undefined') {
       return res.status(400).json({ error: 'Lesson does not have a quiz configured' });
     }
 
