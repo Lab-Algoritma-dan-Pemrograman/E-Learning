@@ -894,10 +894,17 @@ export const LessonPage: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-auto lg:h-[calc(100vh-280px)]"
+              className={cn(
+                'grid grid-cols-1 lg:grid-cols-2 gap-8',
+                // Latihan kode memakai tinggi tetap + scroll di dalam kolom.
+                // Latihan flowchart butuh tinggi lebih untuk bank + susunan +
+                // tombol aksi; kalau dipaksa tinggi tetap, bagian bawahnya
+                // terpotong dan tertutup bilah navigasi di bawah halaman.
+                isFlowchart ? 'h-auto' : 'h-auto lg:h-[calc(100vh-280px)]'
+              )}
             >
               <div className="flex flex-col gap-6 lg:overflow-y-auto pr-4 custom-scrollbar h-auto lg:h-full">
-                <h2 className="text-3xl font-bold tracking-tight">Latihan Pemrograman</h2>
+                <h2 className="text-3xl font-bold tracking-tight">Latihan {isFlowchart ? 'Flowchart' : 'Pemrograman'}</h2>
                 <div className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm">
                   <h3 className="font-bold text-lg mb-4">Tugas Anda</h3>
                   <div className="space-y-4 mb-4">
@@ -984,7 +991,15 @@ export const LessonPage: React.FC = () => {
               <div className="flex flex-col gap-4 h-auto lg:h-full">
                 {isFlowchart ? (
                   /* Latihan puzzle flowchart: susun simbol dari kode sederhana */
-                  <div className="h-[520px] lg:h-full lg:flex-1 bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm overflow-y-auto custom-scrollbar">
+                  <div className={cn(
+                    'bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm',
+                    // flow: halaman ikut memanjang dan kontainer ikut memanjang,
+                    // jadi tombol aksi di dalam puzzle tidak pernah tertutup
+                    // bilah navigasi halaman.
+                    isFlowchart
+                      ? 'min-h-[620px]'
+                      : 'h-[520px] lg:h-full lg:flex-1 overflow-y-auto custom-scrollbar'
+                  )}>
                     <FlowchartPuzzle
                       code={lesson.initialCode || lesson.codeExample || ''}
                       solutionJson={lesson.solution || '[]'}

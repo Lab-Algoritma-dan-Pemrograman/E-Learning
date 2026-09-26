@@ -231,6 +231,7 @@ export const FlowchartPuzzle: React.FC<Props> = ({ code, solutionJson, distracto
   };
   const onDropBank = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const key = e.dataTransfer.getData('text/plain');
     if (!key) return;
     const sid = slotOfKey(key);
@@ -245,8 +246,8 @@ export const FlowchartPuzzle: React.FC<Props> = ({ code, solutionJson, distracto
     return (
       <div
         key={ref.id}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={onDropSlot(ref.id)}
+        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onDropSlot(ref.id)(e); }}
         onClick={() => {
           if (item) removeFromSlot(ref.id);
           else if (tapped) { placeAt(tapped, ref.id); setTapped(null); }
@@ -297,7 +298,7 @@ export const FlowchartPuzzle: React.FC<Props> = ({ code, solutionJson, distracto
         {/* Bank simbol */}
         <div
           className="bg-zinc-50 border-2 border-dashed border-zinc-200 rounded-2xl p-4 overflow-y-auto custom-scrollbar"
-          onDragOver={(e) => e.preventDefault()}
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
           onDrop={onDropBank}
         >
           <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
