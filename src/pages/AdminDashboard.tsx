@@ -1217,7 +1217,7 @@ export const AdminDashboard: React.FC = () => {
     const fetchUsers = async () => {
       const { data, error } = await supabase
         .from('users')
-        .select('id,nim,nama,kelas,jurusan,email,role,xp,level,streak,study_time,last_active,created_at,assessment_access,level_access_overrides')
+        .select('id,nim,nama,kelas,jurusan,email,role,elearning_role,xp,level,streak,study_time,last_active,created_at,assessment_access,level_access_overrides')
         .order('xp', { ascending: false });
 
       if (error) {
@@ -1238,6 +1238,7 @@ export const AdminDashboard: React.FC = () => {
         lastActive: u.last_active || '',
         createdAt: u.created_at || '',
         role: u.role || 'praktikan',
+        elearningRole: (u as any).elearning_role || null,
         levelAccessOverrides: u.level_access_overrides || {},
         assessmentAccess: u.assessment_access || {}
       })) as UserProfile[]);
@@ -1740,10 +1741,10 @@ export const AdminDashboard: React.FC = () => {
                           </button>
                           <button 
                             onClick={() => handleToggleRole(selectedUser, 'admin')}
-                            disabled={(selectedUser as any).elearningRole === 'admin' || !isCoordinator}
+                            disabled={selectedUser.elearningRole === 'admin' || !isCoordinator}
                             className={cn(
                               "flex-1 py-1.5 px-2 text-[10px] font-bold rounded-lg transition-all min-w-[50px]",
-                              (selectedUser as any).elearningRole === 'admin' || selectedUser.role === 'admin'
+                              selectedUser.elearningRole === 'admin' || selectedUser.role === 'admin'
                                 ? "bg-purple-600 text-white shadow-sm" 
                                 : "text-zinc-500 hover:text-zinc-900",
                               !isCoordinator && "opacity-50 cursor-not-allowed"

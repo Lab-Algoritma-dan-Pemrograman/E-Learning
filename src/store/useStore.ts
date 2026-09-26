@@ -17,6 +17,9 @@ export interface UserProfile {
   lastActive: string;
   createdAt: string;
   role?: AppRole; // default: 'praktikan' (set by SupabaseProvider)
+  // Flag 'admin' khas E-Learning (users.elearning_role). Terpisah dari `role`
+  // yang menyimpan nilai kanonik bersama Praktikum/Siakad.
+  elearningRole?: string | null;
   division?: string;
   levelAccessOverrides?: Record<string, 'auto' | 'unlocked' | 'locked'>;
   assessmentAccess?: Record<string, boolean>;
