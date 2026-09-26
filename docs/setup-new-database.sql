@@ -157,8 +157,7 @@ CREATE TABLE IF NOT EXISTS public.game_settings (
     bug_hunt_active BOOLEAN DEFAULT TRUE,
     bug_hunt_c_active BOOLEAN DEFAULT TRUE,
     bug_hunt_python_active BOOLEAN DEFAULT TRUE,
-    bug_hunt_weekly_limit INTEGER DEFAULT 3,
-    bug_hunt_question_count INTEGER DEFAULT 5
+    bug_hunt_weekly_limit INTEGER DEFAULT 3
 );
 
 CREATE TABLE IF NOT EXISTS public.game_history (
@@ -175,16 +174,14 @@ CREATE TABLE IF NOT EXISTS public.achievements (
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     icon TEXT,
-    category TEXT,
     requirement_type TEXT,
-    requirement_value INTEGER,
-    xp_reward INTEGER DEFAULT 50
+    requirement_value TEXT
 );
 
 CREATE TABLE IF NOT EXISTS public.unlocked_achievements (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nim TEXT NOT NULL,
-    achievement_id TEXT NOT NULL REFERENCES public.achievements(id) ON DELETE CASCADE,
+    achievement_id TEXT NOT NULL,
     unlocked_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(nim, achievement_id)
 );
@@ -192,7 +189,7 @@ CREATE TABLE IF NOT EXISTS public.unlocked_achievements (
 CREATE TABLE IF NOT EXISTS public.activity_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nim TEXT,
-    nama TEXT NOT NULL,
+    nama TEXT,
     event_type TEXT NOT NULL,
     timestamp TIMESTAMPTZ DEFAULT NOW(),
     details TEXT,
@@ -200,15 +197,19 @@ CREATE TABLE IF NOT EXISTS public.activity_logs (
 );
 
 CREATE TABLE IF NOT EXISTS public.playground_examples (
-    id TEXT PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
-    language TEXT NOT NULL,
     description TEXT,
-    code TEXT NOT NULL
+    language TEXT NOT NULL,
+    code TEXT NOT NULL,
+    category TEXT DEFAULT 'general',
+    difficulty TEXT DEFAULT 'beginner',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sort_order INTEGER DEFAULT 0
 );
 
 
--- 3. CREATE SECURE VIEW: student_lessons (Hides solutions from students)
+-- 3. CREATE VIEW SECURE LESSONS (Menyembunyikan Solusi dari Siswa)
 -- =========================================================================
 
 CREATE OR REPLACE VIEW public.student_lessons AS
@@ -235,8 +236,8 @@ FROM public.lessons;
 -- 4. INSERT DEFAULT SEED DATA
 -- =========================================================================
 
-INSERT INTO public.game_settings (id, bug_hunt_active, bug_hunt_c_active, bug_hunt_python_active, bug_hunt_weekly_limit, bug_hunt_question_count)
-VALUES ('default', true, true, true, 3, 5)
+INSERT INTO public.game_settings (id, bug_hunt_active, bug_hunt_c_active, bug_hunt_python_active, bug_hunt_weekly_limit)
+VALUES ('default', true, true, true, 3)
 ON CONFLICT (id) DO NOTHING;
 
 

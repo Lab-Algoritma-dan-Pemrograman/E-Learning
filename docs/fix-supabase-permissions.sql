@@ -22,8 +22,8 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authent
 
 
 -- 2. PASTIKAN ROW DEFAULT UNTUK game_settings TERSEDIA
-INSERT INTO public.game_settings (id, bug_hunt_active, bug_hunt_c_active, bug_hunt_python_active, bug_hunt_weekly_limit, bug_hunt_question_count)
-VALUES ('default', true, true, true, 3, 5)
+INSERT INTO public.game_settings (id, bug_hunt_active, bug_hunt_c_active, bug_hunt_python_active, bug_hunt_weekly_limit)
+VALUES ('default', true, true, true, 3)
 ON CONFLICT (id) DO NOTHING;
 
 
