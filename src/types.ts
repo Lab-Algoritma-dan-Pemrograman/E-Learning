@@ -24,6 +24,24 @@ export interface FlowchartSymbol {
   label: string;
 }
 
+/** Cabang alur flowchart: utama, atau cabang Ya/Tidak milik sebuah decision. */
+export type FlowchartBranch = 'main' | 'yes' | 'no';
+
+/** Satu kartu simbol pada posisi alur tertentu. */
+export interface FlowchartStep extends FlowchartSymbol {
+  at: FlowchartBranch;
+}
+
+/**
+ * Bentuk `solution` versi 2 untuk latihan flowchart bercabang.
+ * Bentuk lama (array FlowchartSymbol[] datar) tetap didukung dan diperlakukan
+ * sebagai seluruhnya beralur `main`.
+ */
+export interface FlowchartFlow {
+  version: number;
+  flow: FlowchartStep[];
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -44,6 +62,8 @@ export interface Lesson {
    *  - testCases[0].description : instruksi tugas
    */
   exerciseType?: 'code' | 'flowchart';
+  /** Kartu simbol pengecoh untuk latihan flowchart (tidak ada di jawaban benar). */
+  flowchartDistractors?: FlowchartSymbol[];
 }
 
 export interface Module {

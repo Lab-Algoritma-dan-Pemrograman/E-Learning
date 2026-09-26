@@ -1,0 +1,31 @@
+<svg width="200" height="350" viewBox="0 0 200 350" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="black" />
+    </marker>
+  </defs>
+  
+  <!-- Terminal (Mulai) -->
+  <rect x="50" y="20" width="100" height="30" rx="15" fill="white" stroke="black" stroke-width="2"/>
+  <text x="100" y="35" font-family="Arial" font-size="12" text-anchor="middle" dominant-baseline="middle" font-weight="bold">Mulai</text>
+  <line x1="100" y1="50" x2="100" y2="80" stroke="black" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Input/Output 1 -->
+  <polygon points="60,80 160,80 140,120 40,120" fill="white" stroke="black" stroke-width="2"/>
+  <text x="100" y="100" font-family="Arial" font-size="12" text-anchor="middle" dominant-baseline="middle">Input Data</text>
+  <line x1="100" y1="120" x2="100" y2="150" stroke="black" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Process -->
+  <rect x="40" y="150" width="120" height="50" fill="white" stroke="black" stroke-width="2"/>
+  <text x="100" y="175" font-family="Arial" font-size="12" text-anchor="middle" dominant-baseline="middle">Proses Data</text>
+  <line x1="100" y1="200" x2="100" y2="230" stroke="black" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Input/Output 2 -->
+  <polygon points="60,230 160,230 140,270 40,270" fill="white" stroke="black" stroke-width="2"/>
+  <text x="100" y="250" font-family="Arial" font-size="12" text-anchor="middle" dominant-baseline="middle">Cetak Hasil</text>
+  <line x1="100" y1="270" x2="100" y2="300" stroke="black" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Terminal (Selesai) -->
+  <rect x="50" y="300" width="100" height="30" rx="15" fill="white" stroke="black" stroke-width="2"/>
+  <text x="100" y="315" font-family="Arial" font-size="12" text-anchor="middle" dominant-baseline="middle" font-weight="bold">Selesai</text>
+</svg>

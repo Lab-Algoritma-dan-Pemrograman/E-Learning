@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase, setSupabaseSession } from '../lib/supabase';
 import { useStore, UserProfile } from '../store/useStore';
+import type { FlowchartSymbol } from '../types';
 import { useProgress } from '../store/useProgress';
 import { initializeFromToken, TokenPayload, startPostMessageListener, normalizeRole, resolveElearningRole } from '../services/tokenService';
 import { calculateStreak } from '../services/streakService';
@@ -439,7 +440,15 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                     quiz,
                     testCases,
                     validationRules,
-                    xpReward: les.xp_reward ?? 60
+                    xpReward: les.xp_reward ?? 60,
+                    // Latihan flowchart (drag & drop). View student_lessons ikut
+                    // mengirim exercise_type + flowchart_distractors, jadi praktikan
+                    // juga mendapat latihan yang sama (bukan editor kode kosong).
+                    exerciseType: (les.exercise_type === 'flowchart' ? 'flowchart' : 'code') as 'code' | 'flowchart',
+                    flowchartDistractors: (() => {
+                      const raw = parseJson(les.flowchart_distractors, []);
+                      return Array.isArray(raw) ? raw : [];
+                    })() as FlowchartSymbol[]
                   };
                 });
               return {

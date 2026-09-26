@@ -55,7 +55,8 @@ export const curriculum: Level[] = [
                 "pattern": "#include\\s*<\\s*stdio\\.h\\s*>[\\s\\S]*#include\\s*<\\s*stdlib\\.h\\s*>",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m1-l3",
@@ -97,7 +98,8 @@ export const curriculum: Level[] = [
                 "pattern": "return\\s+0\\s*;\\s*\\n?\\s*\\}",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m1-l4",
@@ -139,7 +141,8 @@ export const curriculum: Level[] = [
                 "pattern": "main\\s*\\(\\s*\\)\\s*\\n?\\s*\\{[\\s\\S]*int\\s+nilai\\s*=\\s*75\\s*;[\\s\\S]*printf",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -182,7 +185,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Inisial saya:\\s*%c\\\\n\"\\s*,\\s*inisial\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m2-l2",
@@ -229,7 +233,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Panjang:\\s*%d\\\\n\"\\s*,\\s*panjang\\s*\\)[\\s\\S]*printf\\s*\\(\\s*\"Lebar:\\s*%d\\\\n\"\\s*,\\s*lebar\\s*\\)[\\s\\S]*printf\\s*\\(\\s*\"Luas:\\s*%d\\\\n\"\\s*,\\s*luas\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m2-l3",
@@ -276,7 +281,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Rata-rata:\\s*%\\.2lf\\\\n\"\\s*,\\s*rata_rata\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m2-l4",
@@ -318,7 +324,8 @@ export const curriculum: Level[] = [
                 "pattern": "int\\s+main\\s*\\(\\s*\\)\\s*\\{[\\s\\S]*sapa_pengguna\\s*\\(\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m2-l5",
@@ -365,7 +372,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Lampu menyala:\\s*%d\\\\n\"\\s*,\\s*lampu_menyala\\s*\\)[\\s\\S]*printf\\s*\\(\\s*\"Pintu terkunci:\\s*%d\\\\n\"\\s*,\\s*pintu_terkunci\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m2-l6",
@@ -407,7 +415,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Lebar 12\\s*:\\s*%12\\.3f\\\\n\"\\s*,\\s*angka\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -460,7 +469,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Tahun:\\s*%d\\\\n\"\\s*,\\s*tahun\\s*\\)[\\s\\S]*printf\\s*\\(\\s*\"IPK:\\s*%\\.2f\\\\n\"\\s*,\\s*ipk\\s*\\)[\\s\\S]*printf\\s*\\(\\s*\"Grade:\\s*%c\\\\n\"\\s*,\\s*grade\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m3-l2",
@@ -502,7 +512,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Harga barang:\\s*%d\\\\n\"\\s*,\\s*harga_barang\\s*\\)[\\s\\S]*printf\\s*\\(\\s*\"Jumlah item:\\s*%d\\\\n\"\\s*,\\s*jumlah_item\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m3-l3",
@@ -544,7 +555,8 @@ export const curriculum: Level[] = [
                 "pattern": "return\\s+0\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -598,7 +610,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Hasil:\\s*%d\\\\n\"\\s*,\\s*hasil\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m4-l2",
@@ -636,7 +649,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Karakter:\\s*%c,\\s*ASCII:\\s*%d\\\\n\"\\s*,\\s*karakter\\s*,\\s*karakter\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m4-l3",
@@ -679,7 +693,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Kota tujuan:\\s*%s\\\\n\"\\s*,\\s*kota\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -722,7 +737,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Pensil\\\\t\\\\t2000\\\\t250\\\\n\"\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m5-l2",
@@ -764,7 +780,8 @@ export const curriculum: Level[] = [
                 "pattern": "puts\\s*\\(\\s*\"Dibuat oleh: Siswa C\"\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m5-l3",
@@ -801,7 +818,8 @@ export const curriculum: Level[] = [
                 "pattern": "putchar\\s*\\(\\s*'\\\\n'\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -849,7 +867,8 @@ export const curriculum: Level[] = [
                 "pattern": "float\\s+keliling\\s*=\\s*DUA\\s*\\*\\s*PI\\s*\\*\\s*r\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m6-l2",
@@ -896,7 +915,8 @@ export const curriculum: Level[] = [
                 "pattern": "int\\s+volume\\s*=\\s*PANJANG\\s*\\*\\s*LEBAR\\s*\\*\\s*TINGGI\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m6-l3",
@@ -943,7 +963,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"%d USD = Rp%\\.2f\\\\n\"\\s*,\\s*usd\\s*,\\s*idr\\s*\\)[\\s\\S]*printf\\s*\\(\\s*\"Minimal transfer:\\s*%d USD\\\\n\"\\s*,\\s*MINIMAL_TRANSFER\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -991,7 +1012,8 @@ export const curriculum: Level[] = [
                 "pattern": "return\\s+sisi\\s*\\*\\s*sisi\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m7-l2",
@@ -1038,7 +1060,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Hasil salinan:\\s*%s\\\\n\"\\s*,\\s*salinan\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m7-l3",
@@ -1085,7 +1108,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Akar dari 144:\\s*%\\.2f\\\\n\"\\s*,\\s*akar\\s*\\)[\\s\\S]*printf\\s*\\(\\s*\"3 pangkat 3:\\s*%\\.2f\\\\n\"\\s*,\\s*pangkat\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -1133,7 +1157,8 @@ export const curriculum: Level[] = [
                 "pattern": "\\+\\+counter[\\s\\S]*counter--[\\s\\S]*Nilai akhir counter",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m8-l2",
@@ -1171,7 +1196,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Sisa bagi:\\s*%d\\\\n\"\\s*,\\s*a\\s*%\\s*b\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m8-l3",
@@ -1214,7 +1240,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"A <= B:\\s*%d\\\\n\"\\s*,\\s*a\\s*<=\\s*b\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m8-l4",
@@ -1257,7 +1284,8 @@ export const curriculum: Level[] = [
                 "pattern": "\\(\\s*suhu\\s*<=\\s*37\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -1267,143 +1295,137 @@ export const curriculum: Level[] = [
         "lessons": [
           {
             "id": "c-level-1-m9-l1",
-            "title": "Aturan Penulisan Flowchart",
-            "explanation": "<div class=\"space-y-4\">\n      <ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li><strong>Flowchart (diagram alir)</strong> adalah representasi visual dari langkah-langkah logika sebuah program menggunakan simbol-simbol standar yang saling terhubung dengan garis/anak panah penunjuk arah. Flowchart membantu programmer <strong>merancang logika sebelum menulis kode</strong>, sehingga alur program lebih mudah dipahami, didiskusikan, dan diverifikasi sebelum diimplementasikan.</li>\n</ul>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Beberapa aturan dasar penulisan flowchart: (1) setiap flowchart <strong>wajib memiliki satu titik Mulai (Start)</strong> dan minimal satu titik <strong>Selesai (End)</strong>; (2) alur dibaca <strong>dari atas ke bawah</strong> dan arah panah menunjukkan urutan eksekusi; (3) setiap simbol memiliki <strong>bentuk dan makna khusus</strong> yang tidak bisa ditukar sembarangan; (4) garis penghubung <strong>tidak boleh saling tumpang tindih tanpa keterangan</strong> yang jelas; (5) percabangan (decision) harus memiliki <strong>minimal dua keluaran</strong> berlabel (misalnya \"Ya\"/\"Tidak\").</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\"><div class=\"my-4 not-prose\">\n  <img src=\"/assets/flowchart/flowchart-dasar.svg\" alt=\"Flowchart sederhana dengan simbol Start, Proses, Input, Decision, Output, dan End yang terhubung anak panah\" class=\"w-full max-w-3xl mx-auto rounded-xl border border-zinc-200 bg-white p-2\" />\n  <p class=\"mt-2 text-center text-xs text-zinc-500\">Contoh flowchart sederhana: Start, Input nilai, Decision nilai >= 60, Output, lalu End.</p>\n</div></p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>#include &lt;stdio.h&gt;\n\n/* \n * Flowchart:\n * [Start] -&gt; [Input: nilai] -&gt; [Decision: nilai &gt;= 60?]\n *    Ya -&gt; [Output: &quot;Lulus&quot;] -&gt; [End]\n *    Tidak -&gt; [Output: &quot;Tidak Lulus&quot;] -&gt; [End]\n */\nint main() {\n    int nilai = 75;\n    if (nilai &gt;= 60) {\n        printf(&quot;Lulus\\n&quot;);\n    } else {\n        printf(&quot;Tidak Lulus\\n&quot;);\n    }\n    return 0;\n}</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal - workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ gcc program.c -o program &amp;&amp;./program</span>\n            <span class=\"block mt-1 text-zinc-100\">Lulus</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            "codeExample": "#include <stdio.h>\n\n/* \n * Flowchart:\n * [Start] -> [Input: nilai] -> [Decision: nilai >= 60?]\n *    Ya -> [Output: \"Lulus\"] -> [End]\n *    Tidak -> [Output: \"Tidak Lulus\"] -> [End]\n */\nint main() {\n    int nilai = 75;\n    if (nilai >= 60) {\n        printf(\"Lulus\\n\");\n    } else {\n        printf(\"Tidak Lulus\\n\");\n    }\n    return 0;\n}",
-            "initialCode": "#include <stdio.h>\n\n/*\n * Flowchart:\n * [Start] -> [Input: angka] -> [Decision: angka % 2 == 0?]\n *    Ya -> [Output: \"Genap\"] -> [End]\n *    Tidak -> [Output: \"__\"] -> [End]\n */\nint main() {\n    int angka = 7;\n    if (angka __ 2 __ 0) {\n        printf(\"Bilangan %d adalah Genap\\n\", angka);\n    } else {\n        __\n    }\n    return 0;\n}",
-            "solution": "#include <stdio.h>\n\n/*\n * Flowchart:\n * [Start] -> [Input: angka] -> [Decision: angka % 2 == 0?]\n *    Ya -> [Output: \"Genap\"] -> [End]\n *    Tidak -> [Output: \"Ganjil\"] -> [End]\n */\nint main() {\n    int angka = 7;\n    if (angka % 2 == 0) {\n        printf(\"Bilangan %d adalah Genap\\n\", angka);\n    } else {\n        printf(\"Bilangan %d adalah Ganjil\\n\", angka);\n    }\n    return 0;\n}",
-            "hint": "1. Pada bagian komentar flowchart, lengkapi label keluaran\n   \"Tidak\", sesuai dengan kondisi (angka % 2 == 0) bernilai\n   salah, artinya angka tersebut termasuk kategori apa?\n\n2. Pada kondisi if, lengkapi ekspresi untuk memeriksa apakah\n   angka habis dibagi 2 (gunakan operator modulus, hasilnya\n   dibandingkan dengan 0).\n\n3. Pada blok else, lengkapi printf() untuk menampilkan bahwa\n   bilangan adalah \"Ganjil\", dengan format yang sama seperti\n   blok if (gunakan %d untuk angka dan sertakan nama variabel).",
+            "title": "Garis Besar & Simbol Flowchart",
+            "explanation": "<div class=\"space-y-4\">\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Flowchart atau bagan alir adalah bagan yang menunjukkan alir di dalam program atau prosedur sistem secara logika. Flowchart dipakai terutama sebagai alat bantu komunikasi dan untuk dokumentasi.</p>\n<p class=\"mb-2 font-bold text-zinc-800\">Aturan Penulisan Flowchart</p>\n<ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li>Flowchart dimulai dari atas ke bawah.</li>\n  <li>Instruksi dalam bagan alir harus jelas dengan menggunakan kata kerja, dan memiliki alur data yang rinci dan jelas.</li>\n  <li>Dimulai dengan awal dan diakhiri dengan akhir.</li>\n  <li>Harus memiliki input dan output.</li>\n  <li>Menggunakan penghubung atau flow direction symbol untuk instruksi yang terpotong.</li>\n</ul>\n<p class=\"mb-2 font-bold text-zinc-800 mt-4\">Struktur Penulisan</p>\n<ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Start</code> berisi instruksi untuk persiapan memulai program sebelum menangani pemecahan masalah.</li>\n  <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Read</code> berisi instruksi untuk membaca data sebagai input program.</li>\n  <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Process</code> berisi kegiatan pengolahan yang berkaitan dengan pemecahan masalah sesuai data yang diinput.</li>\n  <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Write</code> berisi instruksi untuk merekam atau menampilkan hasil kegiatan process sebagai output program.</li>\n  <li><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">End</code> mengakhiri kegiatan pengolahan program.</li>\n</ul>\n<p class=\"mb-2 font-bold text-zinc-800 mt-4\">Simbol dan Notasi Flowchart</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Simbol flowchart dibagi menjadi tiga kelompok: <strong>Flow Direction Symbols</strong> (penghubung antar simbol), <strong>Processing Symbols</strong> (jenis operasi pengolahan), dan <strong>Input-output Symbols</strong> (media input/output).</p>\n<div class=\"my-4 overflow-x-auto\">\n  <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n    <thead>\n      <tr><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Simbol</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Nama</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Kegunaan</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Contoh Isi</th></tr>\n    </thead>\n    <tbody>\n      <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><img src=\"/assets/flowchart/simbol_terminal.svg\" alt=\"Simbol Terminal\" class=\"h-10 w-auto mx-auto\" /></td><td class=\"border border-zinc-200 px-3 py-1.5 font-bold\">Terminal</td><td class=\"border border-zinc-200 px-3 py-1.5\">Permulaan atau akhir program</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Mulai / Selesai</code></td></tr>\n      <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><img src=\"/assets/flowchart/simbol_input-output.svg\" alt=\"Simbol Input-Output\" class=\"h-10 w-auto mx-auto\" /></td><td class=\"border border-zinc-200 px-3 py-1.5 font-bold\">Input-Output</td><td class=\"border border-zinc-200 px-3 py-1.5\">Proses input dan output</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Input Data</code></td></tr>\n      <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><img src=\"/assets/flowchart/simbol_process.svg\" alt=\"Simbol Process\" class=\"h-10 w-auto mx-auto\" /></td><td class=\"border border-zinc-200 px-3 py-1.5 font-bold\">Process</td><td class=\"border border-zinc-200 px-3 py-1.5\">Pengolahan yang dilakukan komputer</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Proses Data</code></td></tr>\n      <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><img src=\"/assets/flowchart/simbol_decision.svg\" alt=\"Simbol Decision\" class=\"h-10 w-auto mx-auto\" /></td><td class=\"border border-zinc-200 px-3 py-1.5 font-bold\">Decision</td><td class=\"border border-zinc-200 px-3 py-1.5\">Kondisi yang menghasilkan beberapa kemungkinan jawaban</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Kondisi?</code></td></tr>\n      <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><img src=\"/assets/flowchart/simbol_predefined_process.svg\" alt=\"Simbol Predefined Process\" class=\"h-10 w-auto mx-auto\" /></td><td class=\"border border-zinc-200 px-3 py-1.5 font-bold\">Predefined Process</td><td class=\"border border-zinc-200 px-3 py-1.5\">Mempersiapkan penyimpanan di dalam storage</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Hitung Total</code></td></tr>\n      <tr><td class=\"border border-zinc-200 px-3 py-1.5\"><img src=\"/assets/flowchart/simbol_connector.svg\" alt=\"Simbol Connector\" class=\"h-10 w-auto mx-auto\" /></td><td class=\"border border-zinc-200 px-3 py-1.5 font-bold\">Connector</td><td class=\"border border-zinc-200 px-3 py-1.5\">Keluar/masuk prosedur pada lembar yang sama</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">A</code></td></tr>\n    </tbody>\n  </table>\n</div>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\"><strong>Symbol dokumen</strong> menyatakan input yang berasal dari dokumen berbentuk kertas atau output yang dicetak di kertas. Tidak dipakai pada latihan di modul ini.</p>\n</div>",
+            "codeExample": "#include <stdio.h>\n\nint main() {\n    printf(\"Halo\\n\");\n    return 0;\n}",
+            "initialCode": "",
+            "solution": "",
+            "hint": "Pelajari bentuk tiap simbol beserta kegunaannya. Di latihan berikutnya kamu akan menyusun kartu simbol ini menjadi flowchart yang benar.",
             "quiz": {
-              "question": "Apa yang **wajib** ada dalam sebuah flowchart yang benar?",
+              "question": "Simbol manakah yang digunakan untuk menyatakan kondisi yang menghasilkan beberapa kemungkinan jawaban?",
               "options": [
-                "Minimal sepuluh simbol proses",
-                "Satu titik Mulai (Start) dan minimal satu titik Selesai (End)",
-                "Hanya simbol decision tanpa simbol proses",
-                "Warna berbeda untuk setiap simbol"
+                "Terminal",
+                "Process",
+                "Decision",
+                "Connector"
               ],
-              "correctAnswer": 1
+              "correctAnswer": 2
             },
-            "testCases": [
-              {
-                "expectedOutput": "Bilangan 7 adalah Ganjil\n",
-                "description": "<span>Lengkapi komentar flowchart berikut agar mencerminkan urutan logika program: cek apakah angka adalah bilangan genap atau ganjil, lalu implementasikan kodenya.</span>"
-              }
-            ],
-            "validationRules": [
-              {
-                "message": "Lengkapi komentar flowchart: Tidak -> [Output: \"Ganjil\"]",
-                "pattern": "Tidak\\s*->\\s*\\[Output:\\s*\"Ganjil\"\\]",
-                "shouldExist": true
-              },
-              {
-                "message": "Gunakan kondisi: if (angka % 2 == 0)",
-                "pattern": "if\\s*\\(\\s*angka\\s*%\\s*2\\s*==\\s*0\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Pada blok else, gunakan: printf(\"Bilangan %d adalah Ganjil\\n\", angka);",
-                "pattern": "else\\s*\\{\\s*printf\\s*\\(\\s*\"Bilangan %d adalah Ganjil\\\\n\"\\s*,\\s*angka\\s*\\)\\s*;\\s*\\}",
-                "shouldExist": true
-              }
-            ]
+            "testCases": [],
+            "validationRules": [],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-1-m9-l2",
-            "title": "Struktur Sequence, Branching, dan Looping",
-            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Setiap algoritma, sesulit apapun, dibangun dari kombinasi <strong>tiga struktur kontrol dasar</strong>: <strong>Sequence</strong> (urutan), <strong>Branching/Selection</strong> (percabangan), dan <strong>Looping/Repetition</strong> (perulangan). Ketiganya adalah dasar sebelum menulis program apapun.</p>\n<ul class=\"list-disc pl-5 space-y-1 my-2 text-zinc-700\">\n  <li><strong>Sequence</strong> adalah eksekusi instruksi <strong>satu per satu secara berurutan</strong> dari atas ke bawah, masing-masing dijalankan tepat satu kali. <strong>Branching</strong> memungkinkan program <strong>memilih jalur eksekusi berbeda</strong> berdasarkan suatu kondisi (true/false), diwakili simbol diamond (belah ketupat) di flowchart. <strong>Looping</strong> memungkinkan satu blok instruksi <strong>dieksekusi berulang kali</strong> selama kondisi tertentu masih terpenuhi, sehingga cocok untuk tugas berulang.</li>\n</ul>\n\n  <div class=\"my-4 overflow-x-auto\">\n    <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n      <thead>\n        <tr><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Struktur</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Simbol Flowchart</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Implementasi di C</th></tr>\n      </thead>\n      <tbody>\n        <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Sequence</td><td class=\"border border-zinc-200 px-3 py-1.5\">Persegi panjang (proses) berurutan</td><td class=\"border border-zinc-200 px-3 py-1.5\">Baris kode berurutan</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Branching</td><td class=\"border border-zinc-200 px-3 py-1.5\">Diamond/belah ketupat</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">if</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">if-else</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">switch</code></td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Looping</td><td class=\"border border-zinc-200 px-3 py-1.5\">Diamond dengan panah kembali (loop back)</td><td class=\"border border-zinc-200 px-3 py-1.5\"><code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">for</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">while</code>, <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">do-while</code></td></tr>\n      </tbody>\n    </table>\n  </div>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\"><div class=\"my-4 not-prose\">\n  <img src=\"/assets/flowchart/struktur-kontrol.svg\" alt=\"Tiga diagram flowchart: Sequence kotak berurutan, Branching diamond bercabang dua, dan Looping diamond dengan panah kembali\" class=\"w-full max-w-3xl mx-auto rounded-xl border border-zinc-200 bg-white p-2\" />\n  <p class=\"mt-2 text-center text-xs text-zinc-500\">Tiga struktur kontrol: Sequence (berurutan), Branching (bercabang), dan Looping (berulang).</p>\n</div></p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>#include &lt;stdio.h&gt;\n\nint main() {\n    /* SEQUENCE: dijalankan berurutan */\n    int total = 0;\n    printf(&quot;Memulai perhitungan...\\n&quot;);\n\n    /* LOOPING: dijalankan berulang 3 kali */\n    for (int i = 1; i &lt;= 3; i++) {\n        total += i;\n\n        /* BRANCHING: cek kondisi setiap iterasi */\n        if (total &gt; 3) {\n            printf(&quot;Total sudah lebih dari 3: %d\\n&quot;, total);\n        } else {\n            printf(&quot;Total masih: %d\\n&quot;, total);\n        }\n    }\n    return 0;\n}</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal - workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ gcc program.c -o program &amp;&amp;./program</span>\n            <span class=\"block mt-1 text-zinc-100\">Memulai perhitungan...\nTotal masih: 1\nTotal masih: 3\nTotal sudah lebih dari 3: 6</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            "codeExample": "#include <stdio.h>\n\nint main() {\n    /* SEQUENCE: dijalankan berurutan */\n    int total = 0;\n    printf(\"Memulai perhitungan...\\n\");\n\n    /* LOOPING: dijalankan berulang 3 kali */\n    for (int i = 1; i <= 3; i++) {\n        total += i;\n\n        /* BRANCHING: cek kondisi setiap iterasi */\n        if (total > 3) {\n            printf(\"Total sudah lebih dari 3: %d\\n\", total);\n        } else {\n            printf(\"Total masih: %d\\n\", total);\n        }\n    }\n    return 0;\n}",
-            "initialCode": "#include <stdio.h>\n\nint main() {\n    for (int i = __; i __ 5; i__) {\n        if (i __ 2 __ 0) {\n            printf(\"__: Genap\\n\", i);\n        } else {\n            printf(\"__: Ganjil\\n\", i);\n        }\n    }\n    return 0;\n}",
-            "solution": "#include <stdio.h>\n\nint main() {\n    for (int i = 1; i <= 5; i++) {\n        if (i % 2 == 0) {\n            printf(\"%d: Genap\\n\", i);\n        } else {\n            printf(\"%d: Ganjil\\n\", i);\n        }\n    }\n    return 0;\n}",
-            "hint": "1. Lengkapi struktur for loop: mulai dari i = 1, kondisi\n   berlanjut selama i <= 5, dan naikkan i sebesar 1 setiap\n   iterasi (sesuai notasi flowchart looping pada materi).\n\n2. Lengkapi kondisi if untuk memeriksa apakah i habis dibagi 2\n   (gunakan operator modulus, bandingkan dengan 0).\n\n3. Lengkapi printf() pada blok if untuk format \"i: Genap\".\n\n4. Lengkapi printf() pada blok else untuk format \"i: Ganjil\".",
+            "title": "Flowchart Sederhana (Struktur Sequence)",
+            "explanation": "<div class=\"space-y-4\">\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Struktur <strong>sequence</strong> adalah flowchart yang alurnya mengalir berurutan dari atas ke bawah, tanpa percabangan dan tanpa perulangan. Setiap langkah dikerjakan tepat satu kali, berurutan.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Perhatikan bahwa struktur ini selalu memuat <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Start</code>, kemudian <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Read</code> (input), <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Process</code> (pengolahan), <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Write</code> (output), dan diakhiri <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">End</code>.</p>\n<div class=\"my-4 not-prose\">\n  <img src=\"/assets/flowchart/flowchart_sederhana.svg\" alt=\"Contoh flowchart sederhana: Mulai, Input Data, Proses Data, Cetak Hasil, Selesai\" class=\"w-full max-w-xl mx-auto rounded-xl border border-zinc-200 bg-white p-2\" />\n  <p class=\"mt-2 text-center text-xs text-zinc-500\">Contoh flowchart sederhana: Mulai -> Input Data -> Proses Data -> Cetak Hasil -> Selesai.</p>\n</div>\n</div>",
+            "codeExample": "#include <stdio.h>\n\nint main() {\n    int nilai;\n    printf(\"Masukkan nilai: \");\n    scanf(\"%d\", &nilai);\n    nilai = nilai * 2;\n    printf(\"Hasil: %d\\n\", nilai);\n    return 0;\n}",
+            "initialCode": "#include <stdio.h>\n\nint main() {\n    int nilai;\n    printf(\"Masukkan nilai: \");\n    scanf(\"%d\", &nilai);\n    nilai = nilai * 2;\n    printf(\"Hasil: %d\\n\", nilai);\n    return 0;\n}",
+            "solution": "{\"version\":2,\"flow\":[{\"at\":\"main\",\"shape\":\"terminator\",\"label\":\"Mulai\"},{\"at\":\"main\",\"shape\":\"io\",\"label\":\"Input Data\"},{\"at\":\"main\",\"shape\":\"process\",\"label\":\"Proses Data\"},{\"at\":\"main\",\"shape\":\"io\",\"label\":\"Cetak Hasil\"},{\"at\":\"main\",\"shape\":\"terminator\",\"label\":\"Selesai\"}]}",
+            "hint": "Susun dari atas: Mulai, lalu langkah input, pengolahan, output, dan terakhir Selesai. Kartu bertanda Kondisi? adalah pengecoh, jangan dipakai.",
             "quiz": {
-              "question": "Struktur kontrol manakah yang digunakan untuk **mengulang** eksekusi sebuah blok kode beberapa kali?",
+              "question": "Bagaimana alur struktur sequence pada flowchart?",
               "options": [
-                "Sequence",
-                "Branching",
-                "Looping",
-                "Selection"
+                "Bercabang sesuai kondisi",
+                "Mengulang sampai kondisi terpenuhi",
+                "Berurutan dari atas ke bawah tanpa percabangan",
+                "Kembali ke langkah sebelumnya"
               ],
               "correctAnswer": 2
             },
             "testCases": [
               {
-                "expectedOutput": "1: Ganjil\n2: Genap\n3: Ganjil\n4: Genap\n5: Ganjil\n",
-                "description": "<span>Tulis program yang menggabungkan ketiga struktur: gunakan <strong>sequence</strong> untuk inisialisasi, <strong>looping</strong> <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">for</code> dari 1 hingga 5, dan di dalam loop gunakan <strong>branching</strong> untuk mencetak \"Genap\" atau \"Ganjil\" untuk setiap angka.</span>"
+                "description": "Susun kartu simbol sehingga alurnya mengalir berurutan dari Mulai sampai Selesai.",
+                "expectedOutput": "",
+                "input": ""
               }
             ],
-            "validationRules": [
+            "validationRules": [],
+            "exerciseType": "flowchart",
+            "flowchartDistractors": [
               {
-                "message": "Gunakan loop: for (int i = 1; i <= 5; i++)",
-                "pattern": "for\\s*\\(\\s*int\\s+i\\s*=\\s*1\\s*;\\s*i\\s*<=\\s*5\\s*;\\s*i\\+\\+\\s*\\)",
-                "shouldExist": true
+                "shape": "decision",
+                "label": "Kondisi?"
               },
               {
-                "message": "Gunakan kondisi: if (i % 2 == 0)",
-                "pattern": "if\\s*\\(\\s*i\\s*%\\s*2\\s*==\\s*0\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Blok if harus: printf(\"%d: Genap\\n\", i);",
-                "pattern": "printf\\s*\\(\\s*\"%d:\\s*Genap\\\\n\"\\s*,\\s*i\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Blok else harus: printf(\"%d: Ganjil\\n\", i);",
-                "pattern": "printf\\s*\\(\\s*\"%d:\\s*Ganjil\\\\n\"\\s*,\\s*i\\s*\\)",
-                "shouldExist": true
+                "shape": "predefined",
+                "label": "Hitung Total"
               }
             ]
           },
           {
             "id": "c-level-1-m9-l3",
-            "title": "Simbol dan Notasi Flowchart",
-            "explanation": "<div class=\"space-y-4\">\n      <p class=\"mb-4 text-zinc-700 leading-relaxed\">Setiap simbol dalam flowchart memiliki <strong>bentuk geometris standar</strong> yang merepresentasikan jenis operasi tertentu. Penggunaan simbol yang seragam membuat flowchart dapat dipahami oleh siapapun yang membacanya, tanpa ambiguitas.</p>\n\n  <div class=\"my-4 overflow-x-auto\">\n    <table class=\"w-full border-collapse border border-zinc-200 text-xs\">\n      <thead>\n        <tr><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Simbol</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Bentuk</th><th class=\"border border-zinc-200 px-3 py-1.5 bg-zinc-50 font-bold text-left\">Fungsi</th></tr>\n      </thead>\n      <tbody>\n        <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Terminator</td><td class=\"border border-zinc-200 px-3 py-1.5\">Oval / elips</td><td class=\"border border-zinc-200 px-3 py-1.5\">Menandai <strong>Start</strong> dan <strong>End</strong> program</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Proses</td><td class=\"border border-zinc-200 px-3 py-1.5\">Persegi panjang</td><td class=\"border border-zinc-200 px-3 py-1.5\">Operasi/instruksi, misal perhitungan</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Input/Output</td><td class=\"border border-zinc-200 px-3 py-1.5\">Jajaran genjang (parallelogram)</td><td class=\"border border-zinc-200 px-3 py-1.5\">Operasi input atau output data</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Decision</td><td class=\"border border-zinc-200 px-3 py-1.5\">Diamond (belah ketupat)</td><td class=\"border border-zinc-200 px-3 py-1.5\">Percabangan kondisi (Ya/Tidak)</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Garis Alir</td><td class=\"border border-zinc-200 px-3 py-1.5\">Anak panah</td><td class=\"border border-zinc-200 px-3 py-1.5\">Menunjukkan arah eksekusi</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Konektor</td><td class=\"border border-zinc-200 px-3 py-1.5\">Lingkaran kecil</td><td class=\"border border-zinc-200 px-3 py-1.5\">Penghubung antar bagian flowchart yang terpisah</td></tr>\n    <tr><td class=\"border border-zinc-200 px-3 py-1.5\">Predefined Process</td><td class=\"border border-zinc-200 px-3 py-1.5\">Persegi panjang dengan garis vertikal di sisi</td><td class=\"border border-zinc-200 px-3 py-1.5\">Pemanggilan sub-program/fungsi</td></tr>\n      </tbody>\n    </table>\n  </div>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\"><div class=\"my-4 not-prose\">\n  <img src=\"/assets/flowchart/simbol-flowchart.svg\" alt=\"Tabel visual simbol flowchart standar: terminator, proses, input-output, decision, connector, preparation, document, dan anak panah\" class=\"w-full max-w-3xl mx-auto rounded-xl border border-zinc-200 bg-white p-2\" />\n  <p class=\"mt-2 text-center text-xs text-zinc-500\">Simbol standar flowchart beserta namanya masing-masing.</p>\n</div></p>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Contoh Penggunaan Kode:</div>\n        <pre class=\"bg-zinc-950 text-zinc-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-zinc-800\"><code>#include &lt;stdio.h&gt;\n\n/*\n * Pemetaan simbol flowchart ke kode:\n * (Oval)        Start\n * (Jajargenjang) Input: panjang, lebar\n * (Persegi)     Proses: luas = panjang * lebar\n * (Jajargenjang) Output: luas\n * (Oval)        End\n */\nint main() {\n    int panjang = 8, lebar = 4;\n    int luas = panjang * lebar;\n    printf(&quot;Luas: %d\\n&quot;, luas);\n    return 0;\n}</code></pre>\n      </div>\n\n      <div class=\"my-4 not-prose\">\n        <div class=\"text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider\">Output Terminal:</div>\n        <div class=\"bg-zinc-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs shadow-xl border border-zinc-800 max-w-xl\">\n          <div class=\"flex items-center gap-1.5 mb-2.5 border-b border-zinc-800 pb-2 text-zinc-500\">\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ff5f56]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#ffbd2e]\"></span>\n            <span class=\"w-2.5 h-2.5 rounded-full bg-[#27c93f]\"></span>\n            <span class=\"ml-2 text-[10px] font-bold text-zinc-400\">terminal - workspace</span>\n          </div>\n          <div class=\"whitespace-pre-wrap font-semibold leading-relaxed\">\n            <span class=\"text-zinc-500\">$ gcc program.c -o program &amp;&amp;./program</span>\n            <span class=\"block mt-1 text-zinc-100\">Luas: 32</span>\n          </div>\n        </div>\n      </div>\n    </div>",
-            "codeExample": "#include <stdio.h>\n\n/*\n * Pemetaan simbol flowchart ke kode:\n * (Oval)        Start\n * (Jajargenjang) Input: panjang, lebar\n * (Persegi)     Proses: luas = panjang * lebar\n * (Jajargenjang) Output: luas\n * (Oval)        End\n */\nint main() {\n    int panjang = 8, lebar = 4;\n    int luas = panjang * lebar;\n    printf(\"Luas: %d\\n\", luas);\n    return 0;\n}",
-            "initialCode": "#include <stdio.h>\n\n/*\n * (Oval)         Start\n * (Jajargenjang) Input: total\n * (Diamond)      Decision: total >= 100000?\n *    Ya -> (Persegi) Proses: total_bayar = total * 0.9\n *          (Jajargenjang) Output: \"Anda mendapat diskon!\" dan total_bayar\n *    Tidak -> (Jajargenjang) Output: total_bayar = total\n * (Oval)         End\n */\nint main() {\n    int total;\n    printf(\"Masukkan total belanja: \");\n    scanf(\"%d\", &total);\n\n    if (total __ 100000) {\n        int total_bayar = total * __;\n        printf(\"__\\n\");\n        printf(\"Total bayar: %d\\n\", __);\n    } else {\n        printf(\"Total bayar: %d\\n\", __);\n    }\n    return 0;\n}",
-            "solution": "#include <stdio.h>\n\n/*\n * (Oval)         Start\n * (Jajargenjang) Input: total\n * (Diamond)      Decision: total >= 100000?\n *    Ya -> (Persegi) Proses: total_bayar = total * 0.9\n *          (Jajargenjang) Output: \"Anda mendapat diskon!\" dan total_bayar\n *    Tidak -> (Jajargenjang) Output: total_bayar = total\n * (Oval)         End\n */\nint main() {\n    int total;\n    printf(\"Masukkan total belanja: \");\n    scanf(\"%d\", &total);\n\n    if (total >= 100000) {\n        int total_bayar = total * 0.9;\n        printf(\"Anda mendapat diskon!\\n\");\n        printf(\"Total bayar: %d\\n\", total_bayar);\n    } else {\n        printf(\"Total bayar: %d\\n\", total);\n    }\n    return 0;\n}",
-            "hint": "1. Lengkapi kondisi if (Decision/diamond) untuk memeriksa apakah\n   total belanja lebih besar atau sama dengan 100000.\n\n2. Pada blok if, lengkapi rumus perhitungan total_bayar setelah\n   diskon 10%, kalikan total dengan 0.9.\n\n3. Pada blok if, lengkapi printf() pertama untuk menampilkan\n   pesan \"Anda mendapat diskon!\".\n\n4. Pada blok if, lengkapi printf() kedua untuk menampilkan\n   total_bayar.\n\n5. Pada blok else, lengkapi printf() untuk menampilkan total\n   (tanpa potongan diskon) sebagai total_bayar.",
+            "title": "Flowchart Percabangan (Struktur Branching)",
+            "explanation": "<div class=\"space-y-4\">\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Struktur <strong>branching</strong> dipakai untuk menyeleksi kondisi dan menentukan pilihan proses selanjutnya. Simbol yang berperan adalah <code class=\"bg-zinc-100 px-1.5 py-0.5 rounded text-rose-700 font-mono text-xs\">Decision</code>.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Karena itu, setelah simbol Decision alurnya <strong>terbelah dua</strong>: satu jalur untuk jawaban <strong>Ya</strong> dan satu jalur untuk jawaban <strong>Tidak</strong>. Keduanya nanti bertemu kembali sebelum mencapai Selesai.</p>\n<div class=\"my-4 not-prose\">\n  <img src=\"/assets/flowchart/flowchart_percabangan.svg\" alt=\"Contoh flowchart percabangan dengan decision Kondisi? dan dua jalur Ya dan Tidak\" class=\"w-full max-w-xl mx-auto rounded-xl border border-zinc-200 bg-white p-2\" />\n  <p class=\"mt-2 text-center text-xs text-zinc-500\">Contoh percabangan: setelah Kondisi?, jalur Tidak mencetak peringatan, jalur Ya memproses data.</p>\n</div>\n</div>",
+            "codeExample": "#include <stdio.h>\n\nint main() {\n    int saldo = 0;\n    saldo = saldo - 5000;\n    if (saldo < 0) {\n        printf(\"Cetak Peringatan: saldo minus\\n\");\n    }\n    printf(\"Proses Data selesai\\n\");\n    return 0;\n}",
+            "initialCode": "#include <stdio.h>\n\nint main() {\n    int saldo = 0;\n    saldo = saldo - 5000;\n    if (saldo < 0) {\n        printf(\"Cetak Peringatan: saldo minus\\n\");\n    }\n    printf(\"Proses Data selesai\\n\");\n    return 0;\n}",
+            "solution": "{\"version\":2,\"flow\":[{\"at\":\"main\",\"shape\":\"terminator\",\"label\":\"Mulai\"},{\"at\":\"main\",\"shape\":\"process\",\"label\":\"Inisialisasi\"},{\"at\":\"main\",\"shape\":\"decision\",\"label\":\"Kondisi?\"},{\"at\":\"no\",\"shape\":\"io\",\"label\":\"Cetak Peringatan\"},{\"at\":\"yes\",\"shape\":\"process\",\"label\":\"Proses Data\"},{\"at\":\"main\",\"shape\":\"terminator\",\"label\":\"Selesai\"}]}",
+            "hint": "Setelah kartu Kondisi? ditempatkan, akan muncul dua kolom: Ya dan Tidak. Letakkan kartu yang cocok pada masing-masing kolom sesuai kode.",
             "quiz": {
-              "question": "Simbol **jajaran genjang (parallelogram)** dalam flowchart digunakan untuk merepresentasikan...",
+              "question": "Pada struktur branching, mengapa sebuah decision menghasilkan dua jalur?",
               "options": [
-                "Titik mulai dan selesai program",
-                "Operasi input atau output data",
-                "Percabangan kondisi",
-                "Proses perhitungan matematis"
+                "Karena decision selalu salah",
+                "Karena kondisi menghasilkan beberapa kemungkinan jawaban (mis. Ya dan Tidak)",
+                "Karena flowchart harus punya dua input",
+                "Karena decision tidak punya cabang"
               ],
               "correctAnswer": 1
             },
             "testCases": [
               {
-                "expectedOutput": "Masukkan total belanja: Anda mendapat diskon!\nTotal bayar: 135000\n",
-                "description": "<span>Tulis komentar flowchart yang memetakan setiap simbol (oval, jajargenjang, persegi panjang, diamond) ke baris kode yang sesuai untuk program penghitung diskon, lalu lengkapi kodenya.</span>",
-                "input": "150000"
+                "description": "Susun kartu sehingga decision Kondisi? bercabang dua, lalu kedua jalur bertemu menuju Selesai.",
+                "expectedOutput": "",
+                "input": ""
               }
             ],
-            "validationRules": [
+            "validationRules": [],
+            "exerciseType": "flowchart",
+            "flowchartDistractors": [
               {
-                "message": "Gunakan decision: if (total >= 100000)",
-                "pattern": "if\\s*\\(\\s*total\\s*>=\\s*100000\\s*\\)",
-                "shouldExist": true
+                "shape": "predefined",
+                "label": "Hitung Total"
               },
               {
-                "message": "Hitung diskon dengan: int total_bayar = total * 0.9;",
-                "pattern": "int\\s+total_bayar\\s*=\\s*total\\s*\\*\\s*0\\.9\\s*;",
-                "shouldExist": true
+                "shape": "connector",
+                "label": "A"
+              }
+            ]
+          },
+          {
+            "id": "c-level-1-m9-l4",
+            "title": "Flowchart Perulangan (Struktur Looping)",
+            "explanation": "<div class=\"space-y-4\">\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Struktur <strong>looping</strong> dipakai untuk mengulangi langkah sebelumnya sampai suatu kondisi terpenuhi. Pada flowchart, ini terlihat dari adanya <strong>alur yang kembali ke atas</strong>.</p>\n<p class=\"mb-4 text-zinc-700 leading-relaxed\">Jalur <strong>Ya</strong> dari kondisi berarti perulangan <strong>masih berjalan</strong> (masuk ke proses, lalu update), sedangkan jalur <strong>Tidak</strong> berarti perulangan <strong>selesai</strong> dan alur lanjut ke Selesai.</p>\n<div class=\"my-4 not-prose\">\n  <img src=\"/assets/flowchart/flowchart_perulangan.svg\" alt=\"Contoh flowchart perulangan: Kondisi, Proses, Update, dengan panah kembali ke atas\" class=\"w-full max-w-xl mx-auto rounded-xl border border-zinc-200 bg-white p-2\" />\n  <p class=\"mt-2 text-center text-xs text-zinc-500\">Contoh perulangan: jalur Ya masuk ke Proses lalu Update, dan kembali mengecek Kondisi.</p>\n</div>\n</div>",
+            "codeExample": "#include <stdio.h>\n\nint main() {\n    int i = 1;\n    while (i <= 3) {\n        printf(\"Proses ke-%d\\n\", i);\n        i = i + 1;\n    }\n    return 0;\n}",
+            "initialCode": "#include <stdio.h>\n\nint main() {\n    int i = 1;\n    while (i <= 3) {\n        printf(\"Proses ke-%d\\n\", i);\n        i = i + 1;\n    }\n    return 0;\n}",
+            "solution": "{\"version\":2,\"flow\":[{\"at\":\"main\",\"shape\":\"terminator\",\"label\":\"Mulai\"},{\"at\":\"main\",\"shape\":\"decision\",\"label\":\"Kondisi\"},{\"at\":\"yes\",\"shape\":\"process\",\"label\":\"Proses\"},{\"at\":\"yes\",\"shape\":\"process\",\"label\":\"Update\"},{\"at\":\"main\",\"shape\":\"terminator\",\"label\":\"Selesai\"}]}",
+            "hint": "Jalur Ya berisi langkah yang diulang (Proses dan Update). Jalur Tidak langsung menuju Selesai karena perulangan berhenti.",
+            "quiz": {
+              "question": "Pada flowchart perulangan, apa arti jalur Ya dari simbol kondisi?",
+              "options": [
+                "Perulangan selesai",
+                "Perulangan masih berjalan sehingga masuk ke proses",
+                "Program berhenti",
+                "Kondisi diabaikan"
+              ],
+              "correctAnswer": 1
+            },
+            "testCases": [
+              {
+                "description": "Susun kartu sehingga kondisi berulang melalui jalur Ya (Proses lalu Update) dan selesai saat Tidak.",
+                "expectedOutput": "",
+                "input": ""
+              }
+            ],
+            "validationRules": [],
+            "exerciseType": "flowchart",
+            "flowchartDistractors": [
+              {
+                "shape": "io",
+                "label": "Cetak Hasil"
               },
               {
-                "message": "Tampilkan pesan diskon: printf(\"Anda mendapat diskon!\\n\");",
-                "pattern": "printf\\s*\\(\\s*\"Anda mendapat diskon!\\\\n\"\\s*\\)\\s*;",
-                "shouldExist": true
-              },
-              {
-                "message": "Pada blok if, tampilkan total_bayar: printf(\"Total bayar: %d\\n\", total_bayar);",
-                "pattern": "if\\s*\\([\\s\\S]*?printf\\s*\\(\\s*\"Total bayar:\\s*%d\\\\n\"\\s*,\\s*total_bayar\\s*\\)",
-                "shouldExist": true
-              },
-              {
-                "message": "Pada blok else, tampilkan total (bukan total_bayar): printf(\"Total bayar: %d\\n\", total);",
-                "pattern": "else\\s*\\{\\s*printf\\s*\\(\\s*\"Total bayar:\\s*%d\\\\n\"\\s*,\\s*total\\s*\\)\\s*;\\s*\\}",
-                "shouldExist": true
+                "shape": "connector",
+                "label": "A"
               }
             ]
           }
@@ -1458,7 +1480,8 @@ export const curriculum: Level[] = [
                 "pattern": "if\\s*\\(\\s*saldo\\s*<\\s*50000\\s*\\)\\s*\\{\\s*printf\\s*\\(\\s*\"Saldo Anda rendah!\\\\n\"\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-2-m1-l2",
@@ -1501,7 +1524,8 @@ export const curriculum: Level[] = [
                 "pattern": "else\\s*\\{\\s*printf\\s*\\(\\s*\"Angka negatif atau nol\\\\n\"\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-2-m1-l3",
@@ -1544,7 +1568,8 @@ export const curriculum: Level[] = [
                 "pattern": "else\\s*\\{\\s*printf\\s*\\(\\s*\"Kategori:\\s*Gemuk\\\\n\"\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-2-m1-l4",
@@ -1602,7 +1627,8 @@ export const curriculum: Level[] = [
                 "pattern": "default\\s*:\\s*\\n\\s*printf\\s*\\(\\s*\"Operator tidak valid\\\\n\"\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -1650,7 +1676,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"%d\\\\n\"\\s*,\\s*hitung\\s*\\)\\s*;\\s*\\n\\s*hitung--\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-2-m2-l2",
@@ -1692,7 +1719,8 @@ export const curriculum: Level[] = [
                 "pattern": "\\}\\s*while\\s*\\(\\s*i\\s*<=\\s*3\\s*\\)\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-2-m2-l3",
@@ -1729,7 +1757,8 @@ export const curriculum: Level[] = [
                 "pattern": "hasil\\s*\\*=\\s*i\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -1777,7 +1806,8 @@ export const curriculum: Level[] = [
                 "pattern": "goto",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-2-m3-l2",
@@ -1819,7 +1849,8 @@ export const curriculum: Level[] = [
                 "pattern": "printf\\s*\\(\\s*\"Berhenti di angka %d \\(habis dibagi 7\\)\\\\n\"\\s*,\\s*i\\s*\\)\\s*;\\s*\\n\\s*break\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "c-level-2-m3-l3",
@@ -1856,7 +1887,8 @@ export const curriculum: Level[] = [
                 "pattern": "if\\s*\\(\\s*i\\s*%\\s*3\\s*==\\s*0\\s*\\)\\s*\\{\\s*continue\\s*;",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       }
@@ -1913,7 +1945,8 @@ export const curriculum: Level[] = [
                 "pattern": "^print\\s*\\(\\s*[\"']Target: Membuat program sederhana[\"']\\s*\\)\\s*$",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m1-l2",
@@ -1955,7 +1988,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Luas:[\"']\\s*,\\s*panjang\\s*\\*\\s*lebar\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -2003,7 +2037,8 @@ export const curriculum: Level[] = [
                 "pattern": "kota\\s*=\\s*[\"']Jakarta[\"'][\\s\\S]*print\\s*\\(\\s*[\"']Kota sekarang:[\"']\\s*,\\s*kota\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m2-l2",
@@ -2040,7 +2075,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Volume:[\"']\\s*,\\s*panjang\\s*\\*\\s*lebar\\s*\\*\\s*tinggi\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -2088,7 +2124,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Modulus:[\"']\\s*,\\s*a\\s*%\\s*b\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m3-l2",
@@ -2130,7 +2167,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Huruf terakhir:[\"']\\s*,\\s*kata\\s*\\[\\s*-1\\s*\\]\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m3-l3",
@@ -2167,7 +2205,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Boleh tanpa pendamping:[\"']\\s*,\\s*usia\\s*>=\\s*18\\s+or\\s+punya_izin\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m3-l4",
@@ -2209,7 +2248,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Umur 5 tahun lagi: [\"']\\s*\\+\\s*str\\s*\\(\\s*umur\\s*\\+\\s*5\\s*\\)\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -2257,7 +2297,8 @@ export const curriculum: Level[] = [
                 "pattern": "skor\\s*\\+=\\s*20[\\s\\S]*skor\\s*\\*=\\s*2",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m4-l2",
@@ -2289,7 +2330,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Dalam rentang lulus:[\"']\\s*,\\s*60\\s*<=\\s*nilai\\s*<=\\s*100\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m4-l3",
@@ -2321,7 +2363,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Kena hujan:[\"']\\s*,\\s*hujan\\s+and\\s+not\\s+bawa_payung\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -2365,7 +2408,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Halo\\s*[\"']\\s*\\+\\s*nama_hewan\\s*\\+\\s*[\"'],\\s*semoga harimu menyenangkan![\"']\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m5-l2",
@@ -2408,7 +2452,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Hasil penjumlahan:[\"']\\s*,\\s*angka1\\s*\\+\\s*angka2\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -2446,7 +2491,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*f[\"']\\{hari:02d\\}[\"']\\s*,\\s*f[\"']\\{bulan:02d\\}[\"']\\s*,\\s*tahun\\s*,\\s*sep\\s*=\\s*[\"']/[\"']\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m6-l2",
@@ -2478,7 +2524,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*f[\"']Produk: \\{nama_produk\\}, Harga: Rp\\{harga:\\.2f\\}[\"']\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-3-m6-l3",
@@ -2515,7 +2562,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']=[\"']\\s*\\*\\s*15\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       }
@@ -2572,7 +2620,8 @@ export const curriculum: Level[] = [
                 "pattern": "print\\s*\\(\\s*[\"']Selamat datang![\"']\\s*\\)\\s*\\n {4}print\\s*\\(\\s*[\"']Silakan login\\.[\"']\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-4-m1-l2",
@@ -2610,7 +2659,8 @@ export const curriculum: Level[] = [
                 "pattern": "if\\s+kecepatan\\s*>\\s*80\\s*:\\s*\\n {4}print\\s*\\(\\s*[\"']Melebihi batas kecepatan![\"']\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-4-m1-l3",
@@ -2653,7 +2703,8 @@ export const curriculum: Level[] = [
                 "pattern": "hasil\\s*=",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-4-m1-l4",
@@ -2696,7 +2747,8 @@ export const curriculum: Level[] = [
                 "pattern": "^else\\s*:\\s*\\n {4}kategori\\s*=\\s*[\"']Gemuk[\"']\\s*$",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -2739,7 +2791,8 @@ export const curriculum: Level[] = [
                 "pattern": "range\\s*\\(\\s*1\\s*,\\s*11\\s*\\)\\s*:\\s*\\n {4}total\\s*\\+=\\s*i",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-4-m2-l2",
@@ -2786,7 +2839,8 @@ export const curriculum: Level[] = [
                 "pattern": "break\\s*\\n {4}angka\\s*\\+=\\s*1",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -2829,7 +2883,8 @@ export const curriculum: Level[] = [
                 "pattern": "persen\\s*=\\s*10\\s*\\)\\s*:\\s*\\n {4}return\\s+harga\\s*-\\s*\\(\\s*harga\\s*\\*\\s*persen\\s*/\\s*100\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-4-m3-l2",
@@ -2881,7 +2936,8 @@ export const curriculum: Level[] = [
                 "pattern": "^k\\s*,\\s*l\\s*=\\s*info_lingkaran\\s*\\(\\s*7\\s*\\)\\s*$",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       }
@@ -2933,7 +2989,8 @@ export const curriculum: Level[] = [
                 "pattern": "dataMahasiswa\\[2\\]",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-5-m1-l2",
@@ -2970,7 +3027,8 @@ export const curriculum: Level[] = [
                 "pattern": "angka\\.insert\\(\\s*1\\s*,\\s*15\\s*\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-5-m1-l3",
@@ -3007,7 +3065,8 @@ export const curriculum: Level[] = [
                 "pattern": "hewan\\.remove\\([\"']Anjing[\"']\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-5-m1-l4",
@@ -3044,7 +3103,8 @@ export const curriculum: Level[] = [
                 "pattern": "angka\\.sort\\(\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       },
@@ -3087,7 +3147,8 @@ export const curriculum: Level[] = [
                 "pattern": "data_siswa\\[[\"']jurusan[\"']\\]",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-5-m2-l2",
@@ -3124,7 +3185,8 @@ export const curriculum: Level[] = [
                 "pattern": "biodata\\.values\\(\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           },
           {
             "id": "level-5-m2-l3",
@@ -3161,7 +3223,8 @@ export const curriculum: Level[] = [
                 "pattern": "produk\\.get\\([\"']garansi[\"']\\s*,\\s*[\"']1 Tahun[\"']\\)",
                 "shouldExist": true
               }
-            ]
+            ],
+            "exerciseType": "code"
           }
         ]
       }
@@ -3202,7 +3265,8 @@ export const curriculum: Level[] = [
                 "description": "Menghitung mean, median, dan mode dari list nilai"
               }
             ],
-            "validationRules": []
+            "validationRules": [],
+            "exerciseType": "code"
           },
           {
             "id": "level-6-m1-l2",
@@ -3228,7 +3292,8 @@ export const curriculum: Level[] = [
                 "description": "Menghitung min, max, varians, dan stdev data sampel"
               }
             ],
-            "validationRules": []
+            "validationRules": [],
+            "exerciseType": "code"
           },
           {
             "id": "level-6-m1-l3",
@@ -3254,7 +3319,8 @@ export const curriculum: Level[] = [
                 "description": "Membagi interval kuartil data"
               }
             ],
-            "validationRules": []
+            "validationRules": [],
+            "exerciseType": "code"
           }
         ]
       },
@@ -3286,7 +3352,8 @@ export const curriculum: Level[] = [
                 "description": "Melengkapi judul, label sumbu X/Y, dan plt.show()"
               }
             ],
-            "validationRules": []
+            "validationRules": [],
+            "exerciseType": "code"
           },
           {
             "id": "level-6-m2-l2",
@@ -3312,7 +3379,8 @@ export const curriculum: Level[] = [
                 "description": "Membuat Grafik Garis (Line Chart) dengan plt.plot()"
               }
             ],
-            "validationRules": []
+            "validationRules": [],
+            "exerciseType": "code"
           },
           {
             "id": "level-6-m2-l3",
@@ -3338,7 +3406,8 @@ export const curriculum: Level[] = [
                 "description": "Membuat Grafik Batang (Bar Chart) dengan plt.bar()"
               }
             ],
-            "validationRules": []
+            "validationRules": [],
+            "exerciseType": "code"
           },
           {
             "id": "level-6-m2-l4",
@@ -3364,7 +3433,8 @@ export const curriculum: Level[] = [
                 "description": "Membuat Grafik Lingkaran (Pie Chart) dengan plt.pie()"
               }
             ],
-            "validationRules": []
+            "validationRules": [],
+            "exerciseType": "code"
           },
           {
             "id": "level-6-m2-l5",
@@ -3390,7 +3460,8 @@ export const curriculum: Level[] = [
                 "description": "Membuat Diagram Pencar (Scatter Plot) dengan plt.scatter()"
               }
             ],
-            "validationRules": []
+            "validationRules": [],
+            "exerciseType": "code"
           },
           {
             "id": "level-6-m2-l6",
@@ -3416,7 +3487,8 @@ export const curriculum: Level[] = [
                 "description": "Membuat Histogram sebaran frekuensi dengan plt.hist()"
               }
             ],
-            "validationRules": []
+            "validationRules": [],
+            "exerciseType": "code"
           }
         ]
       }

@@ -232,7 +232,11 @@ export const LessonPage: React.FC = () => {
   }
 
   const isLessonDone = completedLessons.includes(lesson.id);
-  const isQuizPassed = isLessonDone || quizXpGranted;
+  // Lesson tanpa kuis tidak punya gerbang kuis, jadi tidak boleh menahan
+  // penyelesaian (dulu: `isLessonDone || quizXpGranted` -> lesson tanpa quiz
+  // mustahil diselesaikan karena keduanya tidak pernah true).
+  const hasQuiz = !!lesson?.quiz;
+  const isQuizPassed = isLessonDone || quizXpGranted || !hasQuiz;
   const isFlowchart = (lesson as any).exerciseType === 'flowchart';
 
 

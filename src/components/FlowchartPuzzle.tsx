@@ -2,22 +2,33 @@ import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, RotateCcw, Trash2, ArrowDown, GripVertical } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { FlowchartSymbol } from '../types';
+import { FlowchartSymbol, FlowchartStep, FlowchartBranch } from '../types';
 
 /**
  * FlowchartPuzzle — latihan susun simbol flowchart (drag & drop / tap).
  *
- * Praktikan membaca kode sederhana (read-only), lalu menyusun kartu simbol
- * dari bank ke slot berurutan atas->bawah. Validasi murni di klien:
- * urutan slot harus sama persis dengan `solution` (JSON FlowchartSymbol[]).
+ * Praktikan membaca kode sederhana (read-only), lalu menyusun kartu simbol dari
+ * bank ke slot. Validasi murni di klien.
  *
- * Kartu pengecoh (distraktor) disediakan via prop `distractors`.
+ * Alur lurus dan bercabang sama-sama didukung:
+ *  - Setiap `decision` pada alur utama otomatis punya dua slot cabang (Ya/Tidak),
+ *    masing-masing dengan kolom sendiri.
+ *  - Cabang ditentukan oleh pemerian yang DIPILIH siswa (decision mana, cabang
+ *    mana), bukan oleh urutan penempatan — jadi penilaian tidak ambigu.
+ *  - Cabang boleh memuat `decision` lagi (bersarang).
+ *
+ * Bentuk `solution` (JSON):
+ *   v2 : { version: 2, flow: [{ at: 'main'|'yes'|'no', shape, label }, ...] }
+ *   v1 : FlowchartSymbol[] datar (diperlakukan sebagai seluruhnya `main`)
+ *
+ * Pengelompokan cabang: setiap `decision` pada alur utama "mengambil" entri
+ * `yes`/`no` berikutnya sebagai cabangnya, sesuai urutan pada `flow`.
  */
 
 interface Props {
   /** Kode sumber yang harus diterjemahkan ke flowchart (read-only). */
   code: string;
-  /** JSON string: FlowchartSymbol[] urutan benar atas -> bawah. */
+  /** JSON string: FlowchartFlow (v2) atau FlowchartSymbol[] (v1). */
   solutionJson: string;
   /** Simbol pengecoh tambahan di bank (tidak dipakai di jawaban benar). */
   distractors?: FlowchartSymbol[];
@@ -26,6 +37,15 @@ interface Props {
 }
 
 type BankItem = FlowchartSymbol & { key: string };
+
+/** Satu slot pada susunan. */
+interface SlotRef {
+  id: string;
+  branch: FlowchartBranch;
+  /** Untuk cabang: indeks decision pemiliknya di alur utama. */
+  owner?: number;
+  expected: FlowchartSymbol;
+}
 
 const SHAPE_LABEL: Record<FlowchartSymbol['shape'], string> = {
   terminator: 'Terminator (Mulai/Selesai)',
@@ -57,72 +77,143 @@ const SymbolShape: React.FC<{ shape: FlowchartSymbol['shape']; label: string; sm
   );
 };
 
-export const FlowchartPuzzle: React.FC<Props> = ({ code, solutionJson, distractors = [], onResult, disabled }) => {
-  const solution = useMemo<FlowchartSymbol[]>(() => {
-    try {
-      const parsed = JSON.parse(solutionJson);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }, [solutionJson]);
+const sameCard = (a: FlowchartSymbol | null | undefined, b: FlowchartSymbol | null | undefined) =>
+  !!a && !!b && a.shape === b.shape && a.label === b.label;
 
-  // Bank = jawaban benar (diacak) + pengecoh. key unik per kartu.
+/** Urai `solution` menjadi alur utama + cabang per decision. */
+function parseFlow(solutionJson: string): { main: FlowchartSymbol[]; yes: FlowchartSymbol[][]; no: FlowchartSymbol[][] } {
+  let parsed: any;
+  try {
+    parsed = JSON.parse(solutionJson);
+  } catch {
+    return { main: [], yes: [], no: [] };
+  }
+
+  let steps: FlowchartStep[];
+  if (Array.isArray(parsed)) {
+    steps = parsed.map((s: any) => ({ shape: s.shape, label: String(s.label ?? ''), at: 'main' as const }));
+  } else if (parsed && Array.isArray(parsed.flow)) {
+    steps = parsed.flow.map((s: any) => ({
+      shape: s.shape,
+      label: String(s.label ?? ''),
+      at: (s.at === 'yes' || s.at === 'no' ? s.at : 'main') as FlowchartBranch,
+    }));
+  } else {
+    return { main: [], yes: [], no: [] };
+  }
+
+  const main: FlowchartSymbol[] = [];
+  const yes: FlowchartSymbol[][] = [];
+  const no: FlowchartSymbol[][] = [];
+  let decisionCount = 0;
+
+  for (const s of steps) {
+    const card: FlowchartSymbol = { shape: s.shape, label: s.label };
+    if (s.at === 'main') {
+      main.push(card);
+      if (card.shape === 'decision') {
+        decisionCount++;
+        yes.push([]);
+        no.push([]);
+      }
+    } else {
+      if (decisionCount === 0) continue;       // cabang tanpa induk -> abaikan
+      const k = decisionCount - 1;
+      (s.at === 'yes' ? yes : no)[k].push(card);
+    }
+  }
+
+  return { main, yes, no };
+}
+
+export const FlowchartPuzzle: React.FC<Props> = ({ code, solutionJson, distractors = [], onResult, disabled }) => {
+  const { main, yes, no } = useMemo(() => parseFlow(solutionJson), [solutionJson]);
+
+  /** Semua slot penilaian: alur utama + cabang tiap decision. */
+  const slotRefs = useMemo<SlotRef[]>(() => {
+    const refs: SlotRef[] = [];
+    main.forEach((s, i) => refs.push({ id: `m-${i}`, branch: 'main', expected: s }));
+
+    let k = -1;                                 // indeks decision yang sedang dihitung
+    main.forEach((s) => {
+      if (s.shape !== 'decision') return;
+      k++;
+      (yes[k] || []).forEach((b, j) => refs.push({ id: `b${k}-yes-${j}`, branch: 'yes', owner: k, expected: b }));
+      (no[k] || []).forEach((b, j) => refs.push({ id: `b${k}-no-${j}`, branch: 'no', owner: k, expected: b }));
+    });
+
+    return refs;
+  }, [main, yes, no]);
+
+  const slotById = useMemo(() => new Map(slotRefs.map(r => [r.id, r])), [slotRefs]);
+
+  /** Bank = semua jawaban benar (diacak) + pengecoh. */
   const initialBank = useMemo<BankItem[]>(() => {
-    const all = [...solution, ...distractors];
+    const all: FlowchartSymbol[] = [...slotRefs.map(r => r.expected), ...distractors];
     const withKeys = all.map((s, i) => ({ ...s, key: `${s.shape}-${i}-${s.label.slice(0, 8)}` }));
-    // Acak deterministik-ish (Fisher-Yates dengan seed sederhana agar stabil per sesi render pertama)
     const arr = [...withKeys];
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
-  }, [solution, distractors]);
+  }, [slotRefs, distractors]);
 
   const [bank, setBank] = useState<BankItem[]>(initialBank);
-  const [slots, setSlots] = useState<(BankItem | null)[]>(() => solution.map(() => null));
+  const [placed, setPlaced] = useState<Record<string, BankItem>>({});
   const [checked, setChecked] = useState<null | boolean>(null);
   const [dragKey, setDragKey] = useState<string | null>(null);
+  const [tapped, setTapped] = useState<string | null>(null);
 
   const findItem = (key: string): BankItem | null =>
-    bank.find(b => b.key === key) || slots.find(s => s?.key === key) || null;
+    bank.find(b => b.key === key) || Object.values(placed).find(p => p.key === key) || null;
 
-  const placeAt = (key: string, slotIdx: number) => {
-    if (disabled) return;
+  const slotOfKey = (key: string): string | null =>
+    Object.entries(placed).find(([, v]) => v.key === key)?.[0] ?? null;
+
+  const placeAt = (key: string, slotId: string) => {
+    if (disabled || !slotById.has(slotId)) return;
     const item = findItem(key);
     if (!item) return;
-    setBank(prev => prev.filter(b => b.key !== key));
-    setSlots(prev => {
-      const next = prev.map(s => (s?.key === key ? null : s));
-      // Slot tujuan yang terisi dikembalikan ke bank
-      const displaced = next[slotIdx];
+
+    setPlaced(prev => {
+      const next = { ...prev };
+      for (const [sid, it] of Object.entries(next)) if (it.key === key) delete next[sid];
+      const displaced = next[slotId];
       if (displaced) setBank(b => [...b, displaced]);
-      next[slotIdx] = item;
+      next[slotId] = item;
       return next;
     });
+    setBank(prev => prev.filter(b => b.key !== key));
     setChecked(null);
   };
 
-  const removeFromSlot = (slotIdx: number) => {
+  const removeFromSlot = (slotId: string) => {
     if (disabled) return;
-    const item = slots[slotIdx];
+    const item = placed[slotId];
     if (!item) return;
-    setSlots(prev => prev.map((s, i) => (i === slotIdx ? null : s)));
+    setPlaced(prev => {
+      const next = { ...prev };
+      delete next[slotId];
+      return next;
+    });
     setBank(prev => [...prev, item]);
     setChecked(null);
   };
 
   const reset = () => {
     setBank(initialBank);
-    setSlots(solution.map(() => null));
+    setPlaced({});
     setChecked(null);
+    setTapped(null);
     onResult(false);
   };
 
+  const filledCount = slotRefs.filter(r => placed[r.id]).length;
+
   const check = () => {
-    const filled = slots.every(Boolean);
-    const correct = filled && slots.every((s, i) => s!.shape === solution[i].shape && s!.label === solution[i].label);
+    const filled = filledCount === slotRefs.length;
+    const correct = filled && slotRefs.every(r => sameCard(placed[r.id], r.expected));
     setChecked(correct);
     onResult(correct);
   };
@@ -132,25 +223,62 @@ export const FlowchartPuzzle: React.FC<Props> = ({ code, solutionJson, distracto
     e.dataTransfer.setData('text/plain', key);
     setDragKey(key);
   };
-  const onDropSlot = (idx: number) => (e: React.DragEvent) => {
+  const onDropSlot = (slotId: string) => (e: React.DragEvent) => {
     e.preventDefault();
     const key = e.dataTransfer.getData('text/plain');
-    if (key) placeAt(key, idx);
+    if (key) placeAt(key, slotId);
     setDragKey(null);
   };
   const onDropBank = (e: React.DragEvent) => {
     e.preventDefault();
     const key = e.dataTransfer.getData('text/plain');
     if (!key) return;
-    const slotIdx = slots.findIndex(s => s?.key === key);
-    if (slotIdx !== -1) removeFromSlot(slotIdx);
+    const sid = slotOfKey(key);
+    if (sid) removeFromSlot(sid);
     setDragKey(null);
   };
 
-  // --- Tap untuk mobile: pilih kartu di bank, lalu tap slot ---
-  const [tapped, setTapped] = useState<string | null>(null);
+  /** Render satu slot (dipakai alur utama maupun cabang). */
+  const renderSlot = (ref: SlotRef, compact = false) => {
+    const item = placed[ref.id];
+    const ok = sameCard(item, ref.expected);
+    return (
+      <div
+        key={ref.id}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={onDropSlot(ref.id)}
+        onClick={() => {
+          if (item) removeFromSlot(ref.id);
+          else if (tapped) { placeAt(tapped, ref.id); setTapped(null); }
+        }}
+        className={cn(
+          'w-full rounded-xl border-2 border-dashed flex items-center justify-center transition-all cursor-pointer relative group',
+          compact ? 'min-h-[56px]' : 'min-h-[64px]',
+          item ? 'border-transparent' : 'border-zinc-300 hover:border-rose-400 hover:bg-rose-50/40',
+          !item && tapped && 'border-rose-400 bg-rose-50/60 animate-pulse'
+        )}
+      >
+        {item ? (
+          <div className="relative">
+            <SymbolShape shape={item.shape} label={item.label} small />
+            <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full p-0.5 shadow">
+              <Trash2 size={10} />
+            </div>
+          </div>
+        ) : (
+          <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Slot</span>
+        )}
+        {checked !== null && item && (
+          <div className={cn('absolute -left-2 top-1/2 -translate-y-1/2 rounded-full p-0.5', ok ? 'text-emerald-600' : 'text-red-500')}>
+            {ok ? <CheckCircle2 size={16} /> : <span className="text-xs font-black">✕</span>}
+          </div>
+        )}
+      </div>
+    );
+  };
 
-  const filledCount = slots.filter(Boolean).length;
+  /** Berapa decision pada alur utama sebelum indeks i (untuk mencocokkan grup cabang). */
+  const branchGroupOf = (i: number) => main.slice(0, i + 1).filter(x => x.shape === 'decision').length - 1;
 
   return (
     <div className="flex flex-col gap-5 h-full">
@@ -201,53 +329,41 @@ export const FlowchartPuzzle: React.FC<Props> = ({ code, solutionJson, distracto
           </div>
         </div>
 
-        {/* Slot susunan */}
+        {/* Susunan flowchart */}
         <div className="bg-white border border-zinc-200 rounded-2xl p-4 overflow-y-auto custom-scrollbar">
           <div className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">
-            Susunan Flowchart ({filledCount}/{solution.length})
+            Susunan Flowchart ({filledCount}/{slotRefs.length})
           </div>
           <div className="flex flex-col items-center gap-0">
-            {slots.map((slot, idx) => (
-              <React.Fragment key={idx}>
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={onDropSlot(idx)}
-                  onClick={() => {
-                    if (slot) removeFromSlot(idx);
-                    else if (tapped) { placeAt(tapped, idx); setTapped(null); }
-                  }}
-                  className={cn(
-                    'w-full min-h-[64px] rounded-xl border-2 border-dashed flex items-center justify-center transition-all cursor-pointer relative group',
-                    slot ? 'border-transparent' : 'border-zinc-300 hover:border-rose-400 hover:bg-rose-50/40',
-                    !slot && tapped && 'border-rose-400 bg-rose-50/60 animate-pulse'
-                  )}
-                >
-                  {slot ? (
-                    <div className="relative">
-                      <SymbolShape shape={slot.shape} label={slot.label} small />
-                      <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full p-0.5 shadow">
-                        <Trash2 size={10} />
+            {main.map((step, i) => {
+              const k = branchGroupOf(i);
+              const yesRefs = step.shape === 'decision' ? slotRefs.filter(r => r.branch === 'yes' && r.owner === k) : [];
+              const noRefs = step.shape === 'decision' ? slotRefs.filter(r => r.branch === 'no' && r.owner === k) : [];
+              const hasBranches = yesRefs.length > 0 || noRefs.length > 0;
+
+              return (
+                <React.Fragment key={i}>
+                  <div className="w-full">
+                    {renderSlot(slotRefs.find(r => r.id === `m-${i}`)!, false)}
+                  </div>
+
+                  {step.shape === 'decision' && hasBranches && (
+                    <div className="w-full grid grid-cols-2 gap-3 my-2">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Ya</span>
+                        {yesRefs.length ? yesRefs.map(r => renderSlot(r, true)) : <span className="text-[10px] text-zinc-300 italic">(tanpa langkah)</span>}
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Tidak</span>
+                        {noRefs.length ? noRefs.map(r => renderSlot(r, true)) : <span className="text-[10px] text-zinc-300 italic">(tanpa langkah)</span>}
                       </div>
                     </div>
-                  ) : (
-                    <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Slot {idx + 1}</span>
                   )}
-                  {checked !== null && slot && (
-                    <div className={cn(
-                      'absolute -left-2 top-1/2 -translate-y-1/2 rounded-full p-0.5',
-                      slot.shape === solution[idx].shape && slot.label === solution[idx].label
-                        ? 'text-emerald-600' : 'text-red-500'
-                    )}>
-                      {slot.shape === solution[idx].shape && slot.label === solution[idx].label
-                        ? <CheckCircle2 size={16} /> : <span className="text-xs font-black">✕</span>}
-                    </div>
-                  )}
-                </div>
-                {idx < slots.length - 1 && (
-                  <ArrowDown size={14} className="text-zinc-300 my-0.5 shrink-0" />
-                )}
-              </React.Fragment>
-            ))}
+
+                  {i < main.length - 1 && <ArrowDown size={14} className="text-zinc-300 my-0.5 shrink-0" />}
+                </React.Fragment>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -263,7 +379,7 @@ export const FlowchartPuzzle: React.FC<Props> = ({ code, solutionJson, distracto
         </button>
         <button
           onClick={check}
-          disabled={disabled || filledCount < solution.length}
+          disabled={disabled || filledCount < slotRefs.length}
           className="flex-1 py-3 bg-zinc-900 text-white font-bold rounded-2xl hover:bg-zinc-800 disabled:opacity-40 transition-all active:scale-95 text-sm"
         >
           Periksa Susunan
@@ -276,9 +392,7 @@ export const FlowchartPuzzle: React.FC<Props> = ({ code, solutionJson, distracto
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             'rounded-2xl p-4 text-sm font-bold text-center border',
-            checked
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-              : 'bg-red-50 border-red-200 text-red-600'
+            checked ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-600'
           )}
         >
           {checked
