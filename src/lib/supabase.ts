@@ -49,14 +49,14 @@ const jwtPayload = (token: string): Record<string, any> | null => {
 
 /**
  * Update the authorization token for all Supabase requests (REST + Realtime).
- * Mapped to the student's JWT token for Row Level Security (RLS).
  *
- * HANYA token yang ditandatangani Supabase JWT secret yang boleh dipakai.
- * Token dari backend Go ditandatangani JWT_SECRET backend, sedangkan PostgREST
- * memverifikasi dengan legacy secret Supabase -> PGRST301 "None of the keys was
- * able to decode the JWT" pada SEMUA request. Dulu itu yang membuat injeksi
- * token dimatikan; sekarang cukup disaring di sini: token non-Supabase
- * diabaikan sehingga anon key tetap dipakai seperti sebelumnya.
+ * HANYA token yang ditandatangani Supabase JWT secret yang boleh dipakai
+ * (role=authenticated, diterbitkan /api/login, /api/verify, /api/receive-token),
+ * supaya RLS role `authenticated` berlaku. Token dari backend Go ditandatangani
+ * JWT_SECRET backend, sedangkan PostgREST memverifikasi dengan legacy secret
+ * Supabase -> PGRST301 "None of the keys was able to decode the JWT" pada SEMUA
+ * request. Token non-Supabase (termasuk yang kedaluwarsa) diabaikan di sini
+ * sehingga anon key tetap dipakai seperti sebelumnya.
  */
 export const setSupabaseSession = (token: string) => {
   if (!token) {

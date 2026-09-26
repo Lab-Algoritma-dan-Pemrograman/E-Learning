@@ -76,11 +76,11 @@ export const StudentMonitoring: React.FC = () => {
       setSessionHeartbeats(heartbeats);
       setOnlineNims(nims);
 
-      // 3. Fetch students (using select('*') for schema resilience)
+      // 3. Fetch students (kolom eksplisit; role kanonis = 'mahasiswa')
       const { data, error } = await supabase
         .from('users')
-        .select('*')
-        .eq('role', 'mahasiswa');
+        .select('nim,nama,kelas,jurusan,email,role,xp,level,streak,study_time,last_active,assessment_access,level_access_overrides')
+        .in('role', ['praktikan', 'mahasiswa']);
       
       if (!error && data) {
         setStudents(data);

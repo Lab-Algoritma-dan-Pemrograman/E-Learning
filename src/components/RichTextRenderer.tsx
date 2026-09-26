@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import React, { useEffect, useRef } from 'react';
 import katex from 'katex';
 import renderMathInElement from 'katex/dist/contrib/auto-render';
@@ -60,6 +61,34 @@ const cleanContent = (html: string): string => {
   return cleaned;
 };
 
+/**
+ * MEDIUM-03: sanitasi final dengan DOMPurify (allowlist tag/atribut),
+ * menggantikan andalan regex blacklist yang mudah dilewati (mXSS/encoding).
+ * Regex di atas tetap jalan agar styling terminal & normalisasi tag lama
+ * tidak berubah; DOMPurify jadi lapisan terakhir sebelum dangerouslySetInnerHTML.
+ */
+const sanitizeHtml = (html: string): string => {
+  if (!html) return '';
+  if (typeof window === 'undefined') {
+    // SSR: jangan render HTML mentah sebelum klien sempat menyanitasi.
+    return '';
+  }
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'div', 'pre', 'code', 'span', 'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'ul', 'ol', 'li', 'strong', 'em', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
+      'a', 'img', 'blockquote', 'svg', 'path', 'hr', 'sub', 'sup',
+    ],
+    ALLOWED_ATTR: [
+      'class', 'href', 'src', 'alt', 'title', 'target', 'rel',
+      'width', 'height', 'viewBox', 'd', 'fill', 'stroke', 'stroke-width',
+      'colspan', 'rowspan', 'style',
+    ],
+    ALLOW_DATA_ATTR: false,
+    FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input'],
+  });
+};
+
 export const RichTextRenderer: React.FC<RichTextRendererProps> = ({ content, className = '' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -93,7 +122,7 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({ content, cla
         prose-pre:bg-zinc-900 prose-pre:text-zinc-100 prose-pre:p-4 prose-pre:rounded-xl
         prose-table:border-collapse prose-th:border prose-th:border-zinc-200 prose-th:bg-zinc-50 prose-th:p-2 prose-td:border prose-td:border-zinc-200 prose-td:p-2
         ${className}`}
-      dangerouslySetInnerHTML={{ __html: cleanContent(content) }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanContent(content)) }}
     />
   );
 };

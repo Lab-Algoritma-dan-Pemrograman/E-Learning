@@ -16,8 +16,25 @@ import { verifyToken, detectSupabaseSecret } from './auth.js';
 import { SignJWT } from 'jose';
 
 export default async function handler(req: any, res: any) {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // HIGH-05: whitelist origin — ganti `*` agar situs asing tak bisa
+  // memanggil API ini dari browser korban (CSRF/CORS abuse).
+  const ALLOWED = [
+    'https://elearning.algohub.web.id',
+    'https://algohub.web.id',
+    'https://www.algohub.web.id',
+    'https://siakad.algohub.web.id',
+  ];
+  // Tambahan via env (mis. preview deployment), dipisah koma.
+  const extra = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const origin = String(req.headers?.origin || '');
+  const okPreview = /^https:\/\/e-learning-[a-z0-9-]+\.vercel\.app$/i.test(origin);
+  if (origin && (ALLOWED.includes(origin) || extra.includes(origin) || okPreview)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 

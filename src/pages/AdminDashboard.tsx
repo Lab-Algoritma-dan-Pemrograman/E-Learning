@@ -1217,7 +1217,7 @@ export const AdminDashboard: React.FC = () => {
     const fetchUsers = async () => {
       const { data, error } = await supabase
         .from('users')
-        .select('*')
+        .select('id,nim,nama,kelas,jurusan,email,role,xp,level,streak,study_time,last_active,created_at,assessment_access,level_access_overrides')
         .order('xp', { ascending: false });
 
       if (error) {
