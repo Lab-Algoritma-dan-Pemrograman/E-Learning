@@ -20,6 +20,14 @@
 
 -- 1. GRANT kolom yang memang ditulis klien
 GRANT UPDATE (elearning_role, level_access_overrides) ON public.users TO authenticated;
+-- 1b. Kolom itu juga DIBACA AdminDashboard (badge peran), jadi butuh SELECT.
+--     Tanpa ini, select(...) yang menyertakan elearning_role ditolak 403 42501
+--     seluruhnya — termasuk 15 kolom lain yang grant-nya sudah ada:
+--       PATCH/GET /rest/v1/users?select=...,elearning_role  ->  403
+--       GET /rest/v1/users?select=elearning_role            ->  403
+GRANT SELECT (elearning_role) ON public.users TO authenticated;
+-- 1c. Tombol hapus user (progressService.deleteUser) memakai DELETE.
+GRANT DELETE ON public.users TO authenticated;
 
 
 -- =========================================================================
