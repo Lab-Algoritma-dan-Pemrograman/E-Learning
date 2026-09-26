@@ -831,7 +831,7 @@ class API {
     const clang = await this.getModule(this.clangFilename);
     return await this.run(clang, 'clang', '-cc1', '-emit-obj',
                           ...this.clangCommonArgs, '-O2', '-o', obj, '-x',
-                          'c++', input);
+                          'c', input);
   }
 
   async compileToAssembly(options) {
@@ -848,7 +848,7 @@ class API {
     await this.run(clang, 'clang', '-cc1', '-S', ...this.clangCommonArgs,
                           `-triple=${triple}`, '-mllvm',
                           '--x86-asm-syntax=intel', `-O${opt}`,
-                          '-o', output, '-x', 'c++', input);
+                          '-o', output, '-x', 'c', input);
     return this.memfs.getFileContents(output);
   }
 

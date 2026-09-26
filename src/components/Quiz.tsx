@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -28,10 +28,23 @@ export const Quiz: React.FC<QuizProps> = ({
 
   const correctAnswer = correctAnswerIndex !== null ? correctAnswerIndex : propCorrectAnswer;
 
+  // Reset state saat pindah lesson. Tanpa ini, jika komponen dipakai ulang
+  // (key sama), correctAnswerIndex lesson sebelumnya ikut terbawa dan jawaban
+  // siswa bisa dinilai salah padahal benar.
+  useEffect(() => {
+    setSelected(null);
+    setIsSubmitted(false);
+    setCorrectAnswerIndex(null);
+    setIsLoading(false);
+  }, [lessonId]);
+
   const handleSubmit = async () => {
     if (selected === null) return;
 
-    if (typeof propCorrectAnswer === 'number' && propCorrectAnswer !== -1 && propCorrectAnswer !== undefined) {
+    // Jalur lokal hanya bila kunci memang tersedia (staf membaca tabel `lessons`).
+    // Untuk non-staf, view `student_lessons` membuang correctAnswer sehingga
+    // nilainya undefined -> wajib divalidasi ke API, bukan dinilai di klien.
+    if (typeof propCorrectAnswer === 'number' && propCorrectAnswer >= 0) {
       const isCorrect = selected === propCorrectAnswer;
       setCorrectAnswerIndex(propCorrectAnswer);
       setIsSubmitted(true);

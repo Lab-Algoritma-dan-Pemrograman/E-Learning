@@ -37,12 +37,35 @@ export default async function handler(req: any, res: any) {
       .eq('id', lessonId)
       .single();
 
-    if (error || !lesson) {
+    // Bedakan "soal tidak ada" dari "backend salah konfigurasi". Sebelumnya
+    // keduanya mengembalikan 404 'Lesson not found', sehingga env var Supabase
+    // yang hilang di Vercel menyamar sebagai soal yang tidak ditemukan.
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Lesson not found' });
+      }
+      console.error('[validate-quiz] query lesson gagal:', error.code, error.message);
+      return res.status(500).json({
+        error: 'Server tidak dapat membaca bank soal. Periksa konfigurasi Supabase di server.',
+        code: error.code,
+      });
+    }
+    if (!lesson) {
       return res.status(404).json({ error: 'Lesson not found' });
     }
 
-    const quiz = lesson.quiz as any;
-    if (!quiz || typeof quiz.correctAnswer === 'undefined') {
+    // Kolom `lessons.quiz` bertipe TEXT berisi JSON (bukan jsonb), jadi PostgREST
+    // mengembalikannya sebagai string. Tanpa JSON.parse, quiz.correctAnswer selalu
+    // undefined dan setiap kuis dianggap tidak terkonfigurasi.
+    let quiz: any = lesson.quiz as any;
+    if (typeof quiz === 'string') {
+      try {
+        quiz = JSON.parse(quiz);
+      } catch {
+        return res.status(500).json({ error: 'Data kuis rusak (bukan JSON yang valid)' });
+      }
+    }
+    if (!quiz || typeof quiz !== 'object' || typeof quiz.correctAnswer === 'undefined') {
       return res.status(400).json({ error: 'Lesson does not have a quiz configured' });
     }
 

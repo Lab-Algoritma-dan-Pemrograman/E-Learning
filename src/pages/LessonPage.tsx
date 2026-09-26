@@ -850,7 +850,7 @@ export const LessonPage: React.FC = () => {
 
           {step === 'quiz' && (
             <motion.div 
-              key="quiz"
+              key={`quiz-${lesson.id}`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -858,6 +858,7 @@ export const LessonPage: React.FC = () => {
             >
               {lesson.quiz ? (
                 <Quiz 
+                  key={lesson.id}
                   lessonId={lesson.id}
                   question={lesson.quiz.question || ''}
                   options={Array.isArray(lesson.quiz.options) ? lesson.quiz.options : []}
