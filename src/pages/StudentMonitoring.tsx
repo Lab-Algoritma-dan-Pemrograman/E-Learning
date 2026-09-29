@@ -85,6 +85,9 @@ export const StudentMonitoring: React.FC = () => {
       if (!error && data) {
         setStudents(data);
       }
+
+      // 4. Progres semua mahasiswa (dipakai kolom % dan urut progres)
+      await fetchStudentProgress();
     } catch (e) { 
       console.error(e); 
     } finally { 
@@ -93,16 +96,39 @@ export const StudentMonitoring: React.FC = () => {
     }
   };
 
-  const fetchStudentProgress = async (nim: string) => {
-    if (studentProgress[nim]) return;
-    const { data } = await supabase
-      .from('student_progress')
-      .select('lesson_id')
-      .eq('nim', nim)
-      .eq('completed', true);
-    if (data) {
-      setStudentProgress(prev => ({ ...prev, [nim]: data.map(p => p.lesson_id) }));
+  const fetchStudentProgress = async () => {
+    // Ambil progres SEMUA mahasiswa sekali jalan, supaya kolom persen dan
+    // "Urut: Progres Tertinggi" terisi tanpa kartu harus dibuka dulu.
+    // ponytail: masih paginasi penuh (1 request / 1000 baris). Kalau baris
+    // student_progress sudah puluhan ribu, ganti ke view/RPC agregat yang
+    // mengembalikan (nim, jumlah_selesai) supaya cukup satu request kecil.
+    const grouped: Record<string, string[]> = {};
+    const PAGE = 1000;
+    let from = 0;
+
+    for (;;) {
+      const { data, error } = await supabase
+        .from('student_progress')
+        .select('nim, lesson_id')
+        // id (uuid unik) sebagai urutan stabil — tanpa ini paginasi dengan
+        // offset bisa melewati/menduplikasi baris dan persen jadi salah.
+        .order('id')
+        .eq('completed', true)
+        .range(from, from + PAGE - 1);
+
+      if (error) {
+        console.error('Failed to load student progress:', error);
+        break;
+      }
+      (data || []).forEach(p => {
+        if (!grouped[p.nim]) grouped[p.nim] = [];
+        grouped[p.nim].push(p.lesson_id);
+      });
+      if (!data || data.length < PAGE) break;
+      from += PAGE;
     }
+
+    setStudentProgress(grouped);
   };
 
   useEffect(() => { 
@@ -151,10 +177,6 @@ export const StudentMonitoring: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  useEffect(() => {
-    if (expandedNim) fetchStudentProgress(expandedNim);
-  }, [expandedNim]);
 
   const getProgressPercent = (nim: string) => {
     const completed = studentProgress[nim]?.length || 0;
