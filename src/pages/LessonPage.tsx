@@ -212,7 +212,14 @@ export const LessonPage: React.FC = () => {
       setShowHint(false);
       setOutput('');
       setError(null);
-      setQuizXpGranted(false);
+      // Kuis yang sudah lulus jangan hilang saat reload/pindah halaman:
+      // flag lama hanya di memori sehingga tombol Selesaikan terkunci lagi
+      // tanpa penjelasan (kasus c-level-1-m4-l1, Okt 2026).
+      try {
+        setQuizXpGranted(localStorage.getItem(`lesson-quiz:${lesson.id}`) === '1');
+      } catch {
+        setQuizXpGranted(false);
+      }
       
       // Initialize sandbox states
       setSandboxCode(lesson.codeExample || '');
@@ -373,12 +380,14 @@ export const LessonPage: React.FC = () => {
         // Clean up per-lesson step and code for the completed lesson
         localStorage.removeItem(`lesson-step:${lesson.id}`);
         localStorage.removeItem(`lesson-code:${lesson.id}`);
+        try { localStorage.removeItem(`lesson-quiz:${lesson.id}`); } catch { /* abaikan */ }
         setCurrentLessonId(nextId);
       } else {
         // Course completed! Clear checkpoint
         localStorage.removeItem('last-lesson-checkpoint');
         localStorage.removeItem(`lesson-step:${lesson.id}`);
         localStorage.removeItem(`lesson-code:${lesson.id}`);
+        try { localStorage.removeItem(`lesson-quiz:${lesson.id}`); } catch { /* abaikan */ }
         setShowSuccessModal(true);
       }
     } catch (err) {
@@ -870,6 +879,7 @@ export const LessonPage: React.FC = () => {
                   onComplete={async (correct) => {
                     if (correct && !quizXpGranted && !completedLessons.includes(lesson.id)) {
                       setQuizXpGranted(true);
+                      try { localStorage.setItem(`lesson-quiz:${lesson.id}`, '1'); } catch { /* abaikan */ }
                     }
                     if (correct) setTimeout(() => setStep('code'), 1500);
                   }}
@@ -1080,6 +1090,13 @@ export const LessonPage: React.FC = () => {
                 </div>
                 )}
                 {/* Selesaikan Pelajaran — posisi asli di kolom kanan */}
+                {(!isCorrect || !isQuizPassed) && !isCompleting && (
+                  <p className="text-xs text-zinc-500 font-medium text-center leading-relaxed">
+                    {!isQuizPassed
+                      ? 'Kembali ke tahap Kuis dan jawab dengan benar untuk membuka tombol ini.'
+                      : 'Tekan Jalankan sampai muncul Berhasil! untuk membuka tombol ini.'}
+                  </p>
+                )}
                 <button
                   disabled={!isCorrect || !isQuizPassed || isCompleting}
                   onClick={nextLesson}
