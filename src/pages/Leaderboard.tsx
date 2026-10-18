@@ -2,13 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { Trophy, Medal, ArrowUp, ArrowDown, Minus, Loader2, User, RotateCcw } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { getLeaderboard, getUserRank, getLeaderboardFilters, getWeeklyLeaderboard, getJakartaWeek } from '../services/leaderboardService';
+import { getLeaderboard, getUserRank, getLeaderboardFilters, getWeeklyLeaderboard, getJakartaWeek, WeeklyEntry } from '../services/leaderboardService';
 import { UserProfile, useStore } from '../store/useStore';
 import { normalizeRole } from '../services/tokenService';
 
 export const Leaderboard: React.FC = () => {
   const { user } = useStore();
-  const [leaders, setLeaders] = useState<UserProfile[]>([]);
+  const [leaders, setLeaders] = useState<(UserProfile & { isCarry?: boolean })[]>([]);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [myWeeklyXp, setMyWeeklyXp] = useState<number>(0);
@@ -132,6 +132,11 @@ export const Leaderboard: React.FC = () => {
           {weeklyMode && (
             <p className="inline-block px-4 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-xs font-black text-amber-700 tracking-wide">
               Periode {week.label} — reset Senin 00:00 WIB
+            </p>
+          )}
+          {weeklyMode && week.weekStartLabel === '2026-10-19' && (
+            <p className="inline-block px-4 py-1.5 bg-sky-50 border border-sky-200 rounded-full text-xs font-black text-sky-700 tracking-wide">
+              Minggu transisi: semua dapat bonus 50% XP minggu lalu + XP minggu ini
             </p>
           )}
           {isStudent && myWeeklyXp > 0 && (
@@ -280,6 +285,7 @@ export const Leaderboard: React.FC = () => {
                     <span className="font-black text-zinc-900 truncate max-w-[150px] sm:max-w-none flex items-center gap-2">
                       {entry.nama || 'Anonymous'}
                       {user?.nim === entry.nim && <span className="text-[9px] bg-rose-100 text-rose-700 font-black px-2 py-0.5 rounded-lg border border-rose-200/50 uppercase tracking-widest">Anda</span>}
+                      {(entry as any).isCarry && <span className="text-[9px] bg-sky-100 text-sky-700 font-black px-2 py-0.5 rounded-lg border border-sky-200/50 uppercase tracking-widest" title="Dapat bonus 50% XP minggu lalu">+50%</span>}
                     </span>
                     <span className="text-[10px] text-zinc-400 sm:hidden uppercase font-black tracking-wider">Level {entry.level || 1}</span>
                   </div>
@@ -367,6 +373,7 @@ const PodiumItem: React.FC<{ entry: UserProfile; rank: number; height: string; c
     <div className="text-center">
       <div className="font-black text-sm sm:text-base text-zinc-800 truncate max-w-[100px] sm:max-w-[140px]">{entry.nama || 'Anonymous'}</div>
       <div className="text-xs sm:text-sm font-bold text-zinc-500">{(entry.xp || 0).toLocaleString()} XP</div>
+      {(entry as any).isCarry && <div className="text-[9px] font-black text-sky-600 uppercase tracking-widest">+50% minggu lalu</div>}
     </div>
     <div className={cn("w-full rounded-t-3xl flex items-center justify-center border-t-2 border-x-2 relative transition-all duration-300", height, color, borderClass)} style={{ boxShadow: `0 8px 0 ${shadowColor}` }}>
       <span className="text-3xl sm:text-5xl font-black text-white/25 group-hover/podium:scale-110 transition-transform select-none">#{rank}</span>

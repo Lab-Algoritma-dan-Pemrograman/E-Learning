@@ -51,7 +51,16 @@ export interface WeeklyEntry extends UserProfile {
   lessonXp: number;
   bughuntXp: number;
   lessonsCompleted: number;
+  isCarry?: boolean; // true = 0 minggu ini, tampil bawa 50% minggu lalu (khusus 19–25 Okt 2026)
+  carryXp?: number; // nilai carry yang dipakai (50% minggu lalu, floor)
 }
+
+// Bonus transisi KHUSUS minggu 19–25 Okt 2026 (weekStartLabel '2026-10-19'):
+// SEMUA entry dapat bonus floor(50% XP minggu lalu 12–18 Okt) DITAMBAH
+// XP minggu ini. Yang 0 minggu ini tetap tampil bawa bonusnya. Yang aktif
+// minggu ini = bonus + usaha aslinya. Auto-mati minggu depan.
+const CARRY_WEEK_LABEL = '2026-10-19';
+const CARRY_DISCOUNT = 0.5;
 
 // Agregasi XP minggu berjalan dari event yang SUDAH ADA (tanpa ubah skema):
 // student_progress.completed_at (lesson, join xp_reward) +
@@ -118,6 +127,7 @@ export const getWeeklyLeaderboard = async (
     const entries: WeeklyEntry[] = (users || []).map(u => {
       const lx = lessonXp.get(u.nim) || 0;
       const bx = bughuntXp.get(u.nim) || 0;
+      const thisWeek = lx + bx;
       return {
         nim: u.nim,
         nama: u.nama,
@@ -125,19 +135,69 @@ export const getWeeklyLeaderboard = async (
         jurusan: u.jurusan,
         shift: u.shift != null ? String(u.shift) : null,
         email: null,
-        xp: lx + bx,
+        xp: thisWeek,
         level: u.level || 1,
         streak: u.streak || 0,
         lastActive: '',
         createdAt: '',
         role: 'praktikan',
         assessmentAccess: {},
-        weeklyXp: lx + bx,
+        weeklyXp: thisWeek,
         lessonXp: lx,
         bughuntXp: bx,
         lessonsCompleted: lessonCount.get(u.nim) || 0,
+        isCarry: false,
+        carryXp: 0,
       };
     });
+
+    // Bonus transisi KHUSUS minggu 19–25 Okt: SEMUA entry dapat
+    // floor(50% XP minggu lalu 12–18 Okt) + XP minggu ini. Dihitung dari
+    // event mentah (bukan snapshot) biar jalan walau migrasi
+    // weekly_standings belum dijalankan.
+    if (week.weekStartLabel === CARRY_WEEK_LABEL) {
+      const prevStart = new Date(week.weekStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const prevEnd = week.weekStart;
+      const prevStartIso = prevStart.toISOString();
+      const prevEndIso = prevEnd.toISOString();
+      const prevLessonXp = new Map<string, number>();
+      const prevBughuntXp = new Map<string, number>();
+      for (let i = 0; i < nims.length; i += CHUNK) {
+        const chunk = nims.slice(i, i + CHUNK);
+        const [{ data: pProg }, { data: pGames }] = await Promise.all([
+          supabase
+            .from('student_progress')
+            .select('nim, lesson_id, completed_at, lessons:lesson_id(xp_reward)')
+            .in('nim', chunk)
+            .eq('completed', true)
+            .gte('completed_at', prevStartIso)
+            .lt('completed_at', prevEndIso),
+          supabase
+            .from('game_history')
+            .select('nim, xp_earned')
+            .in('nim', chunk)
+            .gte('played_at', prevStartIso)
+            .lt('played_at', prevEndIso),
+        ]);
+        for (const p of (pProg || []) as any[]) {
+          const reward = p.lessons?.xp_reward ?? 60;
+          prevLessonXp.set(p.nim, (prevLessonXp.get(p.nim) || 0) + (reward || 0));
+        }
+        for (const g of (pGames || []) as any[]) {
+          prevBughuntXp.set(g.nim, (prevBughuntXp.get(g.nim) || 0) + (g.xp_earned || 0));
+        }
+      }
+      for (const e of entries) {
+        const prevTotal = (prevLessonXp.get(e.nim) || 0) + (prevBughuntXp.get(e.nim) || 0);
+        if (prevTotal > 0) {
+          const bonus = Math.floor(prevTotal * CARRY_DISCOUNT);
+          e.weeklyXp = e.weeklyXp + bonus;
+          e.xp = e.weeklyXp;
+          e.isCarry = true;
+          e.carryXp = bonus;
+        }
+      }
+    }
 
     entries.sort((a, b) => b.weeklyXp - a.weeklyXp || a.nama.localeCompare(b.nama));
     return limitCount > 0 ? entries.slice(0, limitCount) : entries;
