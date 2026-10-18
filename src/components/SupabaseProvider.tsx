@@ -89,7 +89,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         const { data: userProfile, error: fetchError } = await supabase
           .from('users')
-          .select('id,nim,nama,kelas,jurusan,email,role,elearning_role,xp,level,streak,study_time,last_active,created_at,assessment_access,level_access_overrides,tersembunyi,is_aktif,kelas_id,shift,divisi,kelompok,gelombang')
+          .select('id,nim,nama,kelas,jurusan,email,role,elearning_role,xp,level,streak,study_time,last_active,created_at,assessment_access,level_access_overrides,tersembunyi,is_aktif,kelas_id,shift,divisi,kelompok,gelombang,prestige_tier,prestige_mult,prestige_count')
           .eq('nim', nim)
           .maybeSingle();
 
@@ -103,6 +103,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             nama: payload.nama,
             kelas: payload.kelas,
             jurusan: (payload as any).jurusan || null,
+            shift: (payload as any).shift != null && String((payload as any).shift) !== '' ? String((payload as any).shift) : null,
             email: payload.email || null,
             xp: 0,
             level: 1,
@@ -138,7 +139,11 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             nama: newProfile.nama,
             kelas: newProfile.kelas,
             jurusan: newProfile.jurusan,
+            shift: (newProfile as any).shift ?? null,
             email: newProfile.email,
+            prestigeTier: null,
+            prestigeMult: 1,
+            prestigeCount: 0,
             xp: newProfile.xp,
             level: newProfile.level,
             streak: newProfile.streak,
@@ -166,7 +171,13 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             nama: payload.nama || userProfile.nama,
             kelas: payload.kelas || userProfile.kelas,
             jurusan: userProfile.jurusan || (payload as any).jurusan || null,
+            shift: (userProfile as any).shift != null && String((userProfile as any).shift) !== ''
+              ? String((userProfile as any).shift)
+              : ((payload as any).shift != null && String((payload as any).shift) !== '' ? String((payload as any).shift) : null),
             email: userProfile.email || payload.email || null,
+            prestigeTier: (userProfile as any).prestige_tier || null,
+            prestigeMult: Number((userProfile as any).prestige_mult || 1),
+            prestigeCount: Number((userProfile as any).prestige_count || 0),
             xp: userProfile.xp,
             level: userProfile.level,
             streak: newStreak,
@@ -187,11 +198,14 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           // menghasilkan role lebih tinggi — token membawa role kanonik.
           const hasRoleChange = payload.role && resolvedRole === 'praktikan' && normalizeRole(userProfile.role) !== payload.role;
           const hasJurusanChange = (payload as any).jurusan && profileData.jurusan !== (payload as any).jurusan;
+          const payloadShift = (payload as any).shift != null && String((payload as any).shift) !== '' ? String((payload as any).shift) : null;
+          const hasShiftChange = payloadShift != null && profileData.shift !== payloadShift;
           
           if (profileData.nama !== payload.nama) updates.nama = payload.nama;
           if (profileData.kelas !== payload.kelas) updates.kelas = payload.kelas;
           if (hasRoleChange) updates.role = payload.role;
           if (hasJurusanChange) updates.jurusan = (payload as any).jurusan;
+          if (hasShiftChange) updates.shift = payloadShift;
 
           try {
             await supabase
@@ -208,6 +222,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           profileData.kelas = payload.kelas;
           profileData.role = effectiveRole as any;
           if ((payload as any).jurusan) profileData.jurusan = (payload as any).jurusan;
+          if ((updates as any).shift != null) profileData.shift = (updates as any).shift;
 
           // Check for streak milestones (e.g., streak-3, streak-7)
           if (newStreak >= 3) {
@@ -255,7 +270,11 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               nama: updated.nama,
               kelas: updated.kelas,
               jurusan: updated.jurusan,
+              shift: (updated as any).shift != null ? String((updated as any).shift) : null,
               email: updated.email,
+              prestigeTier: (updated as any).prestige_tier || null,
+              prestigeMult: Number((updated as any).prestige_mult || 1),
+              prestigeCount: Number((updated as any).prestige_count || 0),
               xp: updated.xp,
               level: newLevel,
               streak: updated.streak,

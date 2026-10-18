@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { Trophy, Medal, ArrowUp, ArrowDown, Minus, Loader2, User, RotateCcw } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { getLeaderboard, getUserRank, getLeaderboardFilters } from '../services/leaderboardService';
+import { getLeaderboard, getUserRank, getLeaderboardFilters, getWeeklyLeaderboard, getJakartaWeek } from '../services/leaderboardService';
 import { UserProfile, useStore } from '../store/useStore';
 import { normalizeRole } from '../services/tokenService';
 
@@ -11,24 +11,34 @@ export const Leaderboard: React.FC = () => {
   const [leaders, setLeaders] = useState<UserProfile[]>([]);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [myWeeklyXp, setMyWeeklyXp] = useState<number>(0);
 
   const userRole = normalizeRole(user?.role);
   const isStudent = userRole === 'praktikan';
   const isStaff = ['admin', 'kordas', 'asisten'].includes(userRole);
 
+  // Tab periode: praktikan SELALU mingguan (fair, reset tiap Senin WIB).
+  // Staff bisa pilih Mingguan / Total + filter bebas (kelas/jurusan/shift).
+  const [period, setPeriod] = useState<'weekly' | 'total'>('weekly');
+  const week = getJakartaWeek();
+  const weeklyMode = isStudent || period === 'weekly';
+
   // Filter state for staff users
   const [filterKelas, setFilterKelas] = useState<string>('');
   const [filterJurusan, setFilterJurusan] = useState<string>('');
+  const [filterShift, setFilterShift] = useState<string>('');
   const [filterLimit, setFilterLimit] = useState<number>(20);
   const [kelasOptions, setKelasOptions] = useState<string[]>([]);
   const [jurusanOptions, setJurusanOptions] = useState<string[]>([]);
+  const [shiftOptions, setShiftOptions] = useState<string[]>([]);
 
   // Fetch filter options for staff
   useEffect(() => {
     if (isStaff) {
-      getLeaderboardFilters().then(({ kelas, jurusan }) => {
+      getLeaderboardFilters().then(({ kelas, jurusan, shift }) => {
         setKelasOptions(kelas);
         setJurusanOptions(jurusan);
+        setShiftOptions(shift || []);
       });
     }
   }, [isStaff]);
@@ -36,34 +46,59 @@ export const Leaderboard: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     if (isStudent && user) {
+      const userShift = user.shift != null && String(user.shift) !== '' ? String(user.shift) : undefined;
       const [topLeaders, rank] = await Promise.all([
-        getLeaderboard(3, user.kelas, user.jurusan),
-        getUserRank(user.xp, user.kelas, user.jurusan)
+        getWeeklyLeaderboard(3, user.kelas, user.jurusan, userShift, week),
+        (async () => {
+          const all = await getWeeklyLeaderboard(0, user.kelas, user.jurusan, userShift, week);
+          const me = all.find(e => e.nim === user.nim);
+          setMyWeeklyXp(me?.weeklyXp || 0);
+          if (!me || me.weeklyXp <= 0) return null;
+          return all.filter(e => e.weeklyXp > me.weeklyXp).length + 1;
+        })()
       ]);
       setLeaders(topLeaders);
       setUserRank(rank);
     } else if (isStaff && user) {
       const kelas = filterKelas || undefined;
       const jurusan = filterJurusan || undefined;
-      const [topLeaders, rank] = await Promise.all([
-        getLeaderboard(filterLimit, kelas, jurusan),
-        getUserRank(user.xp, kelas, jurusan)
-      ]);
-      setLeaders(topLeaders);
-      setUserRank(rank);
+      const shift = filterShift || undefined;
+      if (weeklyMode) {
+        const [topLeaders, rank] = await Promise.all([
+          getWeeklyLeaderboard(filterLimit, kelas, jurusan, shift, week),
+          (async () => {
+            const all = await getWeeklyLeaderboard(0, kelas, jurusan, shift, week);
+            const me = all.find(e => e.nim === user.nim);
+            setMyWeeklyXp(me?.weeklyXp || 0);
+            if (!me || me.weeklyXp <= 0) return null;
+            return all.filter(e => e.weeklyXp > me.weeklyXp).length + 1;
+          })()
+        ]);
+        setLeaders(topLeaders);
+        setUserRank(rank);
+      } else {
+        const [topLeaders, rank] = await Promise.all([
+          getLeaderboard(filterLimit, kelas, jurusan, shift),
+          getUserRank(user.xp, kelas, jurusan, shift)
+        ]);
+        setLeaders(topLeaders);
+        setUserRank(rank);
+        setMyWeeklyXp(0);
+      }
     }
     setLoading(false);
-  }, [user, isStudent, isStaff, filterKelas, filterJurusan, filterLimit]);
+  }, [user, isStudent, isStaff, filterKelas, filterJurusan, filterShift, filterLimit, period]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const hasActiveFilter = filterKelas !== '' || filterJurusan !== '' || filterLimit !== 20;
+  const hasActiveFilter = filterKelas !== '' || filterJurusan !== '' || filterShift !== '' || filterLimit !== 20;
 
   const resetFilters = () => {
     setFilterKelas('');
     setFilterJurusan('');
+    setFilterShift('');
     setFilterLimit(20);
   };
 
@@ -84,15 +119,55 @@ export const Leaderboard: React.FC = () => {
       <div className="max-w-4xl mx-auto space-y-8 pb-12">
         <div className="text-center space-y-3">
           <h1 className="text-4xl md:text-5xl font-black text-maroon mb-2 tracking-tight flex items-center justify-center select-none">
-            Papan Peringkat Global
+            {weeklyMode ? 'Papan Peringkat Mingguan' : 'Papan Peringkat Global'}
             <i className="fa-solid fa-crown text-fun-yellow ml-4 text-3xl animate-bounce"></i>
           </h1>
           <p className="text-zinc-550 font-bold max-w-xl mx-auto leading-relaxed">
-            {isStudent 
-              ? `Top 3 Penjelajah Python di Kelas ${user?.kelas} - ${user?.jurusan || ''}`
-              : 'Lihat peringkat semua praktikan berdasarkan total XP.'}
+            {isStudent
+              ? `Top 3 Penjelajah Python di Kelas ${user?.kelas}${user?.shift ? ` - Shift ${user.shift}` : ''} - ${user?.jurusan || ''}`
+              : weeklyMode
+                ? 'Peringkat XP minggu berjalan. Reset tiap Senin 00:00 WIB.'
+                : 'Lihat peringkat semua praktikan berdasarkan total XP.'}
           </p>
+          {weeklyMode && (
+            <p className="inline-block px-4 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-xs font-black text-amber-700 tracking-wide">
+              Periode {week.label} — reset Senin 00:00 WIB
+            </p>
+          )}
+          {isStudent && myWeeklyXp > 0 && (
+            <p className="text-sm font-black text-rose-700">
+              XP minggumu: {myWeeklyXp.toLocaleString()} XP
+            </p>
+          )}
         </div>
+
+        {/* Tab periode khusus staff: Mingguan | Total */}
+        {isStaff && (
+          <div className="flex justify-center gap-2">
+            <button
+              onClick={() => setPeriod('weekly')}
+              className={cn(
+                'px-6 py-2.5 rounded-xl text-sm font-black border-2 transition-all cursor-pointer',
+                period === 'weekly'
+                  ? 'bg-maroon text-white border-maroon shadow-[0_3px_0_rgba(0,0,0,0.2)]'
+                  : 'bg-white text-zinc-500 border-zinc-200 hover:border-maroon/30'
+              )}
+            >
+              Mingguan
+            </button>
+            <button
+              onClick={() => setPeriod('total')}
+              className={cn(
+                'px-6 py-2.5 rounded-xl text-sm font-black border-2 transition-all cursor-pointer',
+                period === 'total'
+                  ? 'bg-maroon text-white border-maroon shadow-[0_3px_0_rgba(0,0,0,0.2)]'
+                  : 'bg-white text-zinc-500 border-zinc-200 hover:border-maroon/30'
+              )}
+            >
+              Total
+            </button>
+          </div>
+        )}
 
         {/* Filter Bar for Staff */}
         {isStaff && (
@@ -117,6 +192,17 @@ export const Leaderboard: React.FC = () => {
                 <option value="">Semua Jurusan</option>
                 {jurusanOptions.map((j) => (
                   <option key={j} value={j}>{j}</option>
+                ))}
+              </select>
+
+              <select
+                value={filterShift}
+                onChange={(e) => setFilterShift(e.target.value)}
+                className="px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-rose-700/20 focus:outline-none shadow-inner cursor-pointer"
+              >
+                <option value="">Semua Shift</option>
+                {shiftOptions.map((s) => (
+                  <option key={s} value={s}>Shift {s}</option>
                 ))}
               </select>
 
@@ -163,7 +249,7 @@ export const Leaderboard: React.FC = () => {
             <div className="col-span-2 sm:col-span-1">Rank</div>
             <div className="col-span-6 sm:col-span-6">Penjelajah</div>
             <div className="col-span-2 text-center hidden sm:block">Level</div>
-            <div className="col-span-4 sm:col-span-3 text-right">Total XP</div>
+            <div className="col-span-4 sm:col-span-3 text-right">{weeklyMode ? 'XP Minggu Ini' : 'Total XP'}</div>
           </div>
           
           <div className="divide-y divide-zinc-100">

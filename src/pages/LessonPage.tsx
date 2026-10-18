@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { CodeEditor } from '../components/CodeEditor';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
@@ -196,6 +196,9 @@ export const LessonPage: React.FC = () => {
 
   useEffect(() => {
     if (lesson) {
+      // Pelajaran berganti (drawer, dashboard, atau navigasi) -> matikan timer
+      // kuis yang masih hidup supaya tidak menyeret step pelajaran baru.
+      cancelQuizAutoAdvance();
       // Resume at last step if lesson is partially done (not fully completed)
       const isLessonDone = completedLessons.includes(lesson.id);
       if (isLessonDone) {
@@ -238,6 +241,19 @@ export const LessonPage: React.FC = () => {
   const hasQuiz = !!lesson?.quiz;
   const isQuizPassed = isLessonDone || quizXpGranted || !hasQuiz;
   const isFlowchart = (lesson as any).exerciseType === 'flowchart';
+
+  // Timer auto-pindah dari kuis ke latihan. Disimpan di ref supaya bisa
+  // dibatalkan saat tombol "Selanjutnya" dipakai — kalau tidak, timer menyala
+  // setelah pelajaran berikutnya dibuka dan menyeret user melewatinya
+  // (gejalanya: 1 pelajaran ke-skip).
+  const quizAdvanceTimer = useRef<number | null>(null);
+  const cancelQuizAutoAdvance = () => {
+    if (quizAdvanceTimer.current !== null) {
+      clearTimeout(quizAdvanceTimer.current);
+      quizAdvanceTimer.current = null;
+    }
+  };
+  useEffect(() => cancelQuizAutoAdvance, []);
 
 
   const handleRun = async () => {
@@ -439,6 +455,7 @@ export const LessonPage: React.FC = () => {
   }, [code, lesson?.id, completedLessons]);
 
   const handlePrev = () => {
+    cancelQuizAutoAdvance();
     const currentStepIdx = stepOrder.indexOf(step);
     if (currentStepIdx > 0) {
       // Move to previous step within same lesson
@@ -451,6 +468,11 @@ export const LessonPage: React.FC = () => {
   };
 
   const handleNext = () => {
+    // WAJIB: batalkan timer kuis→latihan sebelum pindah. Tanpa ini, timer
+    // yang masih hidup menyala setelah pelajaran berikutnya terbuka dan
+    // langsung melompatkannya ke step 'code' — user melihat 1 pelajaran
+    // ke-skip.
+    cancelQuizAutoAdvance();
     const currentStepIdx = stepOrder.indexOf(step);
     if (currentStepIdx < stepOrder.length - 1) {
       // Move to next step within same lesson
@@ -769,7 +791,10 @@ export const LessonPage: React.FC = () => {
                 
                 <div className="pt-4 shrink-0">
                   <button 
-                    onClick={() => setStep('quiz')}
+                    onClick={() => {
+                      cancelQuizAutoAdvance();
+                      setStep('quiz');
+                    }}
                     className="w-full bg-zinc-900 text-white py-4 rounded-2xl font-bold hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-zinc-900/10 active:scale-95"
                   >
                     Ikuti Kuis
@@ -871,14 +896,23 @@ export const LessonPage: React.FC = () => {
                     if (correct && !quizXpGranted && !completedLessons.includes(lesson.id)) {
                       setQuizXpGranted(true);
                     }
-                    if (correct) setTimeout(() => setStep('code'), 1500);
+                    if (correct) {
+                      cancelQuizAutoAdvance();
+                      quizAdvanceTimer.current = window.setTimeout(() => {
+                        quizAdvanceTimer.current = null;
+                        setStep('code');
+                      }, 1500);
+                    }
                   }}
                 />
               ) : (
                 <div className="bg-white border border-zinc-200 rounded-3xl p-8 text-center space-y-4">
                   <p className="text-zinc-600 font-medium">Tidak ada kuis untuk pelajaran ini.</p>
                   <button
-                    onClick={() => setStep('code')}
+                    onClick={() => {
+                      cancelQuizAutoAdvance();
+                      setStep('code');
+                    }}
                     className="px-6 py-3 bg-zinc-900 text-white font-bold rounded-2xl hover:bg-zinc-800 transition-all"
                   >
                     Lanjut ke Latihan

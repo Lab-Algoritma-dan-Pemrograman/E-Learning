@@ -222,6 +222,8 @@ const apiDevServer = (env: Record<string, string>) => ({
             const nim: string = u.nim || identifier;
             const nama: string = u.nama || nim;
             const kelas: string = u.nama_kelas || '';
+            const shiftRaw = (u as any).shift ?? null;
+            const shift = shiftRaw != null && String(shiftRaw) !== '' ? String(shiftRaw) : null;
             const rawRole = String(u.role || '').toLowerCase();
             let appRole = 'praktikan';
             if (rawRole === 'admin') appRole = 'admin';
@@ -232,7 +234,7 @@ const apiDevServer = (env: Record<string, string>) => ({
             if (devSupabaseSecret) {
               const secret = new TextEncoder().encode(devSupabaseSecret.trim());
               signedToken = await new SignJWT({
-                nim, nama, kelas, jurusan: null, email: null,
+                nim, nama, kelas, shift, jurusan: null, email: null,
                 role: 'authenticated',
                 user_role: appRole,
                 iss: 'supabase', sub: nim, aud: 'authenticated',
@@ -244,7 +246,7 @@ const apiDevServer = (env: Record<string, string>) => ({
             }
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
-              payload: { nim, nama, kelas, jurusan: null, email: null, role: appRole },
+              payload: { nim, nama, kelas, shift, jurusan: null, email: null, role: appRole },
               token: signedToken,
               backendToken,
               user: { nim, nama, kelas, role: appRole, nama_kelas: u.nama_kelas || null, shift: u.shift ?? null },

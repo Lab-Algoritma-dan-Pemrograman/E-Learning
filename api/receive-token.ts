@@ -44,6 +44,8 @@ export default async function handler(req: any, res: any) {
     const nama    = p.nama || p.full_name || p.name || null;
     const kelas   = p.kelas || p.class_code || '';
     const jurusan = p.jurusan || p.major || null;
+    const shiftRaw = p.shift ?? null;
+    const shift = shiftRaw != null && String(shiftRaw) !== '' ? String(shiftRaw) : null;
     const email   = p.email || null;
 
     if (!nim || !nama) {
@@ -74,6 +76,7 @@ export default async function handler(req: any, res: any) {
         nim,
         nama,
         kelas,
+        shift,
         jurusan,
         role: 'authenticated',
         user_role: appRole,
@@ -92,7 +95,7 @@ export default async function handler(req: any, res: any) {
       success: true,
       token: signedToken,
       redirectUrl: `/?token=${encodeURIComponent(signedToken)}`,
-      payload: { nim, nama, kelas, jurusan, email, role: appRole },
+      payload: { nim, nama, kelas, shift, jurusan, email, role: appRole },
     });
 
   } catch (error: any) {
