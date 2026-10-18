@@ -82,6 +82,7 @@ export default async function handler(req: any, res: any) {
     const nim: string = u.nim || identifier;
     const nama: string = u.nama || nim;
     const kelas: string = u.nama_kelas || '';
+    const shift: string | null = u.shift != null && String(u.shift) !== '' ? String(u.shift) : null;
     const email: string | null = null; // UserResponse backend tidak membawa email
     const appRole = mapRole(u.role || 'mahasiswa');
 
@@ -93,6 +94,7 @@ export default async function handler(req: any, res: any) {
         nim,
         nama,
         kelas,
+        shift,
         jurusan: null,
         role: 'authenticated',
         user_role: appRole,
@@ -108,7 +110,7 @@ export default async function handler(req: any, res: any) {
     }
 
     return res.status(200).json({
-      payload: { nim, nama, kelas, jurusan: null, email, role: appRole },
+      payload: { nim, nama, kelas, shift, jurusan: null, email, role: appRole },
       token: signedToken,
       backendToken,
       user: {

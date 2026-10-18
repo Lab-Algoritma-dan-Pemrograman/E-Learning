@@ -9,6 +9,7 @@ export interface UserProfile {
   nama: string;
   kelas: string;
   jurusan?: string | null;
+  shift?: string | null;
   email?: string | null;
   photoURL?: string | null;
   xp: number;
@@ -21,6 +22,9 @@ export interface UserProfile {
   // yang menyimpan nilai kanonik bersama Praktikum/Siakad.
   elearningRole?: string | null;
   division?: string;
+  prestigeTier?: string | null;
+  prestigeMult?: number;
+  prestigeCount?: number;
   levelAccessOverrides?: Record<string, 'auto' | 'unlocked' | 'locked'>;
   assessmentAccess?: Record<string, boolean>;
   studyTime?: number; // study time tracked in seconds

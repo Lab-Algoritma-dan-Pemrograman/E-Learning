@@ -44,6 +44,9 @@ export default async function handler(req: any, res: any) {
                  || (tokenPayload as any).major
                  || null;
 
+    const shiftRaw = (tokenPayload as any).shift ?? null;
+    const shift = shiftRaw != null && String(shiftRaw) !== '' ? String(shiftRaw) : null;
+
     const email = (tokenPayload as any).email || null;
 
     if (!nim || !nama) {
@@ -78,6 +81,7 @@ export default async function handler(req: any, res: any) {
         nim,
         nama,
         kelas,
+        shift,
         jurusan,
         role: 'authenticated',
         user_role: appRole,
@@ -97,6 +101,7 @@ export default async function handler(req: any, res: any) {
         nim,
         nama,
         kelas,
+        shift,
         jurusan,
         email,
         role: appRole,

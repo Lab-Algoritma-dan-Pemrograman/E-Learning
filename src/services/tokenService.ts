@@ -5,6 +5,7 @@ export interface TokenPayload {
   nama: string;
   kelas: string;
   jurusan?: string;
+  shift?: string | number | null;
   role?: 'admin' | 'kordas' | 'koordinator' | 'asisten' | 'praktikan' | 'mahasiswa';
   email?: string;
   exp?: number;
@@ -199,6 +200,7 @@ export async function verifyToken(token: string): Promise<VerifyResult | null> {
       const nama = decoded.nama || decoded.full_name || decoded.name || '';
       const kelas = decoded.kelas || decoded.class_code || '';
       const jurusan = decoded.jurusan || decoded.major || undefined;
+      const shift = decoded.shift ?? undefined;
       const email = decoded.email || undefined;
       const role = normalizeRole(decoded.user_role || decoded.role);
 
@@ -209,6 +211,7 @@ export async function verifyToken(token: string): Promise<VerifyResult | null> {
             nama,
             kelas,
             jurusan,
+            shift,
             email,
             role,
             exp: decoded.exp,

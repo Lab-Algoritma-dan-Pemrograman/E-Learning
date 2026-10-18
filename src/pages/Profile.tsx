@@ -8,11 +8,16 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Achievement } from '../services/achievementService';
 import achievementsData from '../data/achievements.json';
+import { checkPrestigeEligibility, doVoluntaryPrestigeReset, PrestigeEligibility, semesterLabelJakarta } from '../services/prestigeService';
 
 export const Profile: React.FC = () => {
   const { user } = useStore();
   const { completedLessons } = useProgress();
   const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
+  const [prestige, setPrestige] = useState<PrestigeEligibility | null>(null);
+  const [prestigeLoading, setPrestigeLoading] = useState(false);
+  const [prestigeMsg, setPrestigeMsg] = useState('');
+  const [confirmPrestige, setConfirmPrestige] = useState(false);
 
   useEffect(() => {
     if (!user?.nim) return;
@@ -47,6 +52,28 @@ export const Profile: React.FC = () => {
     };
   }, [user?.nim]);
 
+  useEffect(() => {
+    if (!user?.nim) return;
+    checkPrestigeEligibility(user.nim).then(setPrestige).catch(() => setPrestige(null));
+  }, [user?.nim, completedLessons.length]);
+
+  const handlePrestige = async () => {
+    if (!user?.nim) return;
+    setPrestigeLoading(true);
+    setPrestigeMsg('');
+    try {
+      const res = await doVoluntaryPrestigeReset(user.nim);
+      setPrestigeMsg(`Prestige #${res.prestigeNo} aktif: tier ${res.tier} x${res.mult.toFixed(2)} untuk lesson. Progres lama diarsip, papan mingguan tetap base.`);
+      setConfirmPrestige(false);
+      const elig = await checkPrestigeEligibility(user.nim);
+      setPrestige(elig);
+    } catch (e: any) {
+      setPrestigeMsg(e?.message || 'Gagal prestige.');
+    } finally {
+      setPrestigeLoading(false);
+    }
+  };
+
   const joinedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'March 2026';
 
   const nextLevelXp = (user?.level || 1) * 2000;
@@ -77,6 +104,9 @@ export const Profile: React.FC = () => {
               <Badge icon={<i className="fa-solid fa-fire text-amber-600"></i>} label={`${user?.streak || 0} Hari Beruntun`} color="bg-amber-50 text-amber-700" shadowColor="#D97706" borderClass="border-amber-200" />
               <Badge icon={<i className="fa-solid fa-trophy text-rose-700"></i>} label={`Level ${user?.level || 1}`} color="bg-rose-50 text-rose-750" shadowColor="#8A1538" borderClass="border-rose-200" />
               <Badge icon={<i className="fa-solid fa-star text-blue-600"></i>} label={`${(user?.xp || 0).toLocaleString()} XP`} color="bg-blue-50 text-blue-705" shadowColor="#023E8A" borderClass="border-blue-200" />
+              {user?.prestigeTier && (
+                <Badge icon={<i className="fa-solid fa-gem text-purple-600"></i>} label={`${user.prestigeTier} x${Number(user.prestigeMult || 1).toFixed(2)}`} color="bg-purple-50 text-purple-700" shadowColor="#7C3AED" borderClass="border-purple-200" />
+              )}
             </div>
           </div>
 
@@ -116,6 +146,67 @@ export const Profile: React.FC = () => {
 
           {/* Stats Sidebar */}
           <div className="space-y-8">
+            <div className="bg-white border-2 border-gray-100 rounded-[2rem] p-6 shadow-soft card-hover hover:border-maroon/20 transition-all group/stats">
+              <h3 className="font-black text-lg mb-4 flex items-center gap-3 select-none">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-[0_3px_0_#4C1D95] transform rotate-[-4deg] group-hover/stats:rotate-0 transition-transform">
+                  <i className="fa-solid fa-gem text-sm"></i>
+                </div>
+                Prestige Sukarela
+              </h3>
+              {prestige ? (
+                <div className="space-y-3 text-sm">
+                  <p className="font-bold text-zinc-600 leading-relaxed">{prestige.reason}</p>
+                  <div className="text-xs font-black text-zinc-500 uppercase tracking-wider space-y-1">
+                    <p>Tamat {prestige.levelsDone}/{prestige.totalLevels} level • {prestige.lessonsDone}/{prestige.totalLessons} lesson</p>
+                    <p>Semester {semesterLabelJakarta()} • dipakai {prestige.semesterUsed}/2 • cooldown 14 hari</p>
+                    {prestige.eligible
+                      ? <p>Multiplier tunggal Master x1.50 lesson-only • papan mingguan tetap base</p>
+                      : <p>Multiplier x1.50 hanya aktif setelah tamat penuh 6/6</p>}
+                  </div>
+                  {prestigeMsg && (
+                    <p className="text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl p-3">{prestigeMsg}</p>
+                  )}
+                  {!confirmPrestige ? (
+                    <button
+                      onClick={() => prestige.eligible && setConfirmPrestige(true)}
+                      disabled={!prestige.eligible || prestigeLoading}
+                      className={cn(
+                        'w-full px-4 py-3 rounded-2xl text-sm font-black border-2 transition-all',
+                        prestige.eligible
+                          ? 'bg-purple-600 text-white border-purple-700 shadow-[0_3px_0_#4C1D95] active:translate-y-[3px] active:shadow-none cursor-pointer'
+                          : 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed'
+                      )}
+                    >
+                      {prestigeLoading ? 'Memproses...' : prestige.eligible ? `Reset & Ambil x${prestige.mult.toFixed(2)}` : 'Belum Layak Prestige'}
+                    </button>
+                  ) : (
+                    <div className="space-y-2 bg-red-50 border-2 border-red-200 rounded-2xl p-4">
+                      <p className="text-xs font-black text-red-700 leading-relaxed">
+                        Yakin? Progres aktif diarsip lalu dihapus, XP kembali 0, multiplier lesson x{prestige.mult.toFixed(2)}. Papan mingguan tetap base. Tidak bisa dibatalkan.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handlePrestige}
+                          disabled={prestigeLoading}
+                          className="flex-1 px-4 py-2.5 rounded-xl text-sm font-black bg-red-600 text-white border-2 border-red-700 cursor-pointer disabled:opacity-50"
+                        >
+                          {prestigeLoading ? '...' : 'Ya, Reset'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmPrestige(false)}
+                          className="flex-1 px-4 py-2.5 rounded-xl text-sm font-black bg-white text-zinc-600 border-2 border-zinc-200 cursor-pointer"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm font-bold text-zinc-400">Memuat status prestige...</p>
+              )}
+            </div>
+
             <div className="bg-white border-2 border-gray-100 rounded-[2rem] p-6 shadow-soft card-hover hover:border-maroon/20 transition-all group/stats">
               <h3 className="font-black text-lg mb-6 flex items-center gap-3 select-none">
                 <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white shadow-[0_3px_0_#D97706] transform rotate-[-4deg] group-hover/stats:rotate-0 transition-transform">

@@ -68,7 +68,12 @@ export const completeLesson = async (
     // 2. Calculate streak
     const { newStreak: streakUpdate } = calculateStreak(user.lastActive, user.streak);
 
-    const newXp = (user.xp || 0) + xpReward;
+    // Prestige: multiplier lesson-only (Bug Hunt TIDAK pernah dikali).
+    // Ambil dari store user (disinkron dari users.prestige_mult saat login).
+    const prestigeMult = Number((user as any).prestigeMult || (user as any).prestige_mult || 1);
+    const { applyPrestigeMult } = await import('./prestigeService');
+    const effectiveReward = applyPrestigeMult(xpReward, prestigeMult);
+    const newXp = (user.xp || 0) + effectiveReward;
     const newLevel = calculateLevel(newXp);
     const oldLevel = user.level || 1;
 
