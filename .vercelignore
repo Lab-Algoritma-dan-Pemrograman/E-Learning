@@ -1,0 +1,64 @@
+node_modules/
+dist/
+build/
+coverage/
+
+# Chrome DevTools profile dumps (dari script debug)
+cdp-profile/
+cdp-profile2/
+cdp-shot-profile/
+.cdp-profile/
+
+# scratch & temp
+scratch/
+.vercel-tmp/
+tmp/
+*.tmp
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+build_error.log
+build_error.txt
+
+# artefacts & screenshots
+screenshot-*.png
+*.png.bak
+
+# script debug sekali-pakai (tidak dipakai runtime)
+_cdp.cjs
+_cdp.ts
+_dbg.ts
+_dbg2.ts
+_dbg3.ts
+_dbg4.ts
+_launch.cjs
+diag_elearn.cjs
+diag2_elearn.cjs
+diag3_elearn.cjs
+fix_bughunt.cjs
+fix2_bughunt.cjs
+fix3_bughunt.cjs
+launch_shot.cjs
+retake_elearn.cjs
+retake2_elearn.cjs
+retake3_bughunt.cjs
+shot_elearn.cjs
+scratch_*.ts
+inspect_paragraphs.ts
+inspect_ppt.ts
+test_import_logic.ts
+testTypes.ts
+migrate.ts
+
+# docs internal (tidak perlu di bundle)
+manual_build/
+apptok.txt
+STATUS-KUIS-PRAKTIKAN.md
+Kemampuan WASM.md
+level1.md
+level4.md
