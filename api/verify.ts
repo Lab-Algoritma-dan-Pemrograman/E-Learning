@@ -30,10 +30,15 @@ export default async function handler(req: any, res: any) {
                || (tokenPayload as any).sub
                || null;
 
+    // Token dari backend Go praktikum membawa { uid, nim, role } tanpa `nama`.
+    // Token lengkap (hasil sign ulang) membawa nim+nama. Terima keduanya;
+    // nama hanya dipakai untuk tampilan, turunkan dari nim bila tidak ada.
     const nama  = (tokenPayload as any).nama
                || (tokenPayload as any).full_name
                || (tokenPayload as any).name
-               || null;
+               || (nim ? String(nim) : null);
+
+    const uid = (tokenPayload as any).uid || null;
 
     const kelas = (tokenPayload as any).kelas
                || (tokenPayload as any).class_code
@@ -78,6 +83,7 @@ export default async function handler(req: any, res: any) {
     const supabaseSecret = await detectSupabaseSecret();
     if (supabaseSecret) {
       returnedToken = await new SignJWT({
+        uid,
         nim,
         nama,
         kelas,
@@ -94,6 +100,11 @@ export default async function handler(req: any, res: any) {
         .setIssuedAt()
         .setExpirationTime('1d')
         .sign(supabaseSecret);
+    } else {
+      // Tanpa legacy JWT secret, token backend Go dipakai apa adanya.
+      // Payload-nya sudah cukup (nim+nama di atas), asal bukan role authenticated
+      // (token Go tidak sah untuk PostgREST -> klien tetap pakai anon key).
+      console.warn('[verify] SUPABASE_JWT_SECRET kosong - token dikembalikan tanpa sign ulang Supabase.');
     }
 
     return res.status(200).json({

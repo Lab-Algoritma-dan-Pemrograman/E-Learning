@@ -1,10 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+/** 1 DB untuk 3 subdomain = project Supabase milik algohub utama.
+ *  Fallback ini bikin bundle tetap jalan walau env build belum tersuntik
+ *  (dulu di Vercel env datang dari dashboard; di VPS env harus ada saat build). */
+const DEFAULT_SUPABASE_URL = 'https://oidwvfcxlxfyojkyurmm.supabase.co';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase URL or Anon Key is missing. Progress reporting to central database will not work.');
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  '';
+
+if (!supabaseAnonKey) {
+  console.warn('[supabase] anon key kosong - baca/tulis tabel akan gagal (401). Isi VITE_SUPABASE_ANON_KEY saat build.');
 }
 
 /**
