@@ -349,14 +349,44 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     executeCCodeRef.current = executeCCode;
   }, [executeCCode]);
 
-  const handleRun = () => {
+  // Tunggu worker compiler siap (polling, non-reactive) sebelum run pertama.
+  const waitForWorker = useCallback(async (lang: 'python' | 'c', ms = 60000): Promise<boolean> => {
+    const mulai = Date.now();
+    while (Date.now() - mulai < ms) {
+      const s = useStore.getState();
+      const ready = lang === 'python' ? !!s.pyodideWorker : !!s.cWorker;
+      if (ready) return true;
+      await new Promise(r => setTimeout(r, 300));
+    }
+    return false;
+  }, []);
+
+  const handleRun = async () => {
     const term = xtermRef.current;
     if (!term || isRunning) return;
 
     if (language === 'python') {
-      runPythonInteractive(code);
+      if (!useStore.getState().pyodideWorker) {
+        term.writeln('\x1b[1;33m⏳ Menyiapkan interpreter Python…\x1b[0m');
+        const ok = await waitForWorker('python');
+        if (!ok) {
+          setIsRunning(false);
+          term.writeln('\x1b[1;31m❌ Interpreter Python gagal dimuat. Periksa koneksi, lalu muat ulang halaman.\x1b[0m');
+          return;
+        }
+      }
+      await runPythonInteractive(code);
     } else {
-      runC();
+      if (!useStore.getState().cWorker) {
+        term.writeln('\x1b[1;33m⏳ Menyiapkan compiler C…\x1b[0m');
+        const ok = await waitForWorker('c');
+        if (!ok) {
+          setIsRunning(false);
+          term.writeln('\x1b[1;31m❌ Compiler C gagal dimuat. Periksa koneksi, lalu muat ulang halaman.\x1b[0m');
+          return;
+        }
+      }
+      await runC(code);
     }
   };
 

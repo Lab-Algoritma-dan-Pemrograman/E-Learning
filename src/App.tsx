@@ -109,15 +109,14 @@ export default function App() {
   );
 }
 
-// Worker compiler (Pyodide/Clang) hanya dinyalakan SETELAH login.
-// Sebelumnya jalan sejak landing dibuka -> rebutan CPU/bandwidth
-// padahal pengunjung belum tentu menekan "Jalankan".
+// Worker compiler (Pyodide/Clang) dinyalakan SELALU sejak aplikasi dibuka —
+// termasuk di halaman Landing (belum login) supaya demo kode di Landing bisa
+// jalan. Dulu hanya dijalankan setelah login -> Landing macet "memuat offline".
 function AppWithWorkers() {
-  const { user } = useStore();
   return (
     <>
-      {user && <PyodideInitializer />}
-      {user && <ClangInitializer />}
+      <PyodideInitializer />
+      <ClangInitializer />
       <div className="relative min-h-screen">
         <AppContent />
       </div>
