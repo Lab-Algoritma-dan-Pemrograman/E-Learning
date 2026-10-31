@@ -6,6 +6,29 @@ let currentInteractiveId = '';
 let pyodideReady = false;
 let moduleRegistered = false;
 
+// Multi-CDN fallback. jsDelivr punya beberapa mirror independent; kalau satu
+// kepotong (AV kampus, proxy sekolah, ISP regional), coba yang lain.
+const PYODIDE_VERSION = 'v0.27.0';
+const PYODIDE_CDNS = [
+  `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`,
+  `https://gcore.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`,
+  `https://fastly.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`,
+];
+
+async function loadPyodideFromCdn() {
+  let lastErr = null;
+  for (const base of PYODIDE_CDNS) {
+    try {
+      importScripts(`${base}pyodide.js`);
+      const py = await self.loadPyodide({ indexURL: base });
+      return { py, base };
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
 self.onmessage = async (event) => {
   const { type, code, id } = event.data;
 
@@ -32,12 +55,10 @@ self.onmessage = async (event) => {
       return;
     }
     try {
-      importScripts('https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js');
-      self.pyodide = await self.loadPyodide({
-        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/',
-      });
+      const { py, base } = await loadPyodideFromCdn();
+      self.pyodide = py;
       pyodideReady = true;
-      self.postMessage({ type: 'INIT_DONE' });
+      self.postMessage({ type: 'INIT_DONE', cdn: base });
     } catch (err) {
       self.postMessage({ type: 'INIT_ERROR', error: err.message });
     }
@@ -91,8 +112,8 @@ try:
                 plt.close(fig)
             
     plt.show = _elearning_custom_show
-except Exception:
-    pass
+except Exception as e:
+    print(f"[elearning-warn] matplotlib tidak tersedia: {type(e).__name__}: {e}")
       `);
 
       await pyodide.runPythonAsync(code);
