@@ -8,6 +8,7 @@ import '@xterm/xterm/css/xterm.css';
 import { Trash2, Copy, Share2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
+import { sendCInput } from '../lib/cInput';
 import { PlaygroundExample, getPlaygroundExamples } from '../services/playgroundService';
 import { parseOutputWithImages } from '../utils/parseOutputWithImages';
 import { PlotDisplay } from '../components/PlotDisplay';
@@ -121,10 +122,14 @@ export const Playground: React.FC = () => {
         // C iterative stdin mode — Enter sends input & re-runs
         if (keyCode === 13) {
           term.write('\r\n');
-          cStdinLinesRef.current.push(cStdinBufferRef.current);
+          const val = cStdinBufferRef.current;
           cStdinBufferRef.current = '';
-          const allStdin = cStdinLinesRef.current.join('\n') + '\n';
-          executeCCodeRef.current(allStdin);
+          cStdinModeRef.current = false;
+          if (!sendCInput(val)) {
+            cStdinLinesRef.current.push(val);
+            const allStdin = cStdinLinesRef.current.join('\n') + '\n';
+            executeCCodeRef.current(allStdin);
+          }
         } else if (keyCode === 8) {
           if (cStdinBufferRef.current.length > 0) {
             cStdinBufferRef.current = cStdinBufferRef.current.slice(0, -1);
@@ -225,7 +230,15 @@ export const Playground: React.FC = () => {
     if (!term) return;
 
     setIsRunning(true);
-    const result = await runCode(code, stdin || undefined);
+
+    const needInputCb = () => {
+      // JANGAN writeln — biarkan kursor tetap di samping prompt.
+      cStdinModeRef.current = true;
+      cStdinBufferRef.current = '';
+    };
+
+    const result = await runCode(code, stdin || undefined, { onNeedInput: needInputCb });
+    cStdinModeRef.current = false;
 
     // Compilation error → show & stop
     if (result.error && !result.output) {
@@ -274,7 +287,11 @@ export const Playground: React.FC = () => {
     }
     displayOutput += output.slice(lastOffset);
     
-    term.write(displayOutput);
+    // Output sudah mengalir realtime via onOutput — hanya tulis sisa yang
+    // belum mengalir (bukan duplikat).
+    if (displayOutput) {
+      term.write(displayOutput);
+    }
 
     // Show runtime error if any
     if (result.error) {

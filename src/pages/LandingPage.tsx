@@ -4,6 +4,7 @@ import { Terminal, BookOpen, Trophy, Zap, ChevronRight, Play, Code2, BarChart3, 
 import { useStore } from '../store/useStore';
 import { useCodeRunner, CodeLanguage } from '../hooks/useCodeRunner';
 import { parseOutputWithImages } from '../utils/parseOutputWithImages';
+import { sendCInput } from '../lib/cInput';
 import '@xterm/xterm/css/xterm.css';
 
 // Demo IDE (Monaco + xterm) di-lazy: sebelumnya ikut terunduh saat landing dibuka.
@@ -155,10 +156,15 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
         if (keyCode === 13) {
           term.write('\r\n');
           setIsWaitingForInput(false);
-          cStdinLinesRef.current.push(cStdinBufferRef.current);
+          const val = cStdinBufferRef.current;
           cStdinBufferRef.current = '';
-          const allStdin = cStdinLinesRef.current.join('\n') + '\n';
-          executeCCodeRef.current(allStdin);
+          cStdinModeRef.current = false;
+          const sent = sendCInput(val);
+          if (!sent) {
+            cStdinLinesRef.current.push(val);
+            const allStdin = cStdinLinesRef.current.join('\n') + '\n';
+            executeCCodeRef.current(allStdin);
+          }
         } else if (keyCode === 8) {
           if (cStdinBufferRef.current.length > 0) {
             cStdinBufferRef.current = cStdinBufferRef.current.slice(0, -1);
@@ -261,7 +267,27 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     if (!term) return;
 
     setIsRunning(true);
-    const result = await runCode(code, stdin || undefined);
+
+    // Mode interaktif SAB: kalau program minta input (need-input), aktifkan
+    // mode ketik; input dikirim langsung ke worker via SAB, bukan re-run.
+    const needInputCb = () => {
+      // JANGAN writeln di sini — program mungkin belum mencetak newline
+      // (mis. printf("Siapa nama kamu? ") tanpa \n). Kursor harus tetap di
+      // samping prompt, bukan pindah baris.
+      cStdinModeRef.current = true;
+      setIsWaitingForInput(true);
+      cStdinBufferRef.current = '';
+      setMobileInputValue('');
+    };
+
+    const result = await runCode(code, stdin || undefined, {
+      onNeedInput: needInputCb,
+      onOutput: (chunk) => {
+        try { term.write(chunk); } catch { /* abaikan */ }
+      },
+    });
+    cStdinModeRef.current = false;
+    setIsWaitingForInput(false);
 
     if (result.error && !result.output) {
       cStdinModeRef.current = false;
@@ -275,11 +301,12 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       return;
     }
 
-    term.clear();
-    term.writeln('\x1b[1;36m$ gcc main.c -o main && ./main\x1b[0m');
-    term.writeln('');
+    // JANGAN clear terminal di jalur normal: di mode SAB, output mengalir
+    // realtime lewat 'write'; kalau di-clear, output program hilang.
+    // Cukup tulis sisa output yang belum tampil.
 
-    if (result.waitingForInput && result.stdoutLenAtInputRequest !== undefined) {
+    const sabMode = useStore.getState().cSab != null;
+    if (result.waitingForInput && result.stdoutLenAtInputRequest !== undefined && !sabMode) {
       const newOffset = result.stdoutLenAtInputRequest;
       if (!cStdinOffsetsRef.current.includes(newOffset)) {
         cStdinOffsetsRef.current.push(newOffset);
@@ -306,14 +333,30 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     }
     displayOutput += output.slice(lastOffset);
     
-    term.write(displayOutput);
+    // Output sudah mengalir realtime via onOutput — jangan tulis ulang
+    // (mencegah duplikat). Hanya tulis kalau tidak ada onOutput (mode legacy).
+    if (!result.sabBlocked && !displayOutput) {
+      term.write(displayOutput);
+    } else if (!displayOutput) {
+      // mode SAB: output sudah realtime; tidak ada sisa
+    } else {
+      // Fallback: masih ada sisa output yang belum tertulis
+      term.write(displayOutput);
+    }
 
     if (result.error) {
       term.writeln('');
       term.writeln(`\x1b[33m⚠ ${result.error}\x1b[0m`);
     }
 
-    if (result.waitingForInput) {
+    if (result.waitingForInput && !sabMode) {
+      cStdinModeRef.current = true;
+      setIsWaitingForInput(true);
+      cStdinBufferRef.current = '';
+      setMobileInputValue('');
+    } else if (result.sabBlocked) {
+      // Mode SAB: program masih nunggu input berikutnya — jangan tampilkan
+      // "Selesai", jangan clear, biarkan terminal tetap seperti sekarang.
       cStdinModeRef.current = true;
       setIsWaitingForInput(true);
       cStdinBufferRef.current = '';
@@ -335,6 +378,11 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     setIsRunning(true);
     term.clear();
     term.writeln('\x1b[1;36m$ gcc main.c -o main && ./main\x1b[0m');
+    // Diagnosa SAB (tampil di terminal biar mudah dicek)
+    const st = useStore.getState();
+    const iso = typeof window !== 'undefined' && !!window.crossOriginIsolated;
+    const sabOn = !!st.cSab;
+    term.writeln(`\x1b[2m[diagnosa] isolated=${iso} sab=${sabOn} mode=${sabOn && iso ? 'SAB-interaktif' : 'legacy-EOF'}\x1b[0m`);
 
     cStdinLinesRef.current = [];
     cStdinBufferRef.current = '';
@@ -393,22 +441,29 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const handleMobileInputSubmit = (forcedValue?: string) => {
     const val = forcedValue !== undefined ? forcedValue : mobileInputValue;
     setMobileInputValue('');
-    setIsWaitingForInput(false);
 
     const term = xtermRef.current;
     if (!term) return;
 
     if (waitingForInputRef.current) {
       waitingForInputRef.current = false;
+      setIsWaitingForInput(false);
       term.writeln(val);
       if (pyodideWorker) {
         pyodideWorker.postMessage({ type: 'INPUT_RESPONSE', value: val });
       }
     } else if (cStdinModeRef.current) {
+      // Mode C interaktif (SAB): kirim langsung ke worker via SAB.
       term.writeln(val);
-      cStdinLinesRef.current.push(val);
-      const allStdin = cStdinLinesRef.current.join('\n') + '\n';
-      executeCCode(allStdin);
+      cStdinBufferRef.current = '';
+      cStdinModeRef.current = false;
+      setIsWaitingForInput(false);
+      if (!sendCInput(val)) {
+        // Fallback kalau SAB tidak tersedia: re-run dengan stdin akumulasi.
+        cStdinLinesRef.current.push(val);
+        const allStdin = cStdinLinesRef.current.join('\n') + '\n';
+        executeCCode(allStdin);
+      }
     }
   };
 
@@ -444,15 +499,27 @@ export const LandingPage: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       (term as any).__cleanup();
       (term as any).__cleanup = null;
     }
+    // Jika user menekan Reset saat program hang (infinite loop), terminate worker
+    // C sekarang juga biar langsung keluar dari keadaan macet, lalu re-init.
+    if (language === 'c') {
+      const st = useStore.getState();
+      if (st.cWorker && st.cWorkerRef) {
+        try { st.cWorkerRef.terminate(); } catch { /* abaikan */ }
+        st.setCWorkerRef(null);
+        st.setCWorker(null);
+        st.setIsCLoading(true);
+      }
+    }
     waitingForInputRef.current = false;
     inputBufferRef.current = '';
     cStdinModeRef.current = false;
     cStdinLinesRef.current = [];
     cStdinBufferRef.current = '';
+    cStdinOffsetsRef.current = [];
+    cLastOutputLenRef.current = 0;
     setIsRunning(false);
     setIsWaitingForInput(false);
-    setActiveTemplateIdx(null);
-    setCode(DEFAULT_CODE[language]);
+    setPlotImages([]);
     term.clear();
     term.writeln('\x1b[2mKetik kode di editor atas, lalu klik "Jalankan" untuk menguji!\x1b[0m');
   };

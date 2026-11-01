@@ -51,6 +51,15 @@ interface AppState {
   setIsPyodideLoading: (loading: boolean) => void;
   cWorker: any;
   setCWorker: (worker: any) => void;
+  // Handle Worker asli (bukan MessagePort) — dipakai untuk terminate saat hang.
+  cWorkerRef: Worker | null;
+  setCWorkerRef: (worker: Worker | null) => void;
+  // SharedArrayBuffer untuk blocking stdin C. null = browser tak mendukung SAB.
+  cSab: SharedArrayBuffer | null;
+  setCSab: (sab: SharedArrayBuffer | null) => void;
+  // callback untuk UI ketika worker minta input (mode SAB)
+  onCNeedInput: (() => void) | null;
+  setOnCNeedInput: (fn: (() => void) | null) => void;
   isCLoading: boolean;
   setIsCLoading: (loading: boolean) => void;
   unlockedAchievement: Achievement | null;
@@ -81,6 +90,12 @@ export const useStore = create<AppState>((set) => ({
   setIsPyodideLoading: (loading) => set({ isPyodideLoading: loading }),
   cWorker: null,
   setCWorker: (worker) => set({ cWorker: worker }),
+  cWorkerRef: null,
+  setCWorkerRef: (worker) => set({ cWorkerRef: worker }),
+  cSab: null,
+  setCSab: (sab) => set({ cSab: sab }),
+  onCNeedInput: null,
+  setOnCNeedInput: (fn) => set({ onCNeedInput: fn }),
   isCLoading: true,
   setIsCLoading: (loading) => set({ isCLoading: loading }),
   unlockedAchievement: null,

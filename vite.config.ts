@@ -360,7 +360,25 @@ export default defineConfig(({mode}) => {
     // vite-plugin-pwa 1.x tidak kompatibel dengan Vite 6 ("source phase
     // import must be external") sehingga build gagal total dan tidak ada
     // deploy yang jalan. Tombol fix butuh deploy, jadi PWA dikorbankan dulu.
-    plugins: [react(), tailwindcss(), apiDevServer(env), ...(process.env.ENABLE_PWA === 'true' ? [VitePWA({
+    plugins: [
+      {
+        name: 'force-worker-200',
+        configureServer(server: any) {
+          server.middlewares.use((req: any, res: any, next: any) => {
+            if (req.url && (req.url.includes('clang-worker.js') || req.url.includes('pyodide.worker.js') || req.url.includes('shared.js'))) {
+              res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+              res.setHeader('Pragma', 'no-cache');
+              res.setHeader('Expires', '0');
+              // Paksa revalidasi selalu 200: hapus conditional headers supaya
+              // Vite tidak membalas 304.
+              delete req.headers['if-none-match'];
+              delete req.headers['if-modified-since'];
+            }
+            next();
+          });
+        },
+      },
+      react(), tailwindcss(), apiDevServer(env), ...(process.env.ENABLE_PWA === 'true' ? [VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       workbox: {
@@ -395,6 +413,15 @@ export default defineConfig(({mode}) => {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
+      // COOP/COEP untuk mengaktifkan SharedArrayBuffer (blocking stdin C).
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+      },
+      // Worker wasm TIDAK boleh di-serve sebagai 304 (revalidasi cache tanpa
+      // header COEP → browser blokir: ERR_BLOCKED_BY_RESPONSE). Paksa selalu
+      // 200 dengan no-cache untuk file worker.
+      middlewareMode: false,
     },
     build: {
       // Matikan modulepreload polyfill: vite-plugin-pwa 1.x gagal bundle

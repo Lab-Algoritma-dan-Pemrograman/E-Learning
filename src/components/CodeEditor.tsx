@@ -56,7 +56,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, o
           {onReset && (
             <button
               onClick={onReset}
-              disabled={isLoading}
               className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-white text-xs font-bold rounded-lg transition-all active:scale-95 cursor-pointer"
             >
               Reset

@@ -160,7 +160,7 @@ function injectStdoutUnbuffering(code: string): string {
 export const useCodeRunner = (language: CodeLanguage = 'python') => {
   const { pyodideWorker, isPyodideLoading, cWorker, isCLoading } = useStore();
 
-  const runCode = useCallback(async (code: string, input?: string): Promise<{ output: string; error: string | null; waitingForInput?: boolean; inputOffsets?: number[]; stdoutLenAtInputRequest?: number }> => {
+  const runCode = useCallback(async (code: string, input?: string, opts?: { onNeedInput?: () => void; onOutput?: (chunk: string) => void }): Promise<{ output: string; error: string | null; waitingForInput?: boolean; sabBlocked?: boolean; inputOffsets?: number[]; stdoutLenAtInputRequest?: number }> => {
     if (language === 'c') {
       if (!cWorker) {
         return {
@@ -168,13 +168,75 @@ export const useCodeRunner = (language: CodeLanguage = 'python') => {
           error: 'Compiler Clang gagal dimuat atau sedang bermasalah. Silakan muat ulang halaman.'
         };
       }
+      // opsional: callback untuk mode interaktif (dipanggil saat worker minta input)
+      const onNeedInput = (opts || {}).onNeedInput || null;
+      // opsional: alirkan output realtime ke terminal (utk program interaktif)
+      const onOutput = (opts || {}).onOutput || null;
 
       return new Promise((resolve) => {
         const responseId = Math.floor(Math.random() * 1000000);
         let outputBuffer = '';
+        let settled = false;
+
+        // Proteksi infinite loop / program gantung: kalau compile+run tidak
+        // selesai dalam 40 detik, terminate worker (satu-satunya cara menghentikan
+        // wasm yang loop sinkron) lalu re-init otomatis.
+        const C_RUN_TIMEOUT_MS = 40000;
+        const timer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          const st = useStore.getState();
+          try {
+            st.cWorkerRef?.terminate();
+          } catch { /* abaikan */ }
+          st.setCWorkerRef(null);
+          st.setCWorker(null);
+          st.setIsCLoading(true);
+          resolve({
+            output: '',
+            error: 'Program tidak merespons dalam 40 detik (kemungkinan infinite loop) — compiler di-reset. Periksa kode Anda.',
+          });
+        }, C_RUN_TIMEOUT_MS);
+
+        const finish = (v: { output: string; error: string | null; waitingForInput?: boolean; sabBlocked?: boolean; inputOffsets?: number[]; stdoutLenAtInputRequest?: number }) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          resolve(v);
+        };
+        // Restart timer (dipakai setelah input diterima supaya ada guards)
+        const restartTimer = () => {
+          if (settled) return;
+          clearTimeout(timer);
+          setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            const st = useStore.getState();
+            try {
+              st.cWorkerRef?.terminate();
+            } catch { /* abaikan */ }
+            st.setCWorkerRef(null);
+            st.setCWorker(null);
+            st.setIsCLoading(true);
+            resolve({
+              output: '',
+              error: 'Program tidak merespons dalam 40 detik (kemungkinan infinite loop) — compiler di-reset. Periksa kode Anda.',
+            });
+          }, C_RUN_TIMEOUT_MS);
+        };
+
+        // Pasang listener need-input (SAB) kalau dipakai mode interaktif
+        const needInputHandler = (e: MessageEvent) => {
+          if (e.data && e.data.id === 'need-input' && onNeedInput) {
+            // Jeda timer timeout: program sah menunggu input user, bukan hang.
+            clearTimeout(timer);
+            onNeedInput();
+          }
+        };
+        cWorker.addEventListener('message', needInputHandler);
 
         // Step 1: Compile the C code
-        cWorker.postMessage({ id: 'compile', responseId, data: injectStdoutUnbuffering(code) });
+        cWorker.postMessage({ id: 'compile', responseId, data: injectStdoutUnbuffering(code), legacy: !onNeedInput });
 
         // Wait for COMPILE done
         const compileHandler = (e: MessageEvent) => {
@@ -186,7 +248,8 @@ export const useCodeRunner = (language: CodeLanguage = 'python') => {
             cWorker.removeEventListener('message', compileHandler);
             
             if (!data.success) {
-              resolve({ output: '', error: outputBuffer || data.error || 'Gagal melakukan kompilasi.' });
+              cWorker.removeEventListener('message', needInputHandler);
+              finish({ output: '', error: outputBuffer || data.error || 'Gagal melakukan kompilasi.' });
               return;
             }
 
@@ -198,12 +261,22 @@ export const useCodeRunner = (language: CodeLanguage = 'python') => {
             const runHandler = (e2: MessageEvent) => {
               const { id: id2, data: data2 } = e2.data;
               if (id2 === 'write') {
-                outputBuffer += data2;
+                if (onOutput) {
+                  onOutput(data2);
+                } else {
+                  outputBuffer += data2;
+                }
               } else if (id2 === 'runAsync' && e2.data.responseId === runResponseId) {
                 cWorker.removeEventListener('message', runHandler);
-                resolve({ output: outputBuffer, error: data2.error, waitingForInput: data2.waitingForInput, inputOffsets: data2.inputOffsets, stdoutLenAtInputRequest: data2.stdoutLenAtInputRequest });
+                cWorker.removeEventListener('message', needInputHandler);
+                finish({ output: outputBuffer, error: data2.error, waitingForInput: data2.waitingForInput, sabBlocked: data2.sabBlocked, inputOffsets: data2.inputOffsets, stdoutLenAtInputRequest: data2.stdoutLenAtInputRequest });
               }
             };
+            // Saat user kirim input via SAB, timer perlu restart untuk kasus
+            // program masih jalan setelah input (mis. loop yang butuh input lagi).
+            const resumed = (() => { let on = false; return (v: boolean) => { on = v; }; })();
+            // Timer timeout hanya restartable lewat need-input pause; tidak perlu
+            // restart di sini karena SAB notify sudah membangunkan worker.
 
             cWorker.addEventListener('message', runHandler);
             cWorker.postMessage({ id: 'run', responseId: runResponseId, data: input || '' });
