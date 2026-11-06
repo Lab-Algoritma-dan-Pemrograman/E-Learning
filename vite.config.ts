@@ -398,9 +398,8 @@ export default defineConfig(({mode}) => {
         ]
       }
     })] : [])],
-    define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || ''),
-    },
+    // Kunci AI hanya dibaca serverless API; jangan tanam secret server ke bundle browser.
+    define: {},
     optimizeDeps: {
       include: ['error-stack-parser', 'stackframe'],
     },

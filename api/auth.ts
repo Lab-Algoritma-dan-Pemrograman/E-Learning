@@ -100,8 +100,22 @@ export async function verifyToken(token: string): Promise<any> {
     }
   }
 
-  const secret = getWebUtamaSecret();
-  const { payload } = await jwtVerify(token, secret);
-  return payload;
+  // Go/Web Utama dan Siakad dapat memakai kunci legacy berbeda. Keduanya
+  // harus dikonfigurasi server-side; token tetap wajib lolos verifikasi HS256.
+  const legacySecrets = [
+    getWebUtamaSecret(),
+    new TextEncoder().encode((process.env.SIAKAD_JWT_SECRET || '').trim()),
+  ].filter((secret) => secret.length > 0);
+
+  let lastError: unknown = new Error('Konfigurasi verifikasi token belum tersedia.');
+  for (const secret of legacySecrets) {
+    try {
+      const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+      return payload;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
 }
 
